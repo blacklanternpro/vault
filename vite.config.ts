@@ -5,4 +5,12 @@ import tailwindcss from '@tailwindcss/vite'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  server: {
+    // Bind on all interfaces (not just localhost) so the dev server is
+    // reachable from outside the container/VM, e.g. via Cloud Agent port
+    // forwarding.
+    host: true,
+    port: 5173,
+    strictPort: true,
+  },
 })
