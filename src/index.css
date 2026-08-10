@@ -1,41 +1,53 @@
 @import 'tailwindcss';
 
+/* Raw terminal output -- JetBrains Mono, standard weights. */
 @import '@fontsource/jetbrains-mono/400.css';
 @import '@fontsource/jetbrains-mono/500.css';
 @import '@fontsource/jetbrains-mono/600.css';
 @import '@fontsource/jetbrains-mono/700.css';
 @import '@fontsource/jetbrains-mono/800.css';
 
-@import '@fontsource/inter/400.css';
-@import '@fontsource/inter/500.css';
-@import '@fontsource/inter/700.css';
-@import '@fontsource/inter/900.css';
+/* Display headers -- Space Grotesk. 700 is its heaviest cut, so `font-black`
+   (900) resolves to this maximum available weight. */
+@import '@fontsource/space-grotesk/400.css';
+@import '@fontsource/space-grotesk/500.css';
+@import '@fontsource/space-grotesk/600.css';
+@import '@fontsource/space-grotesk/700.css';
 
 @theme {
-  /* ---- Editorial Brutalist palette: exactly three colors ---- */
-  --color-canvas: #f4f4f0;
-  --color-ink: #000000;
+  /* ---- Minimal brutalist palette ---- */
+  --color-canvas: #f4f4f0; /* very subtle off-white base */
+  --color-ink: #000000; /* near-black foreground default */
   --color-cobalt: #0000ff;
 
-  /* Data/lists: JetBrains Mono. Headers/display numerals: Inter (grotesque sans). */
+  /* Headers/display: Space Grotesk (grotesque sans, up to font-black).
+     Data/raw terminal output: JetBrains Mono. Exposed as CSS variables so
+     `font-sans` / `font-mono` utilities resolve to them. */
+  --font-sans: 'Space Grotesk', 'Helvetica Neue', Helvetica, Arial,
+    ui-sans-serif, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo,
     Consolas, monospace;
-  --font-sans: 'Inter', 'Helvetica Neue', Helvetica, Arial, ui-sans-serif,
-    sans-serif;
 }
 
 @layer base {
   * {
-    /* Every hairline/rule in this design is solid black -- no gray grid device. */
+    /* Default hairline color follows the light ink on the dark base. */
     border-color: var(--color-ink);
   }
 
   html {
     background-color: var(--color-canvas);
+    /* Clip horizontal overflow at the root so `position: sticky` descendants
+       still resolve against the viewport (setting overflow-x on the sticky
+       header's wrapper would turn it into the scroll container and break it). */
+    overflow-x: hidden;
+    /* Hash navigation is a harsh, instant jump -- never animated. */
+    scroll-behavior: auto;
   }
 
   body {
     margin: 0;
+    /* Flat, solid, subtle off-white base -- no gradients, no noise. */
     background-color: var(--color-canvas);
     color: var(--color-ink);
     font-family: var(--font-mono);
@@ -45,6 +57,37 @@
 
   ::selection {
     background-color: var(--color-cobalt);
-    color: var(--color-canvas);
+    color: #ffffff;
+  }
+}
+
+@layer utilities {
+  /* Fully hidden scrollbar (Firefox / IE / WebKit) for HUD scroll strips. */
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Hard, non-smooth flicker for amber note text on mount -- steps(2, end)
+     quantizes it into a rapid on/off blink over 150ms, then reverts to the
+     element's natural (visible) opacity. */
+  .animate-amber-flicker {
+    animation: amber-flicker 150ms steps(2, end);
+  }
+}
+
+@keyframes amber-flicker {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
   }
 }

@@ -23,6 +23,7 @@ export interface SysLog {
   id: string;
   date: string;
   text: string;
+  completed?: boolean;
 }
 
 /** The full materialized view the worker pushes to the UI on every change. */
@@ -47,6 +48,7 @@ export type WorkerRequest =
   | { type: 'TOGGLE_TASK'; payload: { id: string } }
   | { type: 'ADD_NOTE'; payload: NoteEntry }
   | { type: 'ADD_SYS_LOG'; payload: SysLog & { day: number } }
+  | { type: 'TOGGLE_SYS_LOG'; payload: { id: string } }
   | { type: 'DELETE_SYS_LOG'; payload: { id: string } };
 
 export type WorkerResponse = { type: 'SNAPSHOT'; payload: VaultSnapshot };

@@ -232,6 +232,7 @@ function sysLogToYMap(log: SysLog): Y.Map<unknown> {
   entry.set('id', log.id);
   entry.set('date', log.date);
   entry.set('text', log.text);
+  entry.set('completed', log.completed ?? false);
   return entry;
 }
 
@@ -325,6 +326,7 @@ function readSysLogs(): SysLog[] {
       id: entry.get('id') as string,
       date: entry.get('date') as string,
       text: entry.get('text') as string,
+      completed: (entry.get('completed') as boolean) ?? false,
     })),
   );
 }
@@ -405,6 +407,14 @@ ctx.addEventListener('message', (event: MessageEvent<WorkerRequest>) => {
         ySysLogs.push([sysLogToYMap(log)]);
         yMarkedDays.set(String(day), true);
       });
+      break;
+    }
+
+    case 'TOGGLE_SYS_LOG': {
+      const entry = ySysLogs
+        .toArray()
+        .find((item) => item.get('id') === request.payload.id);
+      if (entry) entry.set('completed', !(entry.get('completed') as boolean));
       break;
     }
 

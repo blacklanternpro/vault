@@ -1,8 +1,11 @@
 import { useState } from 'react';
 import { VaultHeader } from './components/VaultHeader';
-import { Calendar } from './components/Calendar';
+import { MainLayout } from './components/MainLayout';
+import { DateBlock } from './components/DateBlock';
 import { TaskNest } from './components/TaskNest';
 import { Scratchpad } from './components/Scratchpad';
+
+const DAYS_IN_MONTH = 31;
 
 const CURRENT_DAY = 11; // August 11, 2026
 
@@ -11,31 +14,38 @@ export default function App() {
 
   return (
     // The master wrapper applies the invert and hue-rotate when isDark is true
-    <div className={`min-h-screen bg-[#F4F4F0] text-[#111] font-mono selection:bg-[#FF2B2B] selection:text-[#F4F4F0] pb-32 antialiased overflow-x-hidden transition-all duration-300 ${isDark ? 'invert hue-rotate-180' : ''}`}>
+    <div className={`min-h-screen bg-canvas text-ink font-mono selection:bg-[#0000FF] selection:text-white pb-32 antialiased transition-all duration-300 ${isDark ? 'invert hue-rotate-180' : ''}`}>
       
       {/* ===================================================================
           1. THE VAULT LOGO 
          =================================================================== */}
-      <VaultHeader onToggleDark={() => setIsDark(!isDark)} />
+      <VaultHeader onToggleDark={() => setIsDark(!isDark)} currentDay={CURRENT_DAY} />
 
-      <main className="max-w-4xl mx-auto px-4 md:px-8 space-y-32">
-        
+      <MainLayout>
+
         {/* ===================================================================
-            2. CALENDAR 
+            2. DATE BLOCKS -- direct grid children; they auto-fill the jagged
+            layout and carry the id targets for the micro-calendar HUD links.
            =================================================================== */}
-        <Calendar currentDay={CURRENT_DAY} />
+        {Array.from({ length: DAYS_IN_MONTH }, (_, i) => i + 1).map((day) => (
+          <DateBlock key={day} day={day} />
+        ))}
 
         {/* ===================================================================
             3. TASKS 
            =================================================================== */}
-        <TaskNest currentDay={CURRENT_DAY} />
+        <div className="col-span-full">
+          <TaskNest currentDay={CURRENT_DAY} />
+        </div>
 
         {/* ===================================================================
             4. SCRATCHPAD 
            =================================================================== */}
-        <Scratchpad currentDay={CURRENT_DAY} />
+        <div className="col-span-full">
+          <Scratchpad currentDay={CURRENT_DAY} />
+        </div>
 
-      </main>
+      </MainLayout>
     </div>
   );
 }

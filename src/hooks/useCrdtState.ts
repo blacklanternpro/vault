@@ -89,6 +89,10 @@ const actions = {
     send({ type: 'ADD_SYS_LOG', payload: log });
   },
 
+  toggleSysLog(id: string): void {
+    send({ type: 'TOGGLE_SYS_LOG', payload: { id } });
+  },
+
   deleteSysLog(id: string): void {
     send({ type: 'DELETE_SYS_LOG', payload: { id } });
   },
