@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { VaultHeader } from './components/VaultHeader';
 import { MainLayout } from './components/MainLayout';
-import { Calendar } from './components/Calendar';
+import { DateBlock } from './components/DateBlock';
 import { TaskNest } from './components/TaskNest';
 import { Scratchpad } from './components/Scratchpad';
+
+const DAYS_IN_MONTH = 31;
 
 const CURRENT_DAY = 11; // August 11, 2026
 
@@ -21,16 +23,13 @@ export default function App() {
 
       <MainLayout>
 
-        {/* The existing sections are not yet uniform date blocks, so they span
-            the full grid width. Future ≤280px date blocks will drop in as
-            direct grid children and auto-fill into the jagged layout. */}
-
         {/* ===================================================================
-            2. CALENDAR 
+            2. DATE BLOCKS -- direct grid children; they auto-fill the jagged
+            layout and carry the id targets for the micro-calendar HUD links.
            =================================================================== */}
-        <div className="col-span-full">
-          <Calendar currentDay={CURRENT_DAY} />
-        </div>
+        {Array.from({ length: DAYS_IN_MONTH }, (_, i) => i + 1).map((day) => (
+          <DateBlock key={day} day={day} />
+        ))}
 
         {/* ===================================================================
             3. TASKS 

@@ -71,4 +71,23 @@
   .no-scrollbar::-webkit-scrollbar {
     display: none;
   }
+
+  /* Hard, non-smooth flicker for amber note text on mount -- steps(2, end)
+     quantizes it into a rapid on/off blink over 150ms, then reverts to the
+     element's natural (visible) opacity. */
+  .animate-amber-flicker {
+    animation: amber-flicker 150ms steps(2, end);
+  }
+}
+
+@keyframes amber-flicker {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
 }
