@@ -13,7 +13,7 @@ export function VaultHeader({ onToggleDark }: VaultHeaderProps) {
         [ INVERT_OS ]
       </button>
 
-      <svg width="240" height="120" viewBox="0 0 200 100" fill="none" className="text-[#111]">
+      <svg width="240" height="120" viewBox="0 0 200 100" fill="none" className="text-neutral-100">
         <ellipse cx="100" cy="50" rx="95" ry="48" stroke="currentColor" strokeWidth="2.5" />
         <path d="M5 50 Q100 85 195 50" stroke="currentColor" strokeWidth="1.5" fill="none" />
         <path d="M5 50 Q100 15 195 50" stroke="currentColor" strokeWidth="1.5" fill="none" />
