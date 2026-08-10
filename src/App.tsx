@@ -5,7 +5,7 @@ interface TaskNode {
   id: string;
   text: string;
   isAi?: boolean;
-  children?: TaskNode[];
+  children: TaskNode[];
 }
 
 interface NoteEntry {
@@ -16,69 +16,48 @@ interface NoteEntry {
 }
 
 export default function App() {
-  const [selectedDay, setSelectedDay] = useState<number | null>(10); // Default to today: Aug 10
+  // --- CALENDAR & LOGGER STATE ---
+  const [selectedDay, setSelectedDay] = useState<number | null>(10);
   const [markedDays, setMarkedDays] = useState<number[]>([2, 9, 14, 28]);
   const [dayNoteInput, setDayNoteInput] = useState('');
-  const [newTaskInput, setNewTaskInput] = useState('');
-  const [scratchInput, setScratchInput] = useState('');
+  const [sysLogs, setSysLogs] = useState<{date: string, text: string}[]>([
+    { date: '08.10.26', text: 'CALENDAR DENSITY PUSHED TO MAXIMUM.' },
+    { date: '08.10.26', text: 'ZERO LAYOUT SHIFT ACROSS VIEWPORTS.' }
+  ]);
 
   const CURRENT_DAY = 10; // August 10, 2026
 
-  // The ASCII Task Tree from Hell (Proper Nested Filth)
-  const [tasks] = useState<TaskNode[]>([
+  // --- SCRATCHPAD STATE ---
+  const [scratchInput, setScratchInput] = useState('');
+  const [notes, setNotes] = useState<NoteEntry[]>([
+    { id: 'n1', date: '08.10.26', text: 'Wildcat Resources (WC8) drill results dropping. Keep an eye on pre-open.' },
+    { id: 'n2', date: '08.09.26', text: 'Lucky bamboo cuttings rooted successfully. Need to structural wall-mount the new planter array.', attachment: 'http://vlt.link/img_773.jpg' },
+  ]);
+
+  // --- TASK ENGINE STATE ---
+  const [tasks, setTasks] = useState<TaskNode[]>([
     {
       id: '1',
-      text: 'root@tui_os:~/operations',
+      text: 'PREP_FERAL_PIG_ULTRA_GEAR',
       children: [
-        {
-          id: '1-1',
-          text: 'sys/offline_engine',
-          children: [
-            { id: '1-1-1', text: 'splice_raw_90s_breaks_for_mixtape' },
-            { id: '1-1-2', text: 'idb_persistence_layer' },
-            { 
-              id: '1-1-3', 
-              text: 'crdt_sync_resolver', 
-              children: [
-                { id: 'a1', text: 'benchmark_yjs_vectors' },
-                { id: 'a2', text: 'build_dead_letter_queue', isAi: true },
-                { id: 'a3', text: 'inject_auto_retry_logic', isAi: true },
-                { 
-                  id: 'a4', 
-                  text: 'ai_branch_expansion',
-                  isAi: true,
-                  children: [
-                    { id: 'a4-1', text: 'parse_token_stream', isAi: true },
-                    { id: 'a4-2', text: 'render_inline_stems', isAi: true }
-                  ]
-                }
-              ]
-            },
-          ]
-        },
-        {
-          id: '1-2',
-          text: 'physical/prep',
-          children: [
-            { id: '1-2-1', text: 'finalize_fuel_strategy_for_50_miler' },
-            { id: '1-2-2', text: 'diagnose_ficus_tree_soil_ph' },
-          ]
-        }
+        { id: '1-1', text: 'calculate_carb_and_hydration_ratios', children: [] },
+        { id: '1-2', text: 'map_aid_station_drops', children: [] },
+      ],
+    },
+    {
+      id: '2',
+      text: 'COMMODORE_RIM_FABRICATION',
+      children: [
+        { id: '2-1', text: 'structurally_mount_makita_backing_pad', children: [] },
       ],
     },
   ]);
+  
+  const [rootInput, setRootInput] = useState('');
+  const [activeParentId, setActiveInputId] = useState<string | null>(null);
+  const [childInput, setChildInput] = useState('');
 
-  // Raw Scratchpad Notes
-  const [notes, setNotes] = useState<NoteEntry[]>([
-    { id: 'n1', date: '08.09.26', text: 'Lucky bamboo cuttings rooted successfully. Transfer to hydro.' },
-    { id: 'n2', date: '08.02.26', text: 'Supabase instance threw a CORS error on the minimalist blog build.', attachment: 'http://tui.loc/img_773.jpg' },
-  ]);
-
-  // Terminal-style date logger
-  const [sysLogs, setSysLogs] = useState<{date: string, text: string}[]>([
-    { date: '08.10.26', text: 'System initialized. Awaiting manual override.' }
-  ]);
-
+  // --- HANDLERS ---
   const handleAddScratch = (e: React.FormEvent) => {
     e.preventDefault();
     if (!scratchInput.trim()) return;
@@ -96,8 +75,105 @@ export default function App() {
     setDayNoteInput('');
   };
 
+  // Task Handlers
+  const handleAddRoot = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!rootInput.trim()) return;
+    setTasks([...tasks, { id: Date.now().toString(), text: rootInput, children: [] }]);
+    setRootInput('');
+  };
+
+  const addChildToTree = (nodes: TaskNode[], parentId: string, newText: string): TaskNode[] => {
+    return nodes.map(node => {
+      if (node.id === parentId) {
+        return {
+          ...node,
+          children: [...node.children, { id: Date.now().toString(), text: newText, children: [] }]
+        };
+      }
+      if (node.children.length > 0) {
+        return { ...node, children: addChildToTree(node.children, parentId, newText) };
+      }
+      return node;
+    });
+  };
+
+  const handleAddChild = (parentId: string) => {
+    if (!childInput.trim()) {
+      setActiveInputId(null);
+      return;
+    }
+    setTasks(addChildToTree(tasks, parentId, childInput));
+    setChildInput('');
+    setActiveInputId(null);
+  };
+
+  // --- RECURSIVE TASK RENDERER ---
+  const renderTree = (nodes: TaskNode[], depth = 0) => {
+    return (
+      <div className="flex flex-col items-start w-full">
+        {nodes.map((node) => {
+          const isRoot = depth === 0;
+          const isAddingToThis = activeParentId === node.id;
+
+          return (
+            <div key={node.id} className="flex flex-col items-start w-full mt-1">
+              
+              <div 
+                className="flex items-start group cursor-pointer"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setActiveInputId(node.id);
+                  setChildInput('');
+                }}
+              >
+                {!isRoot && (
+                  <span className="text-[#111]/30 font-black text-lg md:text-xl mr-3 leading-none select-none">
+                    \
+                  </span>
+                )}
+                <span className={`text-[#111] leading-tight transition-colors hover:text-[#0000FF] ${
+                  isRoot 
+                    ? 'font-black uppercase tracking-tighter text-xl md:text-3xl underline decoration-[3px] underline-offset-4' 
+                    : 'font-medium text-base md:text-xl'
+                }`}>
+                  {node.text}
+                </span>
+              </div>
+
+              <div className="ml-6 md:ml-10 flex flex-col items-start">
+                {node.children.length > 0 && renderTree(node.children, depth + 1)}
+
+                {isAddingToThis && (
+                  <div className="flex items-end mt-1 animate-pulse">
+                    <span className="text-[#0000FF] font-black text-lg md:text-xl mr-3 leading-none select-none">
+                      \
+                    </span>
+                    <input
+                      autoFocus
+                      type="text"
+                      value={childInput}
+                      onChange={(e) => setChildInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') handleAddChild(node.id);
+                        if (e.key === 'Escape') setActiveInputId(null);
+                      }}
+                      onBlur={() => handleAddChild(node.id)}
+                      placeholder="extend branch..."
+                      className="bg-transparent border-b-[2px] border-[#0000FF] text-[#0000FF] outline-none font-bold placeholder:text-[#0000FF]/40 text-base md:text-lg pb-0.5 rounded-none"
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
   return (
-    <div className="min-h-screen bg-[#F4F4F0] text-[#111] font-mono selection:bg-[#FF2B2B] selection:text-[#F4F4F0] pb-32 antialiased overflow-x-hidden">
+    <div className="min-h-screen bg-[#F4F4F0] text-[#111] font-mono selection:bg-[#0000FF] selection:text-[#F4F4F0] pb-32 antialiased overflow-x-hidden">
       
       {/* ===================================================================
           1. THE VAULT LOGO 
@@ -120,9 +196,9 @@ export default function App() {
       <main className="max-w-4xl mx-auto px-4 md:px-8 space-y-32 mt-12">
         
         {/* ===================================================================
-            2. CALENDAR (RAW, JAMMED, ACID WATERMARK)
+            2. CALENDAR (RAW, JAMMED, ACID WATERMARK) & VCR LOGGER
            =================================================================== */}
-        <section className="relative">
+        <section className="relative w-full flex flex-col items-center mt-12 mb-20">
           <h2 className="text-center font-sans font-black text-4xl md:text-5xl uppercase underline decoration-[4px] underline-offset-8 mb-12">
             August
           </h2>
@@ -133,38 +209,34 @@ export default function App() {
             </span>
           </div>
 
-          <div className="relative z-10">
-            <div className="flex flex-wrap justify-center gap-0 w-full max-w-3xl mx-auto leading-none">
+          <div className="relative z-10 w-full max-w-3xl">
+            <div className="grid grid-cols-7 gap-0 w-full leading-none text-center">
+              <div className="py-2 md:py-4"></div>
+              <div className="py-2 md:py-4"></div>
+              <div className="py-2 md:py-4"></div>
+              <div className="py-2 md:py-4"></div>
+              <div className="py-2 md:py-4"></div>
+              
               {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => {
                 const isMarked = markedDays.includes(day);
                 const isPast = day < CURRENT_DAY;
                 const isToday = day === CURRENT_DAY;
                 
-                // Calculate actual weekday for Aug 2026
                 const dateObj = new Date(2026, 7, day);
-                const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
+                const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
 
                 return (
-                  <div key={day} className="relative flex items-center justify-center w-14 h-20 md:w-20 md:h-24 hover:bg-black/5 cursor-pointer" onClick={() => setSelectedDay(selectedDay === day ? null : day)}>
-                    
-                    {/* The Near-Black Date Number */}
-                    <span className={`font-sans font-black text-4xl md:text-6xl text-[#111] opacity-90 tracking-tighter ${isToday ? 'border-b-[4px] border-[#111] pb-1' : ''}`}>
+                  <div key={day} className="relative flex items-center justify-center w-full aspect-square hover:bg-black/5 cursor-pointer" onClick={() => setSelectedDay(selectedDay === day ? null : day)}>
+                    <span className={`font-sans font-light text-5xl md:text-8xl tracking-tighter transition-colors ${isPast ? 'text-gray-300' : 'text-[#111]'} ${isToday ? 'border-b-[4px] md:border-b-[6px] border-[#111] pb-1 md:pb-2' : ''}`}>
                       {day < 10 ? `0${day}` : day}
                     </span>
                     
-                    {/* Lowercase full day name piercing the middle */}
-                    <span className="absolute text-[8px] md:text-[11px] font-bold text-[#111] tracking-widest bg-[#F4F4F0]/80 px-1">
+                    <span className={`absolute text-[10px] md:text-[14px] font-black text-[#0000FF] tracking-widest z-10 mix-blend-hard-light ${isPast ? 'opacity-40' : 'opacity-100'}`}>
                       {dayName}
                     </span>
                     
-                    {/* Past Date: White-out diagonal mark */}
-                    {isPast && (
-                      <span className="absolute inset-0 w-[120%] h-[3px] bg-white top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 -rotate-12 pointer-events-none shadow-[0px_1px_2px_rgba(0,0,0,0.1)]" />
-                    )}
-
-                    {/* Marked Date: Straight Red Line right through the middle */}
                     {isMarked && (
-                      <span className="absolute inset-x-0 h-[3px] bg-[#FF2B2B] top-1/2 -translate-y-1/2 pointer-events-none z-20" />
+                      <span className="absolute inset-x-0 h-[3px] md:h-[4px] bg-[#FF2B2B] top-1/2 -translate-y-1/2 pointer-events-none z-20 mix-blend-multiply" />
                     )}
                   </div>
                 );
@@ -172,70 +244,79 @@ export default function App() {
             </div>
           </div>
 
-          {/* Amber Wavy Terminal Input */}
+          {/* VCR / RECEIPT TERMINAL */}
           {selectedDay !== null && (
-            <div className="mt-12 bg-[#111] text-[#FFB000] p-6 mx-auto max-w-2xl font-mono text-sm shadow-[0px_0px_20px_rgba(255,176,0,0.1)]">
-              {/* Cooked ASCII Wavy Border Top */}
-              <div className="overflow-hidden whitespace-nowrap opacity-50 mb-4 select-none">
-                {'~'.repeat(150)}
+            <div className="mt-8 md:mt-16 w-full max-w-3xl mx-auto font-mono relative z-10 bg-[#F4F4F0]">
+              <div className="text-[#0000FF] text-[10px] md:text-xs tracking-[0.2em] overflow-hidden whitespace-nowrap mb-6 select-none opacity-80">
+                {'*'.repeat(150)}
               </div>
               
-              <div className="font-bold mb-4 uppercase tracking-widest opacity-80">
-                SYS_LOG :: 08.{selectedDay < 10 ? `0${selectedDay}` : selectedDay}.26
+              <div className="flex justify-between items-end mb-8 text-[#0000FF] text-xs md:text-sm font-bold uppercase tracking-widest">
+                <span>DATE // 08.{selectedDay < 10 ? `0${selectedDay}` : selectedDay}.26</span>
+                <span className="opacity-60">RECORDS: {sysLogs.filter(n => n.date === `08.${selectedDay < 10 ? `0${selectedDay}` : selectedDay}.26`).length}</span>
               </div>
-              
-              <div className="space-y-2 mb-6 min-h-[60px]">
+
+              <div className="space-y-3 mb-10 min-h-[40px]">
                 {sysLogs
                   .filter(n => n.date === `08.${selectedDay < 10 ? `0${selectedDay}` : selectedDay}.26`)
                   .map((log, i) => (
-                    <div key={i} className="leading-tight break-words">
-                      <span className="opacity-50 mr-2">{'>'}</span>{log.text}
+                    <div key={i} className="flex gap-4 items-start text-xs md:text-sm text-[#111]">
+                      <span className="text-[#0000FF] shrink-0 font-bold">[{i + 1 < 10 ? `0${i+1}` : i+1}]</span>
+                      <span className="uppercase leading-snug">{log.text}</span>
                     </div>
                   ))}
+                
+                {sysLogs.filter(n => n.date === `08.${selectedDay < 10 ? `0${selectedDay}` : selectedDay}.26`).length === 0 && (
+                  <div className="text-xs md:text-sm text-[#111]/30 uppercase tracking-widest">
+                    NO_DATA_FOUND_FOR_CURRENT_CYCLE
+                  </div>
+                )}
               </div>
 
-              <form onSubmit={handleAddSysLog} className="flex items-end gap-3 mt-4">
-                <span className="font-bold opacity-80 pb-0.5">$</span>
+              <form onSubmit={handleAddSysLog} className="flex items-end gap-3 text-[#0000FF] text-xs md:text-sm">
+                <span className="font-bold animate-pulse mb-1">{'>'}</span>
                 <input
                   type="text"
                   value={dayNoteInput}
                   onChange={(e) => setDayNoteInput(e.target.value)}
-                  autoFocus
-                  className="flex-1 bg-transparent border-b border-[#FFB000]/30 outline-none text-[#FFB000] placeholder:text-[#FFB000]/30 pb-1 rounded-none font-medium focus:border-[#FFB000]"
+                  placeholder="APPEND RECORD..."
+                  className="flex-1 bg-transparent border-b-[2px] border-[#0000FF] outline-none text-[#0000FF] placeholder:text-[#0000FF]/40 pb-1 rounded-none uppercase font-bold"
                 />
+                <button type="submit" className="font-bold hover:bg-[#0000FF] hover:text-[#F4F4F0] px-3 py-1 transition-colors tracking-widest">[ENTER]</button>
               </form>
 
-              {/* Cooked ASCII Wavy Border Bottom */}
-              <div className="overflow-hidden whitespace-nowrap opacity-50 mt-6 select-none">
-                {'~'.repeat(150)}
+              <div className="text-[#0000FF] text-[10px] md:text-xs tracking-[0.2em] overflow-hidden whitespace-nowrap mt-8 select-none opacity-80">
+                {'*'.repeat(150)}
               </div>
             </div>
           )}
         </section>
 
         {/* ===================================================================
-            3. TASKS (MASSIVE TREE, UNDERLINED ROOTS)
+            3. TASKS (FLUID DIAGONAL NESTING)
            =================================================================== */}
-        <section>
-          <h2 className="text-center font-sans font-black text-4xl md:text-5xl uppercase underline decoration-[4px] underline-offset-8 mb-12">
-            Tasks
+        <section className="w-full font-mono">
+          <h2 className="text-center font-sans font-black text-4xl md:text-5xl uppercase underline decoration-[4px] underline-offset-8 mb-16">
+            TASKS
           </h2>
-          
-          {/* Stripped Down Input */}
-          <div className="max-w-xl mx-auto flex items-end gap-3 text-xs md:text-sm font-mono mb-12">
-            <span className="text-[#111] font-bold opacity-50 pb-1">08.10.26 //</span>
-            <input 
-              type="text"
-              value={newTaskInput}
-              onChange={(e) => setNewTaskInput(e.target.value)}
-              placeholder="add root task..."
-              className="flex-1 bg-transparent border-b-2 border-[#111] outline-none text-[#111] placeholder:text-[#111]/30 pb-1 font-bold"
-            />
+
+          <div className="w-full flex justify-end mb-12">
+            <form onSubmit={handleAddRoot} className="w-full md:w-3/4 flex items-end gap-3 text-sm md:text-base pr-4 md:pr-8">
+              <span className="text-[#111] font-bold opacity-50 pb-1">08.10.26 //</span>
+              <input 
+                type="text" 
+                value={rootInput} 
+                onChange={(e) => setRootInput(e.target.value)} 
+                className="flex-1 bg-transparent border-b-[2px] border-[#111] outline-none text-[#111] placeholder:text-[#111]/30 pb-1 font-bold uppercase rounded-none" 
+                placeholder="ADD ROOT TASK..." 
+              />
+            </form>
           </div>
 
-          {/* Proper Nested Filth (Bigger Text, No Container) */}
-          <div className="text-sm md:text-lg font-mono leading-relaxed overflow-x-auto whitespace-nowrap px-2">
-            <RenderTree nodes={tasks} />
+          <div className="w-full flex justify-end pr-4 md:pr-8 overflow-visible">
+            <div className="w-fit flex flex-col items-start min-w-[50%]">
+              {renderTree(tasks)}
+            </div>
           </div>
         </section>
 
@@ -277,46 +358,5 @@ export default function App() {
 
       </main>
     </div>
-  );
-}
-
-// Helper Recursive Component for Clean ASCII Task Rendering
-function RenderTree({ nodes, prefix = '' }: { nodes: TaskNode[]; prefix?: string }) {
-  return (
-    <>
-      {nodes.map((node, index) => {
-        const isLast = index === nodes.length - 1;
-        const currentConnector = isLast ? '└── ' : '├── ';
-        const childPrefix = prefix + (isLast ? '    ' : '│   ');
-        const isRoot = prefix === ''; // Check if it's a top-level item
-
-        return (
-          <div key={node.id}>
-            <div className="flex items-center gap-3 py-1 hover:bg-[#111]/5 group cursor-pointer transition-colors">
-              <span className="text-[#111]/30 select-none font-normal">{prefix}{currentConnector}</span>
-              
-              {node.isAi && (
-                <span className="bg-[#0000FF] text-[#F4F4F0] text-[10px] md:text-xs px-1.5 font-bold uppercase tracking-widest">
-                  AI
-                </span>
-              )}
-
-              <span className={`text-[#111] font-bold ${isRoot ? 'underline decoration-2 underline-offset-4' : ''}`}>
-                {node.text}
-              </span>
-
-              {/* Functional 'X' cross-off button */}
-              <button className="ml-auto opacity-0 group-hover:opacity-100 text-[#FF2B2B] text-sm md:text-base font-black px-2 hover:bg-[#FF2B2B] hover:text-[#F4F4F0] transition-colors">
-                [X]
-              </button>
-            </div>
-
-            {node.children && node.children.length > 0 && (
-              <RenderTree nodes={node.children} prefix={childPrefix} />
-            )}
-          </div>
-        );
-      })}
-    </>
   );
 }
