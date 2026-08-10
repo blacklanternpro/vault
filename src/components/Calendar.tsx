@@ -63,7 +63,7 @@ export function Calendar({ currentDay }: CalendarProps) {
             const dayAbbr = dateObj.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
 
             return (
-              <div key={day} className="relative flex items-center justify-center w-full aspect-[4/3] hover:bg-black/5 cursor-pointer z-10" onClick={() => setSelectedDay(selectedDay === day ? null : day)}>
+              <div key={day} id={`date-${day}`} className="relative flex items-center justify-center w-full aspect-[4/3] hover:bg-black/5 cursor-pointer z-10 scroll-mt-40" onClick={() => setSelectedDay(selectedDay === day ? null : day)}>
                 
                 <span className={`font-sans font-light text-[4.5rem] md:text-[7.5rem] tracking-tighter leading-[0.75] transition-colors ${
                   isSelected ? 'text-[#0000FF] font-medium' : isPast ? 'text-gray-200' : 'text-[#111]'

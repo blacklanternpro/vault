@@ -1,5 +1,49 @@
+import { useCrdtState } from '../hooks/useCrdtState';
+
 interface VaultHeaderProps {
   onToggleDark: () => void;
+  currentDay: number;
+}
+
+/**
+ * Micro-Calendar HUD: a horizontally scrollable strip of 1..31 sitting under
+ * the logo. Noted days glow terminal amber, empty days are concrete gray, and
+ * the current day is an inverted chip. Each number is an anchor that hard-jumps
+ * to its date cell in the calendar below.
+ */
+function MicroCalendarLegend({ currentDay }: { currentDay: number }) {
+  const { sysLogs, markedDays } = useCrdtState();
+
+  const notedDays = new Set<number>(markedDays);
+  for (const log of sysLogs) {
+    const day = parseInt(log.date.split('.')[1] ?? '', 10);
+    if (!Number.isNaN(day)) notedDays.add(day);
+  }
+
+  return (
+    <nav className="w-72 max-w-full flex overflow-x-auto gap-3 no-scrollbar font-mono text-xs">
+      {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => {
+        const isCurrent = day === currentDay;
+        const hasNotes = notedDays.has(day);
+
+        const stateClass = isCurrent
+          ? 'bg-ink text-canvas px-1' // inverted current-day chip
+          : hasNotes
+            ? 'text-[#FFB000]' // terminal amber
+            : 'text-zinc-700'; // dead concrete gray
+
+        return (
+          <a
+            key={day}
+            href={`#date-${day}`}
+            className={`shrink-0 leading-none tabular-nums no-underline hover:opacity-70 ${stateClass}`}
+          >
+            {day}
+          </a>
+        );
+      })}
+    </nav>
+  );
 }
 
 /**
@@ -43,15 +87,16 @@ function VaultGlobeLogo() {
   );
 }
 
-export function VaultHeader({ onToggleDark }: VaultHeaderProps) {
+export function VaultHeader({ onToggleDark, currentDay }: VaultHeaderProps) {
   return (
-    <header className="sticky top-0 z-50 bg-canvas border-b-2 border-ink flex items-center justify-center py-3 px-4">
+    <header className="sticky top-0 z-50 bg-canvas border-b-2 border-ink flex flex-col items-center gap-2 py-3 px-4">
       <VaultGlobeLogo />
+      <MicroCalendarLegend currentDay={currentDay} />
 
       {/* Dark-mode invert toggle, kept out of the standalone logo */}
       <button
         onClick={onToggleDark}
-        className="absolute right-4 text-[#0000FF] font-black text-[10px] md:text-xs border-2 border-[#0000FF] px-2 py-1 hover:bg-[#0000FF] hover:text-white transition-colors tracking-widest"
+        className="absolute top-4 right-4 text-[#0000FF] font-black text-[10px] md:text-xs border-2 border-[#0000FF] px-2 py-1 hover:bg-[#0000FF] hover:text-white transition-colors tracking-widest"
       >
         [ INVERT_OS ]
       </button>

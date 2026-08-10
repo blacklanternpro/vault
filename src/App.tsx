@@ -16,7 +16,7 @@ export default function App() {
       {/* ===================================================================
           1. THE VAULT LOGO 
          =================================================================== */}
-      <VaultHeader onToggleDark={() => setIsDark(!isDark)} />
+      <VaultHeader onToggleDark={() => setIsDark(!isDark)} currentDay={CURRENT_DAY} />
 
       <main className="max-w-4xl mx-auto px-4 md:px-8 space-y-32">
         
