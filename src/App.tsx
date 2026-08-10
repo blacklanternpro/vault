@@ -22,12 +22,14 @@ export default function App() {
   const [selectedDay, setSelectedDay] = useState<number | null>(10);
   const [markedDays, setMarkedDays] = useState<number[]>([2, 9, 14, 28]);
   const [dayNoteInput, setDayNoteInput] = useState('');
-  const [sysLogs, setSysLogs] = useState<{date: string, text: string}[]>([
-    { date: '08.10.26', text: 'CALENDAR DENSITY PUSHED TO MAXIMUM.' },
-    { date: '08.10.26', text: 'ZERO LAYOUT SHIFT ACROSS VIEWPORTS.' }
+  const [sysLogs, setSysLogs] = useState<{id: string, date: string, text: string}[]>([
+    { id: 'l1', date: '08.10.26', text: 'CALENDAR DENSITY PUSHED TO MAXIMUM.' },
+    { id: 'l2', date: '08.10.26', text: 'ZERO LAYOUT SHIFT ACROSS VIEWPORTS.' }
   ]);
 
   const CURRENT_DAY = 10; // August 10, 2026
+
+  const getFullDateString = (day: number) => `08.${day < 10 ? `0${day}` : day}.26`;
 
   // --- SCRATCHPAD STATE ---
   const [scratchInput, setScratchInput] = useState('');
@@ -83,10 +85,14 @@ export default function App() {
     e.preventDefault();
     if (!dayNoteInput.trim() || selectedDay === null) return;
     if (!markedDays.includes(selectedDay)) setMarkedDays([...markedDays, selectedDay]);
-    
-    const dateStr = `08.${selectedDay < 10 ? `0${selectedDay}` : selectedDay}.26`;
-    setSysLogs([...sysLogs, { date: dateStr, text: dayNoteInput }]);
+
+    setSysLogs([...sysLogs, { id: Date.now().toString(), date: getFullDateString(selectedDay), text: dayNoteInput }]);
     setDayNoteInput('');
+  };
+
+  const handleDeleteSysLog = (e: React.MouseEvent, logId: string) => {
+    e.stopPropagation();
+    setSysLogs(sysLogs.filter((log) => log.id !== logId));
   };
 
   // --- TASK LOGIC ---
@@ -153,106 +159,114 @@ export default function App() {
     return 0;
   });
 
-  // --- RECURSIVE HYBRID TASK RENDERER ---
-  const renderTree = (nodes: TaskNode[], depth = 0, isParentCompleted = false, isParentUrgent = false) => {
-    return (
-      <div className="flex flex-col items-start w-full gap-2">
+// --- RECURSIVE HYBRID TASK RENDERER ---
+const renderTree = (parentId: string | null, nodes: TaskNode[], depth = 0, isParentCompleted = false, isParentUrgent = false) => {
+  // If no nodes exist and we aren't actively adding to this specific parent, render nothing
+  if (nodes.length === 0 && activeParentId !== parentId) return null;
+
+  return (
+    <div className={`flex flex-col w-full ${depth > 0 ? 'ml-4 md:ml-8' : ''}`}>
+      
+      {/* Depth > 1: The standalone Diagonal Hash bridging parent to children */}
+      {depth > 1 && (
+        <div className={`mb-1 ml-2 text-lg md:text-xl font-black select-none leading-none ${isParentUrgent ? 'text-[#FF2B2B]' : 'text-[#111]'}`}>
+          \
+        </div>
+      )}
+
+      {/* Children Group Container (Vertical Dashed Line) */}
+      <div className={`flex flex-col w-full ${depth > 0 ? `border-l-[2px] border-dashed pl-3 md:pl-4 ${isParentUrgent ? 'border-[#FF2B2B]' : 'border-[#111]'}` : ''}`}>
+        
         {nodes.map((node) => {
           const isRoot = depth === 0;
-          const isAddingToThis = activeParentId === node.id;
-          
-          // Inherit traits from parents
           const isCompleted = isParentCompleted || node.completed;
           const isUrgent = isParentUrgent || node.priority === 'URGENT';
           
-          // Aesthetic logic
           const colorClass = isUrgent ? 'text-[#FF2B2B]' : 'text-[#111]';
           const strikeClass = isCompleted ? 'line-through decoration-[3px] opacity-40' : '';
 
           return (
-            <div key={node.id} className="flex flex-col items-start w-full">
+            <div key={node.id} className="flex flex-col w-full mt-3">
               
-              <div className="flex items-center group w-full relative">
+              {/* Task Row */}
+              <div className="flex items-start group w-full pr-2 md:pr-4">
                 
-                {/* The "20% in" Diagonal Hash Connector */}
+                {/* Inline Dash for Level 1+ Children */}
                 {!isRoot && (
-                  <span className="ml-6 md:ml-12 mr-3 text-[#111]/30 font-black text-lg select-none">
-                    \
+                  <span className={`mr-3 font-black text-sm md:text-base select-none mt-0.5 ${colorClass}`}>
+                    -
                   </span>
                 )}
-                
-                {/* Task Text */}
-                <span 
-                  onClick={() => { setActiveInputId(node.id); setChildInput(''); }}
-                  className={`cursor-pointer transition-opacity hover:opacity-60 ${colorClass} ${strikeClass} ${
-                    isRoot ? 'font-black uppercase tracking-tighter text-xl md:text-3xl underline decoration-[4px] underline-offset-4' : 'font-medium text-base md:text-xl'
-                  }`}
-                >
-                  {node.text}
-                </span>
 
-                {/* Badges & Buttons */}
-                <div className="flex items-center gap-3 ml-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                {/* Task Text & Badges (Flex-1 and min-w-0 forces wrapping on mobile instead of cutting off) */}
+                <div className="flex-1 flex flex-wrap items-start gap-2 min-w-0">
+                  <span 
+                    onClick={() => { setActiveInputId(node.id); setChildInput(''); }}
+                    className={`cursor-pointer transition-opacity hover:opacity-60 whitespace-normal break-words ${colorClass} ${strikeClass} ${
+                      isRoot ? 'font-black uppercase tracking-tighter text-xl md:text-3xl underline decoration-[4px] underline-offset-4' : 'font-medium text-sm md:text-lg'
+                    }`}
+                  >
+                    {node.text}
+                  </span>
+
                   {node.isAi && (
-                    <span className="bg-[#111] text-[#F4F4F0] text-[10px] px-1.5 font-bold uppercase tracking-widest">
-                      AI_GEN
+                    <span className={`text-[#F4F4F0] text-[10px] px-1.5 font-bold uppercase tracking-widest shrink-0 mt-1 ${isUrgent ? 'bg-[#FF2B2B]' : 'bg-[#111]'}`}>
+                      AI
                     </span>
                   )}
-                  {isRoot && !isCompleted && (
-                    <button 
-                      onClick={() => triggerAiCascade(node.id)}
-                      className="text-[#0000FF] font-black text-xs md:text-sm border border-[#0000FF] px-2 hover:bg-[#0000FF] hover:text-white"
-                    >
-                      [TXT AI]
+                  
+                  {/* Hover Actions ([TXT AI] and [X]) */}
+                  <div className="flex items-center gap-2 ml-2 opacity-0 group-hover:opacity-100 transition-opacity shrink-0 mt-0.5">
+                    {isRoot && !isCompleted && (
+                      <button onClick={(e) => { e.stopPropagation(); triggerAiCascade(node.id); }} className={`font-black text-[10px] md:text-xs border px-1 transition-colors ${isUrgent ? 'text-[#FF2B2B] border-[#FF2B2B] hover:bg-[#FF2B2B] hover:text-[#F4F4F0]' : 'text-[#0000FF] border-[#0000FF] hover:bg-[#0000FF] hover:text-[#F4F4F0]'}`}>
+                        [TXT AI]
+                      </button>
+                    )}
+                    <button onClick={(e) => { e.stopPropagation(); setTasks(toggleTaskCompletion(tasks, node.id)); }} className="text-[#FF2B2B] font-black text-sm md:text-base hover:bg-[#FF2B2B] hover:text-white px-1 leading-none transition-colors">
+                      [X]
                     </button>
-                  )}
-                  <button 
-                    onClick={() => setTasks(toggleTaskCompletion(tasks, node.id))}
-                    className="text-[#FF2B2B] font-black text-sm md:text-base px-1 hover:bg-[#FF2B2B] hover:text-white"
-                  >
-                    [X]
-                  </button>
+                  </div>
                 </div>
               </div>
 
-              {/* Children Container (Dashed Vertical Line) */}
-              {(node.children.length > 0 || isAddingToThis) && (
-                <div className={`flex flex-col items-start w-full ${isRoot ? 'ml-4' : 'ml-[4.5rem] md:ml-[6rem]'} border-l-2 border-dashed ${isUrgent ? 'border-[#FF2B2B]/40' : 'border-[#111]/30'} mt-2 mb-2 py-1`}>
-                  
-                  {node.children.length > 0 && renderTree(node.children, depth + 1, isCompleted, isUrgent)}
-
-                  {/* Inline Child Input */}
-                  {isAddingToThis && !isCompleted && (
-                    <div className="flex items-end mt-2 animate-pulse w-full max-w-md">
-                      <span className="ml-6 md:ml-12 mr-3 text-[#0000FF] font-black text-lg select-none">
-                        \
-                      </span>
-                      <input
-                        autoFocus
-                        type="text"
-                        value={childInput}
-                        onChange={(e) => setChildInput(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') handleAddChild(node.id);
-                          if (e.key === 'Escape') setActiveInputId(null);
-                        }}
-                        onBlur={() => handleAddChild(node.id)}
-                        placeholder="append child..."
-                        className="flex-1 bg-transparent border-b-[2px] border-[#0000FF] text-[#0000FF] outline-none font-bold placeholder:text-[#0000FF]/40 text-base pb-0.5 rounded-none uppercase"
-                      />
-                    </div>
-                  )}
-                </div>
-              )}
+              {/* Recursive Children Call */}
+              {(node.children.length > 0 || activeParentId === node.id) && 
+                renderTree(node.id, node.children, depth + 1, isCompleted, isUrgent)
+              }
+              
             </div>
           );
         })}
-      </div>
-    );
-  };
 
-  return (
-    <div className="min-h-screen bg-[#F4F4F0] text-[#111] font-mono selection:bg-[#FF2B2B] selection:text-[#F4F4F0] pb-32 antialiased overflow-x-hidden">
+        {/* Inline Input for New Child appending to THIS level */}
+        {activeParentId === parentId && !isParentCompleted && (
+          <div className="flex items-end w-full mt-3 group pr-2 md:pr-4">
+            {depth > 0 && (
+              <span className={`mr-3 font-black text-sm md:text-base select-none mt-1 ${isParentUrgent ? 'text-[#FF2B2B]' : 'text-[#111]'}`}>
+                -
+              </span>
+            )}
+            <input
+              autoFocus
+              type="text"
+              value={childInput}
+              onChange={(e) => setChildInput(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') handleAddChild(parentId!); if (e.key === 'Escape') setActiveInputId(null); }}
+              onBlur={() => handleAddChild(parentId!)}
+              placeholder="APPEND NODE..."
+              className={`flex-1 bg-transparent border-b-[2px] outline-none font-bold pb-0.5 rounded-none uppercase text-sm md:text-base min-w-0 ${
+                isParentUrgent ? 'border-[#FF2B2B] text-[#FF2B2B] placeholder:text-[#FF2B2B]/40' : 'border-[#0000FF] text-[#0000FF] placeholder:text-[#0000FF]/40'
+              }`}
+            />
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+return (
+  <div className="min-h-screen bg-[#F4F4F0] text-[#111] font-mono selection:bg-[#FF2B2B] selection:text-[#F4F4F0] pb-32 antialiased overflow-x-hidden">
       
       {/* ===================================================================
           1. THE VAULT LOGO 
@@ -272,22 +286,24 @@ export default function App() {
 
       <main className="max-w-4xl mx-auto px-4 md:px-8 space-y-32">
         
-        {/* ===================================================================
-            2. CALENDAR (JAMMED, GHOSTED PAST, RED DROPDOWN)
+{/* ===================================================================
+            2. CALENDAR (TRUE CRAM BLOCK, INLINE TYPOGRAPHIC LOGS)
            =================================================================== */}
-        <section className="relative w-full flex flex-col items-center mt-12">
+        <section className="relative w-full flex flex-col items-center mt-12 mb-8">
           
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0 overflow-hidden">
-            <span className="text-[45vw] md:text-[38rem] font-black text-[#00FFCC] tracking-tighter leading-none mix-blend-multiply opacity-60 select-none mt-12">
-              AUG
-            </span>
-          </div>
+          {/* We wrap the watermark and grid in the exact same container so the watermark NEVER shifts */}
+          <div className="relative z-10 w-full max-w-4xl flex justify-center">
+            
+            {/* Locked Background Watermark */}
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
+              <span className="text-[45vw] md:text-[38rem] font-black text-[#00FFCC] tracking-tighter leading-none mix-blend-multiply opacity-60 select-none">
+                AUG
+              </span>
+            </div>
 
-          <div className="relative z-10 w-full max-w-3xl">
-            <div className="grid grid-cols-7 gap-0 w-full leading-none text-center">
-              
+            <div className="grid grid-cols-7 gap-0 w-full leading-none text-center relative z-10">
               {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => {
-                const dateStr = `08.${day < 10 ? `0${day}` : day}.26`;
+                const dateStr = getFullDateString(day);
                 const dayLogs = sysLogs.filter(n => n.date === dateStr);
                 const isMarked = dayLogs.length > 0 || markedDays.includes(day);
                 const isPast = day < CURRENT_DAY;
@@ -296,49 +312,47 @@ export default function App() {
                 
                 const dateObj = new Date(2026, 7, day);
                 const dayAbbr = dateObj.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
-                const alignRight = (day - 1) % 7 >= 4;
 
                 return (
                   <div 
                     key={day} 
-                    className="relative flex items-center justify-center w-full aspect-square hover:bg-black/5 cursor-pointer z-10" 
+                    className="relative flex items-center justify-center w-full aspect-[4/3] hover:bg-black/5 cursor-pointer z-10" 
                     onClick={() => setSelectedDay(selectedDay === day ? null : day)}
                   >
+                    
+                    {/* The Raw Number */}
                     <span className={`font-sans font-light text-5xl md:text-8xl tracking-tighter transition-colors ${
-                      isPast ? 'text-gray-300' : 'text-[#111]'
+                      isSelected ? 'text-[#0000FF] font-medium' : isPast ? 'text-gray-300' : 'text-[#111]'
                     } ${isToday ? 'border-b-[4px] md:border-b-[6px] border-[#111] pb-1 md:pb-2' : ''}`}>
                       {day}
                     </span>
                     
-                    <span className={`absolute text-[10px] md:text-[14px] font-black text-[#0000FF] tracking-widest z-10 bg-[#F4F4F0] px-1 py-0.5 leading-none ${
+                    {/* Day Name Block (White BG, Blue Text) */}
+                    <span className={`absolute text-[10px] md:text-[14px] font-black text-[#0000FF] tracking-widest z-10 bg-white px-1 leading-none top-1/2 -translate-y-1/2 ${
                       isPast ? 'opacity-40' : 'opacity-100'
                     }`}>
                       {dayAbbr}
                     </span>
                     
-                    {isPast && (
-                      <span className="absolute inset-0 w-[120%] h-[3px] bg-white top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 -rotate-12 pointer-events-none z-0" />
-                    )}
-
+                    {/* Marked Date Red Line (Top Z-Index) */}
                     {isMarked && (
                       <span className="absolute inset-x-0 h-[3px] md:h-[4px] bg-[#FF2B2B] top-1/2 -translate-y-1/2 pointer-events-none z-20" />
                     )}
 
-                    {/* RED INLINE DROPDOWN */}
+                    {/* SLEEK, INLINE DIARY ENTRIES (Matching the Day Name Block) */}
                     {isSelected && dayLogs.length > 0 && (
-                      <div className={`absolute top-full mt-1 bg-[#FF2B2B] text-white p-3 z-50 min-w-[200px] w-max max-w-[300px] text-left shadow-[4px_4px_0px_#111] ${
-                        alignRight ? 'right-0' : 'left-0'
-                      }`}>
-                        <div className="text-[10px] uppercase font-bold tracking-widest border-b border-white/30 pb-1 mb-2">
-                          LOGS // {dateStr}
-                        </div>
-                        <div className="space-y-2">
-                          {dayLogs.map((log, idx) => (
-                            <div key={idx} className="text-xs md:text-sm leading-tight uppercase font-medium">
-                              {log.text}
-                            </div>
-                          ))}
-                        </div>
+                      <div className="absolute top-[55%] md:top-[60%] left-1/2 -translate-x-1/2 flex flex-col items-center gap-[1px] md:gap-[2px] z-50 w-max pointer-events-auto">
+                        {dayLogs.map((log) => (
+                          <div key={log.id} className="bg-white text-[#0000FF] px-1 md:px-1.5 py-0.5 text-[10px] md:text-[14px] font-black uppercase tracking-widest flex items-center gap-2 leading-none">
+                            <span>{log.text}</span>
+                            <button 
+                              onClick={(e) => handleDeleteSysLog(e, log.id)} 
+                              className="text-[#0000FF] hover:text-[#FF2B2B] transition-colors"
+                            >
+                              [X]
+                            </button>
+                          </div>
+                        ))}
                       </div>
                     )}
                   </div>
@@ -347,16 +361,16 @@ export default function App() {
             </div>
           </div>
 
-          {/* VCR / RECEIPT TERMINAL */}
+          {/* COMPACT VCR INPUT FIELD (Margins crushed, metadata stripped) */}
           {selectedDay !== null && (
-            <div className="mt-8 md:mt-12 w-full max-w-3xl mx-auto font-mono relative z-0 bg-[#F4F4F0]">
-              <div className="text-[#0000FF] text-[10px] md:text-xs tracking-[0.2em] overflow-hidden whitespace-nowrap mb-6 select-none opacity-80">
+            <div className="mt-4 mb-2 w-full max-w-3xl mx-auto font-mono relative z-0 bg-[#F4F4F0]">
+              
+              <div className="text-[#0000FF] text-[10px] md:text-xs tracking-[0.2em] overflow-hidden whitespace-nowrap mb-3 select-none opacity-80">
                 {'*'.repeat(150)}
               </div>
               
-              <div className="flex justify-between items-end mb-6 text-[#0000FF] text-xs md:text-sm font-bold uppercase tracking-widest">
-                <span>DATE // 08.{selectedDay < 10 ? `0${selectedDay}` : selectedDay}.26</span>
-                <span className="opacity-60">TARGET ENGAGED</span>
+              <div className="flex justify-between items-end mb-3 text-[#0000FF] text-xs md:text-sm font-bold uppercase tracking-widest">
+                <span>DATE // {getFullDateString(selectedDay)}</span>
               </div>
 
               <form onSubmit={handleAddSysLog} className="flex items-end gap-3 text-[#0000FF] text-xs md:text-sm">
@@ -368,10 +382,12 @@ export default function App() {
                   placeholder="APPEND RECORD TO SELECTED DATE..."
                   className="flex-1 bg-transparent border-b-[2px] border-[#0000FF] outline-none text-[#0000FF] placeholder:text-[#0000FF]/40 pb-1 rounded-none uppercase font-bold"
                 />
-                <button type="submit" className="font-bold hover:bg-[#0000FF] hover:text-[#F4F4F0] px-3 py-1 transition-colors tracking-widest">[ENTER]</button>
+                <button type="submit" className="font-bold hover:bg-[#0000FF] hover:text-[#F4F4F0] px-3 py-1 transition-colors tracking-widest">
+                  [ENTER]
+                </button>
               </form>
 
-              <div className="text-[#0000FF] text-[10px] md:text-xs tracking-[0.2em] overflow-hidden whitespace-nowrap mt-8 select-none opacity-80">
+              <div className="text-[#0000FF] text-[10px] md:text-xs tracking-[0.2em] overflow-hidden whitespace-nowrap mt-4 select-none opacity-80">
                 {'*'.repeat(150)}
               </div>
             </div>
@@ -379,57 +395,66 @@ export default function App() {
         </section>
 
         {/* ===================================================================
-            3. TASKS (HYBRID ASCII NEST, URGENT RED, AI BUTTONS)
+            3. TASKS (VCR TERMINAL INPUT, HYBRID ASCII NEST, URGENT RED)
            =================================================================== */}
-        <section className="w-full font-mono">
+        <section className="w-full font-mono mt-12">
           <h2 className="text-center font-sans font-black text-4xl md:text-5xl uppercase underline decoration-[4px] underline-offset-8 mb-16">
             TASKS
           </h2>
 
-          <div className="w-full flex justify-end mb-16">
-            <div className="w-full md:w-3/4 flex flex-col gap-6 md:pr-8">
+          {/* VCR Terminal Root Input */}
+          <div className="w-full mb-16 relative z-0 bg-[#F4F4F0] max-w-4xl mx-auto">
+            <div className="text-[#0000FF] text-[10px] md:text-xs tracking-[0.2em] overflow-hidden whitespace-nowrap mb-6 select-none opacity-80">
+              {'*'.repeat(150)}
+            </div>
+            
+            <div className="flex flex-col md:flex-row md:justify-between md:items-end mb-6 gap-4">
+              <div className="text-[#0000FF] text-xs md:text-sm font-bold uppercase tracking-widest">
+                <span>DATE // {CURRENT_DAY < 10 ? `0${CURRENT_DAY}` : CURRENT_DAY}.08.26</span>
+              </div>
               
               {/* Terminal Priority Selection */}
-              <div className="flex gap-4 text-xs font-bold font-mono">
+              <div className="flex gap-2 text-[10px] md:text-xs font-bold font-mono">
                 {['P1', 'P2', 'P3', 'URGENT'].map(p => (
                   <button 
-                    key={p} 
-                    onClick={() => setSelectedPrio(p as any)} 
-                    className={`px-3 py-1 border-[2px] tracking-widest uppercase transition-colors ${
-                      selectedPrio === p 
-                        ? (p === 'URGENT' ? 'bg-[#FF2B2B] text-white border-[#FF2B2B]' : 'bg-[#111] text-[#F4F4F0] border-[#111]')
-                        : 'border-[#111]/30 text-[#111]/50 hover:border-[#111] hover:text-[#111]'
+                    key={p} onClick={() => setSelectedPrio(p as any)} 
+                    className={`px-2 py-1 border-[2px] tracking-widest uppercase transition-colors ${
+                      selectedPrio === p ? (p === 'URGENT' ? 'bg-[#FF2B2B] text-white border-[#FF2B2B]' : 'bg-[#0000FF] text-white border-[#0000FF]') : 'border-[#0000FF]/30 text-[#0000FF]/70 hover:border-[#0000FF] hover:text-[#0000FF]'
                     }`}
                   >
                     {p}
                   </button>
                 ))}
               </div>
+            </div>
 
-              {/* Terminal Root Input */}
-              <form onSubmit={handleAddRootTask} className="w-full flex items-end gap-3 text-sm md:text-base">
-                <span className="text-[#111] font-bold pb-1 animate-pulse">{'>'}</span>
-                <input 
-                  type="text" 
-                  value={rootInput} 
-                  onChange={(e) => setRootInput(e.target.value)} 
-                  className="flex-1 bg-transparent border-b-[2px] border-[#111] outline-none text-[#111] placeholder:text-[#111]/30 pb-1 font-black uppercase rounded-none" 
-                  placeholder="DEFINE ROOT TASK..." 
-                />
-                <button type="submit" className="text-[#111] font-black px-2 hover:bg-[#111] hover:text-white transition-colors pb-1">
-                  [ENTER]
-                </button>
-              </form>
+            <form onSubmit={handleAddRootTask} className="w-full flex items-end gap-3 text-sm md:text-base text-[#0000FF]">
+              <span className="font-bold animate-pulse mb-1">{'>'}</span>
+              <input 
+                type="text" 
+                value={rootInput} 
+                onChange={(e) => setRootInput(e.target.value)} 
+                className="flex-1 bg-transparent border-b-[2px] border-[#0000FF] outline-none text-[#0000FF] placeholder:text-[#0000FF]/40 pb-1 font-black uppercase rounded-none min-w-0" 
+                placeholder="DEFINE ROOT TASK..." 
+              />
+              <button type="submit" className="font-bold hover:bg-[#0000FF] hover:text-[#F4F4F0] px-2 py-1 transition-colors shrink-0">
+                [ENTER]
+              </button>
+            </form>
+
+            <div className="text-[#0000FF] text-[10px] md:text-xs tracking-[0.2em] overflow-hidden whitespace-nowrap mt-8 select-none opacity-80">
+              {'*'.repeat(150)}
             </div>
           </div>
 
-          <div className="w-full flex justify-end pr-4 md:pr-8 overflow-visible">
-            <div className="w-fit flex flex-col items-start min-w-[50%]">
-              {renderTree(sortedTasks)}
+          {/* The ASCII Nest rendering call */}
+          <div className="w-full flex justify-end">
+            <div className="w-full md:w-3/4 flex flex-col items-start min-w-[50%] overflow-x-hidden pr-4 md:pr-8">
+              {/* Note the new `null` parameter passed into renderTree! */}
+              {renderTree(null, sortedTasks)}
             </div>
           </div>
         </section>
-
         {/* ===================================================================
             4. SCRATCHPAD (RAW LIST, FILE INPUT, TINY URLS)
            =================================================================== */}
