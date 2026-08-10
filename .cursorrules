@@ -1,0 +1,16 @@
+MASTER AESTHETIC & SYSTEM RULES FOR TUI_OS:
+This is a proprietary, brutalist internal tool. DO NOT use standard UI components, rounded corners, or soft shadows. The canvas is Off-White (#F4F4F0), Primary text is Near-Black (#111), Accent is Electric Blue (#0000FF), and Urgent/Warning is Pure Red (#FF2B2B).
+
+1. CALENDAR MODULE:
+- The True Cram Grid: Start Day 1 in the absolute top-left corner. Wrap continuously. No empty offsets for weekdays.
+- Typography: Numbers are massive (`text-[5rem]`), `font-light`, zero leading zero. Past numbers are flat light grey. Selected number is Electric Blue.
+- Day Labels: Abbreviated day (MON) sits directly over the center, Electric Blue text on a solid White background block.
+- Inline Typographic Logs: When a date is selected, its logs render directly underneath the Day Label. They EXACTLY match the Day Label's aesthetic (Blue text, solid White block, highlighted precisely to text length). Include an `[X]` to delete.
+- Log Striking: If a day has logs, a pure Red line strikes horizontally across the center of the cell, OVER the Day Label (`z-20`).
+
+2. TASKS MODULE (HYBRID NEST):
+- Root Tasks (Depth 0): Heavy underline, uppercase.
+- Level 1 Children: Wrapped in a vertical dashed border on the left (`border-l-2 border-dashed`). Preceded by a `-`. NO diagonal hash connectors.
+- Level 2+ Children: Connected by a diagonal hash (`\`) that sits on its OWN LINE between the parent and the child block. The child block then uses the dashed border and `-`.
+- Mobile Optimization: NEVER use `whitespace-nowrap`. Use `whitespace-normal break-words min-w-0` so deeply nested tasks wrap cleanly on mobile.
+- Priority & Strikethrough: URGENT forces the text to Pure Red (#FF2B2B). Clicking `[X]` applies a line-through to the task AND recursively passes it down to all children.
