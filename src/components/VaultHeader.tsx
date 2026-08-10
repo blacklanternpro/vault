@@ -19,7 +19,7 @@ export function VaultHeader({ onToggleDark }: VaultHeaderProps) {
         <path d="M5 50 Q100 15 195 50" stroke="currentColor" strokeWidth="1.5" fill="none" />
         <ellipse cx="100" cy="50" rx="45" ry="48" stroke="currentColor" strokeWidth="1.5" />
         <line x1="100" y1="2" x2="100" y2="98" stroke="currentColor" strokeWidth="2" />
-        <rect x="40" y="30" width="120" height="40" fill="#F4F4F0" />
+        <rect x="40" y="30" width="120" height="40" fill="#0a0a0a" />
         <text x="100" y="58" textAnchor="middle" fill="currentColor" className="font-sans font-black text-4xl tracking-[0.1em] uppercase">VAULT</text>
       </svg>
     </header>
