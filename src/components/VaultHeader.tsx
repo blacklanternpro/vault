@@ -2,32 +2,53 @@ interface VaultHeaderProps {
   onToggleDark: () => void;
 }
 
-export function VaultHeader({ onToggleDark }: VaultHeaderProps) {
+/**
+ * Standalone 90s corporate "digital globe" logo (WRLDWD / Pacific-Bell lineage):
+ * a wide wireframe globe rendered in electric cobalt with the bold VAULT
+ * wordmark banded across the equator. No box, no dates -- clean and stands
+ * alone. Non-scaling strokes keep every grid line a crisp 1px hairline.
+ */
+function VaultGlobeLogo() {
   return (
-    <header className="sticky top-0 z-50 bg-neutral-950 border-b-2 border-white flex items-center justify-center py-2 px-4">
-      {/* 90s corporate brutalist logo assembly */}
-      <div className="flex flex-row items-center gap-2 border border-white p-1">
-        {/* Micro-Globe: pure-CSS wireframe reticle (no SVG) */}
-        <div className="relative w-5 h-5 rounded-full border border-white overflow-hidden shrink-0">
-          {/* Vertical crosshair */}
-          <span className="absolute top-0 bottom-0 left-1/2 -translate-x-1/2 w-px bg-white" />
-          {/* Horizontal crosshair */}
-          <span className="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-px bg-white" />
-        </div>
+    <div className="relative w-72 h-20 select-none">
+      <svg
+        viewBox="0 0 200 100"
+        preserveAspectRatio="none"
+        className="absolute inset-0 w-full h-full text-[#0000FF]"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={1}
+      >
+        <ellipse cx="100" cy="50" rx="98" ry="48" vectorEffect="non-scaling-stroke" />
+        {/* Meridians */}
+        <line x1="100" y1="2" x2="100" y2="98" vectorEffect="non-scaling-stroke" />
+        <ellipse cx="100" cy="50" rx="34" ry="48" vectorEffect="non-scaling-stroke" />
+        <ellipse cx="100" cy="50" rx="67" ry="48" vectorEffect="non-scaling-stroke" />
+        {/* Latitudes */}
+        <line x1="2" y1="50" x2="198" y2="50" vectorEffect="non-scaling-stroke" />
+        <ellipse cx="100" cy="50" rx="98" ry="17" vectorEffect="non-scaling-stroke" />
+        <ellipse cx="100" cy="50" rx="98" ry="34" vectorEffect="non-scaling-stroke" />
+      </svg>
 
-        {/* Wordmark */}
-        <span className="font-sans font-black tracking-tighter text-white uppercase leading-none bg-black px-2 py-1">
+      {/* Wordmark -- knocked out across the equator, styled bold + slanted.
+          The knockout uses the shared canvas token so it always matches the
+          page background, even when the base color changes later. */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex items-start bg-canvas px-3">
+        <span className="font-sans font-black tracking-tighter text-ink uppercase leading-none text-5xl -skew-x-6">
           VAULT
         </span>
-
-        {/* Micro-Data */}
-        <div className="flex flex-col font-mono text-[9px] uppercase leading-none text-zinc-400 gap-0.5">
-          <span>SYS.REC // 01</span>
-          <span>WORLDWIDE</span>
-        </div>
+        <span className="font-mono text-xs text-[#0000FF] leading-none ml-1 mt-1">&reg;</span>
       </div>
+    </div>
+  );
+}
 
-      {/* Dark-mode invert toggle, kept out of the centered assembly */}
+export function VaultHeader({ onToggleDark }: VaultHeaderProps) {
+  return (
+    <header className="sticky top-0 z-50 bg-canvas border-b-2 border-ink flex items-center justify-center py-3 px-4">
+      <VaultGlobeLogo />
+
+      {/* Dark-mode invert toggle, kept out of the standalone logo */}
       <button
         onClick={onToggleDark}
         className="absolute right-4 text-[#0000FF] font-black text-[10px] md:text-xs border-2 border-[#0000FF] px-2 py-1 hover:bg-[#0000FF] hover:text-white transition-colors tracking-widest"

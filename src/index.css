@@ -16,8 +16,8 @@
 
 @theme {
   /* ---- Minimal brutalist palette ---- */
-  --color-canvas: #0a0a0a; /* flat, solid neutral-950 base */
-  --color-ink: #ededed; /* light foreground default */
+  --color-canvas: #f4f4f0; /* very subtle off-white base */
+  --color-ink: #000000; /* near-black foreground default */
   --color-cobalt: #0000ff;
 
   /* Headers/display: Space Grotesk (grotesque sans, up to font-black).
@@ -41,7 +41,7 @@
 
   body {
     margin: 0;
-    /* Flat, solid, very dark neutral base -- no gradients, no noise. */
+    /* Flat, solid, subtle off-white base -- no gradients, no noise. */
     background-color: var(--color-canvas);
     color: var(--color-ink);
     font-family: var(--font-mono);
