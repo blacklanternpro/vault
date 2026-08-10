@@ -6,27 +6,28 @@
 @import '@fontsource/jetbrains-mono/700.css';
 @import '@fontsource/jetbrains-mono/800.css';
 
+@import '@fontsource/inter/400.css';
+@import '@fontsource/inter/500.css';
+@import '@fontsource/inter/700.css';
+@import '@fontsource/inter/900.css';
+
 @theme {
-  /* ---- Neo-Brutalist TUI palette ---- */
+  /* ---- Editorial Brutalist palette: exactly three colors ---- */
   --color-canvas: #f4f4f0;
   --color-ink: #000000;
   --color-cobalt: #0000ff;
-  --color-grid-line: #e5e5df;
-  --color-term-green: #00b050;
 
+  /* Data/lists: JetBrains Mono. Headers/display numerals: Inter (grotesque sans). */
   --font-mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo,
     Consolas, monospace;
-  --font-sans: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo,
-    Consolas, monospace;
-
-  /* JetBrains Mono tops out at 800 -- pin the "black" utility to it so
-     font-black renders the real shipped weight instead of a synthetic 900. */
-  --font-weight-black: 800;
+  --font-sans: 'Inter', 'Helvetica Neue', Helvetica, Arial, ui-sans-serif,
+    sans-serif;
 }
 
 @layer base {
   * {
-    border-color: var(--color-grid-line);
+    /* Every hairline/rule in this design is solid black -- no gray grid device. */
+    border-color: var(--color-ink);
   }
 
   html {
@@ -45,42 +46,5 @@
   ::selection {
     background-color: var(--color-cobalt);
     color: var(--color-canvas);
-  }
-}
-
-@layer utilities {
-  /* Hairline dividers rendered as repeated ASCII glyphs -- never a <hr>,
-     never a border: the character IS the rule. */
-  .ascii-rule {
-    overflow: hidden;
-    white-space: nowrap;
-    user-select: none;
-    letter-spacing: -0.02em;
-  }
-
-  .caret-blink {
-    animation: caret-blink 1.1s steps(1) infinite;
-  }
-
-  @keyframes caret-blink {
-    0%,
-    49% {
-      opacity: 1;
-    }
-    50%,
-    100% {
-      opacity: 0;
-    }
-  }
-
-  /* Faint CRT scanline texture layered under the inverted NOTES terminal. */
-  .tui-scanlines {
-    background-image: repeating-linear-gradient(
-      to bottom,
-      rgba(255, 255, 255, 0.035) 0px,
-      rgba(255, 255, 255, 0.035) 1px,
-      transparent 1px,
-      transparent 3px
-    );
   }
 }
