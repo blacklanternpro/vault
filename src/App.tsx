@@ -11,7 +11,7 @@ export default function App() {
 
   return (
     // The master wrapper applies the invert and hue-rotate when isDark is true
-    <div className={`min-h-screen bg-canvas text-ink font-mono selection:bg-[#0000FF] selection:text-white pb-32 antialiased overflow-x-hidden transition-all duration-300 ${isDark ? 'invert hue-rotate-180' : ''}`}>
+    <div className={`min-h-screen bg-canvas text-ink font-mono selection:bg-[#0000FF] selection:text-white pb-32 antialiased transition-all duration-300 ${isDark ? 'invert hue-rotate-180' : ''}`}>
       
       {/* ===================================================================
           1. THE VAULT LOGO 

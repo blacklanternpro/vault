@@ -37,6 +37,10 @@
 
   html {
     background-color: var(--color-canvas);
+    /* Clip horizontal overflow at the root so `position: sticky` descendants
+       still resolve against the viewport (setting overflow-x on the sticky
+       header's wrapper would turn it into the scroll container and break it). */
+    overflow-x: hidden;
   }
 
   body {
