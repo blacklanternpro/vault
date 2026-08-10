@@ -36,6 +36,15 @@ function MicroCalendarLegend({ currentDay }: { currentDay: number }) {
           <a
             key={day}
             href={`#date-${day}`}
+            onClick={(e) => {
+              // Force a harsh, instant jump regardless of the browser's
+              // smooth-scroll setting, while keeping the anchor href + hash.
+              e.preventDefault();
+              document
+                .getElementById(`date-${day}`)
+                ?.scrollIntoView({ behavior: 'instant', block: 'start' });
+              history.replaceState(null, '', `#date-${day}`);
+            }}
             className={`shrink-0 leading-none tabular-nums no-underline hover:opacity-70 ${stateClass}`}
           >
             {day}
