@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { VaultHeader } from './components/VaultHeader';
+import { MainLayout } from './components/MainLayout';
 import { Calendar } from './components/Calendar';
 import { TaskNest } from './components/TaskNest';
 import { Scratchpad } from './components/Scratchpad';
@@ -18,24 +19,34 @@ export default function App() {
          =================================================================== */}
       <VaultHeader onToggleDark={() => setIsDark(!isDark)} currentDay={CURRENT_DAY} />
 
-      <main className="max-w-4xl mx-auto px-4 md:px-8 space-y-32">
-        
+      <MainLayout>
+
+        {/* The existing sections are not yet uniform date blocks, so they span
+            the full grid width. Future ≤280px date blocks will drop in as
+            direct grid children and auto-fill into the jagged layout. */}
+
         {/* ===================================================================
             2. CALENDAR 
            =================================================================== */}
-        <Calendar currentDay={CURRENT_DAY} />
+        <div className="col-span-full">
+          <Calendar currentDay={CURRENT_DAY} />
+        </div>
 
         {/* ===================================================================
             3. TASKS 
            =================================================================== */}
-        <TaskNest currentDay={CURRENT_DAY} />
+        <div className="col-span-full">
+          <TaskNest currentDay={CURRENT_DAY} />
+        </div>
 
         {/* ===================================================================
             4. SCRATCHPAD 
            =================================================================== */}
-        <Scratchpad currentDay={CURRENT_DAY} />
+        <div className="col-span-full">
+          <Scratchpad currentDay={CURRENT_DAY} />
+        </div>
 
-      </main>
+      </MainLayout>
     </div>
   );
 }
