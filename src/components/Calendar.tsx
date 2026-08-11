@@ -101,7 +101,7 @@ export function Calendar({
                   setSelectedDay(selectedDay === day ? null : day)
                 }
               >
-                {/* Massive numeral */}
+                {/* Massive numeral — sits under all chrome */}
                 <span
                   className={`font-sans font-light text-[5rem] md:text-[7.5rem] tracking-tighter leading-[0.75] transition-colors select-none ${
                     isSelected
@@ -118,25 +118,31 @@ export function Calendar({
                   {day}
                 </span>
 
-                {/*
-                  Day label + inline logs.
-                  Selected cell elevates to z-40 so the diary cascade paints
-                  OVER neighboring numerals — never buried behind the grid.
-                */}
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center z-30 pointer-events-none max-w-[95%]">
-                  <span
-                    className={`text-[12px] md:text-[16px] font-black text-cobalt tracking-widest bg-white px-1 leading-none ${
-                      isPast ? 'opacity-40' : 'opacity-100'
-                    }`}
-                  >
-                    {dayAbbr}
-                  </span>
+                {/* Day label — center; red strike paints OVER this */}
+                <span
+                  className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 text-[12px] md:text-[16px] font-black text-cobalt tracking-widest bg-white px-1 leading-none pointer-events-none ${
+                    isPast ? 'opacity-40' : 'opacity-100'
+                  }`}
+                >
+                  {dayAbbr}
+                </span>
 
-                  {isSelected &&
-                    dayLogs.map((log) => (
+                {/* Red strike OVER the day label */}
+                {isMarked && (
+                  <span className="absolute inset-x-0 h-[3px] md:h-[4px] bg-urgent top-1/2 -translate-y-1/2 pointer-events-none z-20" />
+                )}
+
+                {/*
+                  Inline typographic logs: same white/blue chip as day label,
+                  stacked under it. z-50 + selected cell z-40 so the cascade
+                  paints OVER neighboring numerals — never buried.
+                */}
+                {isSelected && dayLogs.length > 0 && (
+                  <div className="absolute top-[58%] left-1/2 -translate-x-1/2 z-50 flex flex-col items-center pointer-events-none">
+                    {dayLogs.map((log) => (
                       <div
                         key={log.id}
-                        className="mt-[2px] text-cobalt bg-white px-1 font-black text-[12px] md:text-[16px] tracking-widest leading-none flex items-center gap-1.5 pointer-events-auto whitespace-normal break-words text-left shadow-none"
+                        className="mt-[2px] text-cobalt bg-white px-1 font-black text-[12px] md:text-[16px] tracking-widest leading-none flex items-center gap-1.5 pointer-events-auto whitespace-nowrap shadow-none"
                       >
                         <span>{log.text}</span>
                         <button
@@ -149,11 +155,7 @@ export function Calendar({
                         </button>
                       </div>
                     ))}
-                </div>
-
-                {/* Red strike OVER the day label */}
-                {isMarked && (
-                  <span className="absolute inset-x-0 h-[3px] md:h-[4px] bg-urgent top-1/2 -translate-y-1/2 pointer-events-none z-20" />
+                  </div>
                 )}
               </div>
             );
