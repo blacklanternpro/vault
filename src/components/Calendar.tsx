@@ -73,8 +73,8 @@ export function Calendar({
               </span>
 
               <span
-                className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 text-[11px] md:text-[15px] font-black text-cobalt tracking-[0.2em] bg-white px-1 leading-none pointer-events-none ${
-                  isPast ? 'opacity-35' : ''
+                className={`absolute top-1/2 left-1/2 z-10 -translate-x-1/2 -translate-y-1/2 bg-white px-1 font-mono text-[10px] font-black leading-none tracking-[0.22em] text-cobalt pointer-events-none md:text-[13px] ${
+                  isPast ? 'opacity-40' : ''
                 }`}
               >
                 {dayAbbr}

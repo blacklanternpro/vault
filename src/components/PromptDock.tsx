@@ -38,7 +38,7 @@ export function PromptDock({
         : 'DUMP RAW TEXT / LINK...'
 
   return (
-    <div className="sticky bottom-0 z-[100] border-t-2 border-cobalt bg-canvas">
+    <div className="sticky bottom-0 z-[100] shrink-0 border-t-2 border-cobalt bg-canvas">
       <div className="px-3 py-3 sm:px-4">
         <div className="mb-2 flex flex-wrap items-center justify-between gap-2 font-mono text-[10px] uppercase tracking-widest md:text-[11px]">
           <span className="text-cobalt">
@@ -75,13 +75,16 @@ export function PromptDock({
           onSubmit={handle}
           className="flex items-end gap-2 text-xs text-cobalt md:text-sm"
         >
-          <span className="vault-caret mb-1 font-black">{'>'}</span>
+          <span className="vault-caret mb-1 font-black" aria-hidden>
+            {'>'}
+          </span>
           <input
             value={text}
             onChange={(e) => setText(e.target.value)}
             placeholder={placeholder}
             className="min-w-0 flex-1 border-b-2 border-cobalt bg-transparent pb-1 font-bold uppercase caret-cobalt outline-none placeholder:text-cobalt/35"
             autoComplete="off"
+            aria-label="OS prompt"
           />
           <button
             type="submit"

@@ -112,7 +112,7 @@ export default function App() {
 
   return (
     <div
-      className={`relative min-h-dvh bg-canvas text-ink font-mono antialiased overflow-x-hidden selection:bg-cobalt selection:text-canvas ${
+      className={`relative min-h-dvh bg-canvas text-ink font-mono antialiased selection:bg-cobalt selection:text-canvas ${
         isDark ? 'invert hue-rotate-180' : ''
       }`}
     >
@@ -131,7 +131,7 @@ export default function App() {
 
         <main className="flex min-h-0 flex-1 flex-col lg:flex-row">
           <section
-            className="min-w-0 flex-1 border-b-2 border-ink lg:border-b-0 lg:border-r-2 cursor-pointer"
+            className="min-w-0 flex-1 overflow-x-clip border-b-2 border-ink lg:border-b-0 lg:border-r-2 cursor-pointer"
             onClick={() => setMode('DAY')}
           >
             <Calendar
@@ -146,7 +146,7 @@ export default function App() {
             />
           </section>
 
-          <aside className="flex w-full shrink-0 flex-col border-ink lg:w-[min(340px,36vw)]">
+          <aside className="flex w-full shrink-0 flex-col overflow-x-clip border-ink lg:w-[min(340px,36vw)]">
             <div
               className="border-b-2 border-ink px-3 py-3 sm:px-4"
               onClick={() => setMode('NEST')}
