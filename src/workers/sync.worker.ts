@@ -127,7 +127,7 @@ const SEED_SYS_LOGS: SysLog[] = [
   { id: 'l2', date: '08.11.26', text: 'WALK THE OLD DOG' },
 ];
 
-const SEED_MARKED_DAYS = [2, 9, 14, 28];
+const SEED_MARKED_DAYS = [2, 9, 11, 14, 28];
 
 /** Monotonic counter so seeded siblings keep their authored order. */
 let seedClock = 0;
