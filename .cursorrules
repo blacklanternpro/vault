@@ -1,28 +1,15 @@
-MASTER AESTHETIC & SYSTEM RULES FOR TUI_OS:
-This is a proprietary, brutalist internal tool. DO NOT use standard UI components, rounded corners, or soft shadows. The canvas is Off-White (#F4F4F0), Primary text is Near-Black (#111), Accent is Electric Blue (#0000FF), and Urgent/Warning is Pure Red (#FF2B2B). Acid teal (#00FFCC) is ONLY for the month watermark.
+MASTER AESTHETIC & SYSTEM RULES FOR TUI_OS (BURNED BOX):
+This is NOT a dashboard. It is one continuous typographic OS field. No cards, no rounded corners, no soft shadows, no section billboards, no DateBlocks, no stacked day lists, no teal decorative watermarks.
 
-HARD VETO: Never build DateBlocks, stacked day cards, jagged auto-fill day lists, or masonry calendars. Calendar is ONLY the True Cram Grid.
+PALETTE: Canvas #F4F4F0 · Ink #111 · Cobalt #0000FF · Urgent #FF2B2B. Cobalt is the primary chrome color (Fidèle / S4AD). Red is ONLY for strikes + URGENT + [X].
 
-FRIED LAYER:
-- Typography: Space Grotesk for display/headers/numerals. JetBrains Mono for ALL data, trees, inputs, metadata. NO Inter/Roboto/system UI stacks.
-- Grain + faint scanlines sit as fixed overlays on the shell. No soft shadows, no cards, no pills.
-- Density over dashboard whitespace. ASCII `*` / `/` dividers beat CSS hairlines when separating modules.
-- Cobalt inverted chips for active metadata. Selection highlight is cobalt on canvas.
+TYPE: JetBrains Mono for ALL chrome, nests, prompts, logs, metadata. Space Grotesk ONLY for calendar numerals. No Inter.
 
-1. CALENDAR MODULE:
-- The True Cram Grid: Start Day 1 in the absolute top-left corner. Wrap continuously. No empty offsets for weekdays.
-- Typography: Numbers are massive (`text-[5rem]`), `font-light`, zero leading zero. Past numbers are flat light grey. Selected number is Electric Blue.
-- Day Labels: Abbreviated day (MON) sits directly over the center, Electric Blue text on a solid White background block.
-- Inline Typographic Logs: When a date is selected, its logs render directly underneath the Day Label. They EXACTLY match the Day Label's aesthetic (Blue text, solid White block, highlighted precisely to text length). Include an `[X]` to delete. Logs must overlay ABOVE neighboring cells and the grid (`z-30+`), never sit behind dates.
-- Log Striking: If a day has logs, a pure Red line strikes horizontally across the center of the cell, OVER the Day Label (`z-20`).
+COMPOSITION:
+1. Sticky teletext HUD — micro VAULT mark + LOCAL/SYNC/clock + mode chips + INVERT. Not a hero logo.
+2. True Cram Grid calendar — Day 1 top-left, wrap continuously, no weekday offset. No month watermark blobs. Day labels = cobalt on white. Selected numeral = cobalt. Logged days = red mid-strike OVER the day label. Selected logs = white/cobalt chips that OVERLAY neighboring cells (parasite stack).
+3. Headerless Hybrid Nest — no "TASKS" monument. Root underline → L1 dashed+`-` → L2+ `\` on own line. Mobile: break-words min-w-0.
+4. Headerless Scratch Dump — cobalt date anchors, hairline rules, raw list. No green terminal.
+5. ONE sticky Prompt Dock — single `>` line. Context switches: DAY (sys log) / NEST (root or child) / DUMP (scratch). Never three separate forms.
 
-2. TASKS MODULE (HYBRID NEST):
-- Root Tasks (Depth 0): Heavy underline, uppercase.
-- Level 1 Children: Wrapped in a vertical dashed border on the left (`border-l-2 border-dashed`). Preceded by a `-`. NO diagonal hash connectors.
-- Level 2+ Children: Connected by a diagonal hash (`\`) that sits on its OWN LINE between the parent and the child block. The child block then uses the dashed border and `-`.
-- Mobile Optimization: NEVER use `whitespace-nowrap`. Use `whitespace-normal break-words min-w-0` so deeply nested tasks wrap cleanly on mobile.
-- Priority & Strikethrough: URGENT forces the text to Pure Red (#FF2B2B). Clicking `[X]` applies a line-through to the task AND recursively passes it down to all children.
-
-3. SCRATCHPAD:
-- Editorial log on canvas. Cobalt date anchors. No green-on-black terminal block.
-- APPEND prepends. Media attach stores a local link, not a card gallery.
+HARD VETO: DateBlocks, jagged day cards, SaaS section stacks, acid teal watermarks, giant centered logos eating the viewport, green-on-black notes.

@@ -20,6 +20,7 @@ Non-obvious notes:
 - Lint is **oxlint** (`npm run lint`), configured via `.oxlintrc.json` — not ESLint.
 - Aesthetic contract is locked in `.cursorrules`. Calendar must remain the True Cram
   Grid — never DateBlocks / stacked day cards.
-- Core interactivity worth smoke-testing: calendar day select + overlay logs + SYS_LOG
-  input, Hybrid Nest task add/`[X]`, SCRATCHPAD APPEND (+ media attach), INVERT_OS,
-  live footer clock. State survives reload via IndexedDB.
+- Core interactivity worth smoke-testing: teletext mode chips (`DAY|NEST|DUMP`),
+  calendar day select + parasite overlay logs, single Prompt Dock submit routing,
+  Hybrid Nest focus + `[X]`, DUMP attach, INV invert, live footer clock. State
+  survives reload via IndexedDB.
