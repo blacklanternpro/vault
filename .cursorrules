@@ -1,15 +1,20 @@
-MASTER AESTHETIC & SYSTEM RULES FOR TUI_OS (BURNED BOX):
-This is NOT a dashboard. It is one continuous typographic OS field. No cards, no rounded corners, no soft shadows, no section billboards, no DateBlocks, no stacked day lists, no teal decorative watermarks.
+MASTER AESTHETIC & SYSTEM RULES FOR TUI_OS (VAULT WORLDWIDE):
+This is one continuous personal OS field — not a dashboard, not stacked sections.
+No cards, rounded corners, soft shadows, section billboards, DateBlocks, or teal watermarks.
 
-PALETTE: Canvas #F4F4F0 · Ink #111 · Cobalt #0000FF · Urgent #FF2B2B. Cobalt is the primary chrome color (Fidèle / S4AD). Red is ONLY for strikes + URGENT + [X].
+PALETTE: Canvas #F4F4F0 · Ink #111 · Cobalt #0000FF · Urgent #FF2B2B.
+Cobalt = chrome. Red = strikes + URGENT + [X] only.
 
-TYPE: JetBrains Mono for ALL chrome, nests, prompts, logs, metadata. Space Grotesk ONLY for calendar numerals. No Inter.
+TYPE: JetBrains Mono everywhere except calendar numerals (Space Grotesk, light).
 
-COMPOSITION:
-1. Sticky teletext HUD — micro VAULT mark + LOCAL/SYNC/clock + mode chips + INVERT. Not a hero logo.
-2. True Cram Grid calendar — Day 1 top-left, wrap continuously, no weekday offset. No month watermark blobs. Day labels = cobalt on white. Selected numeral = cobalt. Logged days = red mid-strike OVER the day label. Selected logs = white/cobalt chips that OVERLAY neighboring cells (parasite stack).
-3. Headerless Hybrid Nest — no "TASKS" monument. Root underline → L1 dashed+`-` → L2+ `\` on own line. Mobile: break-words min-w-0.
-4. Headerless Scratch Dump — cobalt date anchors, hairline rules, raw list. No green terminal.
-5. ONE sticky Prompt Dock — single `>` line. Context switches: DAY (sys log) / NEST (root or child) / DUMP (scratch). Never three separate forms.
+COMPOSITION (mobile-first):
+1. Centered VAULT WORLDWIDE 90s-sleaze micrographic (scanline globe + orbital seal). No boxes around it.
+2. Calendar block — Day 1 top-left continuous wrap, half-scale numerals, tight ungridded pack.
+   Day labels = cobalt on white. Logged = red mid-strike over label. Selected logs = parasite chips.
+   TUI toggle MONTH ↔ YEAR. Month view has ◀ ▶ nav. Year view = 12 mini months, same language.
+3. Unix file-tree nest from hell — dense ASCII connectors (│ ├── └──). Click = nest context.
+4. Scratch dump — cobalt date anchors, hairline rules. Click = dump context.
+5. ONE fixed bottom Prompt Dock — always locked to viewport bottom. Context comes from what you click
+   (day / nest node / dump). No mode chips or CTX boxes in the header. Never three forms.
 
-HARD VETO: DateBlocks, jagged day cards, SaaS section stacks, acid teal watermarks, giant centered logos eating the viewport, green-on-black notes.
+HARD VETO: DateBlocks, jagged day cards, SaaS stacks, acid watermarks, giant boxed logos, demo fluff.

@@ -17,8 +17,6 @@ import type {
  * intent messages in and receives plain JSON snapshots back.
  */
 
-// `lib.webworker` isn't in tsconfig (DOM is), so narrow the global to the
-// message-passing surface we actually use.
 const ctx = self as unknown as {
   postMessage(message: WorkerResponse): void;
   addEventListener(
@@ -28,6 +26,8 @@ const ctx = self as unknown as {
 };
 
 const DOC_NAME = 'tui-os-vault';
+/** Bump to wipe legacy demo seeds and install the current OS seed. */
+const SEED_VERSION = 3;
 
 const doc = new Y.Doc();
 
@@ -42,10 +42,10 @@ const yNotes = doc.getArray<Y.Map<unknown>>('notes');
 const ySysLogs = doc.getArray<Y.Map<unknown>>('sysLogs');
 /** Set semantics: day number -> true. Marking the same day twice is a no-op. */
 const yMarkedDays = doc.getMap<boolean>('markedDays');
-const yMeta = doc.getMap<boolean>('meta');
+const yMeta = doc.getMap<number | boolean>('meta');
 
 // ---------------------------------------------------------------------------
-// SEED
+// SEED — lean OS tree, 3 levels deep. No calendar/notes demo fluff.
 // ---------------------------------------------------------------------------
 
 interface SeedTask {
@@ -58,76 +58,72 @@ interface SeedTask {
 
 const SEED_TASKS: SeedTask[] = [
   {
-    id: '1',
-    text: 'SYSTEM_OUTAGE_RESOLUTION',
+    id: 'v3-ops',
+    text: 'ops/',
     priority: 'URGENT',
-    children: [{ id: '1-1', text: 'bypass_crdt_firewall', children: [] }],
+    children: [
+      {
+        id: 'v3-ops-net',
+        text: 'net/',
+        children: [
+          { id: 'v3-ops-net-dns', text: 'flush_stale_resolvers.sh', children: [] },
+          { id: 'v3-ops-net-wg', text: 'wireguard_peer_audit', children: [] },
+        ],
+      },
+      {
+        id: 'v3-ops-pwr',
+        text: 'power/',
+        children: [
+          { id: 'v3-ops-pwr-ups', text: 'ups_runtime_check', children: [] },
+        ],
+      },
+    ],
   },
   {
-    id: '2',
-    text: 'PREP_FERAL_PIG_ULTRA_GEAR',
+    id: 'v3-lab',
+    text: 'lab/',
     priority: 'P1',
     children: [
       {
-        id: '2-1',
-        text: 'calculate_carb_and_hydration_ratios',
+        id: 'v3-lab-chem',
+        text: 'chem/',
         children: [
-          {
-            id: '2-1-1',
-            text: 'Buy gel',
-            children: [{ id: '2-1-1-1', text: 'Wntwe rhe deagon', children: [] }],
-          },
+          { id: 'v3-lab-chem-ph', text: 'calibrate_ph_probe', children: [] },
+          { id: 'v3-lab-chem-stock', text: 'reorder_nitrile_stock', children: [] },
         ],
       },
       {
-        id: '2-2',
-        text: 'map_aid_station_drops',
+        id: 'v3-lab-fab',
+        text: 'fab/',
         children: [
-          {
-            id: '2-2-1',
-            text: 'Appease the gods',
-            children: [{ id: '2-2-1-1', text: 'Have a look', children: [] }],
-          },
+          { id: 'v3-lab-fab-cnc', text: 'cnc_toolpath_night_run', children: [] },
         ],
       },
     ],
   },
   {
-    id: '3',
-    text: 'COMMODORE_RIM_FABRICATION',
+    id: 'v3-field',
+    text: 'field/',
     priority: 'P2',
-    completed: true,
     children: [
-      { id: '3-1', text: 'structurally_mount_makita_backing_pad', children: [] },
+      {
+        id: 'v3-field-pack',
+        text: 'pack/',
+        children: [
+          { id: 'v3-field-pack-kit', text: 'rebuild_day_kit', children: [] },
+          { id: 'v3-field-pack-map', text: 'print_topo_overlays', children: [] },
+        ],
+      },
+      {
+        id: 'v3-field-route',
+        text: 'route/',
+        children: [
+          { id: 'v3-field-route-a', text: 'scout_ridge_a', children: [] },
+        ],
+      },
     ],
   },
 ];
-
-const SEED_NOTES: NoteEntry[] = [
-  {
-    id: 'n1',
-    date: '08.10.26',
-    text: 'Wildcat Resources (WC8) drill results dropping.',
-  },
-  {
-    id: 'n2',
-    date: '08.09.26',
-    text: 'Lucky bamboo cuttings rooted successfully.',
-    attachment: 'http://vlt.link/img_773.jpg',
-  },
-  {
-    id: 'n3',
-    date: '08.02.26',
-    text: 'NZ Itinerary draft for Chase. August dates confirmed.',
-  },
-];
-
-const SEED_SYS_LOGS: SysLog[] = [
-  { id: 'l1', date: '08.11.26', text: 'BUY MILK' },
-  { id: 'l2', date: '08.11.26', text: 'WALK THE OLD DOG' },
-];
-
-const SEED_MARKED_DAYS = [2, 9, 11, 14, 28];
 
 /** Monotonic counter so seeded siblings keep their authored order. */
 let seedClock = 0;
@@ -146,26 +142,22 @@ function seedTasks(nodes: SeedTask[], parentId: string | null): void {
   }
 }
 
-function hasEntry(array: Y.Array<Y.Map<unknown>>, id: string): boolean {
-  return array.toArray().some((entry) => entry.get('id') === id);
+function clearStore(): void {
+  for (const key of [...yTasks.keys()]) yTasks.delete(key);
+  if (yNotes.length > 0) yNotes.delete(0, yNotes.length);
+  if (ySysLogs.length > 0) ySysLogs.delete(0, ySysLogs.length);
+  for (const key of [...yMarkedDays.keys()]) yMarkedDays.delete(key);
 }
 
-function seedIfEmpty(): void {
-  if (yMeta.get('seeded')) return;
+function seedIfNeeded(): void {
+  const current = yMeta.get('seedVersion');
+  if (current === SEED_VERSION) return;
 
   doc.transact(() => {
+    clearStore();
+    yMeta.set('seedVersion', SEED_VERSION);
     yMeta.set('seeded', true);
-    // Keyed writes (Y.Map) are idempotent by construction; the arrays need an
-    // explicit existence check so a re-seed can't append a second copy.
     seedTasks(SEED_TASKS, null);
-
-    for (const note of SEED_NOTES) {
-      if (!hasEntry(yNotes, note.id)) yNotes.push([noteToYMap(note)]);
-    }
-    for (const log of SEED_SYS_LOGS) {
-      if (!hasEntry(ySysLogs, log.id)) ySysLogs.push([sysLogToYMap(log)]);
-    }
-    for (const day of SEED_MARKED_DAYS) yMarkedDays.set(String(day), true);
   });
 }
 
@@ -187,7 +179,6 @@ function dedupeById(array: Y.Array<Y.Map<unknown>>): void {
 
   if (duplicates.length === 0) return;
 
-  // Delete back-to-front so the remaining indexes stay valid.
   doc.transact(() => {
     for (let i = duplicates.length - 1; i >= 0; i--) {
       array.delete(duplicates[i], 1);
@@ -213,7 +204,6 @@ function writeTask(task: {
   entry.set('parentId', task.parentId);
   entry.set('completed', task.completed ?? false);
   entry.set('createdAt', task.createdAt);
-  // Y.Map cannot hold `undefined`, so only write a priority when there is one.
   if (task.priority) entry.set('priority', task.priority);
   yTasks.set(task.id, entry);
 }
@@ -277,8 +267,6 @@ function buildTaskTree(): TaskNode[] {
     else byParent.set(row.parentId, [row]);
   }
 
-  // `visited` guards against a cycle in `parentId` (a corrupt or concurrently
-  // re-parented doc) turning the walk into infinite recursion.
   const visited = new Set<string>();
 
   const build = (parentId: string | null): TaskNode[] =>
@@ -298,7 +286,6 @@ function buildTaskTree(): TaskNode[] {
   return build(null);
 }
 
-/** Belt-and-braces: never hand React a list with repeated keys. */
 function uniqueById<T extends { id: string }>(rows: T[]): T[] {
   const seen = new Set<string>();
   return rows.filter((row) => {
@@ -353,22 +340,17 @@ let persistence: IndexeddbPersistence | null = null;
 
 function init(): void {
   if (persistence) {
-    // A second mount (React StrictMode, hot reload) just needs the current state.
     postSnapshot();
     return;
   }
 
   persistence = new IndexeddbPersistence(DOC_NAME, doc);
-
-  // Every update -- local edit or one replayed from IndexedDB -- republishes
-  // the materialized view.
   doc.on('update', postSnapshot);
 
   persistence.whenSynced.then(() => {
-    // Heal any duplicates a previous concurrent seed left at rest, then seed.
     dedupeById(yNotes);
     dedupeById(ySysLogs);
-    seedIfEmpty();
+    seedIfNeeded();
     postSnapshot();
   });
 }
@@ -394,7 +376,6 @@ ctx.addEventListener('message', (event: MessageEvent<WorkerRequest>) => {
     }
 
     case 'ADD_NOTE': {
-      // Newest first, matching the scratchpad's prepend order.
       yNotes.unshift([noteToYMap(request.payload)]);
       break;
     }

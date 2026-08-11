@@ -18,9 +18,6 @@ Non-obvious notes:
 - `npm run build` runs `tsc -b` first, so a type error fails the build (not just a
   bundling error).
 - Lint is **oxlint** (`npm run lint`), configured via `.oxlintrc.json` — not ESLint.
-- Aesthetic contract is locked in `.cursorrules`. Calendar must remain the True Cram
-  Grid — never DateBlocks / stacked day cards.
-- Core interactivity worth smoke-testing: teletext mode chips (`DAY|NEST|DUMP`),
-  calendar day select + parasite overlay logs, single Prompt Dock submit routing,
-  Hybrid Nest focus + `[X]`, DUMP attach, INV invert, live footer clock. State
-  survives reload via IndexedDB.
+- Aesthetic contract is locked in `.cursorrules`.
+- Smoke: fixed bottom prompt, click day/nest/dump to set context, MO/YR calendar,
+  tree nest, INV. Seed version in the worker clears legacy demo on upgrade.
