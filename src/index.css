@@ -2,36 +2,34 @@
 
 @import '@fontsource/jetbrains-mono/400.css';
 @import '@fontsource/jetbrains-mono/500.css';
-@import '@fontsource/jetbrains-mono/600.css';
 @import '@fontsource/jetbrains-mono/700.css';
 @import '@fontsource/jetbrains-mono/800.css';
 
-@import '@fontsource/inter/400.css';
-@import '@fontsource/inter/500.css';
-@import '@fontsource/inter/700.css';
-@import '@fontsource/inter/900.css';
+@import '@fontsource/space-grotesk/400.css';
+@import '@fontsource/space-grotesk/500.css';
+@import '@fontsource/space-grotesk/700.css';
 
 @theme {
-  /* ---- Editorial Brutalist palette: exactly three colors ---- */
   --color-canvas: #f4f4f0;
-  --color-ink: #000000;
+  --color-ink: #111111;
   --color-cobalt: #0000ff;
+  --color-urgent: #ff2b2b;
+  --color-acid: #00ffcc;
 
-  /* Data/lists: JetBrains Mono. Headers/display numerals: Inter (grotesque sans). */
   --font-mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo,
     Consolas, monospace;
-  --font-sans: 'Inter', 'Helvetica Neue', Helvetica, Arial, ui-sans-serif,
-    sans-serif;
+  --font-sans: 'Space Grotesk', 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
 
 @layer base {
   * {
-    /* Every hairline/rule in this design is solid black -- no gray grid device. */
     border-color: var(--color-ink);
+    border-radius: 0;
   }
 
   html {
     background-color: var(--color-canvas);
+    overflow-x: hidden;
   }
 
   body {
@@ -47,4 +45,54 @@
     background-color: var(--color-cobalt);
     color: var(--color-canvas);
   }
+
+  button,
+  input,
+  textarea {
+    border-radius: 0;
+  }
+}
+
+/* Fried film grain — sits above content, never captures clicks */
+.vault-grain {
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  opacity: 0.07;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 180px 180px;
+}
+
+/* Subtle CRT scanlines */
+.vault-scan {
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  opacity: 0.035;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent 2px,
+    rgba(0, 0, 0, 0.35) 2px,
+    rgba(0, 0, 0, 0.35) 3px
+  );
+}
+
+@keyframes vault-caret {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+
+.vault-caret {
+  animation: vault-caret 1s steps(1, end) infinite;
 }

@@ -1,47 +1,40 @@
 # vault
 
-Foundational layout for a Neo-Brutalist TUI (Terminal User Interface) — built
-with React, TypeScript, Vite, and Tailwind CSS v4.
+Fried TUI maxi-minimalism — a local-first personal OS shell.
+React 19 + Vite 8 + Tailwind CSS v4 + Yjs / IndexedDB.
 
 ## Aesthetic
 
-- Off-white canvas (`#F4F4F0`), pure black ink, Electric Cobalt accent
-  (`#0000FF`), Terminal Green (`#00B050`) for the inverted NOTES block.
-- No rounded corners, no soft shadows, no standard UI components.
-- An "Architectural Grid": faint 1px hairlines (`#E5E5DF`) split the screen
-  into major quadrants instead of boxes/cards.
-- JetBrains Mono everywhere, dense and small for data (`text-[10px]` /
-  `text-xs`), restrained and tightly kerned for headers (`text-2xl` /
-  `text-3xl`, `font-black`, `tracking-tighter`, uppercase).
-- Section dividers are literal repeated ASCII characters (`/`, `*`) instead
-  of `<hr>` elements or borders.
+- Canvas `#F4F4F0`, ink `#111`, cobalt `#0000FF`, urgent `#FF2B2B`, acid `#00FFCC` (month watermark only).
+- Space Grotesk (display / numerals) + JetBrains Mono (all data).
+- No cards, rounded corners, or soft shadows. Film grain + scanline overlays.
+- Calendar is the **True Cram Grid** only — never DateBlocks or stacked day lists.
 
 ## Structure
 
 ```
 src/
+  App.tsx                 shell: invert, grain, modules
+  index.css               tokens, grain, scanlines
   components/
-    Layout.tsx           structural shell: header quadrants, typography
-                          anchor, zone slot, status bar
-    tui/
-      AsciiRule.tsx       full-width repeated-character divider
-      VaultPlate.tsx      top-left "hardware serial plate" status block
-      IndexPanel.tsx      top-right nav / system index quadrant
-      Zone.tsx            unboxed architectural zone (title + content)
-      CalendarList.tsx    CALENDAR zone content
-      TaskList.tsx        EXTENDED TASKS zone content
-      NotesTerminal.tsx   inverted black/green terminal block for NOTES
-      StatusBar.tsx       footer status bar with a live clock
-  data/tui.ts             seed data for every zone
-  hooks/useClock.ts        ticking HH:MM:SS clock hook
-  App.tsx                  composes Layout + zones into the full page
+    VaultHeader.tsx       globe seal + INVERT_OS + status
+    Calendar.tsx          True Cram Grid + overlay logs + VCR logger
+    TaskNest.tsx          Hybrid Nest tasks
+    Scratchpad.tsx        raw append + media attach
+  hooks/
+    useCrdtState.ts       worker bridge
+    useClock.ts           live HH:MM:SS
+  lib/vault-types.ts      shared main↔worker types
+  workers/sync.worker.ts  Y.Doc + IndexedDB persistence
 ```
 
 ## Development
 
 ```bash
 npm install
-npm run dev       # start the Vite dev server
-npm run build     # typecheck + production build
+npm run dev       # http://localhost:5173 (strictPort)
+npm run build
 npm run lint      # oxlint
 ```
+
+All state persists in IndexedDB (`tui-os-vault`). No backend.
