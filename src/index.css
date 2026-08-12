@@ -5,6 +5,7 @@
 @import '@fontsource/jetbrains-mono/700.css';
 @import '@fontsource/jetbrains-mono/800.css';
 
+@import '@fontsource/space-grotesk/300.css';
 @import '@fontsource/space-grotesk/400.css';
 @import '@fontsource/space-grotesk/700.css';
 
@@ -91,6 +92,73 @@
 
 .vault-caret {
   animation: vault-caret 0.9s steps(1, end) infinite;
+}
+
+.speck-host {
+  position: relative;
+  min-height: 100dvh;
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  font-family: var(--font-mono);
+  padding-bottom: calc(var(--speck-dock-h, 92px) + env(safe-area-inset-bottom));
+}
+
+.speck-inv {
+  filter: invert(1) hue-rotate(180deg);
+}
+
+.speck-field {
+  display: block;
+  width: 100%;
+  cursor: default;
+  touch-action: manipulation;
+}
+
+.speck-dock {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 200;
+  height: calc(var(--speck-dock-h, 92px) + env(safe-area-inset-bottom));
+  background: var(--color-canvas);
+}
+
+.speck-dock-canvas {
+  display: block;
+  width: 100%;
+  height: var(--speck-dock-h, 92px);
+  touch-action: manipulation;
+}
+
+.speck-dock-form {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: env(safe-area-inset-bottom);
+  height: 44px;
+  display: flex;
+  padding-left: max(26px, calc((100% - 672px) / 2 + 26px));
+  padding-right: max(40px, calc((100% - 672px) / 2 + 40px));
+  pointer-events: none;
+}
+
+.speck-dock-input {
+  pointer-events: auto;
+  width: 100%;
+  margin-bottom: 8px;
+  background: transparent;
+  border: 0;
+  color: transparent;
+  caret-color: transparent;
+  outline: none;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.speck-file {
+  display: none;
 }
 
 /* Teletext inverted chip */

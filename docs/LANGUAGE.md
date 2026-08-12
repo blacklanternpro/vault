@@ -132,14 +132,14 @@ These are the letters of the language. Use them. Do not invent a parallel alphab
 
 ## 6. What already works (do not throw away)
 
-The current VAULT shell is a **correct skeleton**:
+The VAULT field is a **correct skeleton**. SPECK paints it. React is the host envelope (canvas, native dock input, worker bridge). Persistence is still the Yjs worker. Do not restyle a component tree and call that the OS.
 
-- Click sets context. One dock. This is the magic.
+- Click sets context. One dock. This is the magic. The dock is the SPECK REPL.
 - True Cram calendar + parasite chip *idea*.
 - Unix nest + seed `ops/ lab/ field/` (reindustrial / field-ops, not BUY MILK).
 - INV.
-- Local-first Yjs worker + IndexedDB (`tui-os-vault`). UI sends intents; UI never touches Yjs.
-- Grain + scan already on the field.
+- Local-first Yjs worker + IndexedDB (`tui-os-vault`). The field sends intents; the field never touches Yjs.
+- Grain + scan already on the glass.
 - Beige canvas already *is* cassette-futurism plastic.
 
 What failed historically: translating vision into React *sections*. Sections want cards. Cards are DateBlocks.
@@ -154,11 +154,15 @@ It is **not** a general-purpose language (no Python-from-scratch, no LLVM, no st
 
 HTML/CSS/React nouns are boxes, cards, flow. SPECK nouns are the field.
 
+The runtime lives in `src/speck`. It lexes, parses, compiles a display list, paints pixels, and interprets dock lines + hits. Persistence stays data.
+
 ### Feature dream rule
 
-A new feature must be **sayable in SPECK**. If you cannot write it as source, it does not belong.
+A new feature must be **sayable in SPECK**. If you cannot write it as source, it does not belong. Help Jake say it, or refuse the feature.
 
-### Source (human, dock-typed) — first draft, not frozen
+### 7.1 Source
+
+Line-oriented. Indent (2 spaces) groups a body. Words are Forth-like. Case-insensitive opcodes; payloads keep their case. Comments: `//` or Forth `\` to end of line.
 
 ```
 SEAL reindustrialize
@@ -169,34 +173,115 @@ NEST ops/ URGENT
   STEM net/ flush_stale_resolvers.sh
 DUMP 08.12.26 "ridge notes"
 DOCK DAY 08.12.26
+GRAIN
+SCAN
 ```
 
-### Opcodes / IR
+**Tokens**
 
-The runtime paints a scene of ops:
+| Form | Example | Meaning |
+| --- | --- | --- |
+| word | `CAL` `cram` `ops/` | opcode, flag, path, legend |
+| string | `"ridge notes"` | glyph payload |
+| number | `11` `-1` | day, nav delta |
+| year-short | `'26` | CAL year |
+| tape date | `08.12.26` | `MM.DD.YY` |
+| month | `AUG` | CAL month |
+
+A CHIP after a DAY in the same body annotates that day (adjacency, not a new alphabet).
+
+### 7.2 Nouns (source)
+
+These name the field. They compile to paint ops. Do not add a noun unless the field grew a new organ.
+
+| Noun | Says |
+| --- | --- |
+| `SEAL` | orbital mark + legend |
+| `CAL` | cram calendar (`cram`, month, year, `MO`/`YR`) |
+| `DAY` | one packed numeral |
+| `CHIP` | inverted log / parasite |
+| `NEST` | unix tree |
+| `STEM` | one node (`│ ├── └──`) |
+| `DUMP` | scratch tape |
+| `DOCK` | the one prompt |
+
+`MO` `YR` `NAV` are CAL chrome. `SEE` writes the current program to DUMP. `WORDS` echos the opcode list. `ATTACH` is DUMP-only (host file picker). `P2` `URGENT` are NEST ink flags.
+
+### 7.3 Opcodes / IR
+
+The painter executes a **stateless display list**. Source `INK` is baked into each op at compile. Public ops:
 
 `GLYPH` `INK` `STRIKE` `CHIP` `STEM` `SEAL` `DOCK` `GRAIN` `SCAN` `INV`
 
-### Events
+| Op | Paints |
+| --- | --- |
+| `GLYPH` | string at a point. Mono, except calendar numerals (Space Grotesk light). |
+| `INK` | source-only. `COBALT INK` then a glyph. IR stores the color on the glyph. |
+| `STRIKE` | urgent red mid-line. Days and completed stems. |
+| `CHIP` | cobalt (or white) field, opposite text, radius 0. Selection, parasite, active mode. |
+| `STEM` | ASCII prefix + label. |
+| `SEAL` | globe + orbital + `VAULT` / `WORLDWIDE ®`. No box. |
+| `DOCK` | mode `//` context, caret `>`, buffer, `↵`. Locked to the viewport bottom. |
+| `GRAIN` | xerox dirt on the glass. |
+| `SCAN` | CRT hairlines on the glass. |
+| `INV` | dirty invert of the whole field. Not a palette. |
 
-Clicks and keys are SPECK, not React handlers with extra steps:
+Overlap is legal. Parasite chips are allowed to cover neighboring numerals.
 
-`HIT DAY 11` · `HIT NODE ops/net` · `HIT DUMP` · `TYPE …` · `COMMIT` · `STRIKE id` · `INV`
+### 7.4 Events
 
-The Prompt Dock is the **REPL**. What you type is what the terminal speaks.
+Pointer and keys are SPECK. The host does not own behavior; it forwards.
 
-### Runtime (later — not tonight)
+```
+HIT DAY 11
+HIT NODE ops/net
+HIT DUMP
+HIT INV
+HIT MO
+HIT YR
+HIT NAV -1
+HIT NAV 1
+HIT [X] <id>
+TYPE …
+COMMIT
+STRIKE <id>
+INV
+```
 
-A host interprets SPECK and paints pixels (canvas / Skia). Persistence stays data (CRDT / IndexedDB ideas already in the worker). SPECK describes how the field looks and behaves, not the database.
+`HIT` on empty CAL / NEST / DUMP sets dock context. Click is the mode switch. Never three forms. Never CTX chips in a header.
 
-Packaging: SPECK runtime in a boring envelope (Capacitor / WebView / TWA) → sideloadable APK. The program inside is SPECK. The envelope is not the aesthetic.
+### 7.5 Dock REPL
 
-### What SPECK is not
+The Prompt Dock is the **REPL**. One field. What you type is what the machine speaks.
+
+- If the line **parses as a command** (first word is a noun, opcode, event, `SEE`, `WORDS`, `ATTACH`, `MO`, `YR`, `NAV`, `P2`, `URGENT`, `◀`, `▶`): execute it.
+- Else the line is **data** for the current dock context:
+  - `DOCK DAY` → SYS_LOG (uppercase) on the selected day
+  - `DOCK NEST` → STEM under the selected node
+  - `DOCK DUMP` → dump note (mixed case allowed)
+- Empty commit is `_` (no-op).
+- Unknown command word: echo `? WORD` (Forth).
+
+Examples of command lines: `INV` · `DAY 11` · `MO` · `YR` · `NAV -1` · `NEST ops/` · `DUMP` · `SEE` · `WORDS` · `URGENT` · `STRIKE`
+
+### 7.6 Runtime contract
+
+1. **Data stays data.** Yjs / IndexedDB (`tui-os-vault`) holds tasks, logs, notes. SPECK never becomes the database.
+2. **The field is compiled**, every frame, from snapshot + session → display list → pixels. Session is the live machine: mode, selected day, nest cursor, CAL view, INV, dock buffer, echo.
+3. **Paint pixels.** Canvas (later Skia). Not DOM flow. Not Tailwind-as-OS. The host may keep a native `<input>` over the dock glyph line so the device keyboard works. That input is envelope, not aesthetic.
+4. **Hit test the display list.** Highest-z box wins. `[X]` above stems. Parasite chips above days.
+5. **Intents leave the field.** `COMMIT` / `STRIKE` / `ATTACH` become worker messages. The worker is the only writer.
+6. **Glass vs machine.** `GRAIN` and `SCAN` may be executed as CSS dirt on the host glass. They still appear in source (`SEE`). `INV` is a host invert of the whole field.
+
+Packaging (when asked): SPECK runtime in a boring envelope (Capacitor / WebView / TWA) → sideloadable APK. Seal as icon. No browser chrome. The envelope is not the aesthetic.
+
+### 7.7 What SPECK is not
 
 - Not CSS.
 - Not a React component tree with cute names.
 - Not a general-purpose language.
 - Not a reason to add a settings app.
+- Not a second palette, a HUD, or a card system.
 
 ---
 

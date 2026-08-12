@@ -19,5 +19,4 @@ Non-obvious notes:
   bundling error).
 - Lint is **oxlint** (`npm run lint`), configured via `.oxlintrc.json` — not ESLint.
 - Aesthetic contract is locked in `.cursorrules`. Full portable language: `docs/LANGUAGE.md`. Overnight brief: `docs/OVERNIGHT_PROMPT.md`.
-- Smoke: fixed bottom prompt, click day/nest/dump to set context, MO/YR calendar,
-  tree nest, INV. Seed version in the worker clears legacy demo on upgrade.
+- Smoke: SPECK canvas field, fixed bottom prompt (REPL), click day/nest/dump to set context, MO/YR calendar, tree nest, INV. Dock speaks SPECK (`INV`, `DAY 11`, `SEE`, `WORDS`). Seed version in the worker clears legacy demo on upgrade.

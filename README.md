@@ -1,36 +1,35 @@
 # vault
 
-VAULT WORLDWIDE — local-first personal OS shell.
-React 19 + Vite 8 + Tailwind CSS v4 + Yjs / IndexedDB.
+VAULT WORLDWIDE — local-first personal OS. The field is a **SPECK** machine (canvas runtime). React is the host envelope. Persistence is Yjs / IndexedDB.
 
-Design language (portable): [`docs/LANGUAGE.md`](docs/LANGUAGE.md).
+Design language (portable): [`docs/LANGUAGE.md`](docs/LANGUAGE.md) — SPECK spec in §7.
 Overnight agent brief: [`docs/OVERNIGHT_PROMPT.md`](docs/OVERNIGHT_PROMPT.md).
 
 ## Composition
 
-Mobile-first continuous field:
+Mobile-first continuous field, painted by SPECK:
 
 1. Centered sleaze micrographic seal
 2. Half-scale ungridded calendar (MO ↔ YR + month nav)
 3. Dense Unix file-tree nest
 4. Scratch dump
-5. Fixed bottom prompt — context from what you click
+5. Fixed bottom prompt — the SPECK REPL. Context from what you click.
 
 ```
 src/
-  App.tsx
-  components/
-    VaultSeal.tsx     centered WORLDWIDE mark
-    Calendar.tsx      month/year TUI calendar
-    TaskNest.tsx      ASCII tree nest
-    Scratchpad.tsx    dump
-    PromptDock.tsx    fixed OS prompt
+  speck/              language + runtime
+    Field.tsx         host: canvas + dock input
+    lex.ts parse.ts   source
+    compile.ts paint.ts
+    machine.ts        HIT TYPE COMMIT STRIKE INV
   workers/sync.worker.ts
 ```
 
+Dock commands (whole line): `INV` `DAY 11` `MO` `YR` `NAV -1` `NEST ops/` `DUMP` `SEE` `WORDS` `STRIKE` `URGENT`. Anything else is data for the current context.
+
 ## Development
 
-```bash
+```
 npm install
 npm run dev       # http://localhost:5173 (strictPort)
 npm run build
