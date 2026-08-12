@@ -18,6 +18,6 @@ Non-obvious notes:
 - `npm run build` runs `tsc -b` first, so a type error fails the build (not just a
   bundling error).
 - Lint is **oxlint** (`npm run lint`), configured via `.oxlintrc.json` — not ESLint.
-- Aesthetic contract is locked in `.cursorrules`.
+- Aesthetic contract is locked in `.cursorrules`. Full portable language: `docs/LANGUAGE.md`. Overnight brief: `docs/OVERNIGHT_PROMPT.md`.
 - Smoke: fixed bottom prompt, click day/nest/dump to set context, MO/YR calendar,
   tree nest, INV. Seed version in the worker clears legacy demo on upgrade.

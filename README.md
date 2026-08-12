@@ -3,6 +3,9 @@
 VAULT WORLDWIDE — local-first personal OS shell.
 React 19 + Vite 8 + Tailwind CSS v4 + Yjs / IndexedDB.
 
+Design language (portable): [`docs/LANGUAGE.md`](docs/LANGUAGE.md).
+Overnight agent brief: [`docs/OVERNIGHT_PROMPT.md`](docs/OVERNIGHT_PROMPT.md).
+
 ## Composition
 
 Mobile-first continuous field:
