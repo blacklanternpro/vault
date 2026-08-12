@@ -374,14 +374,14 @@ function compileCal(buf: Buf, world: World, measure: Measure, x: number, y: numb
       y: cy - 6,
       w: aw,
       h: 12,
-      color: '#FFFFFF',
+      color: isSelected ? COBALT : '#FFFFFF',
     })
     buf.ops.push({
       op: 'GLYPH',
       x: cx,
       y: cy,
       text: abbr,
-      color: isPast ? 'rgba(0,0,255,0.55)' : COBALT,
+      color: isSelected ? CANVAS : isPast ? 'rgba(0,0,255,0.55)' : COBALT,
       font: labFont,
       align: 'center',
       baseline: 'middle',
