@@ -25,8 +25,7 @@ export const DOCK_LAYOUT = {
 
 const PAD = 12
 const MAX_INNER = 672
-const DAY_COLS = 7
-const DAY_ROW_H = 54
+const DAY_ROW_H = 52
 const NAV_H = 24
 
 type Buf = {
@@ -318,16 +317,26 @@ function compileCal(buf: Buf, world: World, measure: Measure, x: number, y: numb
   }
 
   const total = daysInMonth(session.viewYear, session.viewMonth)
-  const colW = w / DAY_COLS
   const mm = String(session.viewMonth + 1).padStart(2, '0')
   const isCurrent = session.viewYear === now.year && session.viewMonth === now.month
   const parasites: { day: number; cx: number; cy: number; logs: { id: string; text: string }[] }[] = []
+  const numFont = fontNum(26, 300)
+  const labFont = fontMono(8, 800)
+  let px = x
+  let py = y
+  let bottom = y
 
   for (let day = 1; day <= total; day++) {
-    const col = (day - 1) % DAY_COLS
-    const row = Math.floor((day - 1) / DAY_COLS)
-    const cx = x + col * colW + colW / 2
-    const cy = y + row * DAY_ROW_H + DAY_ROW_H / 2
+    const abbr = dayAbbr(session.viewYear, session.viewMonth, day)
+    const nw = measure(String(day), numFont)
+    const lw = measure(abbr, labFont) + 8
+    const cw = Math.max(nw + 8, lw, 32)
+    if (px > x && px + cw > x + w) {
+      px = x
+      py += DAY_ROW_H
+    }
+    const cx = px + cw / 2
+    const cy = py + DAY_ROW_H / 2
     const key = `${mm}.${String(day).padStart(2, '0')}.${yy}`
     const dayLogs = snapshot.sysLogs.filter((n) => n.date === key)
     const isMarked = dayLogs.length > 0 || snapshot.markedDays.includes(day)
@@ -335,32 +344,30 @@ function compileCal(buf: Buf, world: World, measure: Measure, x: number, y: numb
     const isToday = isCurrent && day === now.day
     const isSelected = session.selectedDay === day
 
-    const numColor = isSelected ? COBALT : isPast ? 'rgba(17,17,17,0.18)' : INK
+    const numColor = isSelected ? COBALT : isPast ? 'rgba(17,17,17,0.42)' : INK
     buf.ops.push({
       op: 'GLYPH',
       x: cx,
       y: cy,
       text: String(day),
       color: numColor,
-      font: fontNum(30, 300),
+      font: numFont,
       align: 'center',
       baseline: 'middle',
     })
     if (isToday) {
-      const nw = measure(String(day), fontNum(30, 300))
       buf.ops.push({
         op: 'LINE',
         x1: cx - nw / 2,
-        y1: cy + 16,
+        y1: cy + 14,
         x2: cx + nw / 2,
-        y2: cy + 16,
+        y2: cy + 14,
         color: INK,
         width: 2,
       })
     }
 
-    const abbr = dayAbbr(session.viewYear, session.viewMonth, day)
-    const aw = measure(abbr, fontMono(8, 800)) + 6
+    const aw = lw
     buf.ops.push({
       op: 'FILL',
       x: cx - aw / 2,
@@ -374,8 +381,8 @@ function compileCal(buf: Buf, world: World, measure: Measure, x: number, y: numb
       x: cx,
       y: cy,
       text: abbr,
-      color: COBALT,
-      font: fontMono(8, 800),
+      color: isPast ? 'rgba(0,0,255,0.55)' : COBALT,
+      font: labFont,
       align: 'center',
       baseline: 'middle',
       track: 1.2,
@@ -384,9 +391,9 @@ function compileCal(buf: Buf, world: World, measure: Measure, x: number, y: numb
     if (isMarked) {
       buf.ops.push({
         op: 'STRIKE',
-        x: x + col * colW + 6,
+        x: px + 2,
         y: cy,
-        w: colW - 12,
+        w: cw - 4,
         thick: 2.5,
         color: URGENT,
       })
@@ -394,9 +401,9 @@ function compileCal(buf: Buf, world: World, measure: Measure, x: number, y: numb
 
     buf.hits.push({
       kind: 'DAY',
-      x: x + col * colW,
-      y: y + row * DAY_ROW_H,
-      w: colW,
+      x: px,
+      y: py,
+      w: cw,
       h: DAY_ROW_H,
       z: isSelected ? 40 : 10,
       payload: day,
@@ -405,6 +412,9 @@ function compileCal(buf: Buf, world: World, measure: Measure, x: number, y: numb
     if (isSelected && dayLogs.length > 0) {
       parasites.push({ day, cx, cy, logs: dayLogs })
     }
+
+    px += cw + 2
+    bottom = py + DAY_ROW_H
   }
 
   for (const p of parasites) {
@@ -459,8 +469,7 @@ function compileCal(buf: Buf, world: World, measure: Measure, x: number, y: numb
     }
   }
 
-  const rows = Math.ceil(total / DAY_COLS)
-  y += rows * DAY_ROW_H
+  y = bottom
   buf.hits.push({ kind: 'CAL', x, y: calTop, w, h: y - calTop, z: 0 })
   return y
 }
