@@ -16,23 +16,6 @@ export function fontNum(px: number, weight = 300): string {
   return `${weight} ${px}px ${FONT_NUM}`
 }
 
-export const MONTHS = [
-  'JAN',
-  'FEB',
-  'MAR',
-  'APR',
-  'MAY',
-  'JUN',
-  'JUL',
-  'AUG',
-  'SEP',
-  'OCT',
-  'NOV',
-  'DEC',
-] as const
-
-export type MonthName = (typeof MONTHS)[number]
-
 export const PAINT_OPS = [
   'GLYPH',
   'INK',
@@ -46,16 +29,7 @@ export const PAINT_OPS = [
   'INV',
 ] as const
 
-export const SOURCE_NOUNS = [
-  'SEAL',
-  'CAL',
-  'DAY',
-  'CHIP',
-  'NEST',
-  'STEM',
-  'DUMP',
-  'DOCK',
-] as const
+export const SOURCE_NOUNS = ['SEAL', 'GLYPH', 'CHIP', 'STEM', 'DOCK'] as const
 
 export const COMMAND_WORDS = new Set<string>([
   ...PAINT_OPS,
@@ -63,14 +37,7 @@ export const COMMAND_WORDS = new Set<string>([
   'HIT',
   'TYPE',
   'COMMIT',
-  'MO',
-  'YR',
-  'NAV',
   'SEE',
   'WORDS',
-  'ATTACH',
-  'P1',
-  'P2',
-  'P3',
-  'URGENT',
+  'CLEAR',
 ])

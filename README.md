@@ -1,6 +1,8 @@
 # vault
 
-VAULT WORLDWIDE — local-first personal OS. The field is a **SPECK** machine (canvas runtime). React is the host envelope. Persistence is Yjs / IndexedDB.
+VAULT WORLDWIDE — local-first personal OS. The field is a **SPECK** machine (canvas runtime). React is the host envelope. The live program is a SPECK source string (`localStorage` key `speck-program`).
+
+The calendar / todo nest / scratch dump were a failed shell. They are gone. SPECK stays.
 
 Design language (portable): [`docs/LANGUAGE.md`](docs/LANGUAGE.md) — SPECK spec in §7.
 Overnight agent brief: [`docs/OVERNIGHT_PROMPT.md`](docs/OVERNIGHT_PROMPT.md).
@@ -10,10 +12,8 @@ Overnight agent brief: [`docs/OVERNIGHT_PROMPT.md`](docs/OVERNIGHT_PROMPT.md).
 Mobile-first continuous field, painted by SPECK:
 
 1. Centered sleaze micrographic seal
-2. Half-scale ungridded calendar (MO ↔ YR + month nav)
-3. Dense Unix file-tree nest
-4. Scratch dump
-5. Fixed bottom prompt — the SPECK REPL. Context from what you click.
+2. Free canvas (whatever the current source paints)
+3. Fixed bottom prompt — the SPECK REPL
 
 ```
 src/
@@ -21,11 +21,19 @@ src/
     Field.tsx         host: canvas + dock input
     lex.ts parse.ts   source
     compile.ts paint.ts
-    machine.ts        HIT TYPE COMMIT STRIKE INV
-  workers/sync.worker.ts
+    machine.ts        HIT TYPE COMMIT STRIKE INV SEE CLEAR
+    source.ts         default program + localStorage
 ```
 
-Dock commands (whole line): `INV` `DAY 11` `MO` `YR` `NAV -1` `NEST ops/` `DUMP` `SEE` `WORDS` `STRIKE` `URGENT`. Anything else is data for the current context.
+Default source:
+
+```
+SEAL reindustrialize
+GRAIN
+SCAN
+```
+
+Dock commands: `INV` `WORDS` `SEE` `CLEAR` `COMMIT`. Paint nouns (`GLYPH` `CHIP` `STEM` `SEAL`) append to source. Anything else becomes `GLYPH "…"`. Typing `todo` does not spawn a todo widget.
 
 ## Development
 
@@ -35,5 +43,3 @@ npm run dev       # http://localhost:5173 (strictPort)
 npm run build
 npm run lint
 ```
-
-State in IndexedDB (`tui-os-vault`). Seed version bumps wipe legacy demo data.

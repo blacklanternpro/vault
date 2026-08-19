@@ -1,17 +1,14 @@
 import { parse, isCommandLine, parseCommand } from './parse'
 import { lex } from './lex'
-import { freshSession } from './machine'
+import { commitLine, freshSession } from './machine'
 import { see } from './see'
-import { EMPTY_SNAPSHOT } from '../lib/vault-types'
+import { DEFAULT_SOURCE } from './source'
 
 const EXAMPLE = `SEAL reindustrialize
-CAL cram AUG '26
-  DAY 11 STRIKE
-  CHIP "FLUSH RESOLVERS"
-NEST ops/ URGENT
+GLYPH "FLUSH RESOLVERS"
+CHIP "OPS"
+STEM ops/
   STEM net/ flush_stale_resolvers.sh
-DUMP 08.12.26 "ridge notes"
-DOCK DAY 08.12.26
 GRAIN
 SCAN`
 
@@ -20,48 +17,52 @@ export function runSpeckChecks(): string[] {
   const fail = (msg: string) => fails.push(msg)
 
   const lines = lex(EXAMPLE)
-  if (lines.length < 8) fail(`lex lines ${lines.length}`)
+  if (lines.length < 6) fail(`lex lines ${lines.length}`)
 
   const { stmts, error } = parse(EXAMPLE)
   if (error) fail(`parse error ${error}`)
   const kinds = stmts.map((s) => s.kind)
   if (kinds[0] !== 'SEAL') fail(`first ${kinds[0]}`)
-  const cal = stmts.find((s) => s.kind === 'CAL')
-  if (!cal || cal.kind !== 'CAL') fail('missing CAL')
-  else {
-    if (cal.month !== 'AUG') fail(`month ${cal.month}`)
-    if (cal.year !== 26) fail(`year ${cal.year}`)
-    if (cal.days.length !== 1 || cal.days[0].n !== 11) fail('DAY 11')
-    if (!cal.days[0].strike) fail('DAY STRIKE')
-    if (cal.days[0].chips[0] !== 'FLUSH RESOLVERS') fail('CHIP adjacency')
+  const glyph = stmts.find((s) => s.kind === 'GLYPH')
+  if (!glyph || glyph.kind !== 'GLYPH' || glyph.text !== 'FLUSH RESOLVERS') fail('GLYPH')
+  const chip = stmts.find((s) => s.kind === 'CHIP')
+  if (!chip || chip.kind !== 'CHIP' || chip.text !== 'OPS') fail('CHIP')
+  const stems = stmts.filter((s) => s.kind === 'STEM')
+  if (stems.length !== 2) fail(`STEM count ${stems.length}`)
+  else if (stems[0].kind === 'STEM' && !stems[0].text.toLowerCase().startsWith('ops')) {
+    fail(`stem path ${stems[0].text}`)
   }
-  const nest = stmts.find((s) => s.kind === 'NEST')
-  if (!nest || nest.kind !== 'NEST') fail('missing NEST')
-  else {
-    if (!nest.path.toLowerCase().startsWith('ops')) fail(`nest path ${nest.path}`)
-    if (!nest.flags.includes('URGENT')) fail('NEST URGENT')
-    if (nest.stems.length < 1) fail('STEM missing')
-  }
-  const dump = stmts.find((s) => s.kind === 'DUMP')
-  if (!dump || dump.kind !== 'DUMP' || dump.date !== '08.12.26') fail('DUMP date')
   if (!stmts.some((s) => s.kind === 'GRAIN') || !stmts.some((s) => s.kind === 'SCAN')) {
     fail('GRAIN/SCAN')
   }
 
   if (!isCommandLine('INV')) fail('INV command')
-  if (!isCommandLine('DAY 11')) fail('DAY command')
   if (!isCommandLine('SEE')) fail('SEE command')
+  if (!isCommandLine('CLEAR')) fail('CLEAR command')
+  if (!isCommandLine('GLYPH hello')) fail('GLYPH command')
   if (isCommandLine('FLUSH RESOLVERS')) fail('data classified as command')
+  if (isCommandLine('todo')) fail('todo classified as command')
+  if (isCommandLine('DAY 11')) fail('DAY still a command')
   if (parseCommand('INV').kind !== 'INV') fail('parse INV')
-  if (parseCommand('DAY 11').kind !== 'DAY_SELECT') fail('parse DAY 11')
   if (parseCommand('WORDS').kind !== 'WORDS') fail('parse WORDS')
+  if (parseCommand('CLEAR').kind !== 'CLEAR') fail('parse CLEAR')
 
-  const session = freshSession({ year: 2026, month: 7, day: 12 })
-  const src = see(EMPTY_SNAPSHOT, session, { year: 2026, month: 7, day: 12 })
+  const session = freshSession()
+  const src = see(DEFAULT_SOURCE, session)
   if (!src.includes('SEAL reindustrialize')) fail('see SEAL')
-  if (!src.includes("CAL cram AUG '26")) fail(`see CAL ${src}`)
-  if (!src.includes('DOCK DAY')) fail('see DOCK')
+  if (src.includes('CAL')) fail('see still emits CAL')
+  if (src.includes('NEST')) fail('see still emits NEST')
+  if (src.includes('DUMP')) fail('see still emits DUMP')
   if (!src.includes('GRAIN')) fail('see GRAIN')
+
+  const data = commitLine('todo', session, DEFAULT_SOURCE)
+  if (!data.source.includes('GLYPH "todo"')) fail(`data glyph ${data.source}`)
+
+  const painted = commitLine('CHIP "FLUSH"', freshSession(), DEFAULT_SOURCE)
+  if (!painted.source.includes('CHIP "FLUSH"')) fail(`chip append ${painted.source}`)
+
+  const wiped = commitLine('CLEAR', freshSession(), data.source)
+  if (wiped.source !== DEFAULT_SOURCE) fail('CLEAR')
 
   return fails
 }

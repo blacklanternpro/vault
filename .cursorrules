@@ -8,16 +8,13 @@ No cards, rounded corners, soft shadows, section billboards, DateBlocks, or teal
 PALETTE: Canvas #F4F4F0 · Ink #111 · Cobalt #0000FF · Urgent #FF2B2B.
 Cobalt = chrome. Red = strikes + URGENT + [X] only.
 
-TYPE: JetBrains Mono everywhere except calendar numerals (Space Grotesk, light).
+TYPE: JetBrains Mono everywhere except display numerals (Space Grotesk, light).
 
 COMPOSITION (mobile-first):
 1. Centered VAULT WORLDWIDE 90s-sleaze micrographic (scanline globe + orbital seal). No boxes around it.
-2. Calendar block — Day 1 top-left continuous wrap, half-scale numerals, tight ungridded pack.
-   Day labels = cobalt on white. Logged = red mid-strike over label. Selected logs = parasite chips.
-   TUI toggle MONTH ↔ YEAR. Month view has ◀ ▶ nav. Year view = 12 mini months, same language.
-3. Unix file-tree nest from hell — dense ASCII connectors (│ ├── └──). Click = nest context.
-4. Scratch dump — cobalt date anchors, hairline rules. Click = dump context.
-5. ONE fixed bottom Prompt Dock — always locked to viewport bottom. Context comes from what you click
-   (day / nest node / dump). No mode chips or CTX boxes in the header. Never three forms.
+2. Free field — SPECK source paints GLYPH / CHIP / STEM. Empty is empty. No calendar. No todo nest. No scratch dump.
+3. ONE fixed bottom Prompt Dock — always locked to viewport bottom. The dock is the SPECK REPL (`SPECK // field`).
+   Commands: INV WORDS SEE CLEAR COMMIT. Paint nouns append to source. Anything else is a GLYPH. Never three forms.
 
 HARD VETO: DateBlocks, jagged day cards, SaaS stacks, acid watermarks, giant boxed logos, demo fluff.
+Do not revive CAL / DAY / NEST / DUMP as product organs.

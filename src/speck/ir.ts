@@ -1,6 +1,3 @@
-import type { OsMode } from '../lib/os-mode'
-import type { TaskPriority } from '../lib/vault-types'
-
 export type Measure = (text: string, font: string) => number
 
 export type Op =
@@ -58,23 +55,7 @@ export type Op =
   | { op: 'SCAN' }
   | { op: 'INV' }
 
-export type HitKind =
-  | 'DAY'
-  | 'NODE'
-  | 'DUMP'
-  | 'CAL'
-  | 'NEST'
-  | 'INV'
-  | 'MO'
-  | 'YR'
-  | 'NAV'
-  | 'MONTH'
-  | 'STRIKE_LOG'
-  | 'STRIKE_NODE'
-  | 'PRIORITY'
-  | 'ATTACH'
-  | 'COMMIT'
-  | 'DOCK'
+export type HitKind = 'INV' | 'COMMIT' | 'DOCK' | 'MARK'
 
 export type HitBox = {
   kind: HitKind
@@ -97,37 +78,10 @@ export type Program = {
   dock: Layer
 }
 
-export type CalView = 'MO' | 'YR'
-
 export type Session = {
   inv: boolean
-  mode: OsMode
-  viewYear: number
-  viewMonth: number
-  calView: CalView
-  selectedDay: number | null
-  nestId: string | null
-  priority: TaskPriority
   buffer: string
   echo: string | null
-}
-
-export type Now = {
-  year: number
-  month: number
-  day: number
-}
-
-export function pad2(n: number): string {
-  return n < 10 ? `0${n}` : String(n)
-}
-
-export function tapeDate(year: number, month: number, day: number): string {
-  return `${pad2(month + 1)}.${pad2(day)}.${String(year).slice(-2)}`
-}
-
-export function uid(): string {
-  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`
 }
 
 export function hitTest(hits: HitBox[], x: number, y: number): HitBox | null {

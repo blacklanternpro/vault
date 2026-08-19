@@ -1,76 +1,29 @@
-import { useEffect, useRef, useState, type ChangeEvent, type FormEvent, type RefObject } from 'react'
+import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from 'react'
 import { useClock } from '../hooks/useClock'
-import { useCrdtState, type VaultActions } from '../hooks/useCrdtState'
 import { compile, DOCK_LAYOUT } from './compile'
-import { hitTest, uid, type HitBox, type Now, type Session } from './ir'
-import { applyHit, commitLine, freshSession, type Intent } from './machine'
+import { hitTest, type HitBox, type Session } from './ir'
+import { applyHit, commitLine, freshSession } from './machine'
 import { makeMeasure, paint, sizeCanvas } from './paint'
-
-function nowOf(d = new Date()): Now {
-  return { year: d.getFullYear(), month: d.getMonth(), day: d.getDate() }
-}
-
-function dispatchIntent(
-  intent: Intent,
-  actions: VaultActions,
-  fileRef: RefObject<HTMLInputElement | null>,
-): void {
-  switch (intent.type) {
-    case 'ADD_SYS_LOG':
-      actions.addSysLog({
-        id: uid(),
-        date: intent.date,
-        text: intent.text,
-        day: intent.day,
-      })
-      break
-    case 'ADD_TASK':
-      actions.addTask({
-        id: uid(),
-        text: intent.text,
-        parentId: intent.parentId,
-        priority: intent.priority,
-      })
-      break
-    case 'ADD_NOTE':
-      actions.addNote({
-        id: uid(),
-        date: intent.date,
-        text: intent.text,
-        attachment: intent.attachment,
-      })
-      break
-    case 'TOGGLE_TASK':
-      actions.toggleTask(intent.id)
-      break
-    case 'DELETE_SYS_LOG':
-      actions.deleteSysLog(intent.id)
-      break
-    case 'ATTACH':
-      fileRef.current?.click()
-      break
-  }
-}
+import { loadSource, saveSource } from './source'
 
 export function Field() {
   const clock = useClock()
-  const crdt = useCrdtState()
-  const [session, setSession] = useState<Session>(() => freshSession(nowOf()))
+  const [session, setSession] = useState<Session>(() => freshSession())
+  const [source, setSource] = useState(loadSource)
   const fieldRef = useRef<HTMLCanvasElement>(null)
   const dockRef = useRef<HTMLCanvasElement>(null)
   const hostRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
-  const fileRef = useRef<HTMLInputElement>(null)
   const sessionRef = useRef(session)
-  const crdtRef = useRef(crdt)
+  const sourceRef = useRef(source)
   const clockRef = useRef(clock)
   sessionRef.current = session
-  crdtRef.current = crdt
+  sourceRef.current = source
   clockRef.current = clock
 
-  const applyIntents = (intents: Intent[]) => {
-    for (const intent of intents) dispatchIntent(intent, crdtRef.current, fileRef)
-  }
+  useEffect(() => {
+    saveSource(source)
+  }, [source])
 
   useEffect(() => {
     const host = hostRef.current
@@ -88,10 +41,9 @@ export function Field() {
       const width = host.clientWidth || 360
       const caretOn = Date.now() % 900 < 450
       const world = {
-        snapshot: crdtRef.current,
+        source: sourceRef.current,
         session: sessionRef.current,
         clock: clockRef.current,
-        now: nowOf(),
         width,
         caretOn,
       }
@@ -123,9 +75,9 @@ export function Field() {
       const y = e.clientY - rect.top
       const hit = hitTest(fieldHits, x, y)
       if (!hit) return
-      const result = applyHit(hit, sessionRef.current, crdtRef.current)
+      const result = applyHit(hit, sessionRef.current, sourceRef.current)
       setSession(result.session)
-      applyIntents(result.intents)
+      setSource(result.source)
       inputRef.current?.focus()
     }
     const onDock = (e: PointerEvent) => {
@@ -134,20 +86,15 @@ export function Field() {
       const y = e.clientY - rect.top
       const hit = hitTest(dockHits, x, y)
       if (hit?.kind === 'COMMIT') {
-        const result = commitLine(
-          sessionRef.current.buffer,
-          sessionRef.current,
-          crdtRef.current,
-          nowOf(),
-        )
+        const result = commitLine(sessionRef.current.buffer, sessionRef.current, sourceRef.current)
         setSession(result.session)
-        applyIntents(result.intents)
+        setSource(result.source)
         return
       }
       if (hit) {
-        const result = applyHit(hit, sessionRef.current, crdtRef.current)
+        const result = applyHit(hit, sessionRef.current, sourceRef.current)
         setSession(result.session)
-        applyIntents(result.intents)
+        setSource(result.source)
       }
       inputRef.current?.focus()
     }
@@ -163,28 +110,13 @@ export function Field() {
 
   const onSubmit = (e: FormEvent) => {
     e.preventDefault()
-    const result = commitLine(session.buffer, session, crdt, nowOf())
+    const result = commitLine(session.buffer, session, source)
     setSession(result.session)
-    applyIntents(result.intents)
+    setSource(result.source)
   }
 
   const onChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const value = session.mode === 'DAY' ? e.target.value.toUpperCase() : e.target.value
-    setSession((s) => ({ ...s, buffer: value, echo: null }))
-  }
-
-  const onAttach = (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    const date = `${String(nowOf().month + 1).padStart(2, '0')}.${String(nowOf().day).padStart(2, '0')}.${String(nowOf().year).slice(-2)}`
-    crdt.addNote({
-      id: uid(),
-      date,
-      text: `[ATTACH] ${file.name}`,
-      attachment: file.name,
-    })
-    setSession((s) => ({ ...s, mode: 'DUMP' }))
-    e.target.value = ''
+    setSession((s) => ({ ...s, buffer: e.target.value, echo: null }))
   }
 
   return (
@@ -209,7 +141,6 @@ export function Field() {
             aria-label="SPECK prompt"
           />
         </form>
-        <input ref={fileRef} type="file" className="speck-file" onChange={onAttach} />
       </div>
     </div>
   )

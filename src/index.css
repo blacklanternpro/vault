@@ -157,10 +157,6 @@
   font-weight: 700;
 }
 
-.speck-file {
-  display: none;
-}
-
 /* Teletext inverted chip */
 .tui-chip {
   display: inline-block;

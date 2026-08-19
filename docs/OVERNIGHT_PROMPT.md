@@ -1,6 +1,8 @@
 # OVERNIGHT PROMPT — paste this into a future agent
 
-This is a **later-run** brief. Tonight we wrote the language. You (the future agent) may invent SPECK fully and, if asked, implement the runtime. Do not ignore `docs/LANGUAGE.md`. It is canon.
+**The calendar / todo nest / scratch dump shell is dead.** Failed project. Do not revive `CAL` `DAY` `NEST` `DUMP` as product organs. Keep **SPECK**. The field is seal + free canvas + one dock REPL. Persistence is the SPECK source string, not a task CRDT.
+
+This is a **later-run** brief. The language is written. The runtime lives in `src/speck`. Do not ignore `docs/LANGUAGE.md`. It is canon.
 
 Read this whole file. Then read `docs/LANGUAGE.md`. Then read `.cursorrules`. Then look at the current shell. Then go.
 
@@ -30,7 +32,7 @@ Jake / BLACK LANTERN. Personal OS. Not a store product. Not a SaaS. Local-first,
 
 1. **`docs/LANGUAGE.md`** — the grand language. Tokens, taste stack, grammar, vetoes, take/leave, SPECK first draft, how to apply. **Primary.**
 2. **`.cursorrules`** — short law. Obey it. It points here.
-3. **Current shell** — `src/App.tsx`, `VaultSeal.tsx`, `Calendar.tsx`, `TaskNest.tsx`, `Scratchpad.tsx`, `PromptDock.tsx`, `src/workers/sync.worker.ts`, `src/index.css`. Correct skeleton. CSS is the wrong long-term substrate.
+3. **Current shell** — `src/App.tsx` hosts `<Field />`. Runtime is `src/speck`. CSS is glass (grain/scan), not the OS. The React calendar/todo/scratch components are a corpse; do not restore them.
 4. **History** — Gemini neo-brutal TUI blueprint (engineering DNA). PRs #8–#11 (fried TUI → burn the box → mobile OS shell). PR #7 DateBlocks = warning. User quotes below.
 5. **Boards** — [cassette futurism ui](https://au.pinterest.com/search/pins/?q=cassette%20futurism%20ui&rs=typed) is the world. [Sleaze board](https://pin.it/6UnA3VfjN) is salt. Attached refs in LANGUAGE.md §9 are take/leave — **cobalt-on-pale Archive poster is the closest cousin.** Steal structure from dark phosphor terminals; restamp onto canvas/ink/cobalt.
 
@@ -43,7 +45,7 @@ Jake / BLACK LANTERN. Personal OS. Not a store product. Not a SaaS. Local-first,
 - Cobalt `#0000FF` — VAULT phosphor / chrome
 - Urgent `#FF2B2B` — warning LED only (strikes, URGENT, `[X]`)
 
-JetBrains Mono everywhere except calendar numerals (Space Grotesk, light).
+JetBrains Mono everywhere except display numerals (Space Grotesk, light).
 
 Radius 0. No shadows. Grain + scan are CRT dirt, not a filter pack.
 
@@ -56,12 +58,10 @@ INV = dirty invert of the whole field. Not a second theme.
 One field. Mobile-first.
 
 1. Seal (no box)
-2. Cram calendar (parasite chips, red strikes, MO/YR)
-3. Unix nest (`│ ├── └──`)
-4. Dump (cobalt date anchors)
-5. ONE dock, locked to the viewport bottom. Click = context. Never three forms. Never CTX chips in the header.
+2. Free field — SPECK source paints it
+3. ONE dock, locked to the viewport bottom. `SPECK // field`. Never three forms. Never CTX chips in the header.
 
-You may refine density and placement **inside cassette futurism**. You may not add hardware bays, card grids, or a second input.
+You may refine density and placement **inside cassette futurism**. You may not add hardware bays, card grids, a second input, or a calendar/todo/scratch app.
 
 ---
 
@@ -83,14 +83,13 @@ Full list: `docs/LANGUAGE.md` §8.
 
 ## What already works (keep)
 
-- Prompt Dock as the deck. Click-sets-context. This is the magic.
-- MO/YR cram calendar + parasite chip *idea*
-- Unix nest + seed `ops/ lab/ field/`
+- Prompt Dock as the deck. This is the magic.
+- SPECK runtime in `src/speck` (lex / parse / compile / paint / machine)
 - INV
-- Yjs worker / IndexedDB — UI never touches Yjs
 - Beige canvas as plastic, grain/scan as CRT
+- Source as the live program
 
-Do not throw the skeleton away to prove you are bold. Bold is SPECK, not another layout.
+Do not throw SPECK away to prove you are bold. Do not rebuild the todo OS.
 
 ---
 
@@ -112,13 +111,12 @@ Cousins: Forth, PostScript, teletext, 3270.
 
 ```
 SEAL reindustrialize
-CAL cram AUG '26
-  DAY 11 STRIKE
-  CHIP "FLUSH RESOLVERS"
-NEST ops/ URGENT
+GLYPH "FLUSH RESOLVERS"
+CHIP "OPS"
+STEM ops/
   STEM net/ flush_stale_resolvers.sh
-DUMP 08.12.26 "ridge notes"
-DOCK DAY 08.12.26
+GRAIN
+SCAN
 ```
 
 ### APK (when asked — not assumed)
