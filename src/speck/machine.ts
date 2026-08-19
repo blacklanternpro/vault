@@ -1,14 +1,8 @@
-import type { HitBox, Session } from './ir'
-import { isCommandLine, parseCommand, type Stmt } from './parse'
+import type { HitBox, Now, Session } from './ir'
+import { tapeDate } from './ir'
+import { isCommandLine, notesForDate, parseCommand, type Stmt } from './parse'
 import { see } from './see'
-import {
-  appendPaint,
-  DEFAULT_SOURCE,
-  quote,
-  setSeal,
-  strikeLast,
-  strikeLine,
-} from './source'
+import { appendDayNote, DEFAULT_SOURCE } from './source'
 import { PAINT_OPS } from './tokens'
 
 export type Result = {
@@ -17,106 +11,104 @@ export type Result = {
 }
 
 export function freshSession(): Session {
-  return { inv: false, buffer: '', echo: null }
+  return { selectedDay: null, notesOpen: false, buffer: '', echo: null }
 }
 
 function ok(session: Session, source: string, echo: string | null = null): Result {
   return { session: { ...session, buffer: '', echo }, source }
 }
 
-function paintLine(stmt: Stmt): string | null {
-  if (stmt.kind === 'GLYPH') {
-    return `GLYPH ${quote(stmt.text)}${stmt.strike ? ' STRIKE' : ''}`
+function selectDay(session: Session, source: string, now: Now, n: number): Result {
+  const date = tapeDate(now.year, now.month, n)
+  const has = notesForDate(source, date).length > 0
+  if (session.selectedDay === n && session.notesOpen) {
+    return {
+      session: { ...session, notesOpen: false, echo: null },
+      source,
+    }
   }
-  if (stmt.kind === 'CHIP') {
-    return `CHIP ${quote(stmt.text)}${stmt.strike ? ' STRIKE' : ''}`
+  return {
+    session: {
+      ...session,
+      selectedDay: n,
+      notesOpen: has,
+      echo: null,
+    },
+    source,
   }
-  if (stmt.kind === 'STEM') {
-    const flags = `${stmt.urgent ? ' URGENT' : ''}${stmt.strike ? ' STRIKE' : ''}`
-    return `STEM ${stmt.text}${flags}`
-  }
-  return null
 }
 
-function applyStmt(stmt: Stmt, session: Session, source: string): Result {
+function applyStmt(stmt: Stmt, session: Session, source: string, now: Now): Result {
   switch (stmt.kind) {
-    case 'INV':
-      return { session: { ...session, inv: !session.inv, buffer: '', echo: null }, source }
     case 'SEE': {
-      const src = see(source, session)
-      const echo = src.replace(/\n+/g, ' · ')
+      const src = see(source)
+      const echo = src.trim() ? src.replace(/\n+/g, ' · ') : '_'
       return ok(session, source, echo.length > 160 ? `${echo.slice(0, 157)}…` : echo)
     }
     case 'WORDS':
       return ok(session, source, `${PAINT_OPS.join(' ')} // HIT TYPE COMMIT SEE CLEAR`)
     case 'CLEAR':
-      return ok({ ...session, inv: false }, DEFAULT_SOURCE)
-    case 'SEAL':
-      return ok(session, setSeal(source, stmt.legend))
-    case 'GLYPH':
-    case 'CHIP':
-    case 'STEM': {
-      const line = paintLine(stmt)
-      return line ? ok(session, appendPaint(source, line)) : ok(session, source, `? ${stmt.kind}`)
+      return ok(freshSession(), DEFAULT_SOURCE)
+    case 'DAY': {
+      if (!stmt.date || !stmt.text) return ok(session, source, '? DAY')
+      return ok(session, appendDayNote(source, stmt.date, stmt.text))
     }
-    case 'GRAIN':
-    case 'SCAN':
     case 'DOCK':
       return ok(session, source)
-    case 'INK':
-      return ok(session, source, 'INK // baked')
-    case 'STRIKE': {
-      const next = strikeLast(source)
-      if (!next) return ok(session, source, '? STRIKE')
-      return ok(session, next)
-    }
     case 'COMMIT':
-      return commitData(session, source, session.buffer)
+      return commitData(session, source, now, session.buffer)
     case 'TYPE':
       return { session: { ...session, buffer: stmt.text }, source }
     case 'HIT':
-      return applyHitStmt(stmt.target, session, source)
+      return applyHitStmt(stmt.target, stmt.arg, session, source, now)
     case 'DATA':
-      return commitData(session, source, stmt.text)
+      return commitData(session, source, now, stmt.text)
   }
 }
 
-function applyHitStmt(target: string, session: Session, source: string): Result {
+function applyHitStmt(
+  target: string,
+  arg: string | number | undefined,
+  session: Session,
+  source: string,
+  now: Now,
+): Result {
   const t = target.toUpperCase()
-  if (t === 'INV') {
-    return { session: { ...session, inv: !session.inv, echo: null, buffer: '' }, source }
+  if (t === 'DAY' && typeof arg === 'number') return selectDay(session, source, now, arg)
+  if (t === 'FIELD') {
+    return { session: { ...session, notesOpen: false, echo: null }, source }
   }
-  if (t === 'CLEAR') return ok({ ...session, inv: false }, DEFAULT_SOURCE)
+  if (t === 'CLEAR') return ok(freshSession(), DEFAULT_SOURCE)
   return ok(session, source, `? HIT ${target}`)
 }
 
-export function applyHit(hit: HitBox, session: Session, source: string): Result {
+export function applyHit(hit: HitBox, session: Session, source: string, now: Now): Result {
   switch (hit.kind) {
-    case 'INV':
-      return { session: { ...session, inv: !session.inv, echo: null }, source }
-    case 'MARK':
-      return { session: { ...session, echo: null }, source: strikeLine(source, Number(hit.payload ?? 0)) }
+    case 'DAY':
+      return selectDay(session, source, now, Number(hit.payload ?? 0))
+    case 'FIELD':
+      return { session: { ...session, notesOpen: false, echo: null }, source }
     case 'COMMIT':
     case 'DOCK':
-      return { session, source }
-    default:
       return { session, source }
   }
 }
 
-function commitData(session: Session, source: string, text: string): Result {
+function commitData(session: Session, source: string, now: Now, text: string): Result {
   const trimmed = text.trim()
   if (!trimmed) return ok(session, source)
-  return ok(session, appendPaint(source, `GLYPH ${quote(trimmed)}`))
+  if (session.selectedDay == null) return ok(session, source, '? DAY')
+  const date = tapeDate(now.year, now.month, session.selectedDay)
+  return ok(session, appendDayNote(source, date, trimmed))
 }
 
-export function commitLine(line: string, session: Session, source: string): Result {
+export function commitLine(line: string, session: Session, source: string, now: Now): Result {
   const trimmed = line.trim()
   if (!trimmed) return ok(session, source)
   if (isCommandLine(trimmed)) {
     const stmt = parseCommand(trimmed)
-    if (stmt.kind === 'DATA') return commitData(session, source, stmt.text)
-    return applyStmt(stmt, session, source)
+    if (stmt.kind === 'DATA') return commitData(session, source, now, stmt.text)
+    return applyStmt(stmt, session, source, now)
   }
-  return commitData(session, source, trimmed)
+  return commitData(session, source, now, trimmed)
 }

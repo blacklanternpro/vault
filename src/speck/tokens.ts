@@ -1,19 +1,15 @@
-/** Locked VAULT tokens. SPECK does not invent color. */
+/** VAULT month field. Black / paper / cobalt. */
 
-export const CANVAS = '#F4F4F0'
-export const INK = '#111111'
+export const FIELD = '#000000'
+export const PAPER = '#F4F4F0'
 export const COBALT = '#0000FF'
-export const URGENT = '#FF2B2B'
+export const WHITE = '#FFFFFF'
+export const CANVAS = FIELD
 
-export const FONT_MONO = '"JetBrains Mono", ui-monospace, monospace'
-export const FONT_NUM = '"Space Grotesk", "Helvetica Neue", sans-serif'
+export const FONT_HELV = '"Helvetica Neue", Helvetica, Arial, sans-serif'
 
-export function fontMono(px: number, weight = 400): string {
-  return `${weight} ${px}px ${FONT_MONO}`
-}
-
-export function fontNum(px: number, weight = 300): string {
-  return `${weight} ${px}px ${FONT_NUM}`
+export function fontHelv(px: number, weight = 400): string {
+  return `${weight} ${px}px ${FONT_HELV}`
 }
 
 export const PAINT_OPS = [
@@ -29,15 +25,13 @@ export const PAINT_OPS = [
   'INV',
 ] as const
 
-export const SOURCE_NOUNS = ['SEAL', 'GLYPH', 'CHIP', 'STEM', 'DOCK'] as const
-
 export const COMMAND_WORDS = new Set<string>([
-  ...PAINT_OPS,
-  ...SOURCE_NOUNS,
   'HIT',
   'TYPE',
   'COMMIT',
   'SEE',
   'WORDS',
   'CLEAR',
+  'DAY',
+  'DOCK',
 ])

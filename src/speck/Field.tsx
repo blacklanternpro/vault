@@ -1,13 +1,15 @@
 import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from 'react'
-import { useClock } from '../hooks/useClock'
 import { compile, DOCK_LAYOUT } from './compile'
-import { hitTest, type HitBox, type Session } from './ir'
+import { hitTest, type HitBox, type Now, type Session } from './ir'
 import { applyHit, commitLine, freshSession } from './machine'
 import { makeMeasure, paint, sizeCanvas } from './paint'
 import { loadSource, saveSource } from './source'
 
+function nowOf(d = new Date()): Now {
+  return { year: d.getFullYear(), month: d.getMonth(), day: d.getDate() }
+}
+
 export function Field() {
-  const clock = useClock()
   const [session, setSession] = useState<Session>(() => freshSession())
   const [source, setSource] = useState(loadSource)
   const fieldRef = useRef<HTMLCanvasElement>(null)
@@ -16,10 +18,8 @@ export function Field() {
   const inputRef = useRef<HTMLInputElement>(null)
   const sessionRef = useRef(session)
   const sourceRef = useRef(source)
-  const clockRef = useRef(clock)
   sessionRef.current = session
   sourceRef.current = source
-  clockRef.current = clock
 
   useEffect(() => {
     saveSource(source)
@@ -40,14 +40,16 @@ export function Field() {
     const frame = () => {
       const width = host.clientWidth || 360
       const caretOn = Date.now() % 900 < 450
+      const viewH = Math.max(240, (host.clientHeight || 640) - dockH)
       const world = {
         source: sourceRef.current,
         session: sessionRef.current,
-        clock: clockRef.current,
+        now: nowOf(),
         width,
+        viewH,
         caretOn,
       }
-      const fctx = sizeCanvas(field, width, Math.max(fieldH, 200))
+      const fctx = sizeCanvas(field, width, Math.max(fieldH, viewH))
       if (!fctx) {
         raf = requestAnimationFrame(frame)
         return
@@ -75,7 +77,7 @@ export function Field() {
       const y = e.clientY - rect.top
       const hit = hitTest(fieldHits, x, y)
       if (!hit) return
-      const result = applyHit(hit, sessionRef.current, sourceRef.current)
+      const result = applyHit(hit, sessionRef.current, sourceRef.current, nowOf())
       setSession(result.session)
       setSource(result.source)
       inputRef.current?.focus()
@@ -86,13 +88,18 @@ export function Field() {
       const y = e.clientY - rect.top
       const hit = hitTest(dockHits, x, y)
       if (hit?.kind === 'COMMIT') {
-        const result = commitLine(sessionRef.current.buffer, sessionRef.current, sourceRef.current)
+        const result = commitLine(
+          sessionRef.current.buffer,
+          sessionRef.current,
+          sourceRef.current,
+          nowOf(),
+        )
         setSession(result.session)
         setSource(result.source)
         return
       }
       if (hit) {
-        const result = applyHit(hit, sessionRef.current, sourceRef.current)
+        const result = applyHit(hit, sessionRef.current, sourceRef.current, nowOf())
         setSession(result.session)
         setSource(result.source)
       }
@@ -110,7 +117,7 @@ export function Field() {
 
   const onSubmit = (e: FormEvent) => {
     e.preventDefault()
-    const result = commitLine(session.buffer, session, source)
+    const result = commitLine(session.buffer, session, source, nowOf())
     setSession(result.session)
     setSource(result.source)
   }
@@ -120,12 +127,7 @@ export function Field() {
   }
 
   return (
-    <div
-      ref={hostRef}
-      className={`speck-host ${session.inv ? 'speck-inv' : ''}`}
-    >
-      <div className="vault-grain" aria-hidden />
-      <div className="vault-scan" aria-hidden />
+    <div ref={hostRef} className="speck-host">
       <canvas ref={fieldRef} className="speck-field" aria-label="VAULT field" />
       <div className="speck-dock">
         <canvas ref={dockRef} className="speck-dock-canvas" aria-hidden />
@@ -138,7 +140,7 @@ export function Field() {
             autoComplete="off"
             enterKeyHint="send"
             spellCheck={false}
-            aria-label="SPECK prompt"
+            aria-label="note"
           />
         </form>
       </div>

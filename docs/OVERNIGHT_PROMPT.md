@@ -1,6 +1,6 @@
 # OVERNIGHT PROMPT — paste this into a future agent
 
-**The calendar / todo nest / scratch dump shell is dead.** Failed project. Do not revive `CAL` `DAY` `NEST` `DUMP` as product organs. Keep **SPECK**. The field is seal + free canvas + one dock REPL. Persistence is the SPECK source string, not a task CRDT.
+**The globe / beige seal shell is dead. The todo nest and scratch dump are dead.** Keep **SPECK**. The field is a black 7-across month pack + one-line note dock. Persistence is `DAY MM.DD.YY "note"` source, not a task CRDT.
 
 This is a **later-run** brief. The language is written. The runtime lives in `src/speck`. Do not ignore `docs/LANGUAGE.md`. It is canon.
 
@@ -32,7 +32,7 @@ Jake / BLACK LANTERN. Personal OS. Not a store product. Not a SaaS. Local-first,
 
 1. **`docs/LANGUAGE.md`** — the grand language. Tokens, taste stack, grammar, vetoes, take/leave, SPECK first draft, how to apply. **Primary.**
 2. **`.cursorrules`** — short law. Obey it. It points here.
-3. **Current shell** — `src/App.tsx` hosts `<Field />`. Runtime is `src/speck`. CSS is glass (grain/scan), not the OS. The React calendar/todo/scratch components are a corpse; do not restore them.
+3. **Current shell** — `src/App.tsx` hosts `<Field />`. Runtime is `src/speck`. Black month pack. No grain/scan. No globe. The React calendar/todo/scratch components are a corpse; do not restore them.
 4. **History** — Gemini neo-brutal TUI blueprint (engineering DNA). PRs #8–#11 (fried TUI → burn the box → mobile OS shell). PR #7 DateBlocks = warning. User quotes below.
 5. **Boards** — [cassette futurism ui](https://au.pinterest.com/search/pins/?q=cassette%20futurism%20ui&rs=typed) is the world. [Sleaze board](https://pin.it/6UnA3VfjN) is salt. Attached refs in LANGUAGE.md §9 are take/leave — **cobalt-on-pale Archive poster is the closest cousin.** Steal structure from dark phosphor terminals; restamp onto canvas/ink/cobalt.
 
@@ -40,16 +40,11 @@ Jake / BLACK LANTERN. Personal OS. Not a store product. Not a SaaS. Local-first,
 
 ## Locked tokens
 
-- Canvas `#F4F4F0` — machine plastic
-- Ink `#111111`
-- Cobalt `#0000FF` — VAULT phosphor / chrome
-- Urgent `#FF2B2B` — warning LED only (strikes, URGENT, `[X]`)
+- Field `#000000`
+- Paper `#F4F4F0` — digits
+- Cobalt `#0000FF` — underline + note overlay
 
-JetBrains Mono everywhere except display numerals (Space Grotesk, light).
-
-Radius 0. No shadows. Grain + scan are CRT dirt, not a filter pack.
-
-INV = dirty invert of the whole field. Not a second theme.
+Helvetica Neue / Helvetica / Arial. Small digits. Radius 0. No shadows. No grain. No globe.
 
 ---
 
@@ -57,11 +52,11 @@ INV = dirty invert of the whole field. Not a second theme.
 
 One field. Mobile-first.
 
-1. Seal (no box)
-2. Free field — SPECK source paints it
-3. ONE dock, locked to the viewport bottom. `SPECK // field`. Never three forms. Never CTX chips in the header.
+1. Current month digits, 7-across, day 1 top-left, Helvetica paper on black
+2. One-line dock: note on the tapped day
+3. Cobalt underline on noted days; overlay drops from the line
 
-You may refine density and placement **inside cassette futurism**. You may not add hardware bays, card grids, a second input, or a calendar/todo/scratch app.
+You may refine density. You may not add hardware bays, card grids, a second input, the globe, or the todo OS.
 
 ---
 
@@ -85,11 +80,10 @@ Full list: `docs/LANGUAGE.md` §8.
 
 - Prompt Dock as the deck. This is the magic.
 - SPECK runtime in `src/speck` (lex / parse / compile / paint / machine)
-- INV
-- Beige canvas as plastic, grain/scan as CRT
-- Source as the live program
+- Black 7-across month + note overlay
+- Source as notes (`speck-month-v1`)
 
-Do not throw SPECK away to prove you are bold. Do not rebuild the todo OS.
+Do not throw SPECK away. Do not rebuild the todo OS. Do not bring the globe back.
 
 ---
 
@@ -110,13 +104,8 @@ Cousins: Forth, PostScript, teletext, 3270.
 ### Example source (shape, not frozen)
 
 ```
-SEAL reindustrialize
-GLYPH "FLUSH RESOLVERS"
-CHIP "OPS"
-STEM ops/
-  STEM net/ flush_stale_resolvers.sh
-GRAIN
-SCAN
+DAY 08.19.26 "ridge"
+DAY 08.19.26 "call"
 ```
 
 ### APK (when asked — not assumed)

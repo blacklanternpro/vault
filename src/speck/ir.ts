@@ -55,7 +55,7 @@ export type Op =
   | { op: 'SCAN' }
   | { op: 'INV' }
 
-export type HitKind = 'INV' | 'COMMIT' | 'DOCK' | 'MARK'
+export type HitKind = 'DAY' | 'FIELD' | 'COMMIT' | 'DOCK'
 
 export type HitBox = {
   kind: HitKind
@@ -79,9 +79,28 @@ export type Program = {
 }
 
 export type Session = {
-  inv: boolean
+  selectedDay: number | null
+  notesOpen: boolean
   buffer: string
   echo: string | null
+}
+
+export type Now = {
+  year: number
+  month: number
+  day: number
+}
+
+export function pad2(n: number): string {
+  return n < 10 ? `0${n}` : String(n)
+}
+
+export function tapeDate(year: number, month: number, day: number): string {
+  return `${pad2(month + 1)}.${pad2(day)}.${String(year).slice(-2)}`
+}
+
+export function monthLength(year: number, month: number): number {
+  return new Date(year, month + 1, 0).getDate()
 }
 
 export function hitTest(hits: HitBox[], x: number, y: number): HitBox | null {

@@ -1,39 +1,36 @@
 # vault
 
-VAULT WORLDWIDE — local-first personal OS. The field is a **SPECK** machine (canvas runtime). React is the host envelope. The live program is a SPECK source string (`localStorage` key `speck-program`).
-
-The calendar / todo nest / scratch dump were a failed shell. They are gone. SPECK stays.
+VAULT WORLDWIDE — local-first personal OS. The field is a **SPECK** machine (canvas runtime). React is the host envelope. Notes live in a SPECK source string (`localStorage` key `speck-month-v1`).
 
 Design language (portable): [`docs/LANGUAGE.md`](docs/LANGUAGE.md) — SPECK spec in §7.
 Overnight agent brief: [`docs/OVERNIGHT_PROMPT.md`](docs/OVERNIGHT_PROMPT.md).
 
 ## Composition
 
-Mobile-first continuous field, painted by SPECK:
+Black field. No globe. Current month as a 7-across Helvetica pack.
 
-1. Centered sleaze micrographic seal
-2. Free canvas (whatever the current source paints)
-3. Fixed bottom prompt — the SPECK REPL
+1. Digits `1 … last`, day 1 top-left, equal cells
+2. Tap a day → one-line dock logs a note on that date
+3. Notes mark the digit with a cobalt underline
+4. Tap a marked day → notes drop from the line (cobalt / white overlay)
+5. One-line dock, viewport bottom
 
 ```
 src/
   speck/              language + runtime
     Field.tsx         host: canvas + dock input
-    lex.ts parse.ts   source
-    compile.ts paint.ts
-    machine.ts        HIT TYPE COMMIT STRIKE INV SEE CLEAR
-    source.ts         default program + localStorage
+    compile.ts        7-col pack + overlay
+    machine.ts        DAY select, note commit
+    source.ts         localStorage
 ```
 
-Default source:
+Notes in source:
 
 ```
-SEAL reindustrialize
-GRAIN
-SCAN
+DAY 08.19.26 "ridge"
 ```
 
-Dock commands: `INV` `WORDS` `SEE` `CLEAR` `COMMIT`. Paint nouns (`GLYPH` `CHIP` `STEM` `SEAL`) append to source. Anything else becomes `GLYPH "…"`. Typing `todo` does not spawn a todo widget.
+Dock: type a note and ↵. Commands: `SEE` `WORDS` `CLEAR`. No day selected → `? DAY`.
 
 ## Development
 

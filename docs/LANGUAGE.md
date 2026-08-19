@@ -14,7 +14,7 @@ If a thing cannot be said in this language, it is not in the work.
 Before you add a feature, a color, a font, a panel, a motion, a word:
 
 1. Can it be said in **SPECK**? (see §7)
-2. Does it live on **canvas / ink / cobalt / urgent** — and nowhere else?
+2. Does it live on **field / paper / cobalt** — and nowhere else?
 3. Is it **utility** wearing attitude, or attitude wearing a fake tool?
 4. Would Jake almost throw up? (DateBlocks, cards, SaaS stacks, boxed amber terminals)
 
@@ -63,22 +63,19 @@ Attitude: slightly illegal, slightly glamorous, still a tool.
 
 | Token | Hex | Job |
 | --- | --- | --- |
-| Canvas | `#F4F4F0` | Machine plastic. The field. |
-| Ink | `#111111` | Body, stems, seal linework. |
-| Cobalt | `#0000FF` | Phosphor. Chrome. Selection. Day labels. Date anchors. Active invert chips. |
-| Urgent | `#FF2B2B` | Warning LED only: strikes, URGENT, `[X]`. |
+| Field | `#000000` | The glass. This instance. |
+| Paper | `#F4F4F0` | Month digits. Off-white. |
+| Cobalt | `#0000FF` | Underline. Note overlay. Dock hairline. |
+| White | `#FFFFFF` | Overlay type on cobalt. |
 
-Cobalt = chrome. Red is not a brand color. Red is an alarm.
+Cobalt = mark + overlay. Not a second theme. Red is not on this field.
 
-No teal. No amber-as-theme. No terminal green. No canary. No cyan HUD. No mauve/mustard ricing palettes.
-
-**INV** inverts the whole field (`invert` + `hue-rotate-180`). It is a dirty display invert, not a second theme system. Do not author a dark palette.
+No teal. No amber-as-theme. No terminal green. No canary. No cyan HUD. No mauve/mustard ricing palettes. No beige plastic on this instance. No globe.
 
 ### Type
 
-- **JetBrains Mono** — everything that is data, chrome, marks, dock, metadata.
-- **Space Grotesk, light** — display numerals if the program paints them. Not a calendar organ.
-- No Inter. No VT323. No Orbitron. No Helvetica-as-section-billboard. No pixel-display novelty fonts.
+- **Helvetica Neue / Helvetica / Arial** — month digits and the one-line dock. Small. Equal cells.
+- No JetBrains. No Space Grotesk. No Inter. No VT323. No Orbitron. No pixel-display novelty fonts.
 
 Tracking is tight on chrome. Uppercase for legends and shouts.
 
@@ -86,9 +83,8 @@ Tracking is tight on chrome. Uppercase for legends and shouts.
 
 - Border radius: **0**. Everywhere. Including native controls.
 - No soft shadows. No gradients. No blur. No glass.
-- Grain: fried SVG noise, multiply, low opacity — xerox, not Instagram.
-- Scan: CRT hairlines, barely there.
-- Selection: cobalt field, canvas text.
+- Grain / scan: off on this instance.
+- Selection: none. A noted day is a cobalt hairline. Open notes are a cobalt overlay.
 
 ---
 
@@ -98,13 +94,14 @@ One continuous personal OS field. Not a dashboard. Not stacked sections. Not thr
 
 Mobile-first. The dock is locked to the viewport bottom.
 
-**VAULT instance (SPECK machine — the calendar / todo / scratch shell is dead):**
+**VAULT instance (SPECK machine — black month field):**
 
-1. **Seal** — centered VAULT WORLDWIDE micrographic. Scanline globe + orbital seal. Legend `REINDUSTRIALIZE`. Wordmark + `WORLDWIDE ®`. Tagline `local_first // no_cloud`. Clock + `INV` as chrome, not a header bar. **No box around the seal.**
-2. **Field** — whatever the live SPECK source paints (`GLYPH` `CHIP` `STEM`). Empty source after the seal is empty canvas. Click a mark to `STRIKE` it. No month grid. No todo tree as an app. No scratch organ.
-3. **Dock** — ONE prompt. Always. Label `SPECK // field`. Blinking `>`. `↵` commits. Never three forms. Never CTX chips in the header.
+1. **Pack** — current month digits `1 … last`. 7 equal columns. Day 1 top-left. No weekday offset. No month wordmark. No globe. No clock. No INV chrome. Helvetica, small, paper on black.
+2. **Dock** — ONE one-line floating prompt. Tap a day, then type a note. Empty select → `? DAY`. Never three forms. Never CTX chips in the header.
+3. **Mark** — a day with notes gets a cobalt hairline under the digit.
+4. **Overlay** — tap a marked day: notes drop from that line, first line flush with the hairline, cobalt fill / white type, covering whatever is under them. Tap the digit, another day, or empty field and they go.
 
-A later agent may rethink density and placement **inside this world**. It may not revive CAL / NEST / DUMP as product organs. It may not add hardware bays, card grids, or a second input.
+A later agent may refine density **inside this field**. It may not bring back the globe, beige cassette chrome, todo nest, scratch dump, DateBlocks, hardware bays, card grids, or a second input.
 
 ---
 
@@ -127,15 +124,14 @@ These are the letters of the language. Use them. Do not invent a parallel alphab
 
 ## 6. What already works (do not throw away)
 
-The VAULT field is a **SPECK machine**. React is the host envelope (canvas, native dock input). The live program is source. Do not restyle a component tree and call that the OS.
+The VAULT field is a **SPECK machine**. React is the host envelope (canvas, native dock input). Notes are source. Do not restyle a component tree and call that the OS.
 
-- One dock. This is the magic. The dock is the SPECK REPL.
-- Seal + INV + grain + scan on the glass.
-- Paint ops: `GLYPH` `CHIP` `STEM` `SEAL` `STRIKE`.
-- Beige canvas already *is* cassette-futurism plastic.
-- Persistence is the SPECK source string (`speck-program` in localStorage).
+- One dock. This is the magic.
+- 7-across current-month pack. Helvetica. Black field.
+- Cobalt underline + overlay notes.
+- Persistence is the SPECK source string (`speck-month-v1` in localStorage).
 
-What failed: the calendar / todo nest / scratch dump as the product. Dead. Do not revive them. What failed historically before that: translating vision into React *sections*. Sections want cards. Cards are DateBlocks.
+What failed: the old todo OS (calendar cards, nest, dump) and the globe/beige seal shell. Dead. Do not revive them. Sections want cards. Cards are DateBlocks.
 
 ---
 
@@ -158,25 +154,19 @@ A new feature must be **sayable in SPECK**. If you cannot write it as source, it
 Line-oriented. Indent (2 spaces) groups a body. Words are Forth-like. Case-insensitive opcodes; payloads keep their case. Comments: `//` or Forth `\` to end of line.
 
 ```
-SEAL reindustrialize
-GLYPH "FLUSH RESOLVERS"
-CHIP "OPS"
-STEM ops/
-  STEM net/ flush_stale_resolvers.sh
-GRAIN
-SCAN
+DAY 08.19.26 "ridge"
+DAY 08.19.26 "call"
 ```
 
 **Tokens**
 
 | Form | Example | Meaning |
 | --- | --- | --- |
-| word | `SEAL` `ops/` `GLYPH` | opcode, path, legend |
-| string | `"FLUSH RESOLVERS"` | glyph / chip payload |
-| number | `11` `-1` | counts, hit args |
-| flag | `STRIKE` `URGENT` | ink on a mark |
+| word | `DAY` `HIT` `CLEAR` | opcode |
+| string | `"ridge"` | note payload |
+| tape date | `08.19.26` | `MM.DD.YY` — keys a note to a day |
 
-Default program is seal + glass. Empty field after the seal is correct.
+The month pack is compiled from the clock. Source only stores notes. Empty source is a clean month.
 
 ### 7.2 Nouns (source)
 
@@ -184,15 +174,12 @@ These name the field. They compile to paint ops. Do not add a noun unless the fi
 
 | Noun | Says |
 | --- | --- |
-| `SEAL` | orbital mark + legend |
-| `GLYPH` | ink string on the field |
-| `CHIP` | inverted cobalt block |
-| `STEM` | one tree node (`│ ├── └──`) |
-| `DOCK` | the one prompt (always compiled; not a widget you spawn) |
+| `DAY` | a note on a tape date (`DAY 08.19.26 "ridge"`) |
+| `DOCK` | the one prompt (always compiled) |
 
-Dead nouns (do not compile as organs): `CAL` `DAY` `NEST` `DUMP`. Typed at the dock they are data → `GLYPH`.
+The pack is not a source noun. It is the live month. Dead organs (do not compile): `CAL` `NEST` `DUMP` `SEAL` as chrome. Typed at the dock they are notes if a day is selected.
 
-`SEE` echoes the current source in the dock. `WORDS` echoes the opcode list. `CLEAR` resets to the default source. `URGENT` is STEM ink. `STRIKE` cuts the last mark (or the mark you click).
+`SEE` echoes source. `WORDS` echoes the opcode list. `CLEAR` wipes notes.
 
 ### 7.3 Opcodes / IR
 
@@ -202,57 +189,49 @@ The painter executes a **stateless display list**. Source `INK` is baked into ea
 
 | Op | Paints |
 | --- | --- |
-| `GLYPH` | string at a point. Mono, except display numerals (Space Grotesk light). |
-| `INK` | source-only. Baked into the glyph at compile. |
-| `STRIKE` | urgent red mid-line through a mark. |
-| `CHIP` | cobalt (or white) field, opposite text, radius 0. |
-| `STEM` | ASCII prefix + label. |
-| `SEAL` | globe + orbital + `VAULT` / `WORLDWIDE ®`. No box. |
-| `DOCK` | `SPECK // field`, caret `>`, buffer, `↵`. Locked to the viewport bottom. |
-| `GRAIN` | xerox dirt on the glass. |
-| `SCAN` | CRT hairlines on the glass. |
-| `INV` | dirty invert of the whole field. Not a palette. |
+| `GLYPH` | month digit (Helvetica, paper) or dock type. |
+| `CHIP` | cobalt fill, white note text. Overlay. Radius 0. |
+| `LINE` | cobalt hairline under a noted digit. |
+| `DOCK` | one-line `>` buffer `↵`. Locked to the viewport bottom. |
+| `FILL` | black field. |
 
-Overlap is legal.
+Overlap is legal. Overlay chips cover later digits.
 
 ### 7.4 Events
 
 Pointer and keys are SPECK. The host does not own behavior; it forwards.
 
 ```
-HIT INV
-HIT MARK <line>
+HIT DAY 19
+HIT FIELD
 TYPE …
 COMMIT
-STRIKE
-INV
 CLEAR
 SEE
 WORDS
 ```
 
-Click a painted mark to strike it. Click INV to invert. Never three forms. Never CTX chips in a header.
+Tap a day to select it (and open overlay if it has notes). Tap empty field to dismiss overlay. Never three forms. Never CTX chips in a header.
 
 ### 7.5 Dock REPL
 
-The Prompt Dock is the **REPL**. One field. What you type is what the machine speaks.
+The Prompt Dock is the **REPL**. One line. What you type is a note on the selected day.
 
-- If the line **parses as a command** (first word is a paint op, event, `SEE`, `WORDS`, `CLEAR`): execute it.
-- Paint nouns (`GLYPH` `CHIP` `STEM` `SEAL`) **append to source** (or replace the seal).
-- Else the line is **data** → append `GLYPH "…"`. Typing `todo` does not spawn a todo widget.
-- Empty commit is `_` (no-op).
-- Unknown command word: echo `? WORD` (Forth).
+- Tap a day first. Else commit echoes `? DAY`.
+- If the line **parses as a command** (`SEE`, `WORDS`, `CLEAR`, `HIT`, `COMMIT`): execute it.
+- Else append `DAY MM.DD.YY "…"`.
+- Empty commit is a no-op.
 
-Examples of command lines: `INV` · `SEE` · `WORDS` · `CLEAR` · `GLYPH "ridge"` · `CHIP "OPS"` · `STEM ops/` · `STRIKE`
+Examples: `SEE` · `WORDS` · `CLEAR` · `ridge` (a note)
 
 ### 7.6 Runtime contract
 
-1. **The program is source.** `localStorage` key `speck-program`. Default is `SEAL reindustrialize` + `GRAIN` + `SCAN`. SPECK is not a database of tasks.
-2. **The field is compiled**, every frame, from source + session → display list → pixels. Session is the live machine: INV, dock buffer, echo.
-3. **Paint pixels.** Canvas (later Skia). Not DOM flow. Not Tailwind-as-OS. The host may keep a native `<input>` over the dock glyph line so the device keyboard works. That input is envelope, not aesthetic.
-4. **Hit test the display list.** Highest-z box wins. Marks strike. INV chrome sits above.
-5. **Commits mutate source.** `COMMIT` / paint nouns / `STRIKE` / `CLEAR` rewrite the program. No worker. No CRDT.
-6. **Glass vs machine.** `GRAIN` and `SCAN` may be executed as CSS dirt on the host glass. They still appear in source (`SEE`). `INV` is a host invert of the whole field.
+1. **Notes are source.** `localStorage` key `speck-month-v1`. Lines like `DAY 08.19.26 "ridge"`. The month pack is compiled from the clock, not stored.
+2. **The field is compiled**, every frame, from source + session + now → display list → pixels. Session: selected day, overlay open, dock buffer, echo.
+3. **Paint pixels.** Canvas (later Skia). Not DOM flow. The host may keep a native `<input>` over the dock glyph line. Envelope, not aesthetic.
+4. **Hit test the display list.** Highest-z box wins. Overlay above days. Days above empty field.
+5. **Commits mutate source.** `COMMIT` appends a `DAY` line. `CLEAR` wipes. No worker. No CRDT.
+6. **No grain, scan, INV, or seal** on this instance.
 
 Packaging (when asked): SPECK runtime in a boring envelope (Capacitor / WebView / TWA) → sideloadable APK. Seal as icon. No browser chrome. The envelope is not the aesthetic.
 
@@ -320,12 +299,12 @@ Older canon still in force: Gemini neo-brutal TUI blueprint (engineering DNA, no
 ## 10. How to apply this to another project
 
 1. Copy **this file**. Keep tokens, vetoes, grammar, SPECK, taste stack.
-2. Change **world content** only: seal legend, what the field paints, what the dock commits.
+2. Change **world content** only: what the field paints, what the dock commits.
 3. Do not change the substrate into cards because “this product is a marketing site.” If it cannot live on one field with one dock, it is a different language — do not pretend it is this one.
 4. Point `.cursorrules` at this file. Keep `.cursorrules` short. Agents read the short law; humans and long agents read this.
 5. If you need a second color, you are already lost. Use cobalt. If it is an alarm, use urgent.
 
-**VAULT-specific content (this repo):** seal `REINDUSTRIALIZE` / `VAULT` / `WORLDWIDE ®`; dock `SPECK // field`; persistence `speck-program`. The calendar / nest / dump shell is not part of the language instance anymore.
+**VAULT-specific content (this repo):** black month pack; Helvetica digits; dock one-line note REPL; persistence `speck-month-v1`. No globe. No beige seal shell. No todo nest. No scratch dump.
 
 ---
 
