@@ -23,9 +23,9 @@ export const DOCK_LAYOUT = {
 }
 
 export const PACK_COLS = 7
-export const DIGIT_PX = 12
-export const ROW_H = 26
-export const TOP = 14
+export const DIGIT_PX = 13
+export const ROW_H = 32
+export const TOP = 16
 
 const PAD = 16
 const MAX_INNER = 672
@@ -84,7 +84,7 @@ function cellsForMonth(now: Now, measure: Measure, x: number, w: number): Cell[]
     const label = String(day)
     const tw = measure(label, DIGIT_FONT)
     const cx = left + cellW / 2
-    const cy = top + 10
+    const cy = top + 12
     cells.push({
       day,
       x: left,
@@ -93,7 +93,7 @@ function cellsForMonth(now: Now, measure: Measure, x: number, w: number): Cell[]
       h: ROW_H,
       cx,
       cy,
-      lineY: cy + 8,
+      lineY: top + 24,
       tw,
     })
   }
@@ -126,7 +126,7 @@ function compileField(world: World, measure: Measure): Layer {
       baseline: 'middle',
     })
     if (notes.length > 0) {
-      const half = cell.tw / 2
+      const half = Math.max(cell.tw / 2 + 3, 7)
       buf.ops.push({
         op: 'LINE',
         x1: cell.cx - half,
@@ -134,7 +134,7 @@ function compileField(world: World, measure: Measure): Layer {
         x2: cell.cx + half,
         y2: cell.lineY,
         color: COBALT,
-        width: 1,
+        width: 2,
       })
     }
     buf.hits.push({

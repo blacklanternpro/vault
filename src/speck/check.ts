@@ -54,6 +54,7 @@ export function runSpeckChecks(): string[] {
   const field = compile(world, measure).field
   const lines = field.ops.filter((op) => op.op === 'LINE')
   if (lines.length < 1) fail('underline missing')
+  if (lines[0].op === 'LINE' && lines[0].width !== 2) fail('underline weight')
   const days = field.ops.filter((op) => op.op === 'GLYPH' && /^\d+$/.test(op.text))
   if (days.length !== 31) fail(`glyphs ${days.length}`)
   const chipsClosed = field.ops.filter((op) => op.op === 'CHIP')
