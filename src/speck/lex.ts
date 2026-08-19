@@ -3,6 +3,7 @@ export type Tok =
   | { t: 'NUM'; v: number; raw: string }
   | { t: 'STR'; v: string; raw: string }
   | { t: 'DATE'; v: string; raw: string }
+  | { t: 'TIME'; v: string; raw: string }
   | { t: 'YEAR'; v: number; raw: string }
 
 export type Line = {
@@ -12,6 +13,7 @@ export type Line = {
 }
 
 const DATE_RE = /^(\d{2}\.\d{2}\.\d{2})/
+const TIME_RE = /^(\d{2}:\d{2})/
 const YEAR_RE = /^'(\d{2})\b/
 const NUM_RE = /^(-?\d+)/
 const WORD_RE = /^([A-Za-z_./][A-Za-z0-9_./-]*)/
@@ -53,6 +55,12 @@ export function lexLine(src: string): Tok[] {
     if (date) {
       toks.push({ t: 'DATE', v: date[1], raw: date[1] })
       i += date[1].length
+      continue
+    }
+    const time = TIME_RE.exec(rest)
+    if (time) {
+      toks.push({ t: 'TIME', v: time[1], raw: time[1] })
+      i += time[1].length
       continue
     }
     const year = YEAR_RE.exec(rest)

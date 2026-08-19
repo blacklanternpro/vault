@@ -1,8 +1,9 @@
 @import 'tailwindcss';
 
 @theme {
-  --color-canvas: #000000;
+  --color-field: #000000;
   --color-paper: #f4f4f0;
+  --color-ink: #111111;
   --color-cobalt: #0000ff;
   --color-urgent: #ff2b2b;
 
@@ -11,22 +12,24 @@
 
 @layer base {
   * {
-    border-color: var(--color-paper);
     border-radius: 0;
   }
 
   html {
-    background-color: var(--color-canvas);
+    background-color: var(--color-field);
     overflow-x: hidden;
+    /* the slip is the only thing that scrolls, and it never bounces */
+    overscroll-behavior-y: none;
   }
 
   body {
     margin: 0;
-    background-color: var(--color-canvas);
+    background-color: var(--color-field);
     color: var(--color-paper);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
+    -webkit-tap-highlight-color: transparent;
   }
 
   ::selection {
@@ -44,17 +47,18 @@
 .speck-host {
   position: relative;
   min-height: 100dvh;
-  background: var(--color-canvas);
+  background: var(--color-field);
   color: var(--color-paper);
   font-family: var(--font-sans);
-  padding-bottom: calc(var(--speck-dock-h, 44px) + env(safe-area-inset-bottom));
 }
 
 .speck-field {
   display: block;
   width: 100%;
   cursor: default;
-  touch-action: manipulation;
+  /* vertical scroll only: taps and long-presses must not be stolen by pan-x */
+  touch-action: pan-y;
+  user-select: none;
 }
 
 .speck-dock {
@@ -63,14 +67,14 @@
   right: 0;
   bottom: 0;
   z-index: 200;
-  height: calc(var(--speck-dock-h, 44px) + env(safe-area-inset-bottom));
-  background: var(--color-canvas);
+  height: calc(var(--speck-dock-h, 46px) + env(safe-area-inset-bottom));
+  background: var(--color-field);
 }
 
 .speck-dock-canvas {
   display: block;
   width: 100%;
-  height: var(--speck-dock-h, 44px);
+  height: var(--speck-dock-h, 46px);
   touch-action: manipulation;
 }
 
@@ -79,23 +83,24 @@
   left: 0;
   right: 0;
   bottom: env(safe-area-inset-bottom);
-  height: 44px;
+  height: 37px;
   display: flex;
-  padding-left: max(28px, calc((100% - 672px) / 2 + 28px));
-  padding-right: max(40px, calc((100% - 672px) / 2 + 40px));
+  padding-left: max(30px, calc((100% - 520px) / 2 + 30px));
+  padding-right: max(44px, calc((100% - 520px) / 2 + 44px));
   pointer-events: none;
 }
 
+/* The real input rides invisibly over the painted glyph line so the phone
+   keyboard works. Envelope, not aesthetic. */
 .speck-dock-input {
   pointer-events: auto;
   width: 100%;
-  margin-bottom: 8px;
   background: transparent;
   border: 0;
   color: transparent;
   caret-color: transparent;
   outline: none;
   font-family: var(--font-sans);
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 400;
 }

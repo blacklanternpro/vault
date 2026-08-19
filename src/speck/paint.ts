@@ -1,5 +1,6 @@
 import type { Op } from './ir'
-import { CANVAS } from './tokens'
+import { rng } from './noise'
+import { FIELD } from './tokens'
 
 function tracked(
   ctx: CanvasRenderingContext2D,
@@ -26,11 +27,96 @@ function tracked(
   }
 }
 
+/** Diagonal connector with a little overshoot past the node. No elbows. */
+function paintWire(ctx: CanvasRenderingContext2D, op: Extract<Op, { op: 'WIRE' }>): void {
+  const r = rng(op.seed)
+  const dx = op.x2 - op.x1
+  const dy = op.y2 - op.y1
+  const len = Math.hypot(dx, dy) || 1
+  const ux = dx / len
+  const uy = dy / len
+  const over = 2 + r() * 3
+  // one soft break in the middle so the line is drawn, not printed
+  const mx = op.x1 + dx * (0.45 + r() * 0.15) + (r() * 2 - 1) * 1.6
+  const my = op.y1 + dy * (0.45 + r() * 0.15) + (r() * 2 - 1) * 1.6
+
+  ctx.save()
+  ctx.strokeStyle = op.color
+  ctx.lineWidth = op.width
+  ctx.lineCap = 'round'
+  ctx.beginPath()
+  ctx.moveTo(op.x1, op.y1)
+  ctx.lineTo(mx, my)
+  ctx.lineTo(op.x2 + ux * over, op.y2 + uy * over)
+  ctx.stroke()
+  ctx.restore()
+}
+
+/** The hand. Jittered, overshooting both ends, wrong on purpose. */
+function paintHand(ctx: CanvasRenderingContext2D, op: Extract<Op, { op: 'HAND' }>): void {
+  const r = rng(op.seed)
+  const lead = 3 + r() * 4
+  const tail = 3 + r() * 5
+  const x0 = op.x - lead
+  const x1 = op.x + op.w + tail
+  const steps = 5
+  ctx.save()
+  ctx.strokeStyle = op.color
+  ctx.lineWidth = op.width
+  ctx.lineCap = 'round'
+  ctx.beginPath()
+  for (let i = 0; i <= steps; i++) {
+    const t = i / steps
+    const px = x0 + (x1 - x0) * t
+    const py = op.y + (r() * 2 - 1) * 1.5 + Math.sin(t * Math.PI) * (r() - 0.5) * 1.2
+    if (i === 0) ctx.moveTo(px, py)
+    else ctx.lineTo(px, py)
+  }
+  ctx.stroke()
+  ctx.restore()
+}
+
+/** Distorted oval, printed twice a hair apart — riso mis-registration. */
+function paintStamp(ctx: CanvasRenderingContext2D, op: Extract<Op, { op: 'STAMP' }>): void {
+  const draw = (color: string, dx: number, dy: number, alpha: number) => {
+    const r = rng(op.seed)
+    ctx.save()
+    ctx.globalAlpha = alpha
+    ctx.translate(op.cx + dx, op.cy + dy)
+    ctx.rotate(op.angle)
+    ctx.strokeStyle = color
+    ctx.fillStyle = color
+    ctx.lineWidth = op.width
+    ctx.lineJoin = 'round'
+
+    const samples = 42
+    ctx.beginPath()
+    for (let i = 0; i <= samples; i++) {
+      const a = (i / samples) * Math.PI * 2
+      const wobble = 1 + (r() * 2 - 1) * 0.06
+      const px = Math.cos(a) * op.rx * wobble
+      const py = Math.sin(a) * op.ry * wobble
+      if (i === 0) ctx.moveTo(px, py)
+      else ctx.lineTo(px, py)
+    }
+    ctx.closePath()
+    ctx.stroke()
+
+    ctx.font = op.font
+    ctx.textAlign = 'left'
+    ctx.textBaseline = 'middle'
+    tracked(ctx, op.text, 0, 1, op.track, 'center')
+    ctx.restore()
+  }
+
+  draw(op.ghost, 1.6, -1.4, op.alpha * 0.55)
+  draw(op.color, 0, 0, op.alpha)
+}
+
 export function paint(ctx: CanvasRenderingContext2D, ops: Op[], w: number, h: number): void {
   ctx.save()
-  ctx.fillStyle = CANVAS
+  ctx.fillStyle = FIELD
   ctx.fillRect(0, 0, w, h)
-  ctx.imageSmoothingEnabled = false
 
   for (const op of ops) {
     switch (op.op) {
@@ -40,17 +126,21 @@ export function paint(ctx: CanvasRenderingContext2D, ops: Op[], w: number, h: nu
         break
       }
       case 'GLYPH': {
-        ctx.fillStyle = op.color
         ctx.font = op.font
-        ctx.textAlign = op.track ? 'left' : (op.align ?? 'left')
         ctx.textBaseline = op.baseline ?? 'alphabetic'
-        if (op.track) tracked(ctx, op.text, op.x, op.y, op.track, op.align ?? 'left')
-        else ctx.fillText(op.text, op.x, op.y)
-        break
-      }
-      case 'STRIKE': {
+        const align = op.align ?? 'left'
+        if (op.ghost) {
+          ctx.fillStyle = op.ghost
+          ctx.textAlign = op.track ? 'left' : align
+          const gx = op.x + (op.ghostDx ?? 1.5)
+          const gy = op.y + (op.ghostDy ?? 0)
+          if (op.track) tracked(ctx, op.text, gx, gy, op.track, align)
+          else ctx.fillText(op.text, gx, gy)
+        }
         ctx.fillStyle = op.color
-        ctx.fillRect(op.x, op.y - op.thick / 2, op.w, op.thick)
+        ctx.textAlign = op.track ? 'left' : align
+        if (op.track) tracked(ctx, op.text, op.x, op.y, op.track, align)
+        else ctx.fillText(op.text, op.x, op.y)
         break
       }
       case 'CHIP': {
@@ -60,15 +150,13 @@ export function paint(ctx: CanvasRenderingContext2D, ops: Op[], w: number, h: nu
         ctx.font = op.font
         ctx.textAlign = 'left'
         ctx.textBaseline = 'middle'
-        const pad = op.padX ?? 6
-        ctx.fillText(op.text, op.x + pad, op.y + op.h / 2)
+        ctx.fillText(op.text, op.x + (op.padX ?? 6), op.y + op.h / 2)
         break
       }
       case 'LINE': {
         ctx.strokeStyle = op.color
         ctx.lineWidth = op.width
-        if (op.dash) ctx.setLineDash(op.dash)
-        else ctx.setLineDash([])
+        ctx.setLineDash(op.dash ?? [])
         ctx.beginPath()
         ctx.moveTo(op.x1, op.y1)
         ctx.lineTo(op.x2, op.y2)
@@ -76,11 +164,31 @@ export function paint(ctx: CanvasRenderingContext2D, ops: Op[], w: number, h: nu
         ctx.setLineDash([])
         break
       }
-      case 'SEAL':
-      case 'GRAIN':
-      case 'SCAN':
-      case 'INV':
+      case 'DOT': {
+        ctx.beginPath()
+        ctx.arc(op.cx, op.cy, op.r, 0, Math.PI * 2)
+        if (op.filled) {
+          ctx.fillStyle = op.color
+          ctx.fill()
+        } else {
+          ctx.strokeStyle = op.color
+          ctx.lineWidth = op.width
+          ctx.stroke()
+        }
         break
+      }
+      case 'WIRE': {
+        paintWire(ctx, op)
+        break
+      }
+      case 'HAND': {
+        paintHand(ctx, op)
+        break
+      }
+      case 'STAMP': {
+        paintStamp(ctx, op)
+        break
+      }
     }
   }
   ctx.restore()
