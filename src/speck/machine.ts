@@ -78,8 +78,6 @@ function applyStmt(stmt: Stmt, session: Session, source: string): Result {
       return applyHitStmt(stmt.target, session, source)
     case 'DATA':
       return commitData(session, source, stmt.text)
-    default:
-      return ok(session, source, `? ${stmt.kind}`)
   }
 }
 
