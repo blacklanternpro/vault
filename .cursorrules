@@ -5,19 +5,17 @@ Overnight agent brief: docs/OVERNIGHT_PROMPT.md.
 This is one continuous personal OS field — not a dashboard, not stacked sections.
 No cards, rounded corners, soft shadows, section billboards, DateBlocks, or teal watermarks.
 
-PALETTE: Canvas #F4F4F0 · Ink #111 · Cobalt #0000FF · Urgent #FF2B2B.
-Cobalt = chrome. Red = strikes + URGENT + [X] only.
+PALETTE: Field #000000 · Paper #F4F4F0 · Cobalt #0000FF.
+Cobalt = underlines + note overlay. Paper = month digits.
 
-TYPE: JetBrains Mono everywhere except calendar numerals (Space Grotesk, light).
+TYPE: Helvetica Neue / Helvetica / Arial. Small month digits. No JetBrains. No Space Grotesk. No globe seal.
 
 COMPOSITION (mobile-first):
-1. Centered VAULT WORLDWIDE 90s-sleaze micrographic (scanline globe + orbital seal). No boxes around it.
-2. Calendar block — Day 1 top-left continuous wrap, half-scale numerals, tight ungridded pack.
-   Day labels = cobalt on white. Logged = red mid-strike over label. Selected logs = parasite chips.
-   TUI toggle MONTH ↔ YEAR. Month view has ◀ ▶ nav. Year view = 12 mini months, same language.
-3. Unix file-tree nest from hell — dense ASCII connectors (│ ├── └──). Click = nest context.
-4. Scratch dump — cobalt date anchors, hairline rules. Click = dump context.
-5. ONE fixed bottom Prompt Dock — always locked to viewport bottom. Context comes from what you click
-   (day / nest node / dump). No mode chips or CTX boxes in the header. Never three forms.
+1. Current month as digits 1…last. 7 equal columns, day 1 top-left, no weekday offset. Off-white Helvetica on black. No header.
+2. Tap a day → one-line floating dock is the note REPL for that day.
+3. A day with notes gets a cobalt hairline under the digit.
+4. Tap a day with notes → notes drop from that line (cobalt fill, white text), overlaying the field. Tap the digit, another day, or empty field to dismiss.
+5. ONE one-line dock, locked to viewport bottom. Never three forms.
 
 HARD VETO: DateBlocks, jagged day cards, SaaS stacks, acid watermarks, giant boxed logos, demo fluff.
+Do not revive the globe seal, beige cassette chrome, todo nest, or scratch dump.

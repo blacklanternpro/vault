@@ -1,40 +1,42 @@
 # vault
 
-VAULT WORLDWIDE — local-first personal OS shell.
-React 19 + Vite 8 + Tailwind CSS v4 + Yjs / IndexedDB.
+VAULT WORLDWIDE — local-first personal OS. The field is a **SPECK** machine (canvas runtime). React is the host envelope. Notes live in a SPECK source string (`localStorage` key `speck-month-v1`).
 
-Design language (portable): [`docs/LANGUAGE.md`](docs/LANGUAGE.md).
+Design language (portable): [`docs/LANGUAGE.md`](docs/LANGUAGE.md) — SPECK spec in §7.
 Overnight agent brief: [`docs/OVERNIGHT_PROMPT.md`](docs/OVERNIGHT_PROMPT.md).
 
 ## Composition
 
-Mobile-first continuous field:
+Black field. No globe. Current month as a 7-across Helvetica pack.
 
-1. Centered sleaze micrographic seal
-2. Half-scale ungridded calendar (MO ↔ YR + month nav)
-3. Dense Unix file-tree nest
-4. Scratch dump
-5. Fixed bottom prompt — context from what you click
+1. Digits `1 … last`, day 1 top-left, equal cells
+2. Tap a day → one-line dock logs a note on that date
+3. Notes mark the digit with a cobalt underline
+4. Tap a marked day → notes drop from the line (cobalt / white overlay)
+5. One-line dock, viewport bottom
 
 ```
 src/
-  App.tsx
-  components/
-    VaultSeal.tsx     centered WORLDWIDE mark
-    Calendar.tsx      month/year TUI calendar
-    TaskNest.tsx      ASCII tree nest
-    Scratchpad.tsx    dump
-    PromptDock.tsx    fixed OS prompt
-  workers/sync.worker.ts
+  speck/              language + runtime
+    Field.tsx         host: canvas + dock input
+    compile.ts        7-col pack + overlay
+    machine.ts        DAY select, note commit
+    source.ts         localStorage
 ```
+
+Notes in source:
+
+```
+DAY 08.19.26 "ridge"
+```
+
+Dock: type a note and ↵. Commands: `SEE` `WORDS` `CLEAR`. No day selected → `? DAY`.
 
 ## Development
 
-```bash
+```
 npm install
 npm run dev       # http://localhost:5173 (strictPort)
 npm run build
 npm run lint
 ```
-
-State in IndexedDB (`tui-os-vault`). Seed version bumps wipe legacy demo data.
