@@ -1,6 +1,6 @@
 # OVERNIGHT PROMPT — paste this into a future agent
 
-**The globe / beige seal shell is dead. The todo nest and scratch dump are dead.** Keep **SPECK**. The field is a black 7-across month pack + one-line note dock. Persistence is `DAY MM.DD.YY "note"` source, not a task CRDT.
+**The globe / beige seal shell is dead. So is the calendar — both the old nest/dump OS and the 7-across month pack.** Keep **SPECK**. The field is one organ: a branching task slip. Paper column on black, cobalt type, red as the hand, `BAD FORM` stamped in a distorted oval. Persistence is indent-nested `STEM "task"` source, not a CRDT.
 
 This is a **later-run** brief. The language is written. The runtime lives in `src/speck`. Do not ignore `docs/LANGUAGE.md`. It is canon.
 
@@ -32,7 +32,7 @@ Jake / BLACK LANTERN. Personal OS. Not a store product. Not a SaaS. Local-first,
 
 1. **`docs/LANGUAGE.md`** — the grand language. Tokens, taste stack, grammar, vetoes, take/leave, SPECK first draft, how to apply. **Primary.**
 2. **`.cursorrules`** — short law. Obey it. It points here.
-3. **Current shell** — `src/App.tsx` hosts `<Field />`. Runtime is `src/speck`. Black month pack. No grain/scan. No globe. The React calendar/todo/scratch components are a corpse; do not restore them.
+3. **Current shell** — `src/App.tsx` hosts `<Field />`. Runtime is `src/speck`: `tree.ts` is the model, `compile.ts` lays out the slip, `paint.ts` draws wires/strike/stamp, `noise.ts` is the seeded chaos. No grain/scan. No globe. The React calendar/todo/scratch components are a corpse; do not restore them.
 4. **History** — Gemini neo-brutal TUI blueprint (engineering DNA). PRs #8–#11 (fried TUI → burn the box → mobile OS shell). PR #7 DateBlocks = warning. User quotes below.
 5. **Boards** — [cassette futurism ui](https://au.pinterest.com/search/pins/?q=cassette%20futurism%20ui&rs=typed) is the world. [Sleaze board](https://pin.it/6UnA3VfjN) is salt. Attached refs in LANGUAGE.md §9 are take/leave — **cobalt-on-pale Archive poster is the closest cousin.** Steal structure from dark phosphor terminals; restamp onto canvas/ink/cobalt.
 
@@ -40,11 +40,14 @@ Jake / BLACK LANTERN. Personal OS. Not a store product. Not a SaaS. Local-first,
 
 ## Locked tokens
 
-- Field `#000000`
-- Paper `#F4F4F0` — digits
-- Cobalt `#0000FF` — underline + note overlay
+- Field `#000000` — the machine
+- Paper `#F4F4F0` — the slip, and any type on the black gutter
+- Ink `#111111` — masthead, rules, totals
+- Cobalt `#0000FF` — the type: items, wires, dots, selection
+- Urgent `#FF2B2B` — **the hand only**: strike and `[X]`
 
-Helvetica Neue / Helvetica / Arial. Small digits. Radius 0. No shadows. No grain. No globe.
+Helvetica Neue / Helvetica / Arial. Radius 0. No shadows. No grain. No globe. Cobalt on black does not
+read — the dock speaks in paper.
 
 ---
 
@@ -52,11 +55,13 @@ Helvetica Neue / Helvetica / Arial. Small digits. Radius 0. No shadows. No grain
 
 One field. Mobile-first.
 
-1. Current month digits, 7-across, day 1 top-left, Helvetica paper on black
-2. One-line dock: note on the tapped day
-3. Cobalt underline on noted days; overlay drops from the line
+1. Paper slip, bleeding off the top and bottom of the viewport. Not a card.
+2. Masthead of real metadata; printed character rules; totals, legend and stamp at the foot.
+3. Rows that branch: `+` arms a parent, children hang off **diagonal** wires with seeded jitter.
+4. One-line dock in the black gutter. Context from what you tapped.
 
-You may refine density. You may not add hardware bays, card grids, a second input, the globe, or the todo OS.
+You may refine density. You may not add hardware bays, card grids, a second input, the globe, the
+calendar, or `├──` elbows.
 
 ---
 
@@ -78,12 +83,13 @@ Full list: `docs/LANGUAGE.md` §8.
 
 ## What already works (keep)
 
-- Prompt Dock as the deck. This is the magic.
-- SPECK runtime in `src/speck` (lex / parse / compile / paint / machine)
-- Black 7-across month + note overlay
-- Source as notes (`speck-month-v1`)
+- Prompt Dock as the deck, context from what you tapped. This is the magic.
+- SPECK runtime in `src/speck` (lex / parse / tree / compile / paint / machine / noise)
+- The slip: paper on black, printed rules, diagonal wires, red hand strike, BAD FORM stamp
+- The undo ripcord after a kill
+- Source as tasks (`speck-tree-v1`)
 
-Do not throw SPECK away. Do not rebuild the todo OS. Do not bring the globe back.
+Do not throw SPECK away. Do not rebuild the calendar or the old todo OS. Do not bring the globe back.
 
 ---
 
@@ -104,8 +110,9 @@ Cousins: Forth, PostScript, teletext, 3270.
 ### Example source (shape, not frozen)
 
 ```
-DAY 08.19.26 "ridge"
-DAY 08.19.26 "call"
+STEM "ops" 08.19.26
+  STEM "flush resolvers" STRIKE 08.19.26 22:41
+    STEM "check dns" 08.19.26
 ```
 
 ### APK (when asked — not assumed)
