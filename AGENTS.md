@@ -24,6 +24,7 @@ Non-obvious notes:
 - The BAD FORM stamp is painted at runtime by `paintStamp()`; `node scripts/make-stamp.mjs`
   replays the same seed into `public/brand/` (SVG + PNG, transparent / paper / black).
   Agency-mark studies: `node scripts/make-stamp-alts.mjs` → `public/brand/alts/`.
+  Original-stamp ink and oval studies: `node scripts/make-stamp-studies.mjs` → `public/brand/studies/`.
 - The service worker only registers in a production build, so `npm run dev` is never
   served from a stale cache.
 - Aesthetic contract is locked in `.cursorrules`; full language in `docs/LANGUAGE.md`.
