@@ -162,6 +162,10 @@ export function runSpeckChecks(): string[] {
     if (wire.op !== 'WIRE') continue
     if (wire.x2 <= wire.x1) fail('wire must run right as it descends')
     if (wire.y2 <= wire.y1) fail('wire must descend')
+    // a wire that runs too far vertically stops reading as a diagonal and
+    // becomes an indent rail, which is the thing we threw out
+    const drop = wire.y2 - wire.y1
+    if (drop > ROW_H * 1.3) fail(`wire drop ${Math.round(drop)} reads as a rail`)
   }
   const hands = field.ops.filter((op) => op.op === 'HAND')
   if (hands.length !== 1) fail(`hand strikes ${hands.length}`)

@@ -278,9 +278,9 @@ function wirePass(buf: Buf, geos: Geo[]): void {
     const parent = byPath.get(parentPath)
     if (!parent) continue
     const seed = g.row.node.seed
-    // Keep the angle lively: a wire from far above starts closer rather than
-    // dropping a near-vertical rail down the page.
-    const startY = Math.max(parent.dotY + DOT_R + 3, g.dotY - ROW_H * 2.2)
+    // Every wire stays a short, clearly angled segment in the parent's column.
+    // Run it the full distance to a distant sibling and it reads as a rail.
+    const startY = Math.max(parent.dotY + DOT_R + 3, g.dotY - ROW_H * 1.15)
     buf.ops.push({
       op: 'WIRE',
       x1: parent.dotX + jitter(seed, 2, 1.5),
