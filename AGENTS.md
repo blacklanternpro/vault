@@ -23,6 +23,7 @@ Non-obvious notes:
 - PWA icons are generated, not hand-drawn: `node scripts/make-icons.mjs`.
 - The BAD FORM stamp is painted at runtime by `paintStamp()`; `node scripts/make-stamp.mjs`
   replays the same seed into `public/brand/` (SVG + PNG, transparent / paper / black).
+  Agency-mark studies: `node scripts/make-stamp-alts.mjs` → `public/brand/alts/`.
 - The service worker only registers in a production build, so `npm run dev` is never
   served from a stale cache.
 - Aesthetic contract is locked in `.cursorrules`; full language in `docs/LANGUAGE.md`.

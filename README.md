@@ -83,6 +83,7 @@ npm run build
 npm run lint
 node scripts/make-icons.mjs   # regenerate PWA icons
 node scripts/make-stamp.mjs   # extract BAD FORM stamp to public/brand/
+node scripts/make-stamp-alts.mjs  # five agency-mark studies, three grounds
 ```
 
 Runtime checks live in `src/speck/check.ts` and run in the console on every dev boot.
