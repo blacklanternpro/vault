@@ -83,7 +83,7 @@ npm run build
 npm run lint
 node scripts/make-icons.mjs   # regenerate PWA icons
 node scripts/make-stamp.mjs   # extract BAD FORM stamp to public/brand/
-node scripts/make-stamp-studies.mjs  # original stamp: 5 inks, 5 ovals
+node scripts/make-stamp-studies.mjs  # original stamp: inks, ovals, level-rule wordmark
 ```
 
 Runtime checks live in `src/speck/check.ts` and run in the console on every dev boot.

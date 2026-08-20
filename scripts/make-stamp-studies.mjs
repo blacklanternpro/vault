@@ -5,6 +5,8 @@
  *
  * 1. Colour: same oval, same type, both inks swapped for a new pair.
  * 2. Shape: same cobalt / urgent, the munted oval rewritten five ways.
+ * 3. More inks of the original oval.
+ * 4. No oval: type still tilted, a dead-level underline through the word.
  *
  * Each on black, white, grey. Sheets in public/brand/studies/.
  */
@@ -55,6 +57,22 @@ const COLOURS = [
   { id: 'riso', color: '#FF48B0', ghost: '#0A2F5C' },
   { id: 'heat', color: '#FF5A00', ghost: '#4A00CC' },
   { id: 'wine', color: '#6E1423', ghost: '#E6DCC8' },
+]
+
+const COLOURS2 = [
+  { id: 'ivory', color: '#F7F1E1', ghost: '#140052' },
+  { id: 'copper', color: '#C45C26', ghost: '#001A4D' },
+  { id: 'slate', color: '#3A4450', ghost: '#FF6F61' },
+  { id: 'plum', color: '#4A0E4E', ghost: '#E6B800' },
+  { id: 'signal', color: '#FFFFFF', ghost: '#FF3B00' },
+]
+
+const RULES = [
+  { id: 'source', color: '#0000FF', ghost: '#FF2B2B' },
+  { id: 'mono', color: '#F4F4F0', ghost: '#111111' },
+  { id: 'swap', color: '#FF2B2B', ghost: '#0000FF' },
+  { id: 'hazard', color: '#FFD200', ghost: '#9B0B0B' },
+  { id: 'night', color: '#F4F4F0', ghost: '#FF2B2B' },
 ]
 
 const SHAPES = [
@@ -150,6 +168,39 @@ function paintStamp(ctx, op) {
   draw(op.color, 0, 0, op.alpha)
 }
 
+function paintRule(ctx, op) {
+  const drawType = (ink, dx, dy, alpha) => {
+    ctx.save()
+    ctx.globalAlpha = alpha
+    ctx.translate(op.cx + dx, op.cy + dy)
+    ctx.rotate(op.angle)
+    ctx.fillStyle = ink
+    ctx.font = op.weight + ' ' + op.font + 'px ' + FONT
+    ctx.textBaseline = 'middle'
+    tracked(ctx, op.text, 0, 1, op.track, 'center')
+    ctx.restore()
+  }
+  drawType(op.ghost, op.ghostDx, op.ghostDy, op.alpha * 0.62)
+  drawType(op.color, 0, 0, op.alpha)
+
+  // Dead level. Not rotated, not jittered. The word still sits at -0.05,
+  // so the rule cuts the left letters higher and the right letters lower.
+  ctx.save()
+  ctx.font = op.weight + ' ' + op.font + 'px ' + FONT
+  const widths = [...op.text].map((ch) => ctx.measureText(ch).width)
+  const total = widths.reduce((a, b) => a + b, 0) + op.track * Math.max(0, op.text.length - 1)
+  const pad = 2.5
+  ctx.globalAlpha = op.alpha
+  ctx.strokeStyle = op.color
+  ctx.lineWidth = 1.15
+  ctx.lineCap = 'butt'
+  ctx.beginPath()
+  ctx.moveTo(-total / 2 - pad, 3.7)
+  ctx.lineTo(total / 2 + pad, 3.7)
+  ctx.stroke()
+  ctx.restore()
+}
+
 function paintOp(ctx, patch, ground) {
   if (ground) {
     ctx.fillStyle = ground
@@ -157,7 +208,9 @@ function paintOp(ctx, patch, ground) {
   }
   ctx.save()
   ctx.translate(FRAME.w / 2, FRAME.h / 2)
-  paintStamp(ctx, Object.assign({ cx: 0, cy: 0 }, BASE, patch))
+  const op = Object.assign({ cx: 0, cy: 0 }, BASE, patch)
+  if (op.kind === 'rule') paintRule(ctx, op)
+  else paintStamp(ctx, op)
   ctx.restore()
 }
 `
@@ -254,32 +307,51 @@ function sheet(dir, filename, title, items) {
 }
 
 mkdirSync(OUT, { recursive: true })
+const onlyNew = process.argv.includes('--new')
 const colorDir = join(OUT, 'color')
 const shapeDir = join(OUT, 'shape')
+const color2Dir = join(OUT, 'color2')
+const ruleDir = join(OUT, 'rule')
 
-for (const c of COLOURS) {
+if (!onlyNew) {
+  for (const c of COLOURS) {
+    for (const [g, hex] of Object.entries(GROUNDS)) {
+      raster(colorDir, `${c.id}-${g}`, { color: c.color, ghost: c.ghost }, g, hex)
+    }
+  }
+  sheet(colorDir, 'sheet.png', 'ORIGINAL  ·  FIVE INKS', COLOURS)
+
+  for (const s of SHAPES) {
+    const patch = {
+      rx: s.rx,
+      ry: s.ry,
+      samples: s.samples,
+      wobble: s.wobble,
+      angle: s.angle,
+      seed: s.seed,
+      harmonicN: s.harmonicN || 0,
+      harmonic: s.harmonic || 0,
+      egg: s.egg || 0,
+    }
+    for (const [g, hex] of Object.entries(GROUNDS)) {
+      raster(shapeDir, `${s.id}-${g}`, patch, g, hex)
+    }
+  }
+  sheet(shapeDir, 'sheet.png', 'ORIGINAL  ·  FIVE OVALS', SHAPES)
+}
+
+for (const c of COLOURS2) {
   for (const [g, hex] of Object.entries(GROUNDS)) {
-    raster(colorDir, `${c.id}-${g}`, { color: c.color, ghost: c.ghost }, g, hex)
+    raster(color2Dir, `${c.id}-${g}`, { color: c.color, ghost: c.ghost }, g, hex)
   }
 }
-sheet(colorDir, 'sheet.png', 'ORIGINAL  ·  FIVE INKS', COLOURS)
+sheet(color2Dir, 'sheet.png', 'ORIGINAL  ·  FIVE MORE INKS', COLOURS2)
 
-for (const s of SHAPES) {
-  const patch = {
-    rx: s.rx,
-    ry: s.ry,
-    samples: s.samples,
-    wobble: s.wobble,
-    angle: s.angle,
-    seed: s.seed,
-    harmonicN: s.harmonicN || 0,
-    harmonic: s.harmonic || 0,
-    egg: s.egg || 0,
-  }
+for (const c of RULES) {
   for (const [g, hex] of Object.entries(GROUNDS)) {
-    raster(shapeDir, `${s.id}-${g}`, patch, g, hex)
+    raster(ruleDir, `${c.id}-${g}`, { kind: 'rule', color: c.color, ghost: c.ghost }, g, hex)
   }
 }
-sheet(shapeDir, 'sheet.png', 'ORIGINAL  ·  FIVE OVALS', SHAPES)
+sheet(ruleDir, 'sheet.png', 'NO OVAL  ·  LEVEL RULE', RULES)
 
 rmSync(TMP, { recursive: true, force: true })
