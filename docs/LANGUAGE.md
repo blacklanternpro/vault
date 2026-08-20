@@ -361,8 +361,8 @@ Older canon still in force: Gemini neo-brutal TUI blueprint (engineering DNA, no
 5. If you need a second color, you are already lost. Use cobalt. If it is an alarm, use urgent.
 
 **VAULT-specific content (this repo):** the branching task slip; Helvetica throughout; `BAD FORM` as
-the maker's stamp; one-line dock REPL; persistence `speck-tree-v1`. No globe. No beige seal shell. No
-calendar. No scratch dump.
+the maker's stamp (same object exported at `public/brand/`); one-line dock REPL; persistence
+`speck-tree-v1`. No globe. No beige seal shell. No calendar. No scratch dump.
 
 ---
 
