@@ -1,28 +1,17 @@
 @import 'tailwindcss';
 
-@import '@fontsource/jetbrains-mono/400.css';
-@import '@fontsource/jetbrains-mono/500.css';
-@import '@fontsource/jetbrains-mono/700.css';
-@import '@fontsource/jetbrains-mono/800.css';
-
-@import '@fontsource/space-grotesk/300.css';
-@import '@fontsource/space-grotesk/400.css';
-@import '@fontsource/space-grotesk/700.css';
-
 @theme {
-  --color-canvas: #f4f4f0;
-  --color-ink: #111111;
+  --color-canvas: #000000;
+  --color-paper: #f4f4f0;
   --color-cobalt: #0000ff;
   --color-urgent: #ff2b2b;
 
-  --font-mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo,
-    Consolas, monospace;
-  --font-sans: 'Space Grotesk', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --font-sans: 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
 
 @layer base {
   * {
-    border-color: var(--color-ink);
+    border-color: var(--color-paper);
     border-radius: 0;
   }
 
@@ -34,15 +23,15 @@
   body {
     margin: 0;
     background-color: var(--color-canvas);
-    color: var(--color-ink);
-    font-family: var(--font-mono);
+    color: var(--color-paper);
+    font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
   }
 
   ::selection {
     background-color: var(--color-cobalt);
-    color: var(--color-canvas);
+    color: #ffffff;
   }
 
   button,
@@ -52,59 +41,13 @@
   }
 }
 
-/* Harder grain — more fried, still non-interactive */
-.vault-grain {
-  pointer-events: none;
-  position: fixed;
-  inset: 0;
-  z-index: 9999;
-  opacity: 0.14;
-  mix-blend-mode: multiply;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.95' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  background-size: 140px 140px;
-}
-
-.vault-scan {
-  pointer-events: none;
-  position: fixed;
-  inset: 0;
-  z-index: 9998;
-  opacity: 0.045;
-  background: repeating-linear-gradient(
-    to bottom,
-    transparent 0,
-    transparent 2px,
-    rgba(0, 0, 0, 0.4) 2px,
-    rgba(0, 0, 0, 0.4) 3px
-  );
-}
-
-@keyframes vault-caret {
-  0%,
-  49% {
-    opacity: 1;
-  }
-  50%,
-  100% {
-    opacity: 0;
-  }
-}
-
-.vault-caret {
-  animation: vault-caret 0.9s steps(1, end) infinite;
-}
-
 .speck-host {
   position: relative;
   min-height: 100dvh;
   background: var(--color-canvas);
-  color: var(--color-ink);
-  font-family: var(--font-mono);
-  padding-bottom: calc(var(--speck-dock-h, 92px) + env(safe-area-inset-bottom));
-}
-
-.speck-inv {
-  filter: invert(1) hue-rotate(180deg);
+  color: var(--color-paper);
+  font-family: var(--font-sans);
+  padding-bottom: calc(var(--speck-dock-h, 44px) + env(safe-area-inset-bottom));
 }
 
 .speck-field {
@@ -120,14 +63,14 @@
   right: 0;
   bottom: 0;
   z-index: 200;
-  height: calc(var(--speck-dock-h, 92px) + env(safe-area-inset-bottom));
+  height: calc(var(--speck-dock-h, 44px) + env(safe-area-inset-bottom));
   background: var(--color-canvas);
 }
 
 .speck-dock-canvas {
   display: block;
   width: 100%;
-  height: var(--speck-dock-h, 92px);
+  height: var(--speck-dock-h, 44px);
   touch-action: manipulation;
 }
 
@@ -138,7 +81,7 @@
   bottom: env(safe-area-inset-bottom);
   height: 44px;
   display: flex;
-  padding-left: max(26px, calc((100% - 672px) / 2 + 26px));
+  padding-left: max(28px, calc((100% - 672px) / 2 + 28px));
   padding-right: max(40px, calc((100% - 672px) / 2 + 40px));
   pointer-events: none;
 }
@@ -152,22 +95,7 @@
   color: transparent;
   caret-color: transparent;
   outline: none;
-  font-family: var(--font-mono);
+  font-family: var(--font-sans);
   font-size: 14px;
-  font-weight: 700;
-}
-
-.speck-file {
-  display: none;
-}
-
-/* Teletext inverted chip */
-.tui-chip {
-  display: inline-block;
-  background: var(--color-cobalt);
-  color: var(--color-canvas);
-  font-weight: 700;
-  padding: 0 0.35em;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  font-weight: 400;
 }

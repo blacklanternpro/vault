@@ -1,249 +1,68 @@
-import type { OsMode } from '../lib/os-mode'
-import type { TaskPriority, VaultSnapshot } from '../lib/vault-types'
 import type { HitBox, Now, Session } from './ir'
 import { tapeDate } from './ir'
-import { isCommandLine, parseCommand, type Stmt } from './parse'
-import { findNodeByPath, findNodePath, see } from './see'
+import { isCommandLine, notesForDate, parseCommand, type Stmt } from './parse'
+import { see } from './see'
+import { appendDayNote, DEFAULT_SOURCE } from './source'
 import { PAINT_OPS } from './tokens'
-
-export type Intent =
-  | { type: 'ADD_SYS_LOG'; text: string; day: number; date: string }
-  | {
-      type: 'ADD_TASK'
-      text: string
-      parentId: string | null
-      priority: TaskPriority
-    }
-  | { type: 'ADD_NOTE'; text: string; date: string; attachment?: string }
-  | { type: 'TOGGLE_TASK'; id: string }
-  | { type: 'DELETE_SYS_LOG'; id: string }
-  | { type: 'ATTACH' }
 
 export type Result = {
   session: Session
-  intents: Intent[]
+  source: string
 }
 
-export function freshSession(now: Now): Session {
-  return {
-    inv: false,
-    mode: 'DAY',
-    viewYear: now.year,
-    viewMonth: now.month,
-    calView: 'MO',
-    selectedDay: now.day,
-    nestId: null,
-    priority: 'P2',
-    buffer: '',
-    echo: null,
-  }
+export function freshSession(): Session {
+  return { selectedDay: null, notesOpen: false, buffer: '', echo: null }
 }
 
-function shiftCal(session: Session, delta: number): Session {
-  const d = new Date(session.viewYear, session.viewMonth, 1)
-  if (session.calView === 'YR') d.setFullYear(d.getFullYear() + delta)
-  else d.setMonth(d.getMonth() + delta)
-  return {
-    ...session,
-    viewYear: d.getFullYear(),
-    viewMonth: d.getMonth(),
-    selectedDay: null,
-    mode: 'DAY',
-    echo: null,
-  }
+function ok(session: Session, source: string, echo: string | null = null): Result {
+  return { session: { ...session, buffer: '', echo }, source }
 }
 
-function dockDate(session: Session, now: Now): { day: number; date: string } | null {
-  const viewingNow = session.viewYear === now.year && session.viewMonth === now.month
-  const day = session.selectedDay ?? (viewingNow ? now.day : null)
-  if (day == null) return null
-  return { day, date: tapeDate(session.viewYear, session.viewMonth, day) }
-}
-
-function commitData(session: Session, now: Now, text: string): Result {
-  const trimmed = text.trim()
-  if (!trimmed) return { session: { ...session, buffer: '', echo: null }, intents: [] }
-
-  if (session.mode === 'DAY') {
-    const slot = dockDate(session, now)
-    if (!slot) {
-      return { session: { ...session, echo: '? DAY' }, intents: [] }
-    }
+function selectDay(session: Session, source: string, now: Now, n: number): Result {
+  const date = tapeDate(now.year, now.month, n)
+  const has = notesForDate(source, date).length > 0
+  if (session.selectedDay === n && session.notesOpen) {
     return {
-      session: { ...session, buffer: '', echo: null, selectedDay: slot.day },
-      intents: [
-        {
-          type: 'ADD_SYS_LOG',
-          text: trimmed.toUpperCase(),
-          day: slot.day,
-          date: slot.date,
-        },
-      ],
+      session: { ...session, notesOpen: false, echo: null },
+      source,
     }
   }
-
-  if (session.mode === 'NEST') {
-    return {
-      session: { ...session, buffer: '', echo: null, priority: 'P2' },
-      intents: [
-        {
-          type: 'ADD_TASK',
-          text: trimmed,
-          parentId: session.nestId,
-          priority: session.priority,
-        },
-      ],
-    }
-  }
-
-  const date = dockDate(session, now)?.date ?? tapeDate(now.year, now.month, now.day)
   return {
-    session: { ...session, buffer: '', echo: null },
-    intents: [{ type: 'ADD_NOTE', text: trimmed, date }],
+    session: {
+      ...session,
+      selectedDay: n,
+      notesOpen: has,
+      echo: null,
+    },
+    source,
   }
 }
 
-function applyStmt(
-  stmt: Stmt,
-  session: Session,
-  snapshot: VaultSnapshot,
-  now: Now,
-): Result {
+function applyStmt(stmt: Stmt, session: Session, source: string, now: Now): Result {
   switch (stmt.kind) {
-    case 'INV':
-      return { session: { ...session, inv: !session.inv, buffer: '', echo: null }, intents: [] }
-    case 'MO':
-      return { session: { ...session, calView: 'MO', mode: 'DAY', buffer: '', echo: null }, intents: [] }
-    case 'YR':
-      return { session: { ...session, calView: 'YR', mode: 'DAY', buffer: '', echo: null }, intents: [] }
-    case 'NAV':
-      return { session: { ...shiftCal(session, stmt.delta), buffer: '' }, intents: [] }
     case 'SEE': {
-      const src = see(snapshot, session, now)
-      const date = tapeDate(now.year, now.month, now.day)
-      return {
-        session: { ...session, buffer: '', echo: 'SEE → DUMP', mode: 'DUMP' },
-        intents: [{ type: 'ADD_NOTE', text: src, date }],
-      }
+      const src = see(source)
+      const echo = src.trim() ? src.replace(/\n+/g, ' · ') : '_'
+      return ok(session, source, echo.length > 160 ? `${echo.slice(0, 157)}…` : echo)
     }
     case 'WORDS':
-      return {
-        session: {
-          ...session,
-          buffer: '',
-          echo: `${PAINT_OPS.join(' ')} // HIT TYPE COMMIT SEE`,
-        },
-        intents: [],
-      }
-    case 'ATTACH':
-      return {
-        session: { ...session, mode: 'DUMP', buffer: '', echo: null },
-        intents: [{ type: 'ATTACH' }],
-      }
-    case 'PRIORITY':
-      return {
-        session: {
-          ...session,
-          mode: 'NEST',
-          priority: stmt.value as TaskPriority,
-          buffer: '',
-          echo: null,
-        },
-        intents: [],
-      }
-    case 'DAY_SELECT':
-      return {
-        session: {
-          ...session,
-          mode: 'DAY',
-          selectedDay: stmt.n,
-          nestId: null,
-          buffer: '',
-          echo: null,
-        },
-        intents: [],
-      }
-    case 'MODE': {
-      if (stmt.mode === 'NEST') {
-        let nestId = session.nestId
-        if (stmt.arg) {
-          const node = findNodeByPath(snapshot.tasks, stmt.arg)
-          nestId = node?.id ?? null
-          if (!node) {
-            return { session: { ...session, echo: `? ${stmt.arg}`, buffer: '' }, intents: [] }
-          }
-        }
-        return {
-          session: { ...session, mode: 'NEST', nestId, buffer: '', echo: null },
-          intents: [],
-        }
-      }
-      const mode = stmt.mode as OsMode
-      return {
-        session: {
-          ...session,
-          mode,
-          nestId: mode === 'NEST' ? session.nestId : null,
-          buffer: '',
-          echo: null,
-        },
-        intents: [],
-      }
+      return ok(session, source, `${PAINT_OPS.join(' ')} // HIT TYPE COMMIT SEE CLEAR`)
+    case 'CLEAR':
+      return ok(freshSession(), DEFAULT_SOURCE)
+    case 'DAY': {
+      if (!stmt.date || !stmt.text) return ok(session, source, '? DAY')
+      return ok(session, appendDayNote(source, stmt.date, stmt.text))
     }
-    case 'DUMP': {
-      if (!stmt.text && !stmt.date) {
-        return { session: { ...session, mode: 'DUMP', buffer: '', echo: null }, intents: [] }
-      }
-      const date = stmt.date || tapeDate(now.year, now.month, now.day)
-      return {
-        session: { ...session, mode: 'DUMP', buffer: '', echo: null },
-        intents: [{ type: 'ADD_NOTE', text: stmt.text || '_', date }],
-      }
-    }
-    case 'STEM_ADD':
-      return commitData({ ...session, mode: 'NEST' }, now, stmt.text)
-    case 'DOCK': {
-      const mode = (stmt.mode === 'NEST' || stmt.mode === 'DUMP' ? stmt.mode : 'DAY') as OsMode
-      return { session: { ...session, mode, buffer: '', echo: null }, intents: [] }
-    }
+    case 'DOCK':
+      return ok(session, source)
     case 'COMMIT':
-      return commitData(session, now, session.buffer)
+      return commitData(session, source, now, session.buffer)
     case 'TYPE':
-      return { session: { ...session, buffer: stmt.text }, intents: [] }
-    case 'STRIKE': {
-      if (stmt.id) {
-        const log = snapshot.sysLogs.find((l) => l.id === stmt.id)
-        if (log) {
-          return {
-            session: { ...session, buffer: '', echo: null },
-            intents: [{ type: 'DELETE_SYS_LOG', id: stmt.id }],
-          }
-        }
-        return {
-          session: { ...session, buffer: '', echo: null },
-          intents: [{ type: 'TOGGLE_TASK', id: stmt.id }],
-        }
-      }
-      if (session.mode === 'NEST' && session.nestId) {
-        return {
-          session: { ...session, buffer: '', echo: null },
-          intents: [{ type: 'TOGGLE_TASK', id: session.nestId }],
-        }
-      }
-      return { session: { ...session, echo: '? STRIKE', buffer: '' }, intents: [] }
-    }
+      return { session: { ...session, buffer: stmt.text }, source }
     case 'HIT':
-      return applyHitStmt(stmt.target, stmt.arg, session, snapshot)
-    case 'GRAIN':
-    case 'SCAN':
-    case 'SEAL':
-      return { session: { ...session, buffer: '', echo: null }, intents: [] }
-    case 'CAL':
-      return { session: { ...session, mode: 'DAY', calView: 'MO', buffer: '', echo: null }, intents: [] }
+      return applyHitStmt(stmt.target, stmt.arg, session, source, now)
     case 'DATA':
-      return commitData(session, now, stmt.text)
-    default:
-      return { session: { ...session, echo: `? ${stmt.kind}`, buffer: '' }, intents: [] }
+      return commitData(session, source, now, stmt.text)
   }
 }
 
@@ -251,144 +70,45 @@ function applyHitStmt(
   target: string,
   arg: string | number | undefined,
   session: Session,
-  snapshot: VaultSnapshot,
-): Result {
-  const t = target.toUpperCase()
-  if (t === 'INV') return { session: { ...session, inv: !session.inv, echo: null }, intents: [] }
-  if (t === 'MO') return { session: { ...session, calView: 'MO', mode: 'DAY', echo: null }, intents: [] }
-  if (t === 'YR') return { session: { ...session, calView: 'YR', mode: 'DAY', echo: null }, intents: [] }
-  if (t === 'NAV' && typeof arg === 'number') {
-    return { session: shiftCal(session, arg), intents: [] }
-  }
-  if (t === 'DAY' && typeof arg === 'number') {
-    return {
-      session: { ...session, mode: 'DAY', selectedDay: arg, nestId: null, echo: null },
-      intents: [],
-    }
-  }
-  if (t === 'DUMP') {
-    return { session: { ...session, mode: 'DUMP', nestId: null, echo: null }, intents: [] }
-  }
-  if (t === 'NODE' && typeof arg === 'string') {
-    const node = findNodeByPath(snapshot.tasks, arg)
-    return {
-      session: {
-        ...session,
-        mode: 'NEST',
-        nestId: node ? (session.nestId === node.id ? null : node.id) : session.nestId,
-        echo: node ? null : `? ${arg}`,
-      },
-      intents: [],
-    }
-  }
-  return { session: { ...session, echo: `? HIT ${target}` }, intents: [] }
-}
-
-export function applyHit(hit: HitBox, session: Session, _snapshot: VaultSnapshot): Result {
-  switch (hit.kind) {
-    case 'INV':
-      return { session: { ...session, inv: !session.inv, echo: null }, intents: [] }
-    case 'MO':
-      return { session: { ...session, calView: 'MO', mode: 'DAY', echo: null }, intents: [] }
-    case 'YR':
-      return { session: { ...session, calView: 'YR', mode: 'DAY', echo: null }, intents: [] }
-    case 'NAV':
-      return { session: shiftCal(session, Number(hit.payload ?? 0)), intents: [] }
-    case 'MONTH':
-      return {
-        session: {
-          ...session,
-          viewMonth: Number(hit.payload),
-          calView: 'MO',
-          selectedDay: null,
-          mode: 'DAY',
-          echo: null,
-        },
-        intents: [],
-      }
-    case 'DAY':
-      return {
-        session: {
-          ...session,
-          mode: 'DAY',
-          selectedDay: Number(hit.payload),
-          nestId: null,
-          echo: null,
-        },
-        intents: [],
-      }
-    case 'CAL':
-      return { session: { ...session, mode: 'DAY', echo: null }, intents: [] }
-    case 'NEST':
-      return { session: { ...session, mode: 'NEST', echo: null }, intents: [] }
-    case 'DUMP':
-      return { session: { ...session, mode: 'DUMP', nestId: null, echo: null }, intents: [] }
-    case 'NODE': {
-      const id = String(hit.payload ?? '')
-      return {
-        session: {
-          ...session,
-          mode: 'NEST',
-          nestId: session.nestId === id ? null : id,
-          echo: null,
-        },
-        intents: [],
-      }
-    }
-    case 'STRIKE_LOG':
-      return {
-        session,
-        intents: [{ type: 'DELETE_SYS_LOG', id: String(hit.payload ?? '') }],
-      }
-    case 'STRIKE_NODE':
-      return {
-        session,
-        intents: [{ type: 'TOGGLE_TASK', id: String(hit.payload ?? '') }],
-      }
-    case 'PRIORITY':
-      return {
-        session: { ...session, priority: String(hit.payload) as TaskPriority, echo: null },
-        intents: [],
-      }
-    case 'ATTACH':
-      return { session: { ...session, mode: 'DUMP' }, intents: [{ type: 'ATTACH' }] }
-    case 'COMMIT':
-      return { session, intents: [] }
-    case 'DOCK':
-      return { session, intents: [] }
-    default:
-      return { session, intents: [] }
-  }
-}
-
-export function commitLine(
-  line: string,
-  session: Session,
-  snapshot: VaultSnapshot,
+  source: string,
   now: Now,
 ): Result {
-  const trimmed = line.trim()
-  if (!trimmed) return { session: { ...session, buffer: '', echo: null }, intents: [] }
-  if (isCommandLine(trimmed)) {
-    const stmt = parseCommand(trimmed)
-    if (stmt.kind === 'DATA') return commitData(session, now, stmt.text)
-    return applyStmt(stmt, session, snapshot, now)
+  const t = target.toUpperCase()
+  if (t === 'DAY' && typeof arg === 'number') return selectDay(session, source, now, arg)
+  if (t === 'FIELD') {
+    return { session: { ...session, notesOpen: false, echo: null }, source }
   }
-  return commitData(session, now, trimmed)
+  if (t === 'CLEAR') return ok(freshSession(), DEFAULT_SOURCE)
+  return ok(session, source, `? HIT ${target}`)
 }
 
-export function contextLabel(session: Session, snapshot: VaultSnapshot, now: Now): string {
-  if (session.mode === 'DAY') {
-    const viewingNow = session.viewYear === now.year && session.viewMonth === now.month
-    if (session.selectedDay != null || viewingNow) {
-      const day = session.selectedDay ?? now.day
-      return tapeDate(session.viewYear, session.viewMonth, day)
-    }
-    return `${String(session.viewMonth + 1).padStart(2, '0')}.??.${String(session.viewYear).slice(-2)}`
+export function applyHit(hit: HitBox, session: Session, source: string, now: Now): Result {
+  switch (hit.kind) {
+    case 'DAY':
+      return selectDay(session, source, now, Number(hit.payload ?? 0))
+    case 'FIELD':
+      return { session: { ...session, notesOpen: false, echo: null }, source }
+    case 'COMMIT':
+    case 'DOCK':
+      return { session, source }
   }
-  if (session.mode === 'NEST') {
-    if (!session.nestId) return 'root/'
-    return findNodePath(snapshot.tasks, session.nestId) ?? 'root/'
+}
+
+function commitData(session: Session, source: string, now: Now, text: string): Result {
+  const trimmed = text.trim()
+  if (!trimmed) return ok(session, source)
+  if (session.selectedDay == null) return ok(session, source, '? DAY')
+  const date = tapeDate(now.year, now.month, session.selectedDay)
+  return ok(session, appendDayNote(source, date, trimmed))
+}
+
+export function commitLine(line: string, session: Session, source: string, now: Now): Result {
+  const trimmed = line.trim()
+  if (!trimmed) return ok(session, source)
+  if (isCommandLine(trimmed)) {
+    const stmt = parseCommand(trimmed)
+    if (stmt.kind === 'DATA') return commitData(session, source, now, stmt.text)
+    return applyStmt(stmt, session, source, now)
   }
-  return 'scratch'
+  return commitData(session, source, now, trimmed)
 }

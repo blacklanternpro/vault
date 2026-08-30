@@ -4,9 +4,8 @@
 
 `vault` is a **frontend-only** single-page app (React 19 + Vite 8 + Tailwind CSS v4,
 TypeScript). There is **no backend, database, auth, API, or environment variables** —
-persistence is local IndexedDB via a Yjs Web Worker. Seed content lives in
-`src/workers/sync.worker.ts`. Running the Vite dev server is enough to exercise the
-product end to end.
+notes persist as a SPECK source string in `localStorage` (`speck-month-v1`).
+Running the Vite dev server is enough to exercise the product end to end.
 
 Standard commands live in `README.md` and `package.json` scripts (`dev`, `build`,
 `lint`, `preview`). Package manager is **npm** (`package-lock.json`).
@@ -19,4 +18,7 @@ Non-obvious notes:
   bundling error).
 - Lint is **oxlint** (`npm run lint`), configured via `.oxlintrc.json` — not ESLint.
 - Aesthetic contract is locked in `.cursorrules`. Full portable language: `docs/LANGUAGE.md`. Overnight brief: `docs/OVERNIGHT_PROMPT.md`.
-- Smoke: SPECK canvas field, fixed bottom prompt (REPL), click day/nest/dump to set context, MO/YR calendar, tree nest, INV. Dock speaks SPECK (`INV`, `DAY 11`, `SEE`, `WORDS`). Seed version in the worker clears legacy demo on upgrade.
+- Smoke: black field, Helvetica month digits 7-across, no globe. Tap a day, type a
+  note in the one-line dock, cobalt underline appears. Tap a noted day — overlay
+  drops from the line. Tap elsewhere — overlay dismisses. Do not revive the seal,
+  beige chrome, todo nest, or scratch dump.
