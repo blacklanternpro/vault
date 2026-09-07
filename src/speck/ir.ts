@@ -1,5 +1,7 @@
 export type Measure = (text: string, font: string) => number
 
+export type OrganName = 'PIPE' | 'NEST' | 'DUMP'
+
 export type Op =
   | {
       op: 'GLYPH'
@@ -32,7 +34,6 @@ export type Op =
       font: string
       padX?: number
     }
-  | { op: 'SEAL'; x: number; y: number; w: number }
   | {
       op: 'FILL'
       x: number
@@ -51,11 +52,31 @@ export type Op =
       width: number
       dash?: number[]
     }
-  | { op: 'GRAIN' }
-  | { op: 'SCAN' }
-  | { op: 'INV' }
+  | {
+      op: 'STEM'
+      x: number
+      y: number
+      text: string
+      color: string
+      font: string
+    }
 
-export type HitKind = 'DAY' | 'FIELD' | 'COMMIT' | 'DOCK'
+export type HitKind =
+  | 'PIPE'
+  | 'COL'
+  | 'TASK'
+  | 'NEST'
+  | 'STEM'
+  | 'DUMP'
+  | 'NOTE'
+  | 'SHOVEL'
+  | 'CLIP'
+  | 'RING'
+  | 'ORGAN'
+  | 'GLYPH'
+  | 'FIELD'
+  | 'COMMIT'
+  | 'DOCK'
 
 export type HitBox = {
   kind: HitKind
@@ -78,9 +99,18 @@ export type Program = {
   dock: Layer
 }
 
+export type Selected =
+  | { kind: 'PIPE' }
+  | { kind: 'COL'; col: string }
+  | { kind: 'TASK'; id: number }
+  | { kind: 'NEST' }
+  | { kind: 'STEM'; path: string }
+  | { kind: 'DUMP' }
+  | { kind: 'NOTE'; index: number }
+
 export type Session = {
-  selectedDay: number | null
-  notesOpen: boolean
+  selected: Selected | null
+  overlay: boolean
   buffer: string
   echo: string | null
 }
@@ -97,10 +127,6 @@ export function pad2(n: number): string {
 
 export function tapeDate(year: number, month: number, day: number): string {
   return `${pad2(month + 1)}.${pad2(day)}.${String(year).slice(-2)}`
-}
-
-export function monthLength(year: number, month: number): number {
-  return new Date(year, month + 1, 0).getDate()
 }
 
 export function hitTest(hits: HitBox[], x: number, y: number): HitBox | null {

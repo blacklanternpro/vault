@@ -48,6 +48,14 @@ export function paint(ctx: CanvasRenderingContext2D, ops: Op[], w: number, h: nu
         else ctx.fillText(op.text, op.x, op.y)
         break
       }
+      case 'STEM': {
+        ctx.fillStyle = op.color
+        ctx.font = op.font
+        ctx.textAlign = 'left'
+        ctx.textBaseline = 'middle'
+        ctx.fillText(op.text, op.x, op.y)
+        break
+      }
       case 'STRIKE': {
         ctx.fillStyle = op.color
         ctx.fillRect(op.x, op.y - op.thick / 2, op.w, op.thick)
@@ -76,11 +84,6 @@ export function paint(ctx: CanvasRenderingContext2D, ops: Op[], w: number, h: nu
         ctx.setLineDash([])
         break
       }
-      case 'SEAL':
-      case 'GRAIN':
-      case 'SCAN':
-      case 'INV':
-        break
     }
   }
   ctx.restore()

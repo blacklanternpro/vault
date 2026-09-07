@@ -1,12 +1,17 @@
 import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from 'react'
 import { compile, DOCK_LAYOUT } from './compile'
-import { hitTest, type HitBox, type Now, type Session } from './ir'
-import { applyHit, commitLine, freshSession } from './machine'
+import { parseDoc, placeOf } from './doc'
+import { hitTest, type HitBox, type OrganName, type Session } from './ir'
+import { applyHit, commitLine, freshSession, placeOrgan } from './machine'
 import { makeMeasure, paint, sizeCanvas } from './paint'
 import { loadSource, saveSource } from './source'
 
-function nowOf(d = new Date()): Now {
-  return { year: d.getFullYear(), month: d.getMonth(), day: d.getDate() }
+type Drag = {
+  organ: OrganName
+  origX: number
+  origY: number
+  startX: number
+  startY: number
 }
 
 export function Field() {
@@ -18,6 +23,9 @@ export function Field() {
   const inputRef = useRef<HTMLInputElement>(null)
   const sessionRef = useRef(session)
   const sourceRef = useRef(source)
+  const drawRef = useRef<() => void>(() => {})
+  const hitsRef = useRef<{ field: HitBox[]; dock: HitBox[] }>({ field: [], dock: [] })
+  const dragRef = useRef<Drag | null>(null)
   sessionRef.current = session
   sourceRef.current = source
 
@@ -26,80 +34,104 @@ export function Field() {
   }, [source])
 
   useEffect(() => {
+    drawRef.current()
+  }, [session, source])
+
+  useEffect(() => {
     const host = hostRef.current
     const field = fieldRef.current
     const dock = dockRef.current
     if (!host || !field || !dock) return
 
-    let raf = 0
-    let fieldH = 400
+    let caretOn = true
     let dockH = DOCK_LAYOUT.h
-    let fieldHits: HitBox[] = []
-    let dockHits: HitBox[] = []
 
     const frame = () => {
-      const width = host.clientWidth || 360
-      const caretOn = Date.now() % 900 < 450
-      const viewH = Math.max(240, (host.clientHeight || 640) - dockH)
+      const width = host.clientWidth || 1200
+      const viewH = Math.max(240, (host.clientHeight || 800) - dockH)
       const world = {
         source: sourceRef.current,
         session: sessionRef.current,
-        now: nowOf(),
         width,
         viewH,
         caretOn,
       }
-      const fctx = sizeCanvas(field, width, Math.max(fieldH, viewH))
-      if (!fctx) {
-        raf = requestAnimationFrame(frame)
-        return
-      }
+      const fctx = sizeCanvas(field, width, Math.max(viewH, 400))
+      if (!fctx) return
       const measure = makeMeasure(fctx)
       const program = compile(world, measure)
-      fieldH = program.field.h
       dockH = program.dock.h
-      fieldHits = program.field.hits
-      dockHits = program.dock.hits
-      sizeCanvas(field, width, fieldH)
-      paint(fctx, program.field.ops, width, fieldH)
+      hitsRef.current = { field: program.field.hits, dock: program.dock.hits }
+      sizeCanvas(field, width, program.field.h)
+      paint(fctx, program.field.ops, width, program.field.h)
 
       const dctx = sizeCanvas(dock, width, dockH)
       if (dctx) paint(dctx, program.dock.ops, width, dockH)
-
       host.style.setProperty('--speck-dock-h', `${dockH}px`)
-      raf = requestAnimationFrame(frame)
     }
-    raf = requestAnimationFrame(frame)
+    drawRef.current = frame
+    frame()
+
+    const caret = window.setInterval(() => {
+      caretOn = !caretOn
+      frame()
+    }, 450)
+    const ro = new ResizeObserver(() => frame())
+    ro.observe(host)
 
     const onField = (e: PointerEvent) => {
       const rect = field.getBoundingClientRect()
       const x = e.clientX - rect.left
       const y = e.clientY - rect.top
-      const hit = hitTest(fieldHits, x, y)
+      const hit = hitTest(hitsRef.current.field, x, y)
       if (!hit) return
-      const result = applyHit(hit, sessionRef.current, sourceRef.current, nowOf())
+      if (hit.kind === 'ORGAN') {
+        const organ = (String(hit.payload ?? 'PIPE') || 'PIPE') as OrganName
+        const at = placeOf(parseDoc(sourceRef.current), organ)
+        dragRef.current = {
+          organ,
+          origX: at.x,
+          origY: at.y,
+          startX: x,
+          startY: y,
+        }
+        field.setPointerCapture(e.pointerId)
+      }
+      const result = applyHit(hit, sessionRef.current, sourceRef.current)
       setSession(result.session)
       setSource(result.source)
       inputRef.current?.focus()
+    }
+    const onMove = (e: PointerEvent) => {
+      const drag = dragRef.current
+      if (!drag) return
+      const rect = field.getBoundingClientRect()
+      const x = e.clientX - rect.left
+      const y = e.clientY - rect.top
+      const nx = drag.origX + (x - drag.startX)
+      const ny = drag.origY + (y - drag.startY)
+      setSource(placeOrgan(sourceRef.current, drag.organ, nx, ny))
+    }
+    const onUp = () => {
+      dragRef.current = null
     }
     const onDock = (e: PointerEvent) => {
       const rect = dock.getBoundingClientRect()
       const x = e.clientX - rect.left
       const y = e.clientY - rect.top
-      const hit = hitTest(dockHits, x, y)
+      const hit = hitTest(hitsRef.current.dock, x, y)
       if (hit?.kind === 'COMMIT') {
         const result = commitLine(
           sessionRef.current.buffer,
           sessionRef.current,
           sourceRef.current,
-          nowOf(),
         )
         setSession(result.session)
         setSource(result.source)
         return
       }
       if (hit) {
-        const result = applyHit(hit, sessionRef.current, sourceRef.current, nowOf())
+        const result = applyHit(hit, sessionRef.current, sourceRef.current)
         setSession(result.session)
         setSource(result.source)
       }
@@ -107,17 +139,24 @@ export function Field() {
     }
 
     field.addEventListener('pointerdown', onField)
+    field.addEventListener('pointermove', onMove)
+    field.addEventListener('pointerup', onUp)
+    field.addEventListener('pointercancel', onUp)
     dock.addEventListener('pointerdown', onDock)
     return () => {
-      cancelAnimationFrame(raf)
+      window.clearInterval(caret)
+      ro.disconnect()
       field.removeEventListener('pointerdown', onField)
+      field.removeEventListener('pointermove', onMove)
+      field.removeEventListener('pointerup', onUp)
+      field.removeEventListener('pointercancel', onUp)
       dock.removeEventListener('pointerdown', onDock)
     }
   }, [])
 
   const onSubmit = (e: FormEvent) => {
     e.preventDefault()
-    const result = commitLine(session.buffer, session, source, nowOf())
+    const result = commitLine(session.buffer, session, source)
     setSession(result.session)
     setSource(result.source)
   }

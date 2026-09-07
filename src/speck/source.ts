@@ -1,26 +1,15 @@
-export const STORAGE_KEY = 'speck-month-v1'
+import { SEED_SOURCE } from './doc'
 
-export const DEFAULT_SOURCE = ''
-
-export function quote(text: string): string {
-  return `"${text.replace(/"/g, '')}"`
-}
-
-export function appendDayNote(source: string, date: string, text: string): string {
-  const line = `DAY ${date} ${quote(text)}`
-  const trimmed = source.replace(/\r\n/g, '\n').trim()
-  if (!trimmed) return line
-  return `${trimmed}\n${line}`
-}
+export const STORAGE_KEY = 'speck-os-v1'
 
 export function loadSource(): string {
   try {
     const stored = localStorage.getItem(STORAGE_KEY)
-    if (stored != null) return stored
+    if (stored != null && stored.trim()) return stored
   } catch {
     /* private mode */
   }
-  return DEFAULT_SOURCE
+  return SEED_SOURCE
 }
 
 export function saveSource(source: string): void {
