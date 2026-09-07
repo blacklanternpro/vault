@@ -1,7 +1,8 @@
 import { compile, PIPE_ROWS } from './compile'
-import { parseDoc, SEED_SOURCE, serializeDoc } from './doc'
-import { applyHit, commitLine, freshSession } from './machine'
-import { PAINT_OPS } from './tokens'
+import { byId, childrenOf, parseDoc, SEED_SOURCE, serializeDoc } from './doc'
+import { applyHit, applyKey, commitLine, cycleField, freshSession } from './machine'
+import { parseDump } from './parse-dump'
+import { PAINT_OPS, POWER } from './tokens'
 
 function measure(text: string): number {
   return text.length * 7
@@ -14,10 +15,17 @@ export function runSpeckChecks(): string[] {
   const doc = parseDoc(SEED_SOURCE)
   if (doc.pipeName !== 'vault') fail(`pipe name ${doc.pipeName}`)
   if (doc.cols.join(' ') !== 'backlog active staging done') fail(`cols ${doc.cols.join(' ')}`)
-  if (!doc.tasks.some((t) => t.id === 104 && t.col === 'backlog' && t.title.includes('ingress'))) {
-    fail('task 104 backlog')
+
+  const n104 = byId(doc, 104)
+  if (!n104 || n104.status !== 'backlog' || n104.parent !== 1 || !n104.title.includes('ingress')) {
+    fail('node 104 backlog under ops')
   }
-  if (!doc.stems.some((s) => s.path.includes('scout_ridge'))) fail('stem scout')
+  const n102 = byId(doc, 102)
+  if (!n102 || n102.status !== 'active' || n102.parent !== 20 || n102.body !== 'overlay leftover') {
+    fail('node 102 active under net')
+  }
+  const n11 = byId(doc, 11)
+  if (!n11 || !n11.urgent || n11.parent !== 10) fail('node 11 urgent lab')
   if (!doc.notes.some((n) => n.text === 'ridge')) fail('dump ridge')
   if (!doc.places.some((p) => p.organ === 'PIPE')) fail('place PIPE')
   if (!doc.glyphs.some((g) => g.text === '07')) fail('glyph 07')
@@ -29,36 +37,57 @@ export function runSpeckChecks(): string[] {
   if (!ops.includes('GLYPH') || !ops.includes('CHIP') || !ops.includes('STEM')) fail('live ops')
 
   const round = parseDoc(serializeDoc(doc))
-  if (round.tasks.length !== doc.tasks.length) fail('serialize tasks')
+  if (round.nodes.length !== doc.nodes.length) fail('serialize nodes')
+  if (byId(round, 102)?.body !== 'overlay leftover') fail('serialize body')
+  if (byId(round, 104)?.parent !== 1) fail('serialize parent')
 
-  let session = { ...freshSession(), selected: { kind: 'TASK' as const, id: 104 } }
-  let result = commitLine('SHOVEL', session, SEED_SOURCE)
-  let next = parseDoc(result.source).tasks.find((t) => t.id === 104)
-  if (next?.col !== 'active') fail(`shovel1 ${next?.col}`)
-
-  result = commitLine('SHOVEL', session, result.source)
-  next = parseDoc(result.source).tasks.find((t) => t.id === 104)
-  if (next?.col !== 'staging') fail(`shovel2 ${next?.col}`)
-
-  const clipStem = doc.stems[0]
-  if (!clipStem) fail('no stem to clip')
+  const dump = parseDump(
+    'new website project, site redesign of homepage, need to assess aesthetic, create repo',
+  )
+  if (dump.kind !== 'project') fail(`dump kind ${dump.kind}`)
   else {
-    result = commitLine('CLIP', { ...freshSession(), selected: { kind: 'STEM', path: clipStem.path } }, SEED_SOURCE)
-    const clipped = parseDoc(result.source).tasks.find((t) => t.nest === clipStem.path)
-    if (!clipped || clipped.col !== 'backlog') fail(`clip ${clipped?.nest}`)
+    if (dump.title !== 'site redesign of homepage') fail(`dump title ${dump.title}`)
+    if (dump.children.join('|') !== 'assess aesthetic|create repo') fail(`dump kids ${dump.children.join('|')}`)
   }
 
-  result = commitLine('rewrite dock', { ...freshSession(), selected: { kind: 'PIPE' } }, SEED_SOURCE)
-  if (!parseDoc(result.source).tasks.some((t) => t.title === 'rewrite dock' && t.col === 'backlog')) {
-    fail('commit pipe task')
+  const amb = parseDump('new website project')
+  if (amb.kind !== 'ambiguous') fail(`dump amb ${amb.kind}`)
+
+  let session = { ...freshSession(), selected: { kind: 'NODE' as const, id: 104 } }
+  let result = commitLine('SHOVEL', session, SEED_SOURCE)
+  let next = byId(parseDoc(result.source), 104)
+  if (next?.status !== 'active') fail(`shovel1 ${next?.status}`)
+
+  result = commitLine('SHOVEL', session, result.source)
+  next = byId(parseDoc(result.source), 104)
+  if (next?.status !== 'staging') fail(`shovel2 ${next?.status}`)
+
+  result = commitLine('SHOVEL', { ...freshSession(), selected: { kind: 'NODE', id: 11 } }, SEED_SOURCE)
+  if (byId(parseDoc(result.source), 11)?.status !== 'backlog') fail('shovel none onto backlog')
+
+  result = commitLine(
+    'new website project, site redesign of homepage, need to assess aesthetic, create repo',
+    freshSession(),
+    SEED_SOURCE,
+  )
+  const dumped = parseDoc(result.source)
+  const project = dumped.nodes.find((n) => n.title === 'site redesign of homepage')
+  if (!project || project.status !== 'none') fail('dump project node')
+  else {
+    const kids = childrenOf(dumped, project.id).map((n) => n.title)
+    if (kids.join('|') !== 'assess aesthetic|create repo') fail(`dump applied ${kids.join('|')}`)
+    if (result.session.nestFocus !== project.id) fail('dump focus')
   }
 
   result = commitLine('WORDS', freshSession(), SEED_SOURCE)
   if (result.session.echo?.includes('SEAL')) fail('WORDS SEAL')
+  if (result.session.echo?.includes('CLIP')) fail('WORDS CLIP')
   if (!result.session.echo?.includes('GLYPH')) fail('WORDS GLYPH')
+  if (!result.session.echo?.includes('FOCUS')) fail('WORDS FOCUS')
 
   result = commitLine('CLEAR', freshSession(), result.source)
   if (parseDoc(result.source).pipeName !== 'vault') fail('CLEAR seed')
+  if (!byId(parseDoc(result.source), 104)) fail('CLEAR nodes')
 
   const world = {
     source: SEED_SOURCE,
@@ -74,46 +103,136 @@ export function runSpeckChecks(): string[] {
   if (!texts.some((t) => /BACKLOG/i.test(t))) fail('BACKLOG legend')
   if (!texts.some((t) => /STAGING/i.test(t))) fail('STAGING legend')
   if (!texts.some((t) => t === '07')) fail('free glyph paints')
+  if (!texts.some((t) => /PIPE \/\//.test(t))) fail('pipe plaque')
+  if (!texts.some((t) => t.includes('[x]'))) fail('organ close')
   const monthPack = field.ops.filter(
     (op) => op.op === 'GLYPH' && /^(?:[1-9]|[12]\d|3[01])$/.test(op.text),
   )
   if (monthPack.length >= 28) fail(`month pack still home ${monthPack.length}`)
 
-  const emptyDoc = { ...parseDoc(SEED_SOURCE), tasks: [] }
+  const colors = field.ops.flatMap((op) => {
+    if (op.op === 'GLYPH' || op.op === 'STEM' || op.op === 'STRIKE') return [op.color]
+    if (op.op === 'LINE') return [op.color]
+    if (op.op === 'CHIP') return [op.bg, op.fg]
+    if (op.op === 'FILL') return [op.color]
+    return []
+  })
+  if (colors.some((c) => c === '#0000FF' || c.toLowerCase() === '#0000ff')) fail('cobalt still live')
+  const dock = compile(world, measure).dock
+  const caret = dock.ops.find((op) => op.op === 'GLYPH' && op.text === '>')
+  if (!caret || caret.op !== 'GLYPH' || caret.color !== POWER) fail('dock caret not power red')
+
+  const emptyDoc = { ...parseDoc(SEED_SOURCE), nodes: parseDoc(SEED_SOURCE).nodes.filter((n) => !['backlog', 'active', 'staging', 'done'].includes(n.status)) }
   const emptyField = compile({ ...world, source: serializeDoc(emptyDoc) }, measure).field
   const emptyLines = emptyField.ops.filter((op) => op.op === 'LINE').length
   if (emptyLines < PIPE_ROWS * 4) fail(`empty rows ${emptyLines}`)
 
+  const closedPipe = field.hits.find((h) => h.kind === 'PIPE')
   const open = compile(
     {
       ...world,
-      session: { ...freshSession(), selected: { kind: 'TASK', id: 102 }, overlay: true },
+      session: { ...freshSession(), selected: { kind: 'NODE', id: 102 }, pipeOpen: 102, lens: 'pipe' },
     },
     measure,
-  ).field
-  const chips = open.ops.filter((op) => op.op === 'CHIP')
-  if (chips.length < 1) fail(`overlay chips ${chips.length}`)
+  )
+  const openPipe = open.field.hits.find((h) => h.kind === 'PIPE')
+  if (!closedPipe || !openPipe || openPipe.h <= closedPipe.h) {
+    fail(`reflow expand ${closedPipe?.h} -> ${openPipe?.h}`)
+  }
+  const chips = open.field.ops.filter((op) => op.op === 'CHIP')
+  if (chips.some((c) => c.h > 20)) fail(`overlay cover chip h ${chips.map((c) => c.h).join(',')}`)
+  if (!open.field.ops.some((op) => op.op === 'GLYPH' && (op.text.includes('overlay leftover') || op.text.includes('body')))) {
+    fail('expand body')
+  }
+  if (!open.field.ops.some((op) => op.op === 'GLYPH' && op.text === 'ACTIVE' && op.color === POWER)) {
+    fail('status ticks')
+  }
 
   const tapped = applyHit(
-    { kind: 'TASK', x: 0, y: 0, w: 10, h: 10, z: 10, payload: 102 },
+    { kind: 'NODE', x: 0, y: 0, w: 10, h: 10, z: 10, payload: 102 },
     freshSession(),
     SEED_SOURCE,
   )
-  if (!tapped.session.overlay || tapped.session.selected?.kind !== 'TASK') fail('tap task overlay')
+  if (tapped.session.pipeOpen !== 102 || tapped.session.field?.slot !== 'title') fail('tap node expand field')
 
   const dismissed = applyHit(
     { kind: 'FIELD', x: 0, y: 0, w: 10, h: 10, z: 0 },
     tapped.session,
     SEED_SOURCE,
   )
-  if (dismissed.session.overlay) fail('field tap dismiss')
+  if (dismissed.session.pipeOpen != null || dismissed.session.field) fail('field tap collapse')
 
   const shoveHit = applyHit(
     { kind: 'SHOVEL', x: 0, y: 0, w: 10, h: 10, z: 20, payload: 104 },
     freshSession(),
     SEED_SOURCE,
   )
-  if (parseDoc(shoveHit.source).tasks.find((t) => t.id === 104)?.col !== 'active') fail('hit shovel')
+  if (byId(parseDoc(shoveHit.source), 104)?.status !== 'active') fail('hit shovel')
+
+  const addHit = applyHit(
+    { kind: 'ADD', x: 0, y: 0, w: 10, h: 10, z: 20, payload: 10 },
+    freshSession(),
+    SEED_SOURCE,
+  )
+  const added = parseDoc(addHit.source)
+  const newKids = childrenOf(added, 10)
+  if (newKids.length < 2) fail('nest add child')
+  if (addHit.session.field?.slot !== 'title' || addHit.session.draftId == null) fail('add opens field')
+
+  const fold = applyHit(
+    { kind: 'TOGGLE', x: 0, y: 0, w: 10, h: 10, z: 20, payload: 10 },
+    freshSession(),
+    SEED_SOURCE,
+  )
+  if (!fold.session.nestClosed.includes(10)) fail('nest collapse')
+
+  const tab0 = applyHit(
+    { kind: 'NODE', x: 0, y: 0, w: 10, h: 10, z: 10, payload: 102 },
+    freshSession(),
+    SEED_SOURCE,
+  )
+  if (tab0.session.field?.slot !== 'title') fail('tab0 title')
+  const tab1 = cycleField(tab0.session, tab0.source, 1)
+  if (tab1.session.field?.slot !== 'body') fail(`tab1 ${tab1.session.field?.slot}`)
+  const tab2 = cycleField(tab1.session, tab1.source, 1)
+  if (tab2.session.field?.slot !== 'subtask') fail(`tab2 ${tab2.session.field?.slot}`)
+  const tab3 = cycleField(tab2.session, tab2.source, 1)
+  if (tab3.session.field?.slot !== 'status') fail(`tab3 ${tab3.session.field?.slot}`)
+
+  const esc = applyKey('Escape', false, tab3.session, tab3.source)
+  if (esc.session.pipeOpen != null || esc.session.field) fail('esc collapse')
+
+  const focused = commitLine('FOCUS 20', { ...freshSession(), selected: { kind: 'NODE', id: 20 } }, SEED_SOURCE)
+  if (focused.session.nestFocus !== 20) fail('FOCUS 20')
+  const filtered = compile(
+    { ...world, session: { ...freshSession(), nestFocus: 20, lens: 'nest' } },
+    measure,
+  ).field
+  if (filtered.hits.some((h) => h.kind === 'NODE' && h.payload === 104)) fail('focus filter still shows ops task')
+  if (!filtered.hits.some((h) => h.kind === 'NODE' && h.payload === 102)) fail('focus filter hides net task')
+
+  const indent = applyKey(
+    'Tab',
+    false,
+    { ...freshSession(), selected: { kind: 'NODE', id: 104 }, lens: 'nest' },
+    SEED_SOURCE,
+  )
+  if (byId(parseDoc(indent.source), 104)?.parent !== 20) fail(`indent ${byId(parseDoc(indent.source), 104)?.parent}`)
+
+  const emptyHit = applyHit(
+    { kind: 'EMPTY', x: 0, y: 0, w: 10, h: 10, z: 10, payload: 'backlog' },
+    freshSession(),
+    SEED_SOURCE,
+  )
+  const created = parseDoc(emptyHit.source).nodes.find((n) => n.id === emptyHit.session.draftId)
+  if (!created || created.status !== 'backlog') fail('empty row create')
+
+  const close = applyHit(
+    { kind: 'CLOSE', x: 0, y: 0, w: 10, h: 10, z: 20, payload: 'DUMP' },
+    freshSession(),
+    SEED_SOURCE,
+  )
+  if (!close.session.collapsed.includes('DUMP')) fail('organ close')
 
   return fails
 }

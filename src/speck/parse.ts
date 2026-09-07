@@ -7,11 +7,12 @@ export type DockStmt =
   | { kind: 'CLEAR' }
   | { kind: 'COMMIT' }
   | { kind: 'SHOVEL'; delta: number }
-  | { kind: 'CLIP' }
+  | { kind: 'FOCUS'; id?: number; clear?: boolean }
   | { kind: 'TYPE'; text: string }
   | { kind: 'HIT'; target: string; arg?: string | number }
   | { kind: 'MOVE'; organ?: string; x: number; y: number }
   | { kind: 'STRIKE' }
+  | { kind: 'ADD' }
   | { kind: 'DATA'; text: string }
 
 function word(tok: Tok | undefined): string | null {
@@ -37,11 +38,17 @@ export function parseCommand(src: string): DockStmt {
   if (head === 'WORDS') return { kind: 'WORDS' }
   if (head === 'CLEAR') return { kind: 'CLEAR' }
   if (head === 'COMMIT') return { kind: 'COMMIT' }
-  if (head === 'CLIP') return { kind: 'CLIP' }
   if (head === 'STRIKE') return { kind: 'STRIKE' }
+  if (head === 'ADD') return { kind: 'ADD' }
   if (head === 'SHOVEL') {
     const n = toks.find((t) => t.t === 'NUM')
     return { kind: 'SHOVEL', delta: n ? n.v : 1 }
+  }
+  if (head === 'FOCUS') {
+    const n = toks.find((t) => t.t === 'NUM')
+    const flag = word(toks[1])
+    if (flag === '_' || flag === 'CLEAR' || flag === 'NONE') return { kind: 'FOCUS', clear: true }
+    return { kind: 'FOCUS', id: n ? n.v : undefined }
   }
   if (head === 'TYPE') {
     const s = toks.find((t) => t.t === 'STR')
@@ -59,7 +66,7 @@ export function parseCommand(src: string): DockStmt {
     const nums = toks.filter((t) => t.t === 'NUM').map((t) => t.v)
     const organ = word(toks[1])
     const organName = organ === 'PIPE' || organ === 'NEST' || organ === 'DUMP' ? organ : undefined
-    return { kind: 'MOVE', organ: organName, x: nums[organName ? 0 : 0] ?? 0, y: nums[organName ? 1 : 1] ?? 0 }
+    return { kind: 'MOVE', organ: organName, x: nums[0] ?? 0, y: nums[1] ?? 0 }
   }
   return { kind: 'DATA', text: toks.map((t) => t.raw).join(' ') }
 }

@@ -1,8 +1,16 @@
-import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type ChangeEvent, type FormEvent, type KeyboardEvent } from 'react'
 import { compile, DOCK_LAYOUT } from './compile'
 import { parseDoc, placeOf } from './doc'
 import { hitTest, type HitBox, type OrganName, type Session } from './ir'
-import { applyHit, commitLine, freshSession, placeOrgan } from './machine'
+import {
+  applyHit,
+  applyKey,
+  commitFieldLine,
+  commitLine,
+  freshSession,
+  placeOrgan,
+  typeField,
+} from './machine'
 import { makeMeasure, paint, sizeCanvas } from './paint'
 import { loadSource, saveSource } from './source'
 
@@ -21,6 +29,7 @@ export function Field() {
   const dockRef = useRef<HTMLCanvasElement>(null)
   const hostRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+  const cellRef = useRef<HTMLInputElement>(null)
   const sessionRef = useRef(session)
   const sourceRef = useRef(source)
   const drawRef = useRef<() => void>(() => {})
@@ -36,6 +45,10 @@ export function Field() {
   useEffect(() => {
     drawRef.current()
   }, [session, source])
+
+  useEffect(() => {
+    if (session.field) cellRef.current?.focus()
+  }, [session.field])
 
   useEffect(() => {
     const host = hostRef.current
@@ -68,6 +81,12 @@ export function Field() {
       const dctx = sizeCanvas(dock, width, dockH)
       if (dctx) paint(dctx, program.dock.ops, width, dockH)
       host.style.setProperty('--speck-dock-h', `${dockH}px`)
+      if (program.editBox) {
+        host.style.setProperty('--speck-cell-x', `${program.editBox.x}px`)
+        host.style.setProperty('--speck-cell-y', `${program.editBox.y}px`)
+        host.style.setProperty('--speck-cell-w', `${program.editBox.w}px`)
+        host.style.setProperty('--speck-cell-h', `${program.editBox.h}px`)
+      }
     }
     drawRef.current = frame
     frame()
@@ -100,7 +119,8 @@ export function Field() {
       const result = applyHit(hit, sessionRef.current, sourceRef.current)
       setSession(result.session)
       setSource(result.source)
-      inputRef.current?.focus()
+      if (result.session.field) queueMicrotask(() => cellRef.current?.focus())
+      else inputRef.current?.focus()
     }
     const onMove = (e: PointerEvent) => {
       const drag = dragRef.current
@@ -121,11 +141,7 @@ export function Field() {
       const y = e.clientY - rect.top
       const hit = hitTest(hitsRef.current.dock, x, y)
       if (hit?.kind === 'COMMIT') {
-        const result = commitLine(
-          sessionRef.current.buffer,
-          sessionRef.current,
-          sourceRef.current,
-        )
+        const result = commitLine(sessionRef.current.buffer, sessionRef.current, sourceRef.current)
         setSession(result.session)
         setSource(result.source)
         return
@@ -138,6 +154,17 @@ export function Field() {
       inputRef.current?.focus()
     }
 
+    const onWinKey = (e: globalThis.KeyboardEvent) => {
+      if (sessionRef.current.field) return
+      const keys = ['Escape', 'Tab', ' ', '[', ']', 'ArrowLeft', 'ArrowRight']
+      if (!keys.includes(e.key)) return
+      if (e.key === 'Tab' || e.key === ' ') e.preventDefault()
+      const result = applyKey(e.key, e.shiftKey, sessionRef.current, sourceRef.current)
+      setSession(result.session)
+      setSource(result.source)
+    }
+    window.addEventListener('keydown', onWinKey)
+
     field.addEventListener('pointerdown', onField)
     field.addEventListener('pointermove', onMove)
     field.addEventListener('pointerup', onUp)
@@ -146,6 +173,7 @@ export function Field() {
     return () => {
       window.clearInterval(caret)
       ro.disconnect()
+      window.removeEventListener('keydown', onWinKey)
       field.removeEventListener('pointerdown', onField)
       field.removeEventListener('pointermove', onMove)
       field.removeEventListener('pointerup', onUp)
@@ -165,9 +193,61 @@ export function Field() {
     setSession((s) => ({ ...s, buffer: e.target.value, echo: null }))
   }
 
+  const onCellSubmit = (e: FormEvent) => {
+    e.preventDefault()
+    const result = commitFieldLine(session, source)
+    setSession(result.session)
+    setSource(result.source)
+  }
+
+  const onCellChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setSession((s) => typeField(s, e.target.value))
+  }
+
+  const onCellKey = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Tab' || e.key === 'Escape') {
+      e.preventDefault()
+      const result = applyKey(e.key, e.shiftKey, session, source)
+      setSession(result.session)
+      setSource(result.source)
+      return
+    }
+    if (e.key === 'Backspace' && !session.fieldBuffer) {
+      const result = applyKey('Backspace', false, session, source)
+      if (result.session.draftId == null && session.draftId != null) {
+        e.preventDefault()
+        setSession(result.session)
+        setSource(result.source)
+      }
+    }
+  }
+
   return (
     <div ref={hostRef} className="speck-host">
       <canvas ref={fieldRef} className="speck-field" aria-label="VAULT field" />
+      {session.field ? (
+        <form
+          className="speck-cell"
+          style={{
+            left: 'var(--speck-cell-x, 0px)',
+            top: 'var(--speck-cell-y, 0px)',
+            width: 'var(--speck-cell-w, 120px)',
+            height: 'var(--speck-cell-h, 16px)',
+          }}
+          onSubmit={onCellSubmit}
+        >
+          <input
+            ref={cellRef}
+            className="speck-cell-input"
+            value={session.fieldBuffer}
+            onChange={onCellChange}
+            onKeyDown={onCellKey}
+            autoComplete="off"
+            spellCheck={false}
+            aria-label={session.field.slot}
+          />
+        </form>
+      ) : null}
       <div className="speck-dock">
         <canvas ref={dockRef} className="speck-dock-canvas" aria-hidden />
         <form className="speck-dock-form" onSubmit={onSubmit}>
@@ -179,7 +259,7 @@ export function Field() {
             autoComplete="off"
             enterKeyHint="send"
             spellCheck={false}
-            aria-label="note"
+            aria-label="operator"
           />
         </form>
       </div>

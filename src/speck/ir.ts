@@ -2,6 +2,10 @@ export type Measure = (text: string, font: string) => number
 
 export type OrganName = 'PIPE' | 'NEST' | 'DUMP'
 
+export type FieldSlot = 'title' | 'body' | 'subtask' | 'status'
+
+export type Lens = 'pipe' | 'nest' | 'dump' | 'field'
+
 export type Op =
   | {
       op: 'GLYPH'
@@ -64,13 +68,18 @@ export type Op =
 export type HitKind =
   | 'PIPE'
   | 'COL'
-  | 'TASK'
+  | 'NODE'
   | 'NEST'
   | 'STEM'
   | 'DUMP'
   | 'NOTE'
   | 'SHOVEL'
-  | 'CLIP'
+  | 'ADD'
+  | 'TOGGLE'
+  | 'CLOSE'
+  | 'STATUS'
+  | 'SLOT'
+  | 'EMPTY'
   | 'RING'
   | 'ORGAN'
   | 'GLYPH'
@@ -94,25 +103,53 @@ export type Layer = {
   h: number
 }
 
+export type EditBox = {
+  x: number
+  y: number
+  w: number
+  h: number
+  value: string
+  placeholder: string
+  slot: FieldSlot
+}
+
 export type Program = {
   field: Layer
   dock: Layer
+  editBox: EditBox | null
 }
 
 export type Selected =
   | { kind: 'PIPE' }
   | { kind: 'COL'; col: string }
-  | { kind: 'TASK'; id: number }
+  | { kind: 'NODE'; id: number }
   | { kind: 'NEST' }
-  | { kind: 'STEM'; path: string }
   | { kind: 'DUMP' }
   | { kind: 'NOTE'; index: number }
 
+export type PendingDump = {
+  kind: 'project'
+  title: string
+  children: string[]
+} | {
+  kind: 'tasks'
+  titles: string[]
+  parent: number | null
+}
+
 export type Session = {
   selected: Selected | null
-  overlay: boolean
+  lens: Lens
+  nestClosed: number[]
+  pipeOpen: number | null
+  nestFocus: number | null
+  field: { id: number; slot: FieldSlot } | null
+  fieldBuffer: string
+  collapsed: OrganName[]
+  draftId: number | null
   buffer: string
   echo: string | null
+  pendingDump: PendingDump | null
 }
 
 export type Now = {
@@ -120,6 +157,8 @@ export type Now = {
   month: number
   day: number
 }
+
+export const FIELD_CYCLE: FieldSlot[] = ['title', 'body', 'subtask', 'status']
 
 export function pad2(n: number): string {
   return n < 10 ? `0${n}` : String(n)
@@ -136,4 +175,10 @@ export function hitTest(hits: HitBox[], x: number, y: number): HitBox | null {
     if (!best || h.z >= best.z) best = h
   }
   return best
+}
+
+export function nextSlot(slot: FieldSlot, dir: 1 | -1): FieldSlot {
+  const i = FIELD_CYCLE.indexOf(slot)
+  const at = (i + dir + FIELD_CYCLE.length) % FIELD_CYCLE.length
+  return FIELD_CYCLE[at]
 }

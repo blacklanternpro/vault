@@ -1,9 +1,9 @@
-import type { HitBox, Measure, Op, Program, Session } from './ir'
+import type { EditBox, HitBox, Measure, Op, Program, Session } from './ir'
 import { parseDoc } from './doc'
 import { compileDump } from './organs/dump'
 import { compileNest } from './organs/nest'
 import { compilePipe, PIPE_ROWS } from './organs/pipe'
-import { COBALT, FIELD, PAPER, fontHelv } from './tokens'
+import { FIELD, PAPER, POWER, fontHelv } from './tokens'
 
 export { PIPE_ROWS }
 
@@ -36,12 +36,12 @@ function innerX(width: number): { x: number; w: number } {
   return { x: (width - w) / 2, w }
 }
 
-function compileField(world: World, measure: Measure) {
+function compileField(world: World, measure: Measure, edit: { box: EditBox | null }) {
   const buf: Buf = { ops: [], hits: [] }
   const width = world.width
   const doc = parseDoc(world.source)
-  const pipe = compilePipe(doc, world.session, measure, width)
-  const nest = compileNest(doc, world.session, width)
+  const pipe = compilePipe(doc, world.session, measure, width, edit)
+  const nest = compileNest(doc, world.session, width, edit)
   const dump = compileDump(doc, world.session, width)
   const glyphBottom = doc.glyphs.reduce((m, g) => Math.max(m, g.y + g.px), 0)
   const h = Math.max(world.viewH, pipe.y + pipe.h, nest.y + nest.h, dump.y + dump.h, glyphBottom + 24, 480)
@@ -75,12 +75,9 @@ function compileField(world: World, measure: Measure) {
 }
 
 function placeholder(session: Session): string {
-  const k = session.selected?.kind
-  if (k === 'NEST' || k === 'STEM') return 'stem…'
-  if (k === 'DUMP' || k === 'NOTE') return 'note…'
-  if (k === 'TASK') return 'task…'
-  if (k === 'COL' || k === 'PIPE') return 'task…'
-  return 'hit an organ'
+  if (session.pendingDump) return '↵ confirm · edit to reject'
+  if (session.lens === 'dump') return 'note…'
+  return 'operator…'
 }
 
 function compileDock(world: World): { ops: Op[]; hits: HitBox[]; h: number } {
@@ -98,7 +95,7 @@ function compileDock(world: World): { ops: Op[]; hits: HitBox[]; h: number } {
     y1: 1,
     x2: width,
     y2: 1,
-    color: COBALT,
+    color: POWER,
     width: 1,
   })
 
@@ -121,7 +118,7 @@ function compileDock(world: World): { ops: Op[]; hits: HitBox[]; h: number } {
       x,
       y: inputY + 10,
       text: '>',
-      color: COBALT,
+      color: POWER,
       font: fontHelv(16, 400),
       baseline: 'middle',
     })
@@ -143,7 +140,7 @@ function compileDock(world: World): { ops: Op[]; hits: HitBox[]; h: number } {
     y1: inputY + DOCK_LAYOUT.inputH - 4,
     x2: x + w - DOCK_LAYOUT.commitW,
     y2: inputY + DOCK_LAYOUT.inputH - 4,
-    color: COBALT,
+    color: POWER,
     width: 1,
   })
   buf.ops.push({
@@ -151,7 +148,7 @@ function compileDock(world: World): { ops: Op[]; hits: HitBox[]; h: number } {
     x: x + w,
     y: inputY + 10,
     text: '↵',
-    color: COBALT,
+    color: POWER,
     font: fontHelv(14, 400),
     align: 'right',
     baseline: 'middle',
@@ -170,8 +167,10 @@ function compileDock(world: World): { ops: Op[]; hits: HitBox[]; h: number } {
 }
 
 export function compile(world: World, measure: Measure): Program {
+  const edit = { box: null as EditBox | null }
   return {
-    field: compileField(world, measure),
+    field: compileField(world, measure, edit),
     dock: compileDock(world),
+    editBox: edit.box,
   }
 }

@@ -8,7 +8,7 @@ the OS persists as a SPECK source string in `localStorage` (`speck-os-v1`).
 Running the Vite dev server is enough to exercise the product end to end.
 
 This is **not** a PWA and **not** a mobile month. It is a personal OS field:
-split-page PIPE binder, unix NEST, DUMP tape, one dock REPL.
+one work graph, NEST tree + PIPE status lens, DUMP tape, field editor, one operator dock.
 
 Standard commands live in `README.md` and `package.json` scripts (`dev`, `build`,
 `lint`, `test`, `preview`). Package manager is **npm** (`package-lock.json`).
@@ -20,8 +20,10 @@ Non-obvious notes:
 - `npm run build` runs `tsc -b` first, so a type error fails the build (not just a
  bundling error).
 - Lint is **oxlint** (`npm run lint`), configured via `.oxlintrc.json` — not ESLint.
-- Aesthetic contract is locked in `.cursorrules`. Full portable language: `docs/LANGUAGE.md`. Overnight brief: `docs/OVERNIGHT_PROMPT.md`.
-- Smoke: black field, Helvetica split-page binder (FOCUS | spine | GATEWAY). Dock
-  adds a backlog task. `->` or `SHOVEL` advances COL. HIT a nest stem and `CLIP`
-  writes a TASK. HIT a task — cobalt dossier overlay. Drag organ legends to PLACE.
-  Do not revive the seal, beige chrome, month pack as the OS, kanban cards, or amber.
+- Aesthetic contract is locked in `.cursorrules`. Full portable language: `docs/LANGUAGE.md`. Overnight brief: `docs/OVERNIGHT_PROMPT.md`. Product: `PRODUCT.md`.
+- Smoke: black field, Helvetica, power-red chrome (not cobalt). Split-page binder
+  (FOCUS | spine | GATEWAY) with project plaques. Tap a day-row: expand in place,
+  rows below move. Click a title, type. `[+]` in nest adds a child. Dock dump:
+  `new website project, site redesign of homepage, need to assess aesthetic, create repo`.
+  Organ `[x]` collapses that window. Do not revive the seal, beige chrome, month pack,
+  overlay CHIP dossier, CLIP-copy, kanban cards, amber, or cobalt.
