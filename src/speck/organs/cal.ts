@@ -31,7 +31,7 @@ export function compileCal(
 
   if (collapsed) {
     const h = CHROME_PAD + 4
-    paintChrome(buf, { x, y, w, h, title: `CAL // ${monthLabel}`, organ: 'CAL', count: last, live, scan: doc.scan })
+    paintChrome(buf, { x, y, w, h, title: `CAL // ${monthLabel}`, organ: 'CAL', count: last, live, scan: 0 })
     return { ops: buf.ops, hits: buf.hits, x, y, w, h }
   }
 
@@ -44,7 +44,7 @@ export function compileCal(
   const dropH = drop.length ? 8 + drop.length * 22 : 0
   const h = CHROME_PAD + 12 + rows * cellH + dropH + 12
 
-  paintChrome(buf, { x, y, w, h, title: `CAL // ${monthLabel}`, organ: 'CAL', count: last, live, scan: doc.scan })
+  paintChrome(buf, { x, y, w, h, title: `CAL // ${monthLabel}`, organ: 'CAL', count: last, live, scan: 0 })
   buf.hits.push({ kind: 'CAL', x, y, w, h, z: 4 })
 
   for (let d = 1; d <= last; d++) {
@@ -74,7 +74,7 @@ export function compileCal(
         x2: dx + cellW - 6,
         y2: dy + 22,
         color: POWER,
-        width: 1,
+        width: 2,
       })
     }
     buf.hits.push({
