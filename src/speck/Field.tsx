@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type ChangeEvent, type FormEvent, type KeyboardEvent } from 'react'
 import { compile, DOCK_LAYOUT } from './compile'
 import { parseDoc, placeOf } from './doc'
-import { hitTest, type HitBox, type OrganName, type Session } from './ir'
+import { hitTest, type EditBox, type HitBox, type OrganName, type Session } from './ir'
 import {
   applyHit,
   applyKey,
@@ -25,6 +25,7 @@ type Drag = {
 export function Field() {
   const [session, setSession] = useState<Session>(() => freshSession())
   const [source, setSource] = useState(loadSource)
+  const [editBox, setEditBox] = useState<EditBox | null>(null)
   const fieldRef = useRef<HTMLCanvasElement>(null)
   const dockRef = useRef<HTMLCanvasElement>(null)
   const hostRef = useRef<HTMLDivElement>(null)
@@ -35,6 +36,7 @@ export function Field() {
   const drawRef = useRef<() => void>(() => {})
   const hitsRef = useRef<{ field: HitBox[]; dock: HitBox[] }>({ field: [], dock: [] })
   const dragRef = useRef<Drag | null>(null)
+  const editKeyRef = useRef('')
   sessionRef.current = session
   sourceRef.current = source
 
@@ -81,11 +83,11 @@ export function Field() {
       const dctx = sizeCanvas(dock, width, dockH)
       if (dctx) paint(dctx, program.dock.ops, width, dockH)
       host.style.setProperty('--speck-dock-h', `${dockH}px`)
-      if (program.editBox) {
-        host.style.setProperty('--speck-cell-x', `${program.editBox.x}px`)
-        host.style.setProperty('--speck-cell-y', `${program.editBox.y}px`)
-        host.style.setProperty('--speck-cell-w', `${program.editBox.w}px`)
-        host.style.setProperty('--speck-cell-h', `${program.editBox.h}px`)
+      const box = program.editBox
+      const key = box ? `${box.x}:${box.y}:${box.w}:${box.h}:${box.slot}` : ''
+      if (key !== editKeyRef.current) {
+        editKeyRef.current = key
+        setEditBox(box)
       }
     }
     drawRef.current = frame
@@ -225,14 +227,14 @@ export function Field() {
   return (
     <div ref={hostRef} className="speck-host">
       <canvas ref={fieldRef} className="speck-field" aria-label="VAULT field" />
-      {session.field ? (
+      {session.field && editBox ? (
         <form
           className="speck-cell"
           style={{
-            left: 'var(--speck-cell-x, 0px)',
-            top: 'var(--speck-cell-y, 0px)',
-            width: 'var(--speck-cell-w, 120px)',
-            height: 'var(--speck-cell-h, 16px)',
+            left: editBox.x,
+            top: editBox.y,
+            width: editBox.w,
+            height: editBox.h,
           }}
           onSubmit={onCellSubmit}
         >

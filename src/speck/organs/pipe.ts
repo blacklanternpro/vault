@@ -56,7 +56,7 @@ function setEdit(
   value: string,
   placeholder: string,
 ) {
-  if (session.field?.id === id && session.field.slot === slot) {
+  if (session.field?.id === id && session.field.slot === slot && session.lens === 'pipe') {
     edit.box = { x, y, w, h: PIPE_ROW_H - 2, value, placeholder, slot }
   }
 }
@@ -127,14 +127,14 @@ function compileCol(
       const label = `${mark} #${task.id} ${task.title || '_'}`
       const tw = measure(label, FONT)
       const editingTitle = session.field?.id === task.id && session.field.slot === 'title'
-      if (selected && !editingTitle) {
+      if (selected) {
         buf.ops.push({
           op: 'CHIP',
           x: x + 6,
           y: rowY,
           w: Math.min(w - 28, Math.max(80, tw + 12)),
           h: PIPE_ROW_H - 2,
-          text: label,
+          text: editingTitle ? '' : label,
           fg: WHITE,
           bg: POWER,
           font: FONT,

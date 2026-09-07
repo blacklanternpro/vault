@@ -137,7 +137,7 @@ export function compileNest(
       payload: row.node.id,
     })
 
-    if (session.field?.id === row.node.id && session.field.slot === 'title') {
+    if (session.lens === 'nest' && session.field?.id === row.node.id && session.field.slot === 'title') {
       edit.box = {
         x: x + 28,
         y: rowY + 1,
