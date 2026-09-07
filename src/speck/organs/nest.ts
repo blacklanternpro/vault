@@ -87,9 +87,9 @@ export function compileNest(
     })
     buf.ops.push({
       op: 'GLYPH',
-      x: x + w - 14,
+      x: x + w - 22,
       y: rowY + 10,
-      text: '+',
+      text: '[+]',
       color: COBALT,
       font: FONT_SM,
       align: 'center',
@@ -97,9 +97,9 @@ export function compileNest(
     })
     buf.hits.push({
       kind: 'CLIP',
-      x: x + w - 28,
+      x: x + w - 44,
       y: rowY,
-      w: 24,
+      w: 40,
       h: ROW,
       z: 20,
       payload: stem.path,
