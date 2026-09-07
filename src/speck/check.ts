@@ -1,11 +1,7 @@
-import { compile, PACK_COLS } from './compile'
-import { commitLine, freshSession, applyHit } from './machine'
-import { monthLength, tapeDate } from './ir'
-import { isCommandLine, parse, parseCommand } from './parse'
-import { see } from './see'
-import { DEFAULT_SOURCE } from './source'
-
-const NOW = { year: 2026, month: 7, day: 19 }
+import { compile, PIPE_ROWS } from './compile'
+import { parseDoc, SEED_SOURCE, serializeDoc } from './doc'
+import { applyHit, commitLine, freshSession } from './machine'
+import { PAINT_OPS } from './tokens'
 
 function measure(text: string): number {
   return text.length * 7
@@ -15,84 +11,109 @@ export function runSpeckChecks(): string[] {
   const fails: string[] = []
   const fail = (msg: string) => fails.push(msg)
 
-  if (monthLength(2026, 7) !== 31) fail('August 2026 days')
-  if (Math.ceil(31 / PACK_COLS) !== 5) fail('7-col pack rows')
-  if (tapeDate(2026, 7, 19) !== '08.19.26') fail(`tape ${tapeDate(2026, 7, 19)}`)
+  const doc = parseDoc(SEED_SOURCE)
+  if (doc.pipeName !== 'vault') fail(`pipe name ${doc.pipeName}`)
+  if (doc.cols.join(' ') !== 'backlog active staging done') fail(`cols ${doc.cols.join(' ')}`)
+  if (!doc.tasks.some((t) => t.id === 104 && t.col === 'backlog' && t.title.includes('ingress'))) {
+    fail('task 104 backlog')
+  }
+  if (!doc.stems.some((s) => s.path.includes('scout_ridge'))) fail('stem scout')
+  if (!doc.notes.some((n) => n.text === 'ridge')) fail('dump ridge')
+  if (!doc.places.some((p) => p.organ === 'PIPE')) fail('place PIPE')
+  if (!doc.glyphs.some((g) => g.text === '07')) fail('glyph 07')
 
-  const { stmts, error } = parse('DAY 08.19.26 "ridge"\nDAY 08.19.26 "call"')
-  if (error) fail(`parse error ${error}`)
-  if (stmts.length !== 2) fail(`day stmts ${stmts.length}`)
-  if (stmts[0].kind !== 'DAY' || stmts[0].date !== '08.19.26' || stmts[0].text !== 'ridge') {
-    fail('parse DAY ridge')
+  const ops = PAINT_OPS.join(' ')
+  if (ops.includes('SEAL') || ops.includes('GRAIN') || ops.includes('SCAN') || ops.includes('INV')) {
+    fail(`dead ops ${ops}`)
+  }
+  if (!ops.includes('GLYPH') || !ops.includes('CHIP') || !ops.includes('STEM')) fail('live ops')
+
+  const round = parseDoc(serializeDoc(doc))
+  if (round.tasks.length !== doc.tasks.length) fail('serialize tasks')
+
+  let session = { ...freshSession(), selected: { kind: 'TASK' as const, id: 104 } }
+  let result = commitLine('SHOVEL', session, SEED_SOURCE)
+  let next = parseDoc(result.source).tasks.find((t) => t.id === 104)
+  if (next?.col !== 'active') fail(`shovel1 ${next?.col}`)
+
+  result = commitLine('SHOVEL', session, result.source)
+  next = parseDoc(result.source).tasks.find((t) => t.id === 104)
+  if (next?.col !== 'staging') fail(`shovel2 ${next?.col}`)
+
+  const clipStem = doc.stems[0]
+  if (!clipStem) fail('no stem to clip')
+  else {
+    result = commitLine('CLIP', { ...freshSession(), selected: { kind: 'STEM', path: clipStem.path } }, SEED_SOURCE)
+    const clipped = parseDoc(result.source).tasks.find((t) => t.nest === clipStem.path)
+    if (!clipped || clipped.col !== 'backlog') fail(`clip ${clipped?.nest}`)
   }
 
-  if (!isCommandLine('SEE')) fail('SEE command')
-  if (!isCommandLine('CLEAR')) fail('CLEAR command')
-  if (isCommandLine('todo')) fail('todo classified as command')
-  if (parseCommand('CLEAR').kind !== 'CLEAR') fail('parse CLEAR')
+  result = commitLine('rewrite dock', { ...freshSession(), selected: { kind: 'PIPE' } }, SEED_SOURCE)
+  if (!parseDoc(result.source).tasks.some((t) => t.title === 'rewrite dock' && t.col === 'backlog')) {
+    fail('commit pipe task')
+  }
 
-  const empty = freshSession()
-  const missed = commitLine('hello', empty, DEFAULT_SOURCE, NOW)
-  if (missed.source !== DEFAULT_SOURCE) fail('note without day')
-  if (missed.session.echo !== '? DAY') fail('echo ? DAY')
+  result = commitLine('WORDS', freshSession(), SEED_SOURCE)
+  if (result.session.echo?.includes('SEAL')) fail('WORDS SEAL')
+  if (!result.session.echo?.includes('GLYPH')) fail('WORDS GLYPH')
 
-  const picked = { ...freshSession(), selectedDay: 19 }
-  const saved = commitLine('ridge', picked, DEFAULT_SOURCE, NOW)
-  if (!saved.source.includes('DAY 08.19.26 "ridge"')) fail(`commit ${saved.source}`)
-
-  const again = commitLine('call', { ...picked, buffer: '' }, saved.source, NOW)
-  if (!again.source.includes('DAY 08.19.26 "call"')) fail('second note')
+  result = commitLine('CLEAR', freshSession(), result.source)
+  if (parseDoc(result.source).pipeName !== 'vault') fail('CLEAR seed')
 
   const world = {
-    source: again.source,
-    session: { ...picked, notesOpen: false, buffer: '', echo: null },
-    now: NOW,
-    width: 360,
-    viewH: 640,
+    source: SEED_SOURCE,
+    session: freshSession(),
+    width: 1200,
+    viewH: 800,
     caretOn: true,
   }
   const field = compile(world, measure).field
   const lines = field.ops.filter((op) => op.op === 'LINE')
-  if (lines.length < 1) fail('underline missing')
-  if (lines[0].op === 'LINE' && lines[0].width !== 2) fail('underline weight')
-  const days = field.ops.filter((op) => op.op === 'GLYPH' && /^\d+$/.test(op.text))
-  if (days.length !== 31) fail(`glyphs ${days.length}`)
-  const chipsClosed = field.ops.filter((op) => op.op === 'CHIP')
-  if (chipsClosed.length !== 0) fail('overlay while closed')
+  if (lines.length < PIPE_ROWS * 4) fail(`ledger lines ${lines.length}`)
+  const texts = field.ops.filter((op) => op.op === 'GLYPH' || op.op === 'STEM').map((op) => op.text)
+  if (!texts.some((t) => /BACKLOG/i.test(t))) fail('BACKLOG legend')
+  if (!texts.some((t) => /STAGING/i.test(t))) fail('STAGING legend')
+  if (!texts.some((t) => t === '07')) fail('free glyph paints')
+  const monthPack = field.ops.filter(
+    (op) => op.op === 'GLYPH' && /^(?:[1-9]|[12]\d|3[01])$/.test(op.text),
+  )
+  if (monthPack.length >= 28) fail(`month pack still home ${monthPack.length}`)
+
+  const emptyDoc = { ...parseDoc(SEED_SOURCE), tasks: [] }
+  const emptyField = compile({ ...world, source: serializeDoc(emptyDoc) }, measure).field
+  const emptyLines = emptyField.ops.filter((op) => op.op === 'LINE').length
+  if (emptyLines < PIPE_ROWS * 4) fail(`empty rows ${emptyLines}`)
 
   const open = compile(
-    { ...world, session: { ...world.session, notesOpen: true, selectedDay: 19 } },
+    {
+      ...world,
+      session: { ...freshSession(), selected: { kind: 'TASK', id: 102 }, overlay: true },
+    },
     measure,
   ).field
   const chips = open.ops.filter((op) => op.op === 'CHIP')
-  if (chips.length < 2) fail(`overlay chips ${chips.length}`)
+  if (chips.length < 1) fail(`overlay chips ${chips.length}`)
 
-  const bare = compile({ ...world, source: '' }, measure).field
-  if (bare.ops.some((op) => op.op === 'LINE')) fail('underline on empty day')
-  if (bare.ops.some((op) => op.op === 'SEAL')) fail('seal still paints')
-
-  const hit = applyHit(
-    { kind: 'DAY', x: 0, y: 0, w: 10, h: 10, z: 10, payload: 19 },
-    picked,
-    again.source,
-    NOW,
+  const tapped = applyHit(
+    { kind: 'TASK', x: 0, y: 0, w: 10, h: 10, z: 10, payload: 102 },
+    freshSession(),
+    SEED_SOURCE,
   )
-  if (!hit.session.notesOpen || hit.session.selectedDay !== 19) fail('tap noted day')
+  if (!tapped.session.overlay || tapped.session.selected?.kind !== 'TASK') fail('tap task overlay')
 
   const dismissed = applyHit(
     { kind: 'FIELD', x: 0, y: 0, w: 10, h: 10, z: 0 },
-    hit.session,
-    again.source,
-    NOW,
+    tapped.session,
+    SEED_SOURCE,
   )
-  if (dismissed.session.notesOpen) fail('field tap dismiss')
+  if (dismissed.session.overlay) fail('field tap dismiss')
 
-  const src = see(again.source)
-  if (!src.includes('DAY 08.19.26')) fail('see notes')
-  if (src.includes('SEAL') || src.includes('NEST') || src.includes('DUMP')) fail('see dead organs')
-
-  const wiped = commitLine('CLEAR', picked, again.source, NOW)
-  if (wiped.source !== DEFAULT_SOURCE) fail('CLEAR')
+  const shoveHit = applyHit(
+    { kind: 'SHOVEL', x: 0, y: 0, w: 10, h: 10, z: 20, payload: 104 },
+    freshSession(),
+    SEED_SOURCE,
+  )
+  if (parseDoc(shoveHit.source).tasks.find((t) => t.id === 104)?.col !== 'active') fail('hit shovel')
 
   return fails
 }

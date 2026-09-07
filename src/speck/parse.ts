@@ -1,61 +1,48 @@
 import { COMMAND_WORDS } from './tokens'
-import { lex, lexLine, type Tok } from './lex'
+import { lexLine, type Tok } from './lex'
 
-export type Stmt =
-  | { kind: 'DAY'; date: string; text: string }
-  | { kind: 'DOCK' }
-  | { kind: 'HIT'; target: string; arg?: string | number }
-  | { kind: 'TYPE'; text: string }
-  | { kind: 'COMMIT' }
+export type DockStmt =
   | { kind: 'SEE' }
   | { kind: 'WORDS' }
   | { kind: 'CLEAR' }
+  | { kind: 'COMMIT' }
+  | { kind: 'SHOVEL'; delta: number }
+  | { kind: 'CLIP' }
+  | { kind: 'TYPE'; text: string }
+  | { kind: 'HIT'; target: string; arg?: string | number }
+  | { kind: 'MOVE'; organ?: string; x: number; y: number }
+  | { kind: 'STRIKE' }
   | { kind: 'DATA'; text: string }
-
-export type ParseResult = {
-  stmts: Stmt[]
-  error?: string
-}
 
 function word(tok: Tok | undefined): string | null {
   if (!tok || tok.t !== 'WORD') return null
   return tok.v
 }
 
-function strPayload(toks: Tok[], from: number): string {
-  const s = toks.find((t) => t.t === 'STR')
-  if (s) return s.v
-  return toks
-    .slice(from)
-    .map((t) => t.raw)
-    .join(' ')
-    .trim()
+export function isCommandLine(src: string): boolean {
+  const toks = lexLine(src.trim())
+  if (toks.length === 0) return false
+  const head = toks[0]
+  if (head.t !== 'WORD') return false
+  return COMMAND_WORDS.has(head.v)
 }
 
-export function parse(src: string): ParseResult {
-  const lines = lex(src)
-  const stmts: Stmt[] = []
-  for (const line of lines) {
-    stmts.push(parseCommandToks(line.toks))
-  }
-  return { stmts }
-}
-
-function parseCommandToks(toks: Tok[]): Stmt {
+export function parseCommand(src: string): DockStmt {
+  const toks = lexLine(src.trim())
+  if (toks.length === 0) return { kind: 'DATA', text: '' }
   const head = word(toks[0])
   if (!head) return { kind: 'DATA', text: toks.map((t) => t.raw).join(' ') }
 
-  if (head === 'DAY') {
-    const dateTok = toks[1]
-    const date = dateTok?.t === 'DATE' ? dateTok.v : ''
-    const text = strPayload(toks, date ? 2 : 1)
-    return { kind: 'DAY', date, text }
-  }
-  if (head === 'DOCK') return { kind: 'DOCK' }
-  if (head === 'COMMIT') return { kind: 'COMMIT' }
   if (head === 'SEE') return { kind: 'SEE' }
   if (head === 'WORDS') return { kind: 'WORDS' }
   if (head === 'CLEAR') return { kind: 'CLEAR' }
+  if (head === 'COMMIT') return { kind: 'COMMIT' }
+  if (head === 'CLIP') return { kind: 'CLIP' }
+  if (head === 'STRIKE') return { kind: 'STRIKE' }
+  if (head === 'SHOVEL') {
+    const n = toks.find((t) => t.t === 'NUM')
+    return { kind: 'SHOVEL', delta: n ? n.v : 1 }
+  }
   if (head === 'TYPE') {
     const s = toks.find((t) => t.t === 'STR')
     return { kind: 'TYPE', text: s ? s.v : toks.slice(1).map((t) => t.raw).join(' ') }
@@ -68,27 +55,11 @@ function parseCommandToks(toks: Tok[]): Stmt {
     else if (argTok) arg = argTok.raw
     return { kind: 'HIT', target, arg }
   }
-
+  if (head === 'MOVE') {
+    const nums = toks.filter((t) => t.t === 'NUM').map((t) => t.v)
+    const organ = word(toks[1])
+    const organName = organ === 'PIPE' || organ === 'NEST' || organ === 'DUMP' ? organ : undefined
+    return { kind: 'MOVE', organ: organName, x: nums[organName ? 0 : 0] ?? 0, y: nums[organName ? 1 : 1] ?? 0 }
+  }
   return { kind: 'DATA', text: toks.map((t) => t.raw).join(' ') }
-}
-
-export function notesForDate(src: string, date: string): string[] {
-  return parse(src)
-    .stmts.filter((s): s is Extract<Stmt, { kind: 'DAY' }> => s.kind === 'DAY' && s.date === date)
-    .map((s) => s.text)
-    .filter(Boolean)
-}
-
-export function isCommandLine(src: string): boolean {
-  const toks = lexLine(src.trim())
-  if (toks.length === 0) return false
-  const head = toks[0]
-  if (head.t !== 'WORD') return false
-  return COMMAND_WORDS.has(head.v)
-}
-
-export function parseCommand(src: string): Stmt {
-  const toks = lexLine(src.trim())
-  if (toks.length === 0) return { kind: 'DATA', text: '' }
-  return parseCommandToks(toks)
 }

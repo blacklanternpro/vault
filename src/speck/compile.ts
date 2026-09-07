@@ -1,12 +1,15 @@
-import type { HitBox, Layer, Measure, Now, Op, Program, Session } from './ir'
-import { monthLength, tapeDate } from './ir'
-import { notesForDate } from './parse'
-import { COBALT, FIELD, PAPER, WHITE, fontHelv } from './tokens'
+import type { HitBox, Measure, Op, Program, Session } from './ir'
+import { parseDoc } from './doc'
+import { compileDump } from './organs/dump'
+import { compileNest } from './organs/nest'
+import { compilePipe, PIPE_ROWS } from './organs/pipe'
+import { COBALT, FIELD, PAPER, fontHelv } from './tokens'
+
+export { PIPE_ROWS }
 
 export type World = {
   source: string
   session: Session
-  now: Now
   width: number
   viewH: number
   caretOn: boolean
@@ -22,176 +25,65 @@ export const DOCK_LAYOUT = {
   pad: 12,
 }
 
-export const PACK_COLS = 7
-export const DIGIT_PX = 13
-export const ROW_H = 32
-export const TOP = 16
-
-const PAD = 16
-const MAX_INNER = 672
-const NOTE_H = 18
-const DIGIT_FONT = fontHelv(DIGIT_PX, 400)
-const NOTE_FONT = fontHelv(12, 400)
 const DOCK_FONT = fontHelv(14, 400)
+const PAD = 16
+const MAX_INNER = 1100
 
-type Buf = {
-  ops: Op[]
-  hits: HitBox[]
-}
-
-type Cell = {
-  day: number
-  x: number
-  y: number
-  w: number
-  h: number
-  cx: number
-  cy: number
-  lineY: number
-  tw: number
-}
+type Buf = { ops: Op[]; hits: HitBox[] }
 
 function innerX(width: number): { x: number; w: number } {
   const w = Math.min(MAX_INNER, Math.max(200, width - PAD * 2))
   return { x: (width - w) / 2, w }
 }
 
-function wrap(measure: Measure, text: string, font: string, maxW: number): string[] {
-  const words = text.split(/\s+/)
-  const out: string[] = []
-  let line = ''
-  for (const word of words) {
-    const next = line ? `${line} ${word}` : word
-    if (measure(next, font) <= maxW) line = next
-    else {
-      if (line) out.push(line)
-      line = word
-    }
-  }
-  if (line) out.push(line)
-  return out.length ? out : ['_']
-}
-
-function cellsForMonth(now: Now, measure: Measure, x: number, w: number): Cell[] {
-  const last = monthLength(now.year, now.month)
-  const cellW = w / PACK_COLS
-  const cells: Cell[] = []
-  for (let day = 1; day <= last; day++) {
-    const col = (day - 1) % PACK_COLS
-    const row = Math.floor((day - 1) / PACK_COLS)
-    const left = x + col * cellW
-    const top = TOP + row * ROW_H
-    const label = String(day)
-    const tw = measure(label, DIGIT_FONT)
-    const cx = left + cellW / 2
-    const cy = top + 12
-    cells.push({
-      day,
-      x: left,
-      y: top,
-      w: cellW,
-      h: ROW_H,
-      cx,
-      cy,
-      lineY: top + 24,
-      tw,
-    })
-  }
-  return cells
-}
-
-function compileField(world: World, measure: Measure): Layer {
+function compileField(world: World, measure: Measure) {
   const buf: Buf = { ops: [], hits: [] }
-  const { x, w } = innerX(world.width)
   const width = world.width
-  const { session, source, now } = world
-  const cells = cellsForMonth(now, measure, x, w)
-  const packBottom = cells.length ? cells[cells.length - 1].y + ROW_H + 16 : TOP + 40
-  const h = Math.max(packBottom, world.viewH)
+  const doc = parseDoc(world.source)
+  const pipe = compilePipe(doc, world.session, measure, width)
+  const nest = compileNest(doc, world.session, width)
+  const dump = compileDump(doc, world.session, width)
+  const glyphBottom = doc.glyphs.reduce((m, g) => Math.max(m, g.y + g.px), 0)
+  const h = Math.max(world.viewH, pipe.y + pipe.h, nest.y + nest.h, dump.y + dump.h, glyphBottom + 24, 480)
 
   buf.ops.push({ op: 'FILL', x: 0, y: 0, w: width, h, color: FIELD })
   buf.hits.push({ kind: 'FIELD', x: 0, y: 0, w: width, h, z: 0 })
+  buf.ops.push(...pipe.ops, ...nest.ops, ...dump.ops)
+  buf.hits.push(...pipe.hits, ...nest.hits, ...dump.hits)
 
-  for (const cell of cells) {
-    const date = tapeDate(now.year, now.month, cell.day)
-    const notes = notesForDate(source, date)
+  for (const g of doc.glyphs) {
     buf.ops.push({
       op: 'GLYPH',
-      x: cell.cx,
-      y: cell.cy,
-      text: String(cell.day),
+      x: g.x,
+      y: g.y,
+      text: g.text,
       color: PAPER,
-      font: DIGIT_FONT,
-      align: 'center',
+      font: fontHelv(g.px, 400),
       baseline: 'middle',
     })
-    if (notes.length > 0) {
-      const half = Math.max(cell.tw / 2 + 3, 7)
-      buf.ops.push({
-        op: 'LINE',
-        x1: cell.cx - half,
-        y1: cell.lineY,
-        x2: cell.cx + half,
-        y2: cell.lineY,
-        color: COBALT,
-        width: 2,
-      })
-    }
     buf.hits.push({
-      kind: 'DAY',
-      x: cell.x,
-      y: cell.y,
-      w: cell.w,
-      h: cell.h,
-      z: 10,
-      payload: cell.day,
+      kind: 'GLYPH',
+      x: g.x - 8,
+      y: g.y - g.px / 2,
+      w: Math.max(24, measure(g.text, fontHelv(g.px, 400))),
+      h: g.px,
+      z: 30,
     })
-  }
-
-  const open = session.notesOpen && session.selectedDay != null
-  if (open) {
-    const cell = cells.find((c) => c.day === session.selectedDay)
-    if (cell) {
-      const date = tapeDate(now.year, now.month, cell.day)
-      const notes = notesForDate(source, date)
-      const originX = cell.cx - cell.tw / 2
-      const maxW = Math.max(48, x + w - originX)
-      let y = cell.lineY
-      for (const note of notes) {
-        const lines = wrap(measure, note, NOTE_FONT, maxW - 12)
-        for (const line of lines) {
-          const tw = measure(line, NOTE_FONT)
-          const cw = Math.min(maxW, Math.max(24, tw + 12))
-          buf.ops.push({
-            op: 'CHIP',
-            x: originX,
-            y,
-            w: cw,
-            h: NOTE_H,
-            text: line,
-            fg: WHITE,
-            bg: COBALT,
-            font: NOTE_FONT,
-            padX: 6,
-          })
-          buf.hits.push({
-            kind: 'FIELD',
-            x: originX,
-            y,
-            w: cw,
-            h: NOTE_H,
-            z: 80,
-          })
-          y += NOTE_H
-        }
-      }
-    }
   }
 
   return { ops: buf.ops, hits: buf.hits, h }
 }
 
-function compileDock(world: World): Layer {
+function placeholder(session: Session): string {
+  const k = session.selected?.kind
+  if (k === 'NEST' || k === 'STEM') return 'stem…'
+  if (k === 'DUMP' || k === 'NOTE') return 'note…'
+  if (k === 'TASK') return 'task…'
+  if (k === 'COL' || k === 'PIPE') return 'task…'
+  return 'hit an organ'
+}
+
+function compileDock(world: World): { ops: Op[]; hits: HitBox[]; h: number } {
   const buf: Buf = { ops: [], hits: [] }
   const { session, width, caretOn } = world
   const { x, w } = innerX(width)
@@ -236,27 +128,15 @@ function compileDock(world: World): Layer {
   }
 
   const shown = session.buffer
-  if (shown) {
-    buf.ops.push({
-      op: 'GLYPH',
-      x: x + DOCK_LAYOUT.caretW,
-      y: inputY + 10,
-      text: shown,
-      color: PAPER,
-      font: DOCK_FONT,
-      baseline: 'middle',
-    })
-  } else {
-    buf.ops.push({
-      op: 'GLYPH',
-      x: x + DOCK_LAYOUT.caretW,
-      y: inputY + 10,
-      text: session.selectedDay == null ? 'tap a date' : 'note…',
-      color: 'rgba(244,244,240,0.28)',
-      font: fontHelv(13, 400),
-      baseline: 'middle',
-    })
-  }
+  buf.ops.push({
+    op: 'GLYPH',
+    x: x + DOCK_LAYOUT.caretW,
+    y: inputY + 10,
+    text: shown || placeholder(session),
+    color: shown ? PAPER : 'rgba(244,244,240,0.28)',
+    font: shown ? DOCK_FONT : fontHelv(13, 400),
+    baseline: 'middle',
+  })
   buf.ops.push({
     op: 'LINE',
     x1: x + DOCK_LAYOUT.caretW,
