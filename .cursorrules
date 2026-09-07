@@ -6,18 +6,18 @@ Product truth: PRODUCT.md. Visual system after build: DESIGN.md.
 This is one continuous personal OS field — not a dashboard, not stacked sections.
 No cards, rounded corners, soft shadows, section billboards, DateBlocks, or teal watermarks.
 
-PALETTE: Field #000000 · Paper #F4F4F0 · Power red #E10600.
-Power red = underlines, selection invert, operator caret, live ticks, `[+]` / shovel, strike / URGENT.
-One accent. Cobalt has left. Paper = type + month-free field ink.
+PALETTE: Paper #F4F4F0 (sheet, `INV` default) · Field #000000 (ink, organ plates) · Power red #E10600.
+Power red = oval, caret, live ticks, `[+]` / shovel, strike / URGENT.
+One accent. Cobalt has left.
 
-TYPE: Helvetica Neue / Helvetica / Arial. No JetBrains. No Space Grotesk. No globe seal.
+TYPE: Oswald 700 on plaques. Helvetica Neue / Helvetica / Arial on work. No JetBrains. No Space Grotesk.
 
 COMPOSITION (desktop field, not a PWA, not mobile-first):
-1. Composed SPECK canvas. Organs are placed ink (PLACE), not CSS regions. Window chrome: double hairline, plaque, `[x] ···`, tick ruler, circle counts.
-2. One work graph. NEST is the tree. PIPE is the same nodes by status (FOCUS | GATEWAY). Empty ledger rows stay and create. HIT a task expands in place — rows below move down. No overlay CHIP covering neighbors.
-3. Click-and-type on the cell. TAB cycles title → body → subtask → status. Dock is operator (commands + dump parser), not the title field.
+1. Paper sheet. Organs are black 1px windows (`PLACE`). Title bar, Oswald plaque, `[x] ···`, tick ruler, octagon counts. Grain / scan / oval are SPECK.
+2. One work graph. NEST is the tree. PIPE is the same nodes by status (FOCUS | GATEWAY). Empty ledger rows stay and create. HIT a task expands in place — rows below move down. Oval + CHIP, not overlay dossier.
+3. Click-and-type on the cell. TAB cycles title → body → subtask → status. Dock is operator (commands + dump). Legend rail above it toggles GRAIN / SCAN / INV. Never a second input.
 4. SHOVEL / status puts a node on the binder. `[+]` adds a child. CLIP-copy is dead.
-5. ONE one-line dock, locked to viewport bottom. Never three forms. Never header CTX tabs.
+5. Salt organs SEAL / SKULL / CAL are PLACE-able, not identity. CAL is a month window, not month-as-OS home.
 
-HARD VETO: DateBlocks, jagged day cards, SaaS kanban cards, amber theme, JSON-as-database, second prompt, cobalt lash.
-Do not revive the globe seal, beige cassette chrome, month-as-OS, todo nest, scratch dump as home, or a Tailwind binder.
+HARD VETO: DateBlocks cards, jagged day cards, SaaS kanban cards, amber theme, JSON-as-database, second prompt, cobalt lash.
+Do not revive beige cassette as the OS identity, month-as-OS as home, todo nest, or a Tailwind binder.

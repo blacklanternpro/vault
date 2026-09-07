@@ -1,6 +1,6 @@
 # OVERNIGHT PROMPT — paste this into a future agent
 
-**Month-as-OS is dead. The globe / beige seal shell is dead. Kanban cards, harvest amber, cobalt lash, overlay CHIP dossiers, and CLIP-copy are dead.** Keep **SPECK**. The field is a composed desktop canvas: one work graph, NEST tree, PIPE status lens, DUMP tape, field editor, one-line operator dock. Persistence is SPECK source (`speck-os-v1`), not a task CRDT, not JSON-as-database.
+**Month-as-OS is dead as home. DateBlocks, kanban cards, harvest amber, cobalt lash, overlay CHIP dossiers, and CLIP-copy are dead.** Keep **SPECK**. The field is a composed desktop canvas on a paper sheet: one work graph, NEST tree, PIPE status lens, DUMP tape, salt organs (SEAL / SKULL / CAL), field editor, legend rail + one-line operator dock. Persistence is SPECK source (`speck-os-v1`), not a task CRDT, not JSON-as-database.
 
 This is a **later-run** brief. The language is written. The runtime lives in `src/speck`. Do not ignore `docs/LANGUAGE.md`. It is canon. Product truth: `PRODUCT.md`.
 
@@ -32,7 +32,7 @@ Jake / BLACK LANTERN. Personal OS. Not a store product. Not a SaaS. Local-first,
 
 1. **`docs/LANGUAGE.md`** — the grand language. Tokens, taste stack, grammar, vetoes, take/leave, SPECK. **Primary.**
 2. **`.cursorrules`** — short law. Obey it. It points here.
-3. **Current shell** — `src/App.tsx` hosts `<Field />`. Runtime is `src/speck`. Split-page PIPE. Power red. No grain/scan. No globe. The React calendar/todo/scratch components are a corpse; do not restore them. The month pack is not the destination.
+3. **Current shell** — `src/App.tsx` hosts `<Field />`. Runtime is `src/speck`. Split-page PIPE. Paper `INV` ground. Grain/scan/oval live. Salt organs SEAL/SKULL/CAL. Legend rail. The React calendar/todo/scratch components are a corpse; do not restore them. CAL is an organ, not the destination.
 4. **History** — Gemini neo-brutal TUI blueprint. PRs #8–#11 (fried TUI → burn the box). PR #7 DateBlocks = warning. PR #14 month field = recovery, not home.
 5. **Pinned world** — office sheet + pixel GUI chrome + IMP plaques, restamped onto field / paper / power red.
 
@@ -40,11 +40,11 @@ Jake / BLACK LANTERN. Personal OS. Not a store product. Not a SaaS. Local-first,
 
 ## Locked tokens
 
-- Field `#000000`
-- Paper `#F4F4F0`
-- Power red `#E10600` — selection, caret, ticks, `[+]` / shovel, strike / URGENT (one red)
+- Paper `#F4F4F0` — the sheet (`INV` default)
+- Field `#000000` — ink, organ plates, dock
+- Power red `#E10600` — oval, caret, ticks, `[+]` / shovel, strike / URGENT (one red)
 
-Helvetica Neue / Helvetica / Arial. Radius 0. No shadows. No grain layer. No globe. No amber. No cobalt.
+Oswald 700 on plaques. Helvetica Neue / Helvetica / Arial on work. Radius 0. No amber. No cobalt.
 
 ---
 
@@ -55,10 +55,10 @@ One field. Desktop. One dock (operator). One graph.
 1. PIPE: FOCUS | spine | GATEWAY. Project plaques. Reflow expand. Shovel, not drag-cards. Empty ledger rows stay and create.
 2. NEST tree. `[+]` adds. SHOVEL onto the binder. CLIP is dead.
 3. DUMP tape.
-4. PLACE / GLYPH. Window chrome. Overlap legal.
-5. Click-and-type + TAB. Dock dumps and commands.
+4. PLACE / GLYPH. Window chrome. Salt organs SEAL / SKULL / CAL. Overlap legal.
+5. Click-and-type + TAB. Dock dumps and commands. Legend rail toggles GRAIN / SCAN / INV.
 
-You may refine density. You may not add hardware bays, card grids, a second input, the globe, month-as-OS, cobalt, or PROJECTS/ROSTER/FLEET/LOGS tabs.
+You may refine density. You may not add hardware bays, card grids, a second input, month-as-OS as home, cobalt, or PROJECTS/ROSTER/FLEET/LOGS tabs.
 
 ---
 
@@ -77,7 +77,7 @@ Full list: `docs/LANGUAGE.md` §8.
 - One graph; PIPE and NEST are lenses
 - Source as program (`speck-os-v1`)
 
-Do not throw SPECK away. Do not rebuild a Tailwind notebook. Do not bring the globe back. Do not make the month the OS.
+Do not throw SPECK away. Do not rebuild a Tailwind notebook. Do not make the month the OS. Salt organs are salt.
 
 ---
 
@@ -104,6 +104,6 @@ Do not propose a new palette. Do not “just use Tailwind a bit more carefully.�
 
 New features must be SPECK-sayable.
 
-When in doubt: power red on field, one dock, overlap is allowed, red is the only alarm, empty is `_`.
+When in doubt: power red on the sheet, black windows, one dock, legend rail, overlap is allowed, red is the only alarm, empty is `_`.
 
 Go.

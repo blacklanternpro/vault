@@ -21,9 +21,10 @@ Non-obvious notes:
  bundling error).
 - Lint is **oxlint** (`npm run lint`), configured via `.oxlintrc.json` — not ESLint.
 - Aesthetic contract is locked in `.cursorrules`. Full portable language: `docs/LANGUAGE.md`. Overnight brief: `docs/OVERNIGHT_PROMPT.md`. Product: `PRODUCT.md`.
-- Smoke: black field, Helvetica, power-red chrome (not cobalt). Split-page binder
-  (FOCUS | spine | GATEWAY) with project plaques. Tap a day-row: expand in place,
+- Smoke: paper sheet, Oswald plaques, Helvetica work rows, power-red oval + chrome (not cobalt).
+  Split-page binder (FOCUS | spine | GATEWAY) with project plaques. Tap a row: expand in place,
   rows below move. Click a title, type. `[+]` in nest adds a child. Dock dump:
   `new website project, site redesign of homepage, need to assess aesthetic, create repo`.
-  Organ `[x]` collapses that window. Do not revive the seal, beige chrome, month pack,
-  overlay CHIP dossier, CLIP-copy, kanban cards, amber, or cobalt.
+  Legend rail toggles GRAIN / SCAN / INV. Organ `[x]` collapses that window.
+  Salt organs SEAL / SKULL / CAL. Do not revive DateBlocks cards, beige UN identity,
+  month-as-OS as home, overlay CHIP dossier, CLIP-copy, kanban cards, amber, or cobalt.

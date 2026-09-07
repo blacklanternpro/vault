@@ -14,7 +14,7 @@ If a thing cannot be said in this language, it is not in the work.
 Before you add a feature, a color, a font, a panel, a motion, a word:
 
 1. Can it be said in **SPECK**? (see §7)
-2. Does it live on **field / paper / power red** — and nowhere else?
+2. Does it live on **paper / black / power red** — and nowhere else?
 3. Is it **utility** wearing attitude, or attitude wearing a fake tool?
 4. Would Jake almost throw up? (DateBlocks, cards, SaaS stacks, boxed amber terminals)
 
@@ -34,7 +34,7 @@ That board is the *room*. It is not a license to build a toy cockpit.
 
 - More **minimal**. More **refined rawness**.
 - A **little** sleaze. An **echo** of hacker grime.
-- Power red on black field — not amber, not terminal green, not cyan-on-black, not cobalt.
+- Power red on a **paper sheet**, black windows — not amber, not terminal green, not cyan-on-black, not cobalt.
 
 This instance is a **desktop field**. Phone lists, TimeTree, and paper diaries already exist. Do not design for a thumb. Packaging later is a boring native envelope (Tauri / WebView). The envelope is not the aesthetic.
 
@@ -63,19 +63,20 @@ Attitude: slightly illegal, slightly glamorous, still a tool.
 
 | Token | Hex | Job |
 | --- | --- | --- |
-| Field | `#000000` | The glass. This instance. |
-| Paper | `#F4F4F0` | Type. Ledger rules (low alpha). Tick marks. |
-| Power red | `#E10600` | Selection invert, operator caret, live ticks, `[+]` / shovel, strike / URGENT. |
+| Paper | `#F4F4F0` | The sheet. Ground when `INV` is live (this instance’s default). |
+| Field | `#000000` | Ink. Organ plates. Dock slab. Ground when `INV` is off. |
+| Power red | `#E10600` | Oval, caret, live ticks, `[+]` / shovel, strike / URGENT. |
 | White | `#FFFFFF` | Type on power-red invert. |
 
-One accent. Strike and URGENT use the same red — not two reds. Cobalt has left. Harvest amber is forbidden. No charcoal leather.
+One accent. Strike and URGENT use the same red. Cobalt has left. Harvest amber is forbidden.
 
-No teal. No amber-as-theme. No terminal green. No canary. No cyan HUD. No mauve/mustard ricing palettes. No beige plastic on this instance. No globe. No cobalt lash.
+`INV` is a SPECK line, not CSS `filter: invert(1)`. Organs stay black windows on the sheet.
 
 ### Type
 
-- **Helvetica Neue / Helvetica / Arial** — binder, nest, dump, dock. Small. Dense.
-- No JetBrains. No Space Grotesk. No Inter. No VT323. No Orbitron. No pixel-display novelty fonts.
+- **Oswald 700** — plaques, shouts, free `GLYPH` stamps. Self-hosted. 32–40px on organ titles.
+- **Helvetica Neue / Helvetica / Arial** — binder, nest, dump, dock, `[x] ···`. Work rows 16–18px, row 26.
+- No JetBrains. No Space Grotesk. No Inter. No VT323. No Orbitron. No pixel-display novelty fonts on titles.
 
 Tracking is tight on chrome. Uppercase for legends and shouts.
 
@@ -83,8 +84,8 @@ Tracking is tight on chrome. Uppercase for legends and shouts.
 
 - Border radius: **0**. Everywhere. Including native controls.
 - No soft shadows. No gradients. No blur. No glass.
-- Grain / scan: off on this instance.
-- Selection: inverted CHIP (power red, white type) on the live row — same row height. HIT expands in place; rows below move down. No overlay covering neighbors.
+- Grain / scan: live SPECK (`GRAIN` `SCAN`) plus one material overlay. Deterministic. No hot RAF.
+- Selection: inverted CHIP (power red, white type) **inside** a power-red `OVAL`. Same row height. HIT expands in place; rows below move down. No overlay covering neighbors.
 
 ---
 
@@ -92,19 +93,20 @@ Tracking is tight on chrome. Uppercase for legends and shouts.
 
 One continuous personal OS field. Not a dashboard. Not stacked sections. Not three apps in a trenchcoat. Not a PWA. Not mobile-first.
 
-The dock is locked to the viewport bottom.
+The dock is locked to the viewport bottom. A **legend rail** sits above the operator (read-only). Never a second `<input>`. Never three forms.
 
 **VAULT instance (SPECK machine — composed desktop field):**
 
 1. **One graph.** Every node: `id`, `title`, `body?`, `status` (`backlog|active|staging|done|none`), `parent`, ordered children, `urgent?`. Projects are nodes with children. Tasks appear on PIPE when status is a binder column.
-2. **PIPE** — a *view* of binder-status nodes, grouped under project plaques. Left page FOCUS (`backlog` / `active`). Right page GATEWAY (`staging` / `done`). ASCII spine and ring hits. Empty ledger rows stay and **create**. HIT expands in place (body, subtasks, status ticks); everything below **moves down**. Shovel (`->` or `SHOVEL`) advances status. Nest project selection filters the binder to that subtree. Not kanban cards. Not overlay chips.
+2. **PIPE** — a *view* of binder-status nodes, grouped under project plaques. Left page FOCUS (`backlog` / `active`). Right page GATEWAY (`staging` / `done`). ASCII spine, scanline meter, ring hits. Empty ledger rows stay and **create**. HIT expands in place (body, subtasks, status ticks); everything below **moves down**. Shovel (`->` or `SHOVEL`) advances status. Nest project selection filters the binder to that subtree. Not kanban cards. Not overlay chips.
 3. **NEST** — the same graph as a unix tree. Expand/collapse. Click name to rename. `[+]` or empty child slot adds. Indent/outdent. `SHOVEL` puts a node on the binder. CLIP-copy is dead.
 4. **DUMP** — scratch tape. `NOTE MM.DD.YY "…"`. Not the work graph.
-5. **PLACE / GLYPH** — organs sit where source says. Window chrome: double hairline, plaque `PIPE // vault`, `[x] ···` (`x` collapses the organ), tick ruler, circle counts. Drag the plaque to rewrite `PLACE`. Dither is salt, not a texture layer.
-6. **Dock** — ONE one-line **operator**. Commands (`SEE`, `WORDS`, `CLEAR`, `SHOVEL`, `FOCUS`, `HIT`, …) or a dump line. Never three forms. Never CTX chips in a header.
-7. **Field editor** — one native `<input>` over the active cell. Click a title, type. TAB / Shift-TAB: `title → body → new subtask → status`. Enter commits. Esc collapses. Space on `[ ]` shovels / checks. Two writers on purpose (cell + operator).
+5. **PLACE / GLYPH** — organs sit where source says. Window chrome: title bar, Oswald plaque, `[x] ···`, tick ruler, octagon counts. Drag the plaque to rewrite `PLACE`. Dither is salt.
+6. **Salt organs** — `SEAL` (wireframe globe), `SKULL` (pixel skull), `CAL` (month digits in a window, 7-across, no weekday offset). PLACE-able, `[x]`-collapsible. None is identity. Home remains PIPE / NEST. CAL underlines days that have DUMP notes. HIT a day lists those notes in the window.
+7. **Dock** — legend rail + ONE one-line **operator**. Legend HIT toggles `GRAIN` / `SCAN` / `INV`. Operator: commands or a dump line. Never three forms. Never CTX chips in a header.
+8. **Field editor** — one native `<input>` over the active cell. Click a title, type. TAB / Shift-TAB: `title → body → new subtask → status`. Enter commits. Esc collapses. Space on `[ ]` shovels / checks. Two writers on purpose (cell + operator).
 
-A later agent may refine density **inside this field**. It may not bring back DateBlocks, month-as-OS, beige cassette chrome, the globe as field chrome, a Tailwind binder, harvest amber, cobalt, CLIP-copy, overlay dossiers, or a second input.
+A later agent may refine density **inside this field**. It may not bring back DateBlocks cards, month-as-OS as home, beige cassette as the OS identity, a Tailwind binder, harvest amber, cobalt, CLIP-copy, overlay dossiers, or a second input.
 
 ---
 
@@ -123,7 +125,9 @@ These are the letters of the language. Use them. Do not invent a parallel alphab
 - **Strike** — red mid-line through a mark. Not `text-decoration` grey.
 - **Caret** — stepped blink `>`. The dock is the **operator**. The cell input is the writer.
 - **Shovel** — margin `->`. Advances a node through the spine (or from `none` onto `backlog`). Not a drag handle for cards.
-- **Window chrome** — 1px double hairline, plaque, `[x] ···`, registration ticks, circle counters. Recess via double hairline, not 3D knobs.
+- **Oval** — power-red ellipse around the live CHIP. The shout. CHIP stays rectangular inside it.
+- **Window chrome** — 1px hairline, filled title bar, Oswald plaque, `[x] ···`, registration ticks, octagon counters. Recess via double hairline, not 3D knobs.
+- **Legend rail** — live ticks for `GRAIN SCAN INV OVAL` above the operator. Not a second input.
 
 ---
 
@@ -136,7 +140,7 @@ The VAULT field is a **SPECK machine**. React is the host envelope (canvas, nati
 - Persistence is the SPECK source string (`speck-os-v1` in localStorage).
 - One graph; PIPE and NEST are lenses. DUMP tape. PLACE / GLYPH.
 
-What failed: DateBlocks, the globe/beige seal shell, Yjs CRDT as the database, month-as-OS as the destination, HTML/Tailwind kanban, overlay CHIP dossiers, CLIP-as-copy, cobalt lash. Dead. Do not revive them. Sections want cards. Cards are DateBlocks.
+What failed: DateBlocks, the beige UN seal as the OS shell, Yjs CRDT as the database, month-as-OS as the destination, HTML/Tailwind kanban, overlay CHIP dossiers, CLIP-as-copy, cobalt lash. Dead. Do not revive them. Sections want cards. Cards are DateBlocks. Globe/skull/CAL as **PLACE-able salt organs** are live; they are not identity.
 
 ---
 
@@ -159,6 +163,9 @@ A new feature must be **sayable in SPECK**. If you cannot write it as source, it
 Line-oriented. Indent (2 spaces) groups a body. Words are Forth-like. Case-insensitive opcodes; payloads keep their case. Comments: `//` or Forth `\` to end of line.
 
 ```
+INV
+GRAIN 0.14
+SCAN 0.1
 PIPE vault
   COL backlog
   COL active
@@ -174,10 +181,13 @@ NEST
     NODE 104 "ingress routing" status backlog
 DUMP
   NOTE 09.07.26 "ridge"
-PLACE PIPE 24 16
-PLACE NEST 16 420
-PLACE DUMP 560 420
-GLYPH 820 36 72 "07"
+PLACE PIPE 24 48
+PLACE NEST 24 540
+PLACE DUMP 560 540
+PLACE SEAL 900 48
+PLACE SKULL 900 280
+PLACE CAL 560 48
+GLYPH 16 16 56 "VAULT"
 ```
 
 **Tokens**
@@ -206,30 +216,40 @@ These name the field. They compile to paint ops. Do not add a noun unless the fi
 | `NOTE` | a dump line |
 | `PLACE` | organ origin `x y` |
 | `GLYPH` | free field ink `x y px "text"` |
-| `DOCK` | the one operator (always compiled) |
+| `DOCK` | the operator (always compiled) plus a read-only legend rail |
+| `INV` | paper ground. Off restores black field |
+| `GRAIN` | film salt amount |
+| `SCAN` | scanline amount |
+| `SEAL` | wireframe globe organ |
+| `SKULL` | pixel skull organ |
+| `CAL` | month digits in a window. Not home |
 
-Dead as field chrome (do not compile): `CAL` `SEAL` month pack, `GRAIN` `SCAN` `INV`, `TASK` `STEM` `CLIP` as live nouns. Legacy `TASK` / `STEM` lines still parse into `NODE`s. Typed at the dock they are dumps if they are not commands.
+Dead as field chrome: `TASK` `STEM` `CLIP` as live nouns. Legacy `TASK` / `STEM` lines still parse into `NODE`s. Typed at the dock they are dumps if they are not commands.
 
-`SEE` echoes source. `WORDS` echoes the live opcode list. `CLEAR` restores seed. `SHOVEL` advances a node (or lifts `none` onto `backlog`). `FOCUS` filters PIPE to a nest subtree. Dump lines create projects and child tasks.
+`SEE` echoes source. `WORDS` echoes the live opcode list. `CLEAR` restores seed. `SHOVEL` advances a node (or lifts `none` onto `backlog`). `FOCUS` filters PIPE to a nest subtree. Dump lines create projects and child tasks. Legend HIT toggles `GRAIN` / `SCAN` / `INV`.
 
 ### 7.3 Opcodes / IR
 
 The painter executes a **stateless display list**. Source `INK` is baked into each op at compile. Live public ops:
 
-`FILL` `GLYPH` `LINE` `CHIP` `STRIKE` `STEM`
+`FILL` `GLYPH` `LINE` `CHIP` `STRIKE` `STEM` `GRAIN` `SCAN` `INV` `OVAL`
 
 | Op | Paints |
 | --- | --- |
-| `GLYPH` | Helvetica type (binder, nest, dump, dock). |
+| `GLYPH` | Type (Helvetica work, Oswald plaques). |
 | `CHIP` | power-red fill, white text. Selection invert. Radius 0. Same row height. |
-| `LINE` | ledger hairline. Spine. Organ double-edge. Tick ruler. |
+| `LINE` | ledger hairline. Spine. Organ edge. Tick ruler. |
 | `STRIKE` | power-red mid-line on done / `[X]`. |
 | `STEM` | ascii tree prefix + label. |
-| `FILL` | black field. Dither salt (1×1). |
+| `FILL` | paper sheet or black plate. Dither salt (1×1). |
+| `GRAIN` | film salt. Deterministic. |
+| `SCAN` | IMP scanlines on black fills / PIPE meter. |
+| `INV` | marker; compile uses paper ground. |
+| `OVAL` | power-red ellipse around the live CHIP. |
 
 Overlap is legal. Expanded rows **reflow** — they do not cover later ink.
 
-Do not advertise `SEAL` `GRAIN` `SCAN` `INV` as live ops.
+Do not advertise `CLIP`.
 
 ### 7.4 Events
 
@@ -249,7 +269,7 @@ SEE
 WORDS
 ```
 
-HIT a binder node to expand it in place and edit. HIT empty field / Esc to collapse. Never three forms. Never CTX chips in a header.
+HIT a binder node to expand it in place and edit. HIT empty field / Esc to collapse. HIT a CAL day to list DUMP notes for that date. Never three forms. Never CTX chips in a header.
 
 ### 7.5 Dock operator
 
@@ -264,11 +284,11 @@ Examples: `SEE` · `WORDS` · `SHOVEL` · `FOCUS` · `new website project, site 
 ### 7.6 Runtime contract
 
 1. **The program is source.** `localStorage` key `speck-os-v1`. Ignore `speck-month-v1`.
-2. **The field is compiled** from source + session → display list → pixels. Session: selected node, nest/pipe expand, nest focus, field slot, collapsed organs, dock buffer, echo, pending dump. Redraw on dirty + caret interval. No hot RAF.
+2. **The field is compiled** from source + session → display list → pixels. Session: selected node, nest/pipe expand, nest focus, field slot, collapsed organs, dock buffer, echo, pending dump, calDay. Redraw on dirty + caret interval. No hot RAF. One material overlay (WebGL or 2D fallback) for grain+scan together.
 3. **Paint pixels.** Canvas (later Skia). Not DOM flow. The host keeps a native `<input>` over the dock glyph line **and** over the active cell. Envelope, not aesthetic.
 4. **Hit test the display list.** Highest-z box wins. Expanded rows occupy their own hits. Organs above empty field.
-5. **Commits mutate source.** `SHOVEL` rewrites a node status. Dump inserts nodes. Field editor rewrites title/body. `CLEAR` restores seed. No worker. No CRDT. No JSON sidecar.
-6. **No grain layer, scan, INV, seal, amber, cobalt, CLIP, overlay dossier, or month pack** on this instance.
+5. **Commits mutate source.** `SHOVEL` rewrites a node status. Dump inserts nodes. Field editor rewrites title/body. `CLEAR` restores seed. Legend HIT rewrites `INV`/`GRAIN`/`SCAN`. No worker. No CRDT. No JSON sidecar.
+6. **No CLIP, overlay dossier, DateBlocks cards, cobalt theme, or month-as-OS home** on this instance. Grain, scan, INV, oval, seal, skull, and CAL are live letters.
 
 Packaging (when asked): SPECK runtime in a boring envelope (Tauri / WebView). Desktop. Seal as icon only. No browser chrome. The envelope is not the aesthetic.
 
@@ -314,9 +334,9 @@ Mood is canon. Palette of the ref is usually not.
 
 ### TAKE
 
-- **Office sheet** — registration ticks, hairline rules, circle counters, stencil weight on plaques, one oval/invert for live selection. Leave skull chrome and `IMAGE NOT FOUND` theatre.
+- **Office sheet** — registration ticks, hairline rules, circle counters, stencil weight on plaques, one oval/invert for live selection. Skull as a **salt organ**, not chrome on every frame.
 - **Pixel GUI** — 1px window chrome, title bar with `[x]` and `···`, overlap legal, dither as salt. Leave Win95 gray and pixel novelty fonts.
-- **IMP** — labeled blocks, dense legends, scanline bars for meters, Helvetica industrial caps, recessed *feeling* via double hairline. Leave rotary 3D knobs.
+- **IMP** — labeled blocks, dense legends, scanline bars for meters, industrial caps, recessed *feeling* via double hairline. Leave rotary 3D knobs. Globe as a **SEAL organ**, not the beige UN app icon.
 - **Lotus Organizer split-page** — two pages, spine, shovel through the gutter, ledger rows that **reflow**. Leave leather, amber, and card chrome.
 - **Linear / Things / OmniFocus / Todoist (stolen, not cloned)** — project + issue + sub-issue; click empty row to add; outline is the document; dump parser. Leave cloud, Apple UI, karma, board cards.
 - **ranger / nnn** — arrows, enter expand, `n` new node. Leave two-pane file-manager costume.
@@ -324,8 +344,10 @@ Mood is canon. Palette of the ref is usually not.
 
 ### LEAVE
 
-- Skull as chrome, `IMAGE NOT FOUND` theatre, UN globe, rotary 3D, Win95 gray, pixel novelty fonts
+- `IMAGE NOT FOUND` theatre, rotary 3D, Win95 gray, pixel novelty fonts on titles
 - Harvest amber, cobalt as the lash, DateBlocks/cards
+- Month-as-OS as home (CAL is an organ)
+- Beige UN seal as the OS identity (SEAL is an organ)
 - Green-on-black Matrix Android launcher
 - Arch ricing (mauve/teal/mustard, anime fetch, glass hover)
 - AMMAR-style l33t IP-tracker CLI
@@ -346,7 +368,7 @@ Older canon still in force: Gemini neo-brutal TUI blueprint (engineering DNA, no
 4. Point `.cursorrules` at this file. Keep `.cursorrules` short. Agents read the short law; humans and long agents read this.
 5. If you need a second color, you are already lost. Use power red. Strike is the same red.
 
-**VAULT-specific content (this repo):** composed desktop field; one graph; PIPE binder view; NEST tree; DUMP tape; operator dock; persistence `speck-os-v1`. No globe. No beige seal shell. No month-as-OS. No amber binder. No cobalt.
+**VAULT-specific content (this repo):** composed desktop field on a paper sheet; one graph; PIPE binder view; NEST tree; DUMP tape; salt organs SEAL/SKULL/CAL; operator dock + legend rail; persistence `speck-os-v1`. No DateBlocks. No month-as-OS home. No amber binder. No cobalt.
 
 ---
 

@@ -1,79 +1,80 @@
 ---
 name: VAULT WORLDWIDE
-description: Local-first personal OS field — one work graph, two lenses, operator dock.
+description: Local-first personal OS field on a paper sheet — one work graph, two lenses, salt organs, operator dock.
 colors:
-  field: "#000000"
   paper: "#F4F4F0"
+  field: "#000000"
   power: "#E10600"
   white: "#FFFFFF"
-  rule: "rgba(244,244,240,0.18)"
-  rule-dim: "rgba(244,244,240,0.08)"
+  rule: "rgba(244,244,240,0.22)"
+  ink-rule: "rgba(0,0,0,0.22)"
 typography:
-  helvetica:
+  work:
     fontFamily: "Helvetica Neue, Helvetica, Arial, sans-serif"
-    fontSize: "12px"
+    fontSize: "16px"
     fontWeight: 400
-    lineHeight: "18px"
+    lineHeight: "26px"
     letterSpacing: "normal"
   plaque:
-    fontFamily: "Helvetica Neue, Helvetica, Arial, sans-serif"
-    fontSize: "13px"
+    fontFamily: "Oswald, Helvetica Neue, Helvetica, Arial, sans-serif"
+    fontSize: "32px"
     fontWeight: 700
-    lineHeight: "22px"
-    letterSpacing: "normal"
+    lineHeight: "44px"
+    letterSpacing: "0.04em"
   legend:
     fontFamily: "Helvetica Neue, Helvetica, Arial, sans-serif"
     fontSize: "11px"
-    fontWeight: 400
-    lineHeight: "16px"
-    letterSpacing: "0.04em"
+    fontWeight: 700
+    lineHeight: "22px"
+    letterSpacing: "0.08em"
   glyph:
-    fontFamily: "Helvetica Neue, Helvetica, Arial, sans-serif"
-    fontSize: "72px"
-    fontWeight: 400
+    fontFamily: "Oswald, Helvetica Neue, Helvetica, Arial, sans-serif"
+    fontSize: "56px"
+    fontWeight: 700
     lineHeight: 1
-    letterSpacing: "normal"
+    letterSpacing: "0.04em"
   dock:
     fontFamily: "Helvetica Neue, Helvetica, Arial, sans-serif"
-    fontSize: "14px"
+    fontSize: "18px"
     fontWeight: 400
-    lineHeight: "28px"
+    lineHeight: "36px"
     letterSpacing: "normal"
 rounded:
   none: "0px"
 spacing:
-  row: "18px"
-  chrome-head: "22px"
-  chrome-ticks: "8px"
+  row: "26px"
+  chrome-head: "44px"
+  chrome-ticks: "12px"
   organ-gap: "16px"
-  dock: "44px"
+  dock: "70px"
+  legend: "22px"
 components:
   organ-plaque:
     backgroundColor: "{colors.field}"
     textColor: "{colors.paper}"
     typography: "{typography.plaque}"
     rounded: "{rounded.none}"
-    height: "22px"
+    height: "44px"
   selection-chip:
     backgroundColor: "{colors.power}"
     textColor: "{colors.white}"
-    typography: "{typography.helvetica}"
+    typography: "{typography.work}"
     rounded: "{rounded.none}"
-    height: "16px"
+    height: "24px"
     padding: "0 6px"
   field-editor:
     backgroundColor: "{colors.power}"
     textColor: "{colors.white}"
-    typography: "{typography.helvetica}"
+    typography: "{typography.work}"
     rounded: "{rounded.none}"
-    height: "16px"
-    padding: "0 4px"
+    height: "24px"
+    padding: "0 6px"
   dock-caret:
     backgroundColor: "{colors.field}"
     textColor: "{colors.power}"
     typography: "{typography.dock}"
     rounded: "{rounded.none}"
-    height: "44px"
+    height: "70px"
   close-mark:
     backgroundColor: "{colors.field}"
     textColor: "{colors.power}"
@@ -85,48 +86,51 @@ components:
 
 ## Overview
 
-VAULT is a composed black desktop field, not a dashboard. Organs (PIPE, NEST, DUMP) are 1px windows on the canvas: double hairline, plaque, `[x] ···`, registration ticks, circle counters. One work graph. NEST is the tree; PIPE is the same nodes by status (FOCUS | GATEWAY). Power red is the only accent. The dock is an operator; titles are typed in a native input over the active cell.
+VAULT is a composed desktop field on an office sheet, not a dashboard. Default ground is paper `#F4F4F0` (`INV`). Organs are black 1px windows: filled title bar, Oswald plaque, `[x] ···`, tick ruler, octagon counters, scanlines. One work graph. NEST is the tree; PIPE is the same nodes by status (FOCUS | GATEWAY). Power red is the only accent. Grain and scan are SPECK plus one material overlay. The dock is an operator under a read-only legend rail. Titles are typed in a native input over the active cell. Salt organs SEAL, SKULL, and CAL sit where `PLACE` says. Home is PIPE / NEST.
 
 ## Colors
 
 | Token | Hex | Use |
 | --- | --- | --- |
-| Field | `#000000` | Canvas, organ fill, dock |
-| Paper | `#F4F4F0` | Type, organ outer hairline |
-| Power | `#E10600` | Selection invert, caret, ticks, `[+]` / shovel, strike, legends |
+| Paper | `#F4F4F0` | Sheet ground when `INV` is live |
+| Field | `#000000` | Organ fill, dock slab, ink, ground when `INV` is off |
+| Power | `#E10600` | Oval, caret, ticks, `[+]` / shovel, strike, live legend |
 | White | `#FFFFFF` | Type on power-red CHIP / field editor |
-| Rule | `rgba(244,244,240,0.18)` | Ledger lines, inner hairline |
+| Rule | `rgba(244,244,240,0.22)` | Ledger lines inside black windows |
 
-No second accent. Strike and URGENT are power red. Cobalt is not in the system.
+No second accent. Strike and URGENT are power red. Cobalt is not in the system. `INV` is a source line, not CSS invert.
 
 ## Typography
 
-Helvetica Neue / Helvetica / Arial only. Binder and nest at 12px. Plaques 13px / 700. Legends 11px tracked. Dock 14px. Free `GLYPH` may be large (seed `07`). Uppercase for plaques, column legends, status ticks. No JetBrains, Space Grotesk, Inter, VT323, or pixel novelty faces.
+Oswald 700 for plaques and free `GLYPH` stamps (self-hosted woff2). Helvetica Neue / Helvetica / Arial for binder, nest, dump, dock, and `[x] ···`. Work 16px / row 26. Plaques 32px / title bar 44. Legends 11px tracked. Dock 18px. Uppercase for plaques, column legends, status ticks, legend rail. No JetBrains, Space Grotesk, Inter, VT323, or pixel novelty faces on titles.
 
 ## Layout
 
-Desktop field. Organs sit at SPECK `PLACE` origins and may overlap. PIPE is a split page: FOCUS (backlog / active) left, GATEWAY (staging / done) right, double power-red spine. Empty ledger rows stay (6 minimum per column) and create. HIT a binder node expands in place — body, subtasks, status ticks — and everything below moves down. NEST is a unix tree under the plaque. DUMP is a short tape. One dock, 44px, locked to the viewport bottom. Cell editor is positioned on the compiled hit box of the active slot.
+Desktop field. Organs sit at SPECK `PLACE` origins and may overlap. PIPE is a split page: FOCUS left, GATEWAY right, double power-red spine with a scanline meter. Empty ledger rows stay (6 minimum per column) and create. HIT a binder node expands in place and everything below moves down. NEST is a unix tree. DUMP is a short tape. CAL is a 7-across month inside a window. SEAL and SKULL are small theatre windows. Legend rail 22px + operator, locked to the viewport bottom. Cell editor is positioned on the compiled hit box of the active slot. Paper registration ticks sit on the sheet; a dashed register runs through the binder spine.
 
 ## Elevation & Depth
 
-No shadows, no blur, no glass. Recess is a double hairline (paper outer, rule inner). Dither is a handful of 1×1 power-red specks in the chrome, not a texture layer. Overlap of organs and free glyphs is legal.
+No shadows, no blur, no glass. Recess is a double hairline (paper outer, rule inner). Grain is hashed film salt. Scan is IMP lines on black plates. Dither is 1×1 power-red specks in chrome. Overlap of organs and free glyphs is legal. A WebGL (or 2D fallback) multiply overlay sits over the field canvas; pointer-events none.
 
 ## Shapes
 
-Radius 0 everywhere, including native inputs. Selection is a rectangular CHIP the height of one ledger row — never an overlay stack covering neighbors. Circle counters are octagon hairlines with a digit. Spine rings are `O` glyphs.
+Radius 0 everywhere, including native inputs. Selection is a rectangular CHIP the height of one ledger row inside a power-red oval — never an overlay stack covering neighbors. Counters are octagon hairlines with a digit. Spine rings are `O` glyphs. Globe meridians are line ovals, not a PNG seal.
 
 ## Components
 
-- **Organ window** — `PIPE // vault` plaque, tick ruler, circle count of open binder work, `···`, `[x]` (collapses that organ).
+- **Organ window** — Oswald `PIPE // vault` plaque, tick ruler, octagon count, `···`, `[x]` (collapses that organ).
 - **Project plaque** — tracked uppercase parent title above a group of binder rows.
-- **Row** — `[ ]` / `[X]`, `#id`, title, shovel `->`. Done rows take a power-red strike.
+- **Row** — `[ ]` / `[X]`, `#id`, title, shovel `->`. Done rows take a power-red strike. Live row: CHIP + OVAL.
 - **Expand** — body line, child checklist, `+ subtask`, status words with the live status in power red.
-- **Nest row** — fold `[-]`/`[+]`, stem prefix, title, `[+]` add. Live row inverts.
+- **Nest row** — fold `[-]`/`[+]`, stem prefix, title, `[+]` add. Live row inverts + oval.
 - **Field editor** — native `<input>` over the cell, power-red fill, white type. TAB: title → body → subtask → status.
-- **Dock** — `>` caret, underline, `↵`. Echo line above when the operator speaks.
+- **Legend rail** — `GRAIN SCAN INV OVAL · PIPE NEST DUMP SEAL SKULL CAL · FOCUS`. HIT material words toggle source. Not an input.
+- **Dock** — `>` caret, underline, `↵`. Echo line between legend and operator when the machine speaks.
+- **CAL** — month digits, power-red underline on DUMP dates, drop list on HIT.
+- **SEAL / SKULL** — wireframe globe + stencil mark; pixel skull. Drag and `[x]` only.
 
 ## Do's and Don'ts
 
-**Do:** say new features in SPECK; keep one graph and two lenses; click-and-type in the cell; dump from the dock; shovel onto the binder; restamp office-sheet ticks, pixel-GUI chrome, and IMP plaques onto field / paper / power red.
+**Do:** say new features in SPECK; keep one graph and two lenses; click-and-type in the cell; dump from the dock; shovel onto the binder; restamp office-sheet ticks, pixel-GUI chrome, and IMP plaques onto paper / black / power red; pare grain/scan with legend HIT.
 
-**Don't:** DateBlocks, cards, rounded corners, shadows, cobalt, harvest amber, CLIP-copy, overlay CHIP dossiers, month-as-OS, globe seal, kanban boards, a second dock form, Win95 gray, 3D knobs, or novelty pixel fonts.
+**Don't:** DateBlocks cards, rounded corners, shadows, cobalt, harvest amber, CLIP-copy, overlay CHIP dossiers, month-as-OS as home, beige UN as identity, kanban boards, a second dock input, Win95 gray, 3D knobs, or novelty pixel fonts on titles.

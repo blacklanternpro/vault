@@ -12,7 +12,7 @@ web
 
 ## Product Purpose
 
-**[inferred]** VAULT WORLDWIDE is a local-first personal OS: a project/task machine spoken in SPECK. Success is being able to dump work, see it as a tree (NEST) and as a status binder (PIPE), click-and-type to edit, and operate from one dock line — without cards, calendars, or a cloud personality.
+**[inferred]** VAULT WORLDWIDE is a local-first personal OS: a project/task machine spoken in SPECK. Success is being able to dump work, see it as a tree (NEST) and as a status binder (PIPE), click-and-type to edit, and operate from one dock line — on a paper sheet that speaks, without cards, a cloud personality, or month-as-OS as home.
 
 ## Positioning
 
@@ -33,16 +33,16 @@ web
 - PIPE view: binder columns FOCUS (backlog / active) | GATEWAY (staging / done). Project plaques. In-place expand (rows reflow). Empty ledger lines create. Nest project selection filters the binder.
 - NEST view: unix tree, expand/collapse, click-create/rename, indent/outdent, `[+]` adds a child. SHOVEL / status puts a node on the binder. CLIP-copy is dead.
 - Field editor: native input over the active cell. TAB cycles `title → body → new subtask → status`. Space shovels / checks. Esc collapses.
-- Dock: operator only. Commands or a dump line (`new … project, title, need to …`).
-- Organs sit where `PLACE` says. `GLYPH` is free ink. One dock. Organ `[x]` collapses that organ, not the app.
+- Dock: operator plus a read-only legend rail. Commands or a dump line (`new … project, title, need to …`). Legend HIT toggles `GRAIN` / `SCAN` / `INV`.
+- Organs sit where `PLACE` says. `GLYPH` is free ink. Salt organs: `SEAL`, `SKULL`, `CAL` (month digits in a window; DUMP notes underline days). Organ `[x]` collapses that organ, not the app.
 
-**Out (YAGNI / veto):** assignees, dates-as-product, calendar, estimates, CRDT, PWA, harvest amber, cobalt lash, 3D knobs, second dock form, DateBlocks, globe seal, month-as-OS, kanban cards, SaaS stacks.
+**Out (YAGNI / veto):** assignees, estimates, CRDT, PWA, harvest amber, cobalt lash, 3D knobs, second dock **input**, DateBlocks cards, month-as-OS as home, kanban cards, SaaS stacks. Calendar/globe/skull are in as salt organs, not as identity.
 
 ## Brand Commitments
 
 - Maker: BLACK LANTERN. Product: VAULT WORLDWIDE.
-- Locked visual world (user-pinned, not a concept roll): office-sheet ticks + pixel-GUI 1px chrome + IMP plaques, restamped onto field / paper / **power red**. Cobalt leaves.
-- Helvetica Neue / Helvetica / Arial. Radius 0. SPECK remains the substrate.
+- Locked visual world (user-pinned): office-sheet **paper ground** + pixel-GUI 1px black windows + IMP plaques, restamped onto paper / black / **power red**. Cobalt leaves.
+- Oswald 700 on plaques. Helvetica Neue / Helvetica / Arial on work. Radius 0. SPECK remains the substrate.
 - Voice: terse machine. Empty is `_`. No dashboard welcome.
 
 ## Evidence on Hand
@@ -62,4 +62,4 @@ web
 
 ## Accessibility & Inclusion
 
-**[inferred]** Keyboard: TAB field cycle, Esc collapse, arrows / `[` `]` nest fold, Space shovel. Native inputs for typing (caret, selection, screen reader name). Hit targets on rows, `[+]`, `[x]`, shovel. Contrast: paper on field; white on power-red invert.
+**[inferred]** Keyboard: TAB field cycle, Esc collapse, arrows / `[` `]` nest fold, Space shovel. Native inputs for typing (caret, selection, screen reader name). Hit targets on rows, `[+]`, `[x]`, shovel, legend, CAL days. Contrast: black ink on paper; paper on black windows; white on power-red invert.
