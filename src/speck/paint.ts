@@ -1,5 +1,4 @@
 import type { Op } from './ir'
-import { CANVAS } from './tokens'
 
 function tracked(
   ctx: CanvasRenderingContext2D,
@@ -26,10 +25,50 @@ function tracked(
   }
 }
 
+function paintGrain(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  amount: number,
+): void {
+  if (amount <= 0 || w < 1 || h < 1) return
+  const n = Math.max(80, Math.floor(w * h * amount * 0.004))
+  let s = Math.floor(amount * 9973 + w * 13 + h) >>> 0
+  for (let i = 0; i < n; i++) {
+    s = (Math.imul(s, 1664525) + 1013904223) >>> 0
+    const px = x + (s % Math.floor(w))
+    s = (Math.imul(s, 1664525) + 1013904223) >>> 0
+    const py = y + (s % Math.floor(h))
+    ctx.fillStyle = i % 19 === 0 ? 'rgba(225,6,0,0.4)' : 'rgba(0,0,0,0.32)'
+    ctx.fillRect(px, py, 1, 1)
+  }
+}
+
+function paintScan(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  amount: number,
+): void {
+  if (amount <= 0 || w < 1 || h < 1) return
+  ctx.strokeStyle = `rgba(244,244,240,${0.05 + amount * 0.45})`
+  ctx.lineWidth = 1
+  const step = amount > 0.16 ? 2 : 3
+  for (let yy = y; yy < y + h; yy += step) {
+    ctx.beginPath()
+    ctx.moveTo(x, yy)
+    ctx.lineTo(x + w, yy)
+    ctx.stroke()
+  }
+}
+
 export function paint(ctx: CanvasRenderingContext2D, ops: Op[], w: number, h: number): void {
   ctx.save()
-  ctx.fillStyle = CANVAS
-  ctx.fillRect(0, 0, w, h)
+  ctx.clearRect(0, 0, w, h)
   ctx.imageSmoothingEnabled = false
 
   for (const op of ops) {
@@ -82,6 +121,33 @@ export function paint(ctx: CanvasRenderingContext2D, ops: Op[], w: number, h: nu
         ctx.lineTo(op.x2, op.y2)
         ctx.stroke()
         ctx.setLineDash([])
+        break
+      }
+      case 'GRAIN': {
+        paintGrain(ctx, op.x, op.y, op.w, op.h, op.amount)
+        break
+      }
+      case 'SCAN': {
+        paintScan(ctx, op.x, op.y, op.w, op.h, op.amount)
+        break
+      }
+      case 'INV': {
+        break
+      }
+      case 'OVAL': {
+        ctx.strokeStyle = op.color
+        ctx.lineWidth = op.width
+        ctx.beginPath()
+        ctx.ellipse(
+          op.x + op.w / 2,
+          op.y + op.h / 2,
+          Math.max(1, op.w / 2),
+          Math.max(1, op.h / 2),
+          0,
+          0,
+          Math.PI * 2,
+        )
+        ctx.stroke()
         break
       }
     }

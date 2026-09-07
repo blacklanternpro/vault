@@ -4,35 +4,35 @@ VAULT WORLDWIDE — local-first personal OS. The field is a **SPECK** machine (c
 
 Design language (portable): [`docs/LANGUAGE.md`](docs/LANGUAGE.md) — SPECK spec in §7.
 Overnight agent brief: [`docs/OVERNIGHT_PROMPT.md`](docs/OVERNIGHT_PROMPT.md).
+Product truth: [`PRODUCT.md`](PRODUCT.md).
 
 ## Composition
 
-Black desktop field. Not a PWA. Not a month.
+Black desktop field. Power red. Not a PWA. Not a month.
 
-1. **PIPE** — split-page binder: FOCUS (backlog / active) | spine | GATEWAY (staging / done)
-2. **NEST** — unix pit. `CLIP` a stem into the binder
-3. **DUMP** — scratch tape
-4. HIT a task → cobalt dossier overlay
-5. One-line dock, viewport bottom. `SHOVEL` advances a task. Drag organ legends to `PLACE`
+1. **One graph** — NEST is the tree; PIPE is the same nodes by status (FOCUS | GATEWAY)
+2. Click a title to type. TAB cycles title → body → subtask → status. HIT expands in place.
+3. **Dock** is the operator: commands or a dump line
+4. `[+]` adds a child. `SHOVEL` puts a node on the binder. Organ `[x]` collapses that window.
 
 ```
 src/
   speck/              language + runtime
-    Field.tsx         host: canvas + dock input
+    Field.tsx         host: canvas + cell editor + operator dock
     compile.ts        field + PLACE
-    organs/           pipe binder, nest, dump
-    machine.ts        shovel, clip, commit
+    organs/           pipe binder, nest tree, dump tape, window chrome
+    machine.ts        shovel, focus, dump, field cycle
+    parse-dump.ts     operator dump
     source.ts         localStorage speck-os-v1
 ```
 
 ```
-PIPE vault
-  TASK backlog "ingress routing" id 104
-NEST ops/
-  STEM lab/ scout_ridge_a
+NEST
+  NODE 1 "ops" status none
+    NODE 104 "ingress routing" status backlog
 ```
 
-Dock: type a line and ↵. Commands: `SEE` `WORDS` `CLEAR` `SHOVEL` `CLIP`.
+Dock: `SEE` `WORDS` `CLEAR` `SHOVEL` `FOCUS` or `new website project, site redesign of homepage, need to assess aesthetic, create repo`.
 
 ## Development
 

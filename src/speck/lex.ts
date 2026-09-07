@@ -13,7 +13,7 @@ export type Line = {
 
 const DATE_RE = /^(\d{2}\.\d{2}\.\d{2})/
 const YEAR_RE = /^'(\d{2})\b/
-const NUM_RE = /^(-?\d+)/
+const NUM_RE = /^(-?\d+(?:\.\d+)?)/
 const WORD_RE = /^([A-Za-z_./][A-Za-z0-9_./-]*)/
 
 function skipComment(s: string, i: number): number {
