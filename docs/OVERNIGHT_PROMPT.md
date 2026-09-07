@@ -2,7 +2,7 @@
 
 **Month-as-OS is dead. The globe / beige seal shell is dead. Kanban cards and harvest amber are dead.** Keep **SPECK**. The field is a composed desktop canvas: split-page PIPE binder, unix NEST, DUMP tape, one-line dock. Persistence is SPECK source (`speck-os-v1`), not a task CRDT, not JSON-as-database.
 
-This is a **later-run** brief. The language is written. The runtime lives in `src/speck`. Do not ignore `docs/LANGUAGE.md`. It is canon.
+This is a **later-run** brief. The language is written. The runtime lives in `src/speck`. Do not ignore `docs/LANGUAGE.md`. It is canon. Product truth: `PRODUCT.md`.
 
 Read this whole file. Then read `docs/LANGUAGE.md`. Then read `.cursorrules`. Then look at the current shell. Then go.
 
@@ -14,7 +14,7 @@ Grasp the vision. Put a spin on it. Go further from the boring. Stay utility.
 
 You are building toward **VAULT WORLDWIDE** — a personal OS on top of an OS. Cassette-futurism *machine*, spoken in SPECK. Desktop field. Not a phone PWA. Not a website. Not Linear.
 
-Jake (blacklanternpro) spent hours fighting agents that translated his vision into cards. DateBlocks made him almost throw up. The single-field prompt was “magic / Genius.” SPECK exists so pixels are owned by functions.
+Jake spent hours fighting agents that translated his vision into cards. DateBlocks made him almost throw up. The single-field prompt was “magic / Genius.” SPECK exists so pixels are owned by functions.
 
 **Tonight-of-that-future-run:** stay inside the language. Refine the binder, nest, dump, PLACE. Do not ship another stack of components and call it done.
 
@@ -24,7 +24,7 @@ If Jake only wanted language docs, they are already in this repo. You are here t
 
 ## Who this is for
 
-Jake / BLACK LANTERN. Personal OS. Not a store product. Not a SaaS. Local-first, no cloud personality. Work / lab / field — reindustrial, not grocery-list demo. Phone chores live elsewhere (homescreen list, paper diary, TimeTree).
+Jake. BAD FORM in-house OS. Not a store product. Not a SaaS. Local-first, no cloud personality. Daily project and task work at a desk. Phone chores live elsewhere (homescreen list, paper diary, TimeTree).
 
 ---
 

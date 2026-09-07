@@ -1,9 +1,10 @@
 # vault
 
-VAULT WORLDWIDE — local-first personal OS. The field is a **SPECK** machine (canvas runtime). React is the host envelope. The live program is a SPECK source string (`localStorage` key `speck-os-v1`).
+VAULT WORLDWIDE — BAD FORM’s in-house OS for project and task management. The field is a **SPECK** machine (canvas runtime). React is the host envelope. The live program is a SPECK source string (`localStorage` key `speck-os-v1`).
 
 Design language (portable): [`docs/LANGUAGE.md`](docs/LANGUAGE.md) — SPECK spec in §7.
 Overnight agent brief: [`docs/OVERNIGHT_PROMPT.md`](docs/OVERNIGHT_PROMPT.md).
+Product truth: [`PRODUCT.md`](PRODUCT.md).
 
 ## Composition
 

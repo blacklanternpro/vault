@@ -1,9 +1,9 @@
-# BLACK LANTERN — Design Language
+# BAD FORM — Design Language
 
 **Canon.** Copy this file into another repo and the language still holds.
 Short law for agents lives in `.cursorrules`. This file is the full tongue.
 
-Maker: BLACK LANTERN. First instance: **VAULT WORLDWIDE** — a local-first personal OS you run as a program on a desktop, not a website you visit, not a phone PWA.
+Maker: BAD FORM. First instance: **VAULT WORLDWIDE** — BAD FORM’s in-house OS for project and task management, run as a program on a desktop, not a website you visit, not a phone PWA.
 
 If a thing cannot be said in this language, it is not in the work.
 
@@ -319,7 +319,7 @@ Mood is canon. Palette of the ref is usually not.
 - **1985 tactical monochrome** — leader dots, asterisks as dividers, geometric status glyphs (`● ○ ▲`), UTC stamps, every pixel earns its keep. Leave radar/cockpit and black-only.
 - **btop / popeye / GDB TUIs** — character grid, `[bracket]` pane labels, keyboard legend, dotted leaders, ASCII wordmarks, `>>>` prompt, nested hierarchy. Leave dark themes, emojis, mascots, rainbow accents.
 - **CIPHER grain + wireframe globe** — film grain, slash section markers, 90° corners, ticker of terse values. Leave yellow/black and website service cards.
-- **NEXUS by BLACK LANTERN** — keep the *maker mark* and the syntax (`[1] MODE`, `>>` stems, underscores). Leave the black cyan HUD, GRADE D, waveforms, tabs-as-apps, ESP32 cosplay.
+- **NEXUS HUD** — keep the syntax (`[1] MODE`, `>>` stems, underscores). Leave the black cyan HUD, GRADE D, waveforms, tabs-as-apps, ESP32 cosplay.
 - **Night-drive CRT / FULCRUM report** — grain, scan, ASCII boxes (`+----+`, `*`), `STATUS: READY`, wireframe as data. Leave phosphor-green bloom and multi-monitor HUD.
 
 ### LEAVE
@@ -356,7 +356,7 @@ Write like a terminal that went to art school for one semester and dropped out.
 - No “welcome to your dashboard.”
 - No empty states that apologize. Empty is `_` or `empty/`.
 - Filenames as mythos: `flush_stale_resolvers.sh`, `cnc_toolpath_night_run`, `scout_ridge_a`.
-- Maker mark: BLACK LANTERN. Product mark: VAULT WORLDWIDE.
+- Maker mark: BAD FORM. Product mark: VAULT WORLDWIDE.
 
 ---
 
