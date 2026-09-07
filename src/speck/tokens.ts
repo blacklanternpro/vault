@@ -1,21 +1,46 @@
-/** VAULT desktop field. Black / paper / power red. */
+/** VAULT desktop field. Paper sheet / black windows / power red. */
 
 export const FIELD = '#000000'
 export const PAPER = '#F4F4F0'
 export const POWER = '#E10600'
 export const WHITE = '#FFFFFF'
 export const URGENT = POWER
-export const CANVAS = FIELD
-export const RULE = 'rgba(244,244,240,0.18)'
-export const RULE_DIM = 'rgba(244,244,240,0.08)'
+export const RULE = 'rgba(244,244,240,0.22)'
+export const RULE_DIM = 'rgba(244,244,240,0.1)'
+export const INK_RULE = 'rgba(0,0,0,0.22)'
+export const INK_RULE_DIM = 'rgba(0,0,0,0.1)'
 
 export const FONT_HELV = '"Helvetica Neue", Helvetica, Arial, sans-serif'
+export const FONT_OSWALD = '"Oswald", "Helvetica Neue", Helvetica, Arial, sans-serif'
 
 export function fontHelv(px: number, weight = 400): string {
   return `${weight} ${px}px ${FONT_HELV}`
 }
 
-export const PAINT_OPS = ['FILL', 'GLYPH', 'LINE', 'CHIP', 'STRIKE', 'STEM'] as const
+export function fontDisplay(px: number, weight = 700): string {
+  return `${weight} ${px}px ${FONT_OSWALD}`
+}
+
+export function ground(inv: boolean): string {
+  return inv ? PAPER : FIELD
+}
+
+export function ink(inv: boolean): string {
+  return inv ? FIELD : PAPER
+}
+
+export const PAINT_OPS = [
+  'FILL',
+  'GLYPH',
+  'LINE',
+  'CHIP',
+  'STRIKE',
+  'STEM',
+  'GRAIN',
+  'SCAN',
+  'INV',
+  'OVAL',
+] as const
 
 export const COL_ORDER = ['backlog', 'active', 'staging', 'done'] as const
 export type ColName = (typeof COL_ORDER)[number]

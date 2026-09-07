@@ -1,5 +1,5 @@
 import { lex, type Tok } from './lex'
-import type { OrganName } from './ir'
+import { isOrganName, type OrganName } from './ir'
 import { COL_ORDER, isBinderStatus, type NodeStatus } from './tokens'
 
 export type GraphNode = {
@@ -36,9 +36,24 @@ export type Doc = {
   notes: Note[]
   places: Place[]
   glyphs: FreeGlyph[]
+  inv: boolean
+  grain: number
+  scan: number
 }
 
-export const SEED_SOURCE = `PIPE vault
+export const DEFAULT_PLACES: Place[] = [
+  { organ: 'PIPE', x: 24, y: 48 },
+  { organ: 'NEST', x: 24, y: 540 },
+  { organ: 'DUMP', x: 560, y: 540 },
+  { organ: 'SEAL', x: 900, y: 48 },
+  { organ: 'SKULL', x: 900, y: 280 },
+  { organ: 'CAL', x: 560, y: 48 },
+]
+
+export const SEED_SOURCE = `INV
+GRAIN 0.14
+SCAN 0.1
+PIPE vault
   COL backlog
   COL active
   COL staging
@@ -56,10 +71,13 @@ NEST
     NODE 99 "baseline" status done
 DUMP
   NOTE 09.07.26 "ridge"
-PLACE PIPE 24 16
-PLACE NEST 24 400
-PLACE DUMP 560 400
-GLYPH 820 36 72 "07"`
+PLACE PIPE 24 48
+PLACE NEST 24 540
+PLACE DUMP 560 540
+PLACE SEAL 900 48
+PLACE SKULL 900 280
+PLACE CAL 560 48
+GLYPH 16 16 56 "VAULT"`
 
 function word(tok: Tok | undefined): string | null {
   if (!tok || tok.t !== 'WORD') return null
@@ -91,12 +109,11 @@ export function blankDoc(): Doc {
     cols: [...COL_ORDER],
     nodes: [],
     notes: [],
-    places: [
-      { organ: 'PIPE', x: 24, y: 16 },
-      { organ: 'NEST', x: 24, y: 400 },
-      { organ: 'DUMP', x: 560, y: 400 },
-    ],
+    places: DEFAULT_PLACES.map((p) => ({ ...p })),
     glyphs: [],
+    inv: false,
+    grain: 0,
+    scan: 0,
   }
 }
 
@@ -249,14 +266,17 @@ export function parseDoc(src: string): Doc {
     const head = word(line.toks[0])
     if (!head) continue
     if (line.indent === 0) {
-      if (head === 'PIPE') doc.pipeName = line.toks[1]?.raw || 'vault'
+      if (head === 'INV') doc.inv = true
+      else if (head === 'GRAIN') doc.grain = nums(line.toks)[0] ?? 0.14
+      else if (head === 'SCAN') doc.scan = nums(line.toks)[0] ?? 0.1
+      else if (head === 'PIPE') doc.pipeName = line.toks[1]?.raw || 'vault'
       else if (head === 'NEST') nestRoot = line.toks[1]?.raw || ''
       else if (head === 'DUMP') {
         /* organ marker */
       } else if (head === 'PLACE') {
         const organ = word(line.toks[1])
         const n = nums(line.toks)
-        if (organ === 'PIPE' || organ === 'NEST' || organ === 'DUMP') {
+        if (organ && isOrganName(organ)) {
           doc.places.push({ organ, x: n[0] ?? 24, y: n[1] ?? 16 })
         }
       } else if (head === 'GLYPH') {
@@ -337,6 +357,9 @@ function writeTree(doc: Doc, parent: number | null, indent: number, lines: strin
 
 export function serializeDoc(doc: Doc): string {
   const lines: string[] = []
+  if (doc.inv) lines.push('INV')
+  if (doc.grain > 0) lines.push(`GRAIN ${doc.grain}`)
+  if (doc.scan > 0) lines.push(`SCAN ${doc.scan}`)
   lines.push(`PIPE ${doc.pipeName}`)
   const cols = doc.cols.length ? doc.cols : [...COL_ORDER]
   for (const col of cols) lines.push(`  COL ${col}`)
@@ -352,7 +375,10 @@ export function serializeDoc(doc: Doc): string {
 }
 
 export function placeOf(doc: Doc, organ: OrganName): Place {
-  return doc.places.find((p) => p.organ === organ) ?? blankDoc().places.find((p) => p.organ === organ)!
+  return (
+    doc.places.find((p) => p.organ === organ) ??
+    DEFAULT_PLACES.find((p) => p.organ === organ) ?? { organ, x: 24, y: 16 }
+  )
 }
 
 export function indentNode(doc: Doc, id: number): boolean {

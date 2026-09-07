@@ -1,5 +1,4 @@
-import type { FieldSlot, HitBox, Now, OrganName, Selected, Session } from './ir'
-import { nextSlot, tapeDate } from './ir'
+import { isOrganName, nextSlot, nowOf, tapeDate, type FieldSlot, type HitBox, type Now, type OrganName, type Selected, type Session } from './ir'
 import {
   byId,
   indentNode,
@@ -38,6 +37,7 @@ export function freshSession(): Session {
     buffer: '',
     echo: null,
     pendingDump: null,
+    calDay: null,
   }
 }
 
@@ -64,6 +64,7 @@ function collapse(session: Session): Session {
     ...closeField(session),
     pipeOpen: null,
     echo: null,
+    calDay: null,
   }
 }
 
@@ -120,14 +121,22 @@ export function placeOrgan(source: string, organ: OrganName, x: number, y: numbe
 }
 
 function moveOrgan(session: Session, source: string, organ: OrganName | undefined, x: number, y: number): Result {
-  const name: OrganName | null =
-    organ === 'PIPE' || organ === 'NEST' || organ === 'DUMP'
-      ? organ
-      : session.selected?.kind === 'PIPE' || session.selected?.kind === 'NEST' || session.selected?.kind === 'DUMP'
-        ? session.selected.kind
-        : null
+  const name: OrganName | null = organ && isOrganName(organ)
+    ? organ
+    : session.selected && isOrganName(session.selected.kind)
+      ? session.selected.kind
+      : null
   if (!name) return ok(session, source, '? MOVE')
   return ok(session, placeOrgan(source, name, x, y))
+}
+
+function toggleMaterial(source: string, flag: string): string {
+  const doc = parseDoc(source)
+  const word = flag.toUpperCase()
+  if (word === 'INV') doc.inv = !doc.inv
+  else if (word === 'GRAIN') doc.grain = doc.grain > 0 ? 0 : 0.14
+  else if (word === 'SCAN') doc.scan = doc.scan > 0 ? 0 : 0.1
+  return serializeDoc(doc)
 }
 
 function toggleCollapsed(session: Session, organ: OrganName): Session {
@@ -309,16 +318,18 @@ function applyAdd(session: Session, source: string, parent: number | null, statu
   }
 }
 
-export function nowOf(d = new Date()): Now {
-  return { year: d.getFullYear(), month: d.getMonth(), day: d.getDate() }
-}
-
 function applyHitStmt(target: string, arg: string | number | undefined, session: Session, source: string): Result {
   const t = target.toUpperCase()
   if (t === 'FIELD') return { session: collapse(session), source }
   if (t === 'PIPE') return { session: { ...collapse(session), selected: { kind: 'PIPE' }, lens: 'pipe' }, source }
   if (t === 'NEST') return { session: { ...collapse(session), selected: { kind: 'NEST' }, lens: 'nest' }, source }
   if (t === 'DUMP') return { session: { ...collapse(session), selected: { kind: 'DUMP' }, lens: 'dump' }, source }
+  if (t === 'CAL') return { session: { ...session, selected: { kind: 'CAL' } }, source }
+  if (t === 'SEAL') return { session: { ...session, selected: { kind: 'SEAL' } }, source }
+  if (t === 'SKULL') return { session: { ...session, selected: { kind: 'SKULL' } }, source }
+  if (t === 'GRAIN' || t === 'SCAN' || t === 'INV') {
+    return ok(session, toggleMaterial(source, t), t)
+  }
   if ((t === 'NODE' || t === 'TASK' || t === 'STEM') && typeof arg === 'number') {
     return hitNode(session, source, arg, t === 'STEM' ? 'nest' : 'pipe')
   }
@@ -442,6 +453,9 @@ export function applyHit(hit: HitBox, session: Session, source: string): Result 
       const organ = String(hit.payload ?? 'PIPE')
       if (organ === 'NEST') return { session: { ...collapse(session), selected: { kind: 'NEST' }, lens: 'nest' }, source }
       if (organ === 'DUMP') return { session: { ...collapse(session), selected: { kind: 'DUMP' }, lens: 'dump' }, source }
+      if (organ === 'CAL') return { session: { ...session, selected: { kind: 'CAL' } }, source }
+      if (organ === 'SEAL') return { session: { ...session, selected: { kind: 'SEAL' } }, source }
+      if (organ === 'SKULL') return { session: { ...session, selected: { kind: 'SKULL' } }, source }
       return { session: { ...collapse(session), selected: { kind: 'PIPE' }, lens: 'pipe' }, source }
     }
     case 'NEST':
@@ -449,6 +463,18 @@ export function applyHit(hit: HitBox, session: Session, source: string): Result 
     case 'DUMP':
     case 'NOTE':
       return { session: { ...collapse(session), selected: { kind: 'DUMP' }, lens: 'dump' }, source }
+    case 'CAL':
+      return { session: { ...session, selected: { kind: 'CAL' } }, source }
+    case 'SEAL':
+      return { session: { ...session, selected: { kind: 'SEAL' } }, source }
+    case 'SKULL':
+      return { session: { ...session, selected: { kind: 'SKULL' } }, source }
+    case 'DAY':
+      return { session: { ...session, selected: { kind: 'CAL' }, calDay: String(hit.payload ?? '') }, source }
+    case 'LEGEND': {
+      const flag = String(hit.payload ?? '')
+      return ok(session, toggleMaterial(source, flag), flag)
+    }
     case 'RING':
       return ok(session, source, session.echo || 'SHOVEL // FOCUS // SEE')
     case 'FIELD':
@@ -566,4 +592,4 @@ export function applyKey(key: string, shift: boolean, session: Session, source: 
   return { session, source }
 }
 
-export { SEED_SOURCE }
+export { SEED_SOURCE, nowOf }

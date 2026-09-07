@@ -1,4 +1,5 @@
 import { COMMAND_WORDS } from './tokens'
+import { isOrganName } from './ir'
 import { lexLine, type Tok } from './lex'
 
 export type DockStmt =
@@ -65,7 +66,7 @@ export function parseCommand(src: string): DockStmt {
   if (head === 'MOVE') {
     const nums = toks.filter((t) => t.t === 'NUM').map((t) => t.v)
     const organ = word(toks[1])
-    const organName = organ === 'PIPE' || organ === 'NEST' || organ === 'DUMP' ? organ : undefined
+    const organName = organ && isOrganName(organ) ? organ : undefined
     return { kind: 'MOVE', organ: organName, x: nums[0] ?? 0, y: nums[1] ?? 0 }
   }
   return { kind: 'DATA', text: toks.map((t) => t.raw).join(' ') }

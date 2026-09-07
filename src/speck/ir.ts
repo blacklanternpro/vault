@@ -1,6 +1,11 @@
 export type Measure = (text: string, font: string) => number
 
-export type OrganName = 'PIPE' | 'NEST' | 'DUMP'
+export const ORGAN_NAMES = ['PIPE', 'NEST', 'DUMP', 'SEAL', 'SKULL', 'CAL'] as const
+export type OrganName = (typeof ORGAN_NAMES)[number]
+
+export function isOrganName(value: string): value is OrganName {
+  return (ORGAN_NAMES as readonly string[]).includes(value)
+}
 
 export type FieldSlot = 'title' | 'body' | 'subtask' | 'status'
 
@@ -64,6 +69,34 @@ export type Op =
       color: string
       font: string
     }
+  | {
+      op: 'GRAIN'
+      x: number
+      y: number
+      w: number
+      h: number
+      amount: number
+    }
+  | {
+      op: 'SCAN'
+      x: number
+      y: number
+      w: number
+      h: number
+      amount: number
+    }
+  | {
+      op: 'INV'
+    }
+  | {
+      op: 'OVAL'
+      x: number
+      y: number
+      w: number
+      h: number
+      color: string
+      width: number
+    }
 
 export type HitKind =
   | 'PIPE'
@@ -86,6 +119,11 @@ export type HitKind =
   | 'FIELD'
   | 'COMMIT'
   | 'DOCK'
+  | 'DAY'
+  | 'LEGEND'
+  | 'CAL'
+  | 'SEAL'
+  | 'SKULL'
 
 export type HitBox = {
   kind: HitKind
@@ -113,10 +151,21 @@ export type EditBox = {
   slot: FieldSlot
 }
 
+export type DockInput = {
+  x: number
+  y: number
+  w: number
+  h: number
+}
+
 export type Program = {
   field: Layer
   dock: Layer
   editBox: EditBox | null
+  dockInput: DockInput
+  grain: number
+  scan: number
+  inv: boolean
 }
 
 export type Selected =
@@ -126,6 +175,9 @@ export type Selected =
   | { kind: 'NEST' }
   | { kind: 'DUMP' }
   | { kind: 'NOTE'; index: number }
+  | { kind: 'SEAL' }
+  | { kind: 'SKULL' }
+  | { kind: 'CAL' }
 
 export type PendingDump = {
   kind: 'project'
@@ -150,6 +202,7 @@ export type Session = {
   buffer: string
   echo: string | null
   pendingDump: PendingDump | null
+  calDay: string | null
 }
 
 export type Now = {
@@ -162,6 +215,10 @@ export const FIELD_CYCLE: FieldSlot[] = ['title', 'body', 'subtask', 'status']
 
 export function pad2(n: number): string {
   return n < 10 ? `0${n}` : String(n)
+}
+
+export function nowOf(d = new Date()): Now {
+  return { year: d.getFullYear(), month: d.getMonth(), day: d.getDate() }
 }
 
 export function tapeDate(year: number, month: number, day: number): string {

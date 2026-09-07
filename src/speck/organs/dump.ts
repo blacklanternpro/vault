@@ -3,9 +3,10 @@ import { placeOf, type Doc } from '../doc'
 import { CHROME_PAD, paintChrome, type Buf } from './chrome'
 import { PAPER, POWER, RULE, fontHelv } from '../tokens'
 
-const FONT = fontHelv(12, 400)
-const FONT_SM = fontHelv(11, 400)
-const ROW = 18
+const FONT = fontHelv(16, 400)
+const FONT_SM = fontHelv(13, 400)
+const ROW = 26
+const MID = ROW / 2
 
 export function compileDump(
   doc: Doc,
@@ -15,7 +16,7 @@ export function compileDump(
   const origin = placeOf(doc, 'DUMP')
   const x = origin.x
   const y = origin.y
-  const w = Math.max(240, Math.min(400, fieldW - x - 16))
+  const w = Math.max(260, Math.min(420, fieldW - x - 16))
   const collapsed = session.collapsed.includes('DUMP')
   const buf: Buf = { ops: [], hits: [] }
   const live = session.lens === 'dump' || session.selected?.kind === 'DUMP'
@@ -23,20 +24,20 @@ export function compileDump(
 
   if (collapsed) {
     const h = CHROME_PAD + 4
-    paintChrome(buf, { x, y, w, h, title: 'DUMP // tape', organ: 'DUMP', count, live })
+    paintChrome(buf, { x, y, w, h, title: 'DUMP // tape', organ: 'DUMP', count, live, scan: doc.scan })
     return { ops: buf.ops, hits: buf.hits, x, y, w, h }
   }
 
   const rows = Math.max(1, doc.notes.length)
   const h = CHROME_PAD + rows * ROW + 16
-  paintChrome(buf, { x, y, w, h, title: 'DUMP // tape', organ: 'DUMP', count, live })
+  paintChrome(buf, { x, y, w, h, title: 'DUMP // tape', organ: 'DUMP', count, live, scan: doc.scan })
   buf.hits.push({ kind: 'DUMP', x, y, w, h, z: 4 })
 
   if (doc.notes.length === 0) {
     buf.ops.push({
       op: 'GLYPH',
       x: x + 10,
-      y: y + CHROME_PAD + 14,
+      y: y + CHROME_PAD + 16,
       text: '_',
       color: RULE,
       font: FONT,
@@ -49,7 +50,7 @@ export function compileDump(
     buf.ops.push({
       op: 'GLYPH',
       x: x + 10,
-      y: rowY + 10,
+      y: rowY + MID,
       text: note.date,
       color: POWER,
       font: FONT_SM,
@@ -57,8 +58,8 @@ export function compileDump(
     })
     buf.ops.push({
       op: 'GLYPH',
-      x: x + 78,
-      y: rowY + 10,
+      x: x + 92,
+      y: rowY + MID,
       text: note.text,
       color: PAPER,
       font: FONT,

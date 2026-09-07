@@ -1,11 +1,12 @@
 import type { EditBox, HitBox, Op, Session } from '../ir'
 import { childrenOf, openTaskCount, placeOf, type Doc, type GraphNode } from '../doc'
-import { CHROME_PAD, paintChrome, type Buf } from './chrome'
+import { CHROME_PAD, liveOval, paintChrome, type Buf } from './chrome'
 import { PAPER, POWER, RULE, WHITE, fontHelv } from '../tokens'
 
-const FONT = fontHelv(12, 400)
-const FONT_SM = fontHelv(11, 400)
-const ROW = 18
+const FONT = fontHelv(16, 400)
+const FONT_SM = fontHelv(13, 400)
+const ROW = 26
+const MID = ROW / 2
 
 function isClosed(session: Session, id: number): boolean {
   return session.nestClosed.includes(id)
@@ -41,7 +42,7 @@ export function compileNest(
   const origin = placeOf(doc, 'NEST')
   const x = origin.x
   const y = origin.y
-  const w = Math.max(260, Math.min(380, fieldW - x - 16))
+  const w = Math.max(300, Math.min(440, fieldW - x - 16))
   const collapsed = session.collapsed.includes('NEST')
   const buf: Buf = { ops: [], hits: [] }
   const roots = childrenOf(doc, null)
@@ -50,7 +51,7 @@ export function compileNest(
 
   if (collapsed) {
     const h = CHROME_PAD + 4
-    paintChrome(buf, { x, y, w, h, title: 'NEST // graph', organ: 'NEST', count, live })
+    paintChrome(buf, { x, y, w, h, title: 'NEST // graph', organ: 'NEST', count, live, scan: doc.scan })
     return { ops: buf.ops, hits: buf.hits, x, y, w, h }
   }
 
@@ -59,7 +60,7 @@ export function compileNest(
   const emptySlot = true
   const h = CHROME_PAD + 8 + (rows.length + (emptySlot ? 1 : 0)) * ROW + 12
 
-  paintChrome(buf, { x, y, w, h, title: 'NEST // graph', organ: 'NEST', count, live })
+  paintChrome(buf, { x, y, w, h, title: 'NEST // graph', organ: 'NEST', count, live, scan: doc.scan })
   buf.hits.push({ kind: 'NEST', x, y, w, h, z: 4 })
 
   if (rows.length === 0) {
@@ -85,7 +86,7 @@ export function compileNest(
     buf.ops.push({
       op: 'GLYPH',
       x: x + 8,
-      y: rowY + 10,
+      y: rowY + MID,
       text: fold,
       color: kids.length ? POWER : RULE,
       font: FONT_SM,
@@ -96,7 +97,7 @@ export function compileNest(
         kind: 'TOGGLE',
         x: x + 4,
         y: rowY,
-        w: 22,
+        w: 28,
         h: ROW,
         z: 20,
         payload: row.node.id,
@@ -104,11 +105,12 @@ export function compileNest(
     }
 
     if (selected && !editing) {
+      const chipW = Math.min(w - 80, Math.max(64, row.node.title.length * 9 + 16))
       buf.ops.push({
         op: 'CHIP',
-        x: x + 28,
+        x: x + 32,
         y: rowY + 1,
-        w: Math.min(w - 72, Math.max(48, row.node.title.length * 7 + 12)),
+        w: chipW,
         h: ROW - 2,
         text: row.node.title,
         fg: WHITE,
@@ -116,11 +118,12 @@ export function compileNest(
         font: FONT,
         padX: 4,
       })
+      liveOval(buf, x + 32, rowY + 1, chipW, ROW - 2)
     } else if (!editing) {
       buf.ops.push({
         op: 'STEM',
-        x: x + 28,
-        y: rowY + 10,
+        x: x + 32,
+        y: rowY + MID,
         text: row.prefix + (row.node.title || '_'),
         color: row.node.urgent ? POWER : focused ? POWER : PAPER,
         font: FONT,
@@ -129,9 +132,9 @@ export function compileNest(
 
     buf.hits.push({
       kind: 'STEM',
-      x: x + 24,
+      x: x + 28,
       y: rowY,
-      w: w - 68,
+      w: w - 72,
       h: ROW,
       z: 12,
       payload: row.node.id,
@@ -139,9 +142,9 @@ export function compileNest(
 
     if (session.lens === 'nest' && session.field?.id === row.node.id && session.field.slot === 'title') {
       edit.box = {
-        x: x + 28,
+        x: x + 32,
         y: rowY + 1,
-        w: w - 76,
+        w: w - 80,
         h: ROW - 2,
         value: row.node.title,
         placeholder: 'name',
@@ -151,8 +154,8 @@ export function compileNest(
 
     buf.ops.push({
       op: 'GLYPH',
-      x: x + w - 16,
-      y: rowY + 10,
+      x: x + w - 18,
+      y: rowY + MID,
       text: '[+]',
       color: POWER,
       font: FONT_SM,
@@ -161,9 +164,9 @@ export function compileNest(
     })
     buf.hits.push({
       kind: 'ADD',
-      x: x + w - 36,
+      x: x + w - 40,
       y: rowY,
-      w: 32,
+      w: 36,
       h: ROW,
       z: 20,
       payload: row.node.id,
@@ -174,7 +177,7 @@ export function compileNest(
   buf.ops.push({
     op: 'GLYPH',
     x: x + 10,
-    y: emptyY + 10,
+    y: emptyY + MID,
     text: '└── +',
     color: RULE,
     font: FONT,

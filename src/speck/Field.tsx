@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type ChangeEvent, type FormEvent, type KeyboardEvent } from 'react'
 import { compile, DOCK_LAYOUT } from './compile'
 import { parseDoc, placeOf } from './doc'
-import { hitTest, type EditBox, type HitBox, type OrganName, type Session } from './ir'
+import { hitTest, isOrganName, type EditBox, type HitBox, type OrganName, type Session } from './ir'
 import {
   applyHit,
   applyKey,
@@ -11,6 +11,7 @@ import {
   placeOrgan,
   typeField,
 } from './machine'
+import { paintMaterial } from './material'
 import { makeMeasure, paint, sizeCanvas } from './paint'
 import { loadSource, saveSource } from './source'
 
@@ -27,6 +28,7 @@ export function Field() {
   const [source, setSource] = useState(loadSource)
   const [editBox, setEditBox] = useState<EditBox | null>(null)
   const fieldRef = useRef<HTMLCanvasElement>(null)
+  const materialRef = useRef<HTMLCanvasElement>(null)
   const dockRef = useRef<HTMLCanvasElement>(null)
   const hostRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -55,8 +57,9 @@ export function Field() {
   useEffect(() => {
     const host = hostRef.current
     const field = fieldRef.current
+    const material = materialRef.current
     const dock = dockRef.current
-    if (!host || !field || !dock) return
+    if (!host || !field || !material || !dock) return
 
     let caretOn = true
     let dockH = DOCK_LAYOUT.h
@@ -79,10 +82,16 @@ export function Field() {
       hitsRef.current = { field: program.field.hits, dock: program.dock.hits }
       sizeCanvas(field, width, program.field.h)
       paint(fctx, program.field.ops, width, program.field.h)
+      paintMaterial(material, width, program.field.h, program.grain, program.scan)
 
       const dctx = sizeCanvas(dock, width, dockH)
       if (dctx) paint(dctx, program.dock.ops, width, dockH)
       host.style.setProperty('--speck-dock-h', `${dockH}px`)
+      host.style.setProperty('--speck-dock-input-y', `${program.dockInput.y}px`)
+      host.style.setProperty('--speck-dock-input-h', `${program.dockInput.h}px`)
+      host.style.setProperty('--speck-dock-input-x', `${program.dockInput.x}px`)
+      host.style.setProperty('--speck-ground', program.inv ? '#F4F4F0' : '#000000')
+      host.style.setProperty('--speck-ink', program.inv ? '#000000' : '#F4F4F0')
       const box = program.editBox
       const key = box ? `${box.x}:${box.y}:${box.w}:${box.h}:${box.slot}` : ''
       if (key !== editKeyRef.current) {
@@ -91,6 +100,8 @@ export function Field() {
       }
     }
     drawRef.current = frame
+    void document.fonts.load('700 32px Oswald').finally(() => frame())
+    void document.fonts.ready.then(() => frame())
     frame()
 
     const caret = window.setInterval(() => {
@@ -107,7 +118,8 @@ export function Field() {
       const hit = hitTest(hitsRef.current.field, x, y)
       if (!hit) return
       if (hit.kind === 'ORGAN') {
-        const organ = (String(hit.payload ?? 'PIPE') || 'PIPE') as OrganName
+        const raw = String(hit.payload ?? 'PIPE')
+        const organ = (isOrganName(raw) ? raw : 'PIPE') as OrganName
         const at = placeOf(parseDoc(sourceRef.current), organ)
         dragRef.current = {
           organ,
@@ -227,6 +239,7 @@ export function Field() {
   return (
     <div ref={hostRef} className="speck-host">
       <canvas ref={fieldRef} className="speck-field" aria-label="VAULT field" />
+      <canvas ref={materialRef} className="speck-material" aria-hidden />
       {session.field && editBox ? (
         <form
           className="speck-cell"

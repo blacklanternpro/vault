@@ -28,13 +28,16 @@ export function runSpeckChecks(): string[] {
   if (!n11 || !n11.urgent || n11.parent !== 10) fail('node 11 urgent lab')
   if (!doc.notes.some((n) => n.text === 'ridge')) fail('dump ridge')
   if (!doc.places.some((p) => p.organ === 'PIPE')) fail('place PIPE')
-  if (!doc.glyphs.some((g) => g.text === '07')) fail('glyph 07')
+  if (!doc.glyphs.some((g) => g.text === 'VAULT' || g.text === '07')) fail('glyph VAULT')
+  if (!doc.inv) fail('seed INV')
+  if (!(doc.grain > 0)) fail('seed GRAIN')
+  if (!doc.places.some((p) => p.organ === 'CAL')) fail('place CAL')
 
   const ops = PAINT_OPS.join(' ')
-  if (ops.includes('SEAL') || ops.includes('GRAIN') || ops.includes('SCAN') || ops.includes('INV')) {
-    fail(`dead ops ${ops}`)
+  for (const live of ['GRAIN', 'SCAN', 'INV', 'OVAL', 'GLYPH', 'CHIP', 'STEM']) {
+    if (!ops.includes(live)) fail(`missing op ${live}`)
   }
-  if (!ops.includes('GLYPH') || !ops.includes('CHIP') || !ops.includes('STEM')) fail('live ops')
+  if (ops.includes('CLIP')) fail('CLIP live')
 
   const round = parseDoc(serializeDoc(doc))
   if (round.nodes.length !== doc.nodes.length) fail('serialize nodes')
@@ -80,8 +83,11 @@ export function runSpeckChecks(): string[] {
   }
 
   result = commitLine('WORDS', freshSession(), SEED_SOURCE)
-  if (result.session.echo?.includes('SEAL')) fail('WORDS SEAL')
   if (result.session.echo?.includes('CLIP')) fail('WORDS CLIP')
+  if (!result.session.echo?.includes('GRAIN')) fail('WORDS GRAIN')
+  if (!result.session.echo?.includes('SCAN')) fail('WORDS SCAN')
+  if (!result.session.echo?.includes('INV')) fail('WORDS INV')
+  if (!result.session.echo?.includes('OVAL')) fail('WORDS OVAL')
   if (!result.session.echo?.includes('GLYPH')) fail('WORDS GLYPH')
   if (!result.session.echo?.includes('FOCUS')) fail('WORDS FOCUS')
 
@@ -102,13 +108,20 @@ export function runSpeckChecks(): string[] {
   const texts = field.ops.filter((op) => op.op === 'GLYPH' || op.op === 'STEM').map((op) => op.text)
   if (!texts.some((t) => /BACKLOG/i.test(t))) fail('BACKLOG legend')
   if (!texts.some((t) => /STAGING/i.test(t))) fail('STAGING legend')
-  if (!texts.some((t) => t === '07')) fail('free glyph paints')
+  if (!texts.some((t) => t === 'VAULT' || t === '07')) fail('free glyph paints')
   if (!texts.some((t) => /PIPE \/\//.test(t))) fail('pipe plaque')
+  if (!texts.some((t) => /CAL \/\//.test(t))) fail('cal plaque')
   if (!texts.some((t) => t.includes('[x]'))) fail('organ close')
+  if (!texts.some((t) => t === 'SKULL')) fail('skull organ')
+  if (!texts.some((t) => t === 'SEAL' || t === 'VAULT WORLDWIDE')) fail('seal organ')
   const monthPack = field.ops.filter(
     (op) => op.op === 'GLYPH' && /^(?:[1-9]|[12]\d|3[01])$/.test(op.text),
   )
-  if (monthPack.length >= 28) fail(`month pack still home ${monthPack.length}`)
+  if (monthPack.length < 28) fail(`cal days ${monthPack.length}`)
+  if (!field.ops.some((op) => op.op === 'GRAIN')) fail('grain op')
+  if (!field.ops.some((op) => op.op === 'INV')) fail('inv op')
+  const groundFill = field.ops.find((op) => op.op === 'FILL')
+  if (!groundFill || groundFill.op !== 'FILL' || groundFill.color !== '#F4F4F0') fail('paper ground')
 
   const colors = field.ops.flatMap((op) => {
     if (op.op === 'GLYPH' || op.op === 'STEM' || op.op === 'STRIKE') return [op.color]
@@ -140,7 +153,8 @@ export function runSpeckChecks(): string[] {
     fail(`reflow expand ${closedPipe?.h} -> ${openPipe?.h}`)
   }
   const chips = open.field.ops.filter((op) => op.op === 'CHIP')
-  if (chips.some((c) => c.h > 20)) fail(`overlay cover chip h ${chips.map((c) => c.h).join(',')}`)
+  if (chips.some((c) => c.h > PIPE_ROWS + 30)) fail(`overlay cover chip h ${chips.map((c) => c.h).join(',')}`)
+  if (!open.field.ops.some((op) => op.op === 'OVAL')) fail('oval select')
   if (!open.field.ops.some((op) => op.op === 'GLYPH' && (op.text.includes('overlay leftover') || op.text.includes('body')))) {
     fail('expand body')
   }
@@ -233,6 +247,34 @@ export function runSpeckChecks(): string[] {
     SEED_SOURCE,
   )
   if (!close.session.collapsed.includes('DUMP')) fail('organ close')
+
+  const invOff = applyHit(
+    { kind: 'LEGEND', x: 0, y: 0, w: 10, h: 10, z: 20, payload: 'INV' },
+    freshSession(),
+    SEED_SOURCE,
+  )
+  if (parseDoc(invOff.source).inv) fail('toggle INV off')
+  const grainOff = applyHit(
+    { kind: 'LEGEND', x: 0, y: 0, w: 10, h: 10, z: 20, payload: 'GRAIN' },
+    freshSession(),
+    SEED_SOURCE,
+  )
+  if (parseDoc(grainOff.source).grain !== 0) fail('toggle GRAIN')
+  const dayHit = applyHit(
+    { kind: 'DAY', x: 0, y: 0, w: 10, h: 10, z: 16, payload: '09.07.26' },
+    freshSession(),
+    SEED_SOURCE,
+  )
+  if (dayHit.session.calDay !== '09.07.26') fail('cal day')
+  const closeSkull = applyHit(
+    { kind: 'CLOSE', x: 0, y: 0, w: 10, h: 10, z: 20, payload: 'SKULL' },
+    freshSession(),
+    SEED_SOURCE,
+  )
+  if (!closeSkull.session.collapsed.includes('SKULL')) fail('skull close')
+  const dockHits = compile(world, measure).dock.hits
+  if (!dockHits.some((h) => h.kind === 'LEGEND' && h.payload === 'GRAIN')) fail('legend grain')
+  if (dockHits.some((h) => h.kind === 'DOCK') === false) fail('dock hit')
 
   return fails
 }

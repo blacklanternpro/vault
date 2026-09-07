@@ -1,13 +1,14 @@
 import type { EditBox, HitBox, Measure, Op, Session } from '../ir'
 import { byId, childrenOf, placeOf, plaqueOf, type Doc, type GraphNode } from '../doc'
-import { CHROME_PAD, paintChrome, type Buf } from './chrome'
+import { CHROME_PAD, liveOval, paintChrome, type Buf } from './chrome'
 import { COL_ORDER, PAPER, POWER, RULE, WHITE, fontHelv, isBinderStatus } from '../tokens'
 
 export const PIPE_ROWS = 6
-export const PIPE_ROW_H = 18
+export const PIPE_ROW_H = 26
 
-const FONT = fontHelv(12, 400)
-const FONT_SM = fontHelv(11, 400)
+const FONT = fontHelv(16, 400)
+const FONT_SM = fontHelv(13, 400)
+const MID = PIPE_ROW_H / 2
 
 const LEFT_COLS = ['backlog', 'active']
 const RIGHT_COLS = ['staging', 'done']
@@ -75,14 +76,14 @@ function compileCol(
   buf.ops.push({
     op: 'GLYPH',
     x: x + 8,
-    y: y + 10,
+    y: y + 12,
     text: `── ${COL_LABEL[col] ?? col.toUpperCase()} ──`,
     color: POWER,
     font: FONT_SM,
     baseline: 'middle',
   })
-  buf.hits.push({ kind: 'COL', x, y, w, h: 16, z: 8, payload: col })
-  let rowY = y + 20
+  buf.hits.push({ kind: 'COL', x, y, w, h: 22, z: 8, payload: col })
+  let rowY = y + 26
   const rows = tasksIn(doc, col, session.nestFocus)
   const groups = grouped(doc, rows)
   let filled = 0
@@ -92,7 +93,7 @@ function compileCol(
       buf.ops.push({
         op: 'GLYPH',
         x: x + 8,
-        y: rowY + 8,
+        y: rowY + MID,
         text: group.plaque.title.toUpperCase(),
         color: POWER,
         font: FONT_SM,
@@ -128,11 +129,12 @@ function compileCol(
       const tw = measure(label, FONT)
       const editingTitle = session.field?.id === task.id && session.field.slot === 'title'
       if (selected) {
+        const chipW = Math.min(w - 28, Math.max(80, tw + 16))
         buf.ops.push({
           op: 'CHIP',
           x: x + 6,
           y: rowY,
-          w: Math.min(w - 28, Math.max(80, tw + 12)),
+          w: chipW,
           h: PIPE_ROW_H - 2,
           text: editingTitle ? '' : label,
           fg: WHITE,
@@ -140,11 +142,12 @@ function compileCol(
           font: FONT,
           padX: 6,
         })
+        liveOval(buf, x + 6, rowY, chipW, PIPE_ROW_H - 2)
       } else if (!editingTitle) {
         buf.ops.push({
           op: 'GLYPH',
           x: x + 10,
-          y: rowY + 8,
+          y: rowY + MID,
           text: label,
           color: PAPER,
           font: FONT,
@@ -155,7 +158,7 @@ function compileCol(
         buf.ops.push({
           op: 'STRIKE',
           x: x + 10,
-          y: rowY + 8,
+          y: rowY + MID,
           w: Math.min(tw, w - 40),
           thick: 1,
           color: POWER,
@@ -174,7 +177,7 @@ function compileCol(
         buf.ops.push({
           op: 'GLYPH',
           x: x + w - 14,
-          y: rowY + 8,
+          y: rowY + MID,
           text: '->',
           color: POWER,
           font: FONT_SM,
@@ -240,7 +243,7 @@ function compileExpand(
   buf.ops.push({
     op: 'GLYPH',
     x: x + 18,
-    y: rowY + 8,
+    y: rowY + MID,
     text: body || 'body _',
     color: body ? PAPER : RULE,
     font: FONT_SM,
@@ -263,7 +266,7 @@ function compileExpand(
     buf.ops.push({
       op: 'GLYPH',
       x: x + 18,
-      y: rowY + 8,
+      y: rowY + MID,
       text: `${mark} ${child.title}`,
       color: PAPER,
       font: FONT,
@@ -293,7 +296,7 @@ function compileExpand(
   buf.ops.push({
     op: 'GLYPH',
     x: x + 18,
-    y: rowY + 8,
+    y: rowY + MID,
     text: '+ subtask',
     color: RULE,
     font: FONT_SM,
@@ -318,7 +321,7 @@ function compileExpand(
     buf.ops.push({
       op: 'GLYPH',
       x: sx,
-      y: rowY + 8,
+      y: rowY + MID,
       text: label,
       color: live ? POWER : RULE,
       font: FONT_SM,
@@ -360,21 +363,31 @@ export function compilePipe(
   const x = origin.x
   const y = origin.y
   const w = Math.max(560, Math.min(fieldW - x - 16, 980))
-  const spineW = 36
+  const spineW = 42
   const pageW = (w - spineW) / 2
   const collapsed = session.collapsed.includes('PIPE')
   const buf: Buf = { ops: [], hits: [] }
   const open = binderNodesCount(doc, session.nestFocus)
   const live = session.lens === 'pipe' || session.selected?.kind === 'PIPE' || session.selected?.kind === 'NODE'
+  const chrome = {
+    x,
+    y,
+    w,
+    title: `PIPE // ${doc.pipeName}`,
+    organ: 'PIPE' as const,
+    count: open,
+    live,
+    scan: doc.scan,
+  }
 
   if (collapsed) {
     const h = CHROME_PAD + 4
-    paintChrome(buf, { x, y, w, h, title: `PIPE // ${doc.pipeName}`, organ: 'PIPE', count: open, live })
+    paintChrome(buf, { ...chrome, h })
     return { ops: buf.ops, hits: buf.hits, x, y, w, h }
   }
 
   const probe: Buf = { ops: [], hits: [] }
-  const head = CHROME_PAD + 18
+  const head = CHROME_PAD + 24
   let ly = y + head
   for (const col of LEFT_COLS) ly = compileCol(probe, doc, session, col, x + 4, ly, pageW - 8, measure, edit)
   let ry = y + head
@@ -383,13 +396,13 @@ export function compilePipe(
   if (rightEdit.box && !edit.box) edit.box = rightEdit.box
   const h = Math.max(ly - y, ry - y) + 10
 
-  paintChrome(buf, { x, y, w, h, title: `PIPE // ${doc.pipeName}`, organ: 'PIPE', count: open, live })
+  paintChrome(buf, { ...chrome, h })
   buf.hits.push({ kind: 'PIPE', x, y, w, h, z: 4, payload: 'PIPE' })
 
   buf.ops.push({
     op: 'GLYPH',
     x: x + 10,
-    y: y + CHROME_PAD + 10,
+    y: y + CHROME_PAD + 12,
     text: '[ FOCUS ]',
     color: POWER,
     font: FONT_SM,
@@ -398,7 +411,7 @@ export function compilePipe(
   buf.ops.push({
     op: 'GLYPH',
     x: x + pageW + spineW + 10,
-    y: y + CHROME_PAD + 10,
+    y: y + CHROME_PAD + 12,
     text: '[ GATEWAY ]',
     color: POWER,
     font: FONT_SM,
@@ -406,6 +419,14 @@ export function compilePipe(
   })
 
   const spineX = x + pageW
+  buf.ops.push({
+    op: 'SCAN',
+    x: spineX + 8,
+    y: y + CHROME_PAD + 4,
+    w: spineW - 16,
+    h: Math.max(24, h - CHROME_PAD - 16),
+    amount: Math.max(doc.scan, 0.12),
+  })
   buf.ops.push({
     op: 'LINE',
     x1: spineX + spineW / 2 - 2,
@@ -425,23 +446,23 @@ export function compilePipe(
     width: 1,
   })
   for (let i = 0; i < 3; i++) {
-    const ringY = y + 80 + i * 70
+    const ringY = y + 90 + i * 80
     buf.ops.push({
       op: 'GLYPH',
       x: spineX + spineW / 2,
       y: ringY,
       text: 'O',
       color: POWER,
-      font: fontHelv(13, 700),
+      font: fontHelv(16, 700),
       align: 'center',
       baseline: 'middle',
     })
     buf.hits.push({
       kind: 'RING',
       x: spineX + 4,
-      y: ringY - 10,
+      y: ringY - 12,
       w: spineW - 8,
-      h: 20,
+      h: 24,
       z: 18,
     })
   }
