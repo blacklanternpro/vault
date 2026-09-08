@@ -1,23 +1,26 @@
 ---
 name: VAULT WORLDWIDE
-description: Local-first personal OS as a dark DOM studio — manager cards, unix directory, scratch, FIND.
+description: Local-first personal OS as a dark DOM studio — racked manager, unix directory, scratch, FIND.
 colors:
   ground: "#111318"
   panel: "#181b22"
   card: "#22262f"
   card-2: "#2a2f3a"
+  well: "#0a0b0e"
   ink: "#eeeae4"
   muted: "#a8adb8"
   hair: "#2c313c"
+  live: "#FF5C1A"
+  live-ink: "#14080a"
   mark: "#ff3355"
   mark-ink: "#14080a"
 typography:
   card:
     fontFamily: "Helvetica Neue, Helvetica, Arial, sans-serif"
-    fontSize: "15px"
-    fontWeight: 500
+    fontSize: "13px"
+    fontWeight: 700
     lineHeight: "1.35"
-    letterSpacing: "-0.02em"
+    letterSpacing: "0.06em"
   directory:
     fontFamily: "Helvetica Neue, Helvetica, Arial, sans-serif"
     fontSize: "13px"
@@ -32,13 +35,13 @@ typography:
     letterSpacing: "normal"
   label:
     fontFamily: "Helvetica Neue, Helvetica, Arial, sans-serif"
-    fontSize: "11px"
+    fontSize: "10px"
     fontWeight: 700
     lineHeight: "1.2"
-    letterSpacing: "0.08em"
+    letterSpacing: "0.14em"
   count:
     fontFamily: "Helvetica Neue, Helvetica, Arial, sans-serif"
-    fontSize: "12px"
+    fontSize: "11px"
     fontWeight: 400
     lineHeight: "1"
     letterSpacing: "normal"
@@ -46,10 +49,10 @@ rounded:
   card: "10px"
   name: "2px"
 spacing:
-  studio-gap: "10px"
+  studio-gap: "8px"
   card-pad: "14px 15px 12px"
   sidebar: "320px"
-  manager: "42%"
+  manager: "52%"
 components:
   project-card:
     backgroundColor: "{colors.card}"
@@ -58,8 +61,8 @@ components:
     rounded: "{rounded.card}"
     padding: "{spacing.card-pad}"
   directory-select:
-    backgroundColor: "{colors.mark}"
-    textColor: "{colors.mark-ink}"
+    backgroundColor: "{colors.live}"
+    textColor: "{colors.live-ink}"
     typography: "{typography.directory}"
     rounded: "{rounded.name}"
     height: "20px"
@@ -82,50 +85,55 @@ components:
 
 ## Overview
 
-VAULT is a dark desktop studio, not a dashboard and not a canvas organ field. Charcoal ground, slate cards, off-white type, one highlighter red. Four tools as a fixed layout: project cards on top, a naked unix directory under them, scratch blocks in a right sidebar, FIND at the top of that sidebar. SPECK source is the save format. Sections do not drag. Type does the work.
+VAULT is a dark desktop studio, not a dashboard and not a canvas organ field. Charcoal ground, slate cards, off-white type. Two signals: safety orange for live/select/filament, highlighter red for URGENT/destroy/CLEAR. The Manager is a racked instrument: five inset wells, plaque labels, modest fasteners. Jobs nest in a card well. Pulled subtasks are satellite cards on a taut tuner-needle filament. Directory under the rack is the unix catalogue. Scratch sidebar with FIND. SPECK source is the save format. Sections do not drag.
 
 ## Colors
 
 | Token | Hex | Use |
 | --- | --- | --- |
 | Ground | `#111318` | Studio field |
-| Panel | `#181b22` | Scratch sidebar |
-| Card | `#22262f` | Project and note blocks |
+| Panel | `#181b22` | Scratch sidebar, rack plate |
+| Card | `#22262f` | Job / satellite / note blocks |
 | Card 2 | `#2a2f3a` | Card hover |
+| Well | `#0a0b0e` | Inset column and job wells |
 | Ink | `#eeeae4` | Work type |
-| Muted | `#a8adb8` | Counts, stems, labels |
-| Hair | `#2c313c` | Separators, ghosts |
-| Mark | `#ff3355` | Directory selection, FIND mark, urgent, caret |
-| Mark ink | `#14080a` | Type on highlighter |
+| Muted | `#a8adb8` | Counts, stems, plaques |
+| Hair | `#2c313c` | Separators, ghosts, bezels |
+| Live | `#FF5C1A` | Directory select, FIND mark, filament, caret, live card |
+| Live ink | `#14080a` | Type on orange |
+| Mark | `#ff3355` | URGENT, strike, CLEAR-class danger |
+| Mark ink | `#14080a` | Type on red |
 
-No second accent. Strike and URGENT are highlighter. Not IMP `#E10600`. Cobalt is not in the system. Dark is native; paper invert is not identity.
+Not IMP `#E10600`. Cobalt is not in the system. Harvest amber is not identity. Cream cassette is not the plate. Dark is native; paper invert is not identity.
 
 ## Typography
 
-Helvetica Neue / Helvetica / Arial only. Cards 15px / 500 / tight tracking. Directory and notes 13px / row 22. FIND 14px. Labels 11px tracked. Counts and ghosts 12px. No Oswald, JetBrains, Space Grotesk, Inter, VT323, or pixel novelty faces.
+Helvetica Neue / Helvetica / Arial only. Job titles 13px / 700 / tracked / uppercase. Nested rows 12px / 400 / sentence case. Directory 13px / row 22. FIND 14px. Plaques 10px tracked. No Oswald, JetBrains, Space Grotesk, Inter, VT323, or pixel novelty faces.
 
 ## Layout
 
-Desktop (~1440). Main column is manager (~42% height) over directory, hairline between. Right sidebar 320px: FIND, then snap-reorderable note blocks, then inert `_ LINK` `_ PIC` `_ FILE`. Four silent stage lanes — position encodes stage, no billboard titles. Scratch blocks reorder vertically; the three main regions stay put.
+Desktop (~1440). Main column is the rack (~52% height) over the directory. Rack: control bar (project dropdown + ADD), project name, five wells (PENDING · R&D · ACTIVE · DONE · DUSTED). Right sidebar 320px: FIND, snap-reorderable notes, inert `_ LINK` `_ PIC` `_ FILE`. Scratch blocks reorder vertically; the three main regions stay put.
 
 ## Elevation & Depth
 
-No shadows, no blur, no glass, no grain/scan overlay. Depth is slate steps on charcoal. Live card: 1px highlighter hairline. Drag ghost: opacity, not a drop shadow.
+No soft shadows, no glass, no grain/scan overlay. Depth is inset wells and slate steps. Modest graphic fasteners on the rack plate (not 3D knobs). Live card: 1px orange hairline. Filament: taut glowing line, no sag. Drag ghost: opacity.
 
 ## Shapes
 
-Radius 10px on project cards and scratch blocks. Radius 2px on the directory name block. FIND and native chrome stay square. Selection is a highlighter rectangle behind the name — not an oval, not a pill overlay covering neighbors.
+Radius 10px on job/satellite/scratch cards. Radius 2px on the directory name block. Wells and FIND stay square. Selection is an orange rectangle behind the directory name — not an oval, not a pill overlay. PM GUI never draws nest stems.
 
 ## Components
 
-- **Project card** — off-white title, muted child count, urgent title in highlighter. Drag between lanes to stage; drag in-lane to reorder. Click focuses the directory subtree. Click title to rename. Trailing `_` creates.
-- **Directory row** — ascii stem `│ ├── └──`, name, hover shovel `→`. Live name sits on highlighter with dark type. Trailing `└── _` adds a child. Click a stem with children to fold.
-- **FIND** — one command field. Label FIND or NOTE. Echo line for the machine. Bare line searches; NOTE appends when a scratch block is live. `CLEAR` restores seed.
+- **Rack bar** — PROJECT select + ADD. Project name under the bar.
+- **Job card** — uppercase title (click to rename). Inset well of nested subtasks (indent by type, no `│ ├──`). Click body to add nested. First nested promotes PENDING → ACTIVE. Drag between wells to stage; nested children follow; loose satellites stay.
+- **Satellite card** — smaller, own well/status, taut filament to immediate parent. Drag nested row out of a well onto a lane to pull (`LOOSE`).
+- **Directory row** — ascii stem `│ ├── └──`, name, hover shovel `→`. Live name sits on orange with dark type. Trailing `└── _` adds a child. Full catalogue, all projects.
+- **FIND** — one command field. Label FIND or NOTE. Echo line. Bare line searches; NOTE appends when a scratch block is live. `CLEAR` restores seed.
 - **Scratch block** — date + textarea. Vertical snap-reorder. Ghost media slots inert.
-- **Field editor** — native input on the live title, highlighter caret, no second dock slab.
+- **Field editor** — native input on the live title, orange caret, no second dock slab.
 
 ## Do's and Don'ts
 
-**Do:** keep one graph and two looks (cards + directory); click-and-type; FIND searches; shovel or lane-drop to stage; snap-reorder notes; stay on charcoal / slate / highlighter.
+**Do:** one graph, two costumes (racked cards + directory); click-and-type; FIND searches; shovel or lane-drop to stage; pull nested into satellites; snap-reorder notes; charcoal / slate / live orange / danger red.
 
-**Don't:** DateBlocks, SaaS kanban chrome (avatars, KPIs, progress bars, “+ New Deal”), section billboards (`PIPE // vault`), paper/IMP canvas, salt organs, organ PLACE-drag, Oswald plaques, DOS `>` dock, dump-parser, cobalt, harvest amber, CLIP-copy, month-as-OS as home.
+**Don't:** DateBlocks, SaaS kanban chrome, section billboards, paper/IMP canvas, salt organs, organ PLACE-drag, Oswald plaques, DOS `>` dock, dump-parser, cobalt, harvest amber as identity, cream cassette OS, 3D knobs, VU KPIs, brass patch-cables, PM nest stems, CLIP-copy, month-as-OS as home.

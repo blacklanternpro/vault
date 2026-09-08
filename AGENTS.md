@@ -22,10 +22,10 @@ Non-obvious notes:
   bundling error).
 - Lint is **oxlint** (`npm run lint`), configured via `.oxlintrc.json` — not ESLint.
 - Aesthetic contract is locked in `.cursorrules`. Full portable language: `docs/LANGUAGE.md`. Overnight brief: `docs/OVERNIGHT_PROMPT.md`. Product: `PRODUCT.md`.
-- Smoke: charcoal/slate studio, Helvetica work, highlighter-red selection (not IMP `#E10600`, not cobalt).
-  Manager on top (quiet cards, no billboard titles). Directory under it (unix stems).
-  Scratch sidebar with FIND. Drag a card between lanes; snap-reorder notes; click a
-  title, type; trailing `_` adds a child; Space/shovel stages a node. Typed `CLEAR`
+- Smoke: charcoal/slate studio, Helvetica work, live orange selection + danger red (not IMP `#E10600`, not cobalt).
+  Racked manager on top (five wells, job cards, nested well, ghost `+`). Directory under it (unix stems, orange name-block).
+  Scratch sidebar with FIND. Drag a job between wells; pull a nested row onto a lane; snap-reorder notes; click a
+  title, type; click a job body to nest; trailing `_` adds a child; Space/shovel stages a node. Typed `CLEAR`
   restores seed. No CAL / SEAL / SKULL, no organ PLACE-drag, no DOS `>` dock.
   Do not revive DateBlocks cards, beige UN identity, month-as-OS as home, paper/black
-  IMP canvas, dump-parser, SaaS kanban chrome, amber, or cobalt.
+  IMP canvas, dump-parser, SaaS kanban chrome, cream cassette OS, or cobalt.

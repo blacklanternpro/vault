@@ -4,20 +4,19 @@ Overnight agent brief: docs/OVERNIGHT_PROMPT.md.
 Product truth: PRODUCT.md. Visual system after build: DESIGN.md.
 
 This is a dark studio: four tools as a fixed layout, not a dashboard, not a canvas OS, not stacked billboards.
-Quiet project cards are the manager. Modest radius (~10px) is allowed on those cards. No DateBlocks, no SaaS kanban chrome, no section titles.
+The Manager is a racked instrument: five inset wells, plaque labels, modest fasteners. Jobs nest in a card well. Pulled subtasks are satellites on a taut filament. No DateBlocks, no SaaS kanban chrome, no PM nest stems.
 
-PALETTE: Ground charcoal · panel/card slate steps · off-white type · muted secondary · one highlighter red (not IMP `#E10600`).
-Highlighter = selection block on the directory, FIND marks, urgent, live caret.
-One accent. Cobalt has left. Paper/INV invert is not the identity.
+PALETTE: Ground charcoal · panel/card slate · inset wells · off-white type · muted secondary · live orange (select, filament, caret) · danger red (URGENT, strike, CLEAR).
+Live orange is not harvest amber identity. Danger red is not IMP `#E10600`. Cobalt has left. Paper/INV invert is not the identity. Cream cassette is not the OS plate.
 
-TYPE: Helvetica Neue / Helvetica / Arial only. No Oswald as identity. No JetBrains. No Space Grotesk.
+TYPE: Helvetica Neue / Helvetica / Arial only. Job titles uppercase. Nested rows sentence case. No Oswald as identity. No JetBrains. No Space Grotesk.
 
 COMPOSITION (desktop studio, not a PWA, not mobile-first):
-1. Dark field. Manager fixed on top, directory fixed under it, scratch sidebar on the right (~320px). FIND is the one command field (top of the sidebar). Sections do not drag.
-2. One work graph. Directory is the tree. Manager is the same nodes as quiet stage cards (position encodes stage; no FOCUS/GATEWAY billboards). Empty lane still creates. Click a card to focus the directory to that subtree. Click a title, type.
-3. Naked unix directory: stems `│ ├── └──`, highlighter-red block behind the live name. Trailing `_` adds a child. TAB indent/outdent. Space / shovel stages onto the manager.
+1. Dark field. Rack fixed on top (project dropdown + ADD, then five wells), directory fixed under it, scratch sidebar on the right (~320px). FIND is the one command field (top of the sidebar). Sections do not drag.
+2. One work graph. Directory is the full unix catalogue. Manager shows jobs of one project plus loose satellites. Nested (non-loose) children live in the card well. Ghost `+` in PENDING creates a job.
+3. Naked unix directory: stems `│ ├── └──`, orange name-block behind the live name. Trailing `_` adds a child. TAB indent/outdent. Space / shovel stages onto the manager. Stems never appear in the PM GUI.
 4. Scratch blocks snap-reorder vertically. Ghost `_ LINK` / `_ PIC` / `_ FILE` stay inert. NOTE when a txt block is focused; else FIND. `CLEAR` is a typed command. No DOS `>` dock slab.
-5. SPECK source is the save format (`speck-os-v1`). It is not the compositor costume and not a Forth/DOS taskmaster.
+5. SPECK source is the save format (`speck-os-v1`). Statuses `pending|rnd|active|done|dusted|none`. `LOOSE` marks a pulled satellite. Physics A: card moves, nested follow, loose stay, filament stretches.
 
-HARD VETO: DateBlocks cards, jagged day cards, SaaS kanban chrome (avatars, KPIs, progress bars, “+ New Deal”), amber theme, JSON-as-database, second prompt, cobalt lash, dump-parser dock, salt organs as identity (CAL / SEAL / SKULL), organ PLACE-drag, grain/scan overlays, Oswald plaques.
+HARD VETO: DateBlocks cards, jagged day cards, SaaS kanban chrome (avatars, KPIs, progress bars, “+ New Deal”), JSON-as-database, second prompt, cobalt lash, dump-parser dock, salt organs as identity (CAL / SEAL / SKULL), organ PLACE-drag, grain/scan overlays, Oswald plaques, 3D knobs, VU meters as KPIs, brass patch-cables, PM nest stems.
 Do not revive beige cassette as the OS identity, month-as-OS as home, paper/black IMP canvas, or a Tailwind binder dashboard.

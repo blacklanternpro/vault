@@ -6,6 +6,8 @@ This is a **later-run** brief. The language is written. Graph ops live in `src/s
 
 Read this whole file. Then read `docs/LANGUAGE.md`. Then read `.cursorrules`. Then look at the current shell. Then go.
 
+Read this whole file. Then read `docs/LANGUAGE.md`. Then read `.cursorrules`. Then look at the current shell. Then go.
+
 ---
 
 ## Mission
@@ -40,11 +42,12 @@ Jake / BLACK LANTERN. Personal OS. Not a store product. Not a SaaS. Local-first,
 
 ## Locked tokens
 
-- Ground charcoal, panel/card slate steps
+- Ground charcoal, panel/card slate steps, inset wells
 - Off-white type, muted secondary
-- Highlighter red — selection, FIND, urgent, caret (not `#E10600`)
+- Live orange — selection, FIND, filament, caret (`#FF5C1A`)
+- Danger red — URGENT, strike, CLEAR (not `#E10600`)
 
-Helvetica Neue / Helvetica / Arial only. Modest radius on cards. No amber. No cobalt. No Oswald identity.
+Helvetica Neue / Helvetica / Arial only. Modest radius on cards. No amber identity. No cobalt. No Oswald identity. Cream cassette is not the plate.
 
 ---
 
@@ -52,13 +55,13 @@ Helvetica Neue / Helvetica / Arial only. Modest radius on cards. No amber. No co
 
 Desktop. One FIND/NOTE field. One graph. Sections do not drag.
 
-1. Manager on top. Silent stage lanes. Project text cards. Lane drag rewrites status. In-lane drag reorders. Empty lane creates. No billboard titles.
-2. Directory under it. Unix stems. Highlighter selection. `_` adds. SHOVEL onto the manager. CLIP is dead.
+1. Manager on top. Racked wells PENDING · R&D · ACTIVE · DONE · DUSTED. One project (dropdown + ADD). Job cards nest; pull makes satellites; filaments stretch. Ghost `+` creates a job.
+2. Directory under it. Unix stems. Orange selection. `_` adds. SHOVEL onto the manager. CLIP is dead. Stems never on the PM.
 3. Scratch on the right. Txt blocks snap-reorder. Link/pic/file slots inert this pass.
 4. FIND in the sidebar. NOTE when a txt block is focused. `CLEAR` typed. No DOS `>` slab.
 5. Click-and-type. FIND searches — it does not create work.
 
-You may refine density. You may not add hardware bays, KPI rows, a second input, month-as-OS as home, cobalt, PLACE-drag, or PROJECTS/ROSTER/FLEET/LOGS tabs.
+You may refine density. You may not add 3D knobs, VU KPIs, brass cables, a second input, month-as-OS as home, cobalt, PLACE-drag, or PROJECTS/ROSTER/FLEET/LOGS tabs.
 
 ---
 
@@ -103,6 +106,6 @@ Do not propose a new palette. Do not revive DateBlocks. Do not build NEXUS HUD a
 
 New features must be SPECK-sayable as source.
 
-When in doubt: charcoal studio, highlighter on the live name, one FIND, empty is `_`.
+When in doubt: charcoal studio, orange on the live name, taut filaments, one FIND, empty is `_`.
 
 Go.
