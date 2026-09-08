@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import {
+  addNested,
   applyHit,
   applyKey,
   applyNoteOrder,
@@ -7,14 +8,15 @@ import {
   commitFieldLine,
   commitLine,
   freshSession,
+  pullCard,
+  setProject,
   stageCard,
   typeField,
   type Result,
 } from '../speck/machine'
-import { parseDoc } from '../speck/doc'
+import { parseDoc, projectIdOf, projectsOf } from '../speck/doc'
 import type { Session } from '../speck/ir'
 import { loadSource, saveSource } from '../speck/source'
-import type { ColName } from '../speck/tokens'
 import { Directory } from './Directory'
 import { Manager } from './Manager'
 import { Scratch } from './Scratch'
@@ -28,6 +30,9 @@ export function Studio() {
   sourceRef.current = source
 
   const doc = useMemo(() => parseDoc(source), [source])
+  const projectId = projectIdOf(doc, session.projectId)
+  const projects = projectsOf(doc)
+  const project = projectId != null ? doc.nodes.find((n) => n.id === projectId) : undefined
 
   useEffect(() => {
     saveSource(source)
@@ -139,16 +144,52 @@ export function Studio() {
   return (
     <div className="studio" data-testid="studio">
       <div className="studio-main">
-        <Manager
-          doc={doc}
-          session={session}
-          onStage={(id, status, beforeId) => apply(stageCard(sessionRef.current, sourceRef.current, id, status, beforeId))}
-          onFocus={(id) => apply(commitLine(`FOCUS ${id}`, sessionRef.current, sourceRef.current))}
-          onRename={(id) => hit('SLOT', `${id}:title`)}
-          onCreate={(status: ColName) => hit('EMPTY', status)}
-          onTitle={(value) => setLive(typeField(sessionRef.current, value))}
-          onTitleCommit={commitTitle}
-        />
+        <div className="studio-rack">
+          <header className="rack-bar">
+            <label className="rack-project">
+              <span className="rack-label">PROJECT</span>
+              <select
+                aria-label="Project"
+                data-testid="project-select"
+                value={projectId ?? ''}
+                onChange={(e) => apply(setProject(sessionRef.current, sourceRef.current, Number(e.target.value)))}
+              >
+                {projects.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.title.trim() || '_'}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <button
+              type="button"
+              className="rack-add"
+              data-testid="project-add"
+              onClick={() => hit('ADD', 0)}
+            >
+              ADD
+            </button>
+          </header>
+          <p className="rack-name" data-testid="project-name">
+            {project?.title.trim() || '_'}
+          </p>
+          <Manager
+            doc={doc}
+            session={session}
+            onStage={(id, status, beforeId) =>
+              apply(stageCard(sessionRef.current, sourceRef.current, id, status, beforeId))
+            }
+            onPull={(id, status, beforeId) =>
+              apply(pullCard(sessionRef.current, sourceRef.current, id, status, beforeId))
+            }
+            onFocus={(id) => apply(commitLine(`FOCUS ${id}`, sessionRef.current, sourceRef.current))}
+            onRename={(id) => hit('SLOT', `${id}:title`)}
+            onAddNested={(parentId) => apply(addNested(sessionRef.current, sourceRef.current, parentId))}
+            onCreateJob={() => hit('EMPTY', 'pending')}
+            onTitle={(value) => setLive(typeField(sessionRef.current, value))}
+            onTitleCommit={commitTitle}
+          />
+        </div>
         <Directory
           doc={doc}
           session={session}

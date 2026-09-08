@@ -1,7 +1,8 @@
-import { useRef, type KeyboardEvent, type PointerEvent } from 'react'
-import { childrenOf, laneOf, managerCards, type Doc } from '../speck/doc'
+import { useRef, type KeyboardEvent, type PointerEvent, type ReactNode } from 'react'
+import { laneOf, managerCards, nestedOf, projectIdOf, type Doc, type GraphNode } from '../speck/doc'
 import { matchesFind, type Session } from '../speck/ir'
-import { COL_ORDER, isBinderStatus, type ColName, type NodeStatus } from '../speck/tokens'
+import { COL_ORDER, LANE_PLAQUE, isBinderStatus, type ColName, type NodeStatus } from '../speck/tokens'
+import { Filament } from './Filament'
 import { Mark } from './Mark'
 
 const THRESH = 7
@@ -10,14 +11,17 @@ type Props = {
   doc: Doc
   session: Session
   onStage: (id: number, status: NodeStatus, beforeId: number | null | undefined) => void
+  onPull: (id: number, status: NodeStatus, beforeId: number | null | undefined) => void
   onFocus: (id: number) => void
   onRename: (id: number) => void
-  onCreate: (status: ColName) => void
+  onAddNested: (parentId: number) => void
+  onCreateJob: () => void
   onTitle: (value: string) => void
   onTitleCommit: () => void
 }
 
 type Drag = {
+  kind: 'card' | 'nested'
   id: number
   x: number
   y: number
@@ -30,16 +34,20 @@ export function Manager({
   doc,
   session,
   onStage,
+  onPull,
   onFocus,
   onRename,
-  onCreate,
+  onAddNested,
+  onCreateJob,
   onTitle,
   onTitleCommit,
 }: Props) {
   const dragRef = useRef<Drag | null>(null)
   const ghostRef = useRef<HTMLDivElement | null>(null)
+  const rackRef = useRef<HTMLElement | null>(null)
 
-  const cards = managerCards(doc, null)
+  const projectId = projectIdOf(doc, session.projectId)
+  const cards = managerCards(doc, projectId)
   const query = session.find
 
   function cardsIn(col: ColName) {
@@ -70,20 +78,22 @@ export function Manager({
     if (!drag) return
     if (!drag.live) {
       const target = e.target as HTMLElement
-      if (target.closest('[data-title]')) onRename(drag.id)
-      else onFocus(drag.id)
+      if (drag.kind === 'nested') onFocus(drag.id)
+      else if (target.closest('[data-title]')) onRename(drag.id)
+      else onAddNested(drag.id)
       return
     }
     const hit = dropAt(e.clientX, e.clientY)
     if (!hit) return
     const before = hit.beforeId === drag.id ? undefined : hit.beforeId
-    onStage(drag.id, hit.lane, before)
+    if (drag.kind === 'nested') onPull(drag.id, hit.lane, before)
+    else onStage(drag.id, hit.lane, before)
   }
 
-  function onCardDown(e: PointerEvent<HTMLElement>, id: number) {
+  function beginDrag(e: PointerEvent<HTMLElement>, id: number, kind: Drag['kind']) {
     if (e.button !== 0) return
     e.currentTarget.setPointerCapture(e.pointerId)
-    dragRef.current = { id, x: e.clientX, y: e.clientY, startX: e.clientX, startY: e.clientY, live: false }
+    dragRef.current = { kind, id, x: e.clientX, y: e.clientY, startX: e.clientX, startY: e.clientY, live: false }
   }
 
   function onCardMove(e: PointerEvent<HTMLElement>) {
@@ -96,7 +106,10 @@ export function Manager({
     drag.x = e.clientX
     drag.y = e.clientY
     if (!ghostRef.current) {
-      const origin = e.currentTarget.closest('[data-card-id]')
+      const origin =
+        drag.kind === 'nested'
+          ? e.currentTarget.closest('[data-nested-id]')
+          : e.currentTarget.closest('[data-card-id]')
       if (origin instanceof HTMLElement) {
         const ghost = origin.cloneNode(true) as HTMLDivElement
         const r = origin.getBoundingClientRect()
@@ -120,66 +133,124 @@ export function Manager({
     }
   }
 
-  function onLaneUp(e: PointerEvent<HTMLElement>, col: ColName) {
-    if (e.button !== 0) return
-    const t = e.target as HTMLElement
-    if (!t.closest('.lane-empty')) return
-    onCreate(col)
+  function titleField(node: GraphNode, kind: 'job' | 'sat' | 'nested') {
+    const editing = session.field?.id === node.id && session.field.slot === 'title'
+    const inputClass = kind === 'nested' ? 'nested-input' : 'card-input'
+    const titleClass = kind === 'nested' ? 'nested-title' : 'card-title'
+    const label = kind === 'nested' ? 'Subtask title' : kind === 'sat' ? 'Satellite title' : 'Job title'
+    if (editing) {
+      return (
+        <input
+          className={inputClass}
+          value={session.fieldBuffer}
+          autoFocus
+          aria-label={label}
+          placeholder="_"
+          onChange={(e) => onTitle(e.target.value)}
+          onBlur={onTitleCommit}
+          onKeyDown={(e: KeyboardEvent<HTMLInputElement>) => {
+            if (e.key === 'Enter') {
+              e.preventDefault()
+              onTitleCommit()
+            }
+          }}
+          onPointerDown={(e) => e.stopPropagation()}
+        />
+      )
+    }
+    const Tag = kind === 'nested' ? 'p' : 'h2'
+    return (
+      <Tag className={titleClass} data-title>
+        <Mark text={node.title} query={query} />
+      </Tag>
+    )
+  }
+
+  function nestedTree(parentId: number, depth: number): ReactNode {
+    return nestedOf(doc, parentId).map((node) => (
+      <div key={node.id} className="nested-block">
+        <div
+          className={`nested-row${node.urgent ? ' is-urgent' : ''}`}
+          data-nested-id={node.id}
+          style={{ paddingLeft: 4 + depth * 10 }}
+          onPointerDown={(e) => {
+            e.stopPropagation()
+            beginDrag(e, node.id, 'nested')
+          }}
+          onPointerMove={onCardMove}
+          onPointerUp={finishDrag}
+          onPointerCancel={finishDrag}
+        >
+          {titleField(node, 'nested')}
+          <span className="jack" data-jack={node.id} aria-hidden="true" />
+        </div>
+        {nestedTree(node.id, depth + 1)}
+      </div>
+    ))
   }
 
   return (
-    <section className="manager" data-testid="manager" aria-label="Projects">
-      {COL_ORDER.map((col) => (
-        <div
-          key={col}
-          className="lane"
-          data-lane={col}
-          onPointerUp={(e) => onLaneUp(e, col)}
-        >
-          {cardsIn(col).map((node) => {
-            const count = childrenOf(doc, node.id).length
-            const editing = session.field?.id === node.id && session.field.slot === 'title'
-            const live = session.nestFocus === node.id
-            const found = matchesFind(session, node.title)
-            return (
-              <article
-                key={node.id}
-                className={`card${live ? ' is-live' : ''}${found ? ' is-found' : ''}${node.urgent ? ' is-urgent' : ''}${node.status === 'done' ? ' is-done' : ''}`}
-                data-card-id={node.id}
-                onPointerDown={(e) => onCardDown(e, node.id)}
-                onPointerMove={onCardMove}
-                onPointerUp={finishDrag}
-                onPointerCancel={finishDrag}
+    <section className="manager" ref={rackRef} data-testid="manager" aria-label="Jobs">
+      <span className="fastener fastener-tl" aria-hidden="true" />
+      <span className="fastener fastener-tr" aria-hidden="true" />
+      <span className="fastener fastener-bl" aria-hidden="true" />
+      <span className="fastener fastener-br" aria-hidden="true" />
+      <Filament doc={doc} projectId={projectId} hostRef={rackRef} />
+      {COL_ORDER.map((col) => {
+        const items = cardsIn(col)
+        return (
+          <div
+            key={col}
+            className={`lane${col === 'dusted' ? ' is-dusted' : ''}`}
+            data-lane={col}
+            data-testid={`lane-${col}`}
+          >
+            <div className="lane-plaque">
+              <span>{LANE_PLAQUE[col]}</span>
+              <span className="lane-count">{items.length}</span>
+            </div>
+            {items.map((node) => {
+              const nested = nestedOf(doc, node.id)
+              const live =
+                session.nestFocus === node.id ||
+                (session.selected?.kind === 'NODE' && session.selected.id === node.id)
+              const found = matchesFind(session, node.title)
+              const sat = Boolean(node.loose)
+              return (
+                <article
+                  key={node.id}
+                  className={`card${sat ? ' is-sat' : ' is-job'}${live ? ' is-live' : ''}${found ? ' is-found' : ''}${node.urgent ? ' is-urgent' : ''}${node.status === 'done' || node.status === 'dusted' ? ' is-quiet' : ''}`}
+                  data-card-id={node.id}
+                  onPointerDown={(e) => beginDrag(e, node.id, 'card')}
+                  onPointerMove={onCardMove}
+                  onPointerUp={finishDrag}
+                  onPointerCancel={finishDrag}
+                >
+                  <span className="jack" data-jack={node.id} aria-hidden="true" />
+                  {titleField(node, sat ? 'sat' : 'job')}
+                  <div className="job-well" data-well>
+                    {nestedTree(node.id, 0)}
+                    {nested.length === 0 ? <span className="well-ghost">_</span> : null}
+                  </div>
+                </article>
+              )
+            })}
+            {col === 'pending' ? (
+              <button
+                type="button"
+                className="ghost-plus"
+                data-testid="ghost-plus"
+                aria-label="Add job"
+                onPointerDown={(e) => e.stopPropagation()}
+                onClick={() => onCreateJob()}
               >
-                {editing ? (
-                  <input
-                    className="card-input"
-                    value={session.fieldBuffer}
-                    autoFocus
-                    aria-label="Project title"
-                    placeholder="_"
-                    onChange={(e) => onTitle(e.target.value)}
-                    onBlur={onTitleCommit}
-                    onKeyDown={(e: KeyboardEvent<HTMLInputElement>) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault()
-                        onTitleCommit()
-                      }
-                    }}
-                    onPointerDown={(e) => e.stopPropagation()}
-                  />
-                ) : (
-                  <h2 className="card-title" data-title>
-                    <Mark text={node.title} query={query} />
-                  </h2>
-                )}
-                {count > 0 ? <p className="card-count">{count}</p> : null}
-              </article>
-            )
-          })}
-          <div className="lane-empty">_</div>
-        </div>
-      ))}
+                +
+              </button>
+            ) : null}
+            <div className="lane-empty">_</div>
+          </div>
+        )
+      })}
     </section>
   )
 }
