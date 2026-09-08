@@ -118,7 +118,7 @@ export function paintChrome(
   buf.hits.push({ kind: 'ORGAN', x, y, w: w - 96, h: CHROME_HEAD, z: 15, payload: organ })
 
   if (spec.lenses) {
-    let tx = x + w - 214
+    let tx = x + 400
     for (const lens of spec.lenses) {
       buf.ops.push({
         op: 'GLYPH',
