@@ -1,9 +1,9 @@
-# BLACK LANTERN — Design Language
+# BAD FORM — Design Language
 
 **Canon.** Copy this file into another repo and the language still holds.
 Short law for agents lives in `.cursorrules`. This file is the full tongue.
 
-Maker: BLACK LANTERN. First instance: **VAULT WORLDWIDE** — a local-first personal OS you run as a program on a desktop, not a website you visit, not a phone PWA.
+Maker: BAD FORM. First instance: **VAULT WORLDWIDE** — BAD FORM’s in-house OS for project and task management, run as a program on a desktop, not a website you visit, not a phone PWA.
 
 If a thing cannot be said in this language, it is not in the work.
 
@@ -380,7 +380,7 @@ Write like a terminal that went to art school for one semester and dropped out.
 - No “welcome to your dashboard.”
 - No empty states that apologize. Empty is `_` or `empty/`.
 - Filenames as mythos: `flush_stale_resolvers.sh`, `cnc_toolpath_night_run`, `scout_ridge_a`.
-- Maker mark: BLACK LANTERN. Product mark: VAULT WORLDWIDE.
+- Maker mark: BAD FORM. Product mark: VAULT WORLDWIDE.
 
 ---
 
