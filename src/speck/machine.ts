@@ -1,7 +1,6 @@
 import { isOrganName, nextSlot, nowOf, tapeDate, type FieldSlot, type HitBox, type Now, type OrganName, type Selected, type Session } from './ir'
 import {
   byId,
-  childrenOf,
   indentNode,
   insertNode,
   isProject,
@@ -13,10 +12,8 @@ import {
   setNodeBody,
   setNodeStatus,
   setNodeTitle,
-  workFolded,
   type Doc,
 } from './doc'
-import { formatDumpGuess, parseDump, type DumpParse } from './parse-dump'
 import { isCommandLine, parseCommand } from './parse'
 import { COL_ORDER, isBinderStatus, PAINT_OPS, type NodeStatus } from './tokens'
 import { visibleBinderIds } from './organs/pipe'
@@ -40,7 +37,7 @@ export function freshSession(): Session {
     draftId: null,
     buffer: '',
     echo: null,
-    pendingDump: null,
+    find: null,
     calDay: null,
   }
 }
@@ -114,16 +111,12 @@ function applyStrike(session: Session, source: string): Result {
 
 export function placeOrgan(source: string, organ: OrganName, x: number, y: number): string {
   const doc = parseDoc(source)
-  const pair = workFolded(doc) && (organ === 'PIPE' || organ === 'NEST')
-  const other: OrganName | null = pair ? (organ === 'PIPE' ? 'NEST' : 'PIPE') : null
-  for (const name of other ? [organ, other] : [organ]) {
-    const found = doc.places.find((p) => p.organ === name)
-    if (found) {
-      found.x = x
-      found.y = y
-    } else {
-      doc.places.push({ organ: name, x, y })
-    }
+  const found = doc.places.find((p) => p.organ === organ)
+  if (found) {
+    found.x = x
+    found.y = y
+  } else {
+    doc.places.push({ organ, x, y })
   }
   return serializeDoc(doc)
 }
@@ -186,68 +179,42 @@ export function addChild(source: string, parent: number | null, title = '', stat
   return { source: serializeDoc(doc), id: node.id }
 }
 
-function applyDumpParse(session: Session, source: string, dump: DumpParse): Result {
-  if (dump.kind === 'ambiguous') {
-    const guess = dump.guess
-    const pending =
-      guess.kind === 'project'
-        ? { kind: 'project' as const, title: guess.title, children: guess.children }
-        : { kind: 'tasks' as const, titles: guess.titles, parent: parentForNew(session, parseDoc(source)) }
-    return {
-      session: { ...session, pendingDump: pending, echo: formatDumpGuess(dump), buffer: '' },
-      source,
-    }
-  }
-  return commitDump(session, source, dump)
-}
-
-function commitDump(
-  session: Session,
-  source: string,
-  dump: { kind: 'project'; title: string; children: string[] } | { kind: 'tasks'; titles: string[] },
-): Result {
+function applyFind(session: Session, source: string, query: string): Result {
+  const q = query.trim()
+  if (!q) return ok({ ...session, find: null }, source, 'FIND _')
   const doc = parseDoc(source)
-  if (dump.kind === 'project') {
-    const project = insertNode(doc, { title: dump.title, status: 'none', parent: null })
-    for (const title of dump.children) {
-      insertNode(doc, { title, status: 'backlog', parent: project.id })
-    }
-    const first = childrenOf(doc, project.id)[0]
-    return ok(
-      {
-        ...session,
-        selected: { kind: 'NODE', id: first?.id ?? project.id },
-        lens: 'pipe',
-        nestFocus: project.id,
-        pendingDump: null,
-      },
-      serializeDoc(doc),
-      `PROJECT ${dump.title}`,
-    )
-  }
-  const parent = parentForNew(session, doc)
-  let last = parent
-  for (const title of dump.titles) {
-    last = insertNode(doc, { title, status: 'backlog', parent }).id
-  }
+  const needle = q.toLowerCase()
+  const hits = doc.nodes.filter((n) => n.title.toLowerCase().includes(needle))
+  const first = hits[0]
   return ok(
     {
       ...session,
-      selected: last != null ? { kind: 'NODE', id: last } : session.selected,
-      pendingDump: null,
+      find: q,
+      selected: first ? { kind: 'NODE', id: first.id } : session.selected,
     },
-    serializeDoc(doc),
-    dump.titles.length ? `+ ${dump.titles.length}` : null,
+    source,
+    hits.length ? `FIND ${hits.length}` : 'FIND _',
   )
 }
 
-function confirmPending(session: Session, source: string): Result {
-  if (!session.pendingDump) return ok(session, source)
-  const p = session.pendingDump
-  if (p.kind === 'project') return commitDump(session, source, p)
+function applyNote(session: Session, source: string, now: Now, text: string): Result {
+  const t = text.trim()
+  if (!t) return ok(session, source, '? NOTE')
   const doc = parseDoc(source)
-  for (const title of p.titles) insertNode(doc, { title, status: 'backlog', parent: p.parent })
-  return ok({ ...session, pendingDump: null }, serializeDoc(doc), `+ ${p.titles.length}`)
+  doc.notes.push({ date: tapeDate(now.year, now.month, now.day), text: t })
+  return ok(
+    { ...session, selected: { kind: 'DUMP' }, lens: 'dump' },
+    serializeDoc(doc),
+    'NOTE',
+  )
+}
+
+function applyGlyph(session: Session, source: string, x: number, y: number, px: number, text: string): Result {
+  const t = text.trim()
+  if (!t) return ok(session, source, '? GLYPH')
+  const doc = parseDoc(source)
+  doc.glyphs.push({ x, y, px, text: t })
+  return ok(session, serializeDoc(doc), `GLYPH ${t}`)
 }
 
 function commitField(session: Session, source: string): Result {
@@ -287,16 +254,10 @@ function commitField(session: Session, source: string): Result {
 
 function commitOperator(session: Session, source: string, now: Now, text: string): Result {
   const trimmed = text.trim()
-  if (!trimmed) {
-    if (session.pendingDump) return confirmPending(session, source)
-    return ok(session, source)
-  }
-  if (session.lens === 'dump') {
-    const doc = parseDoc(source)
-    doc.notes.push({ date: tapeDate(now.year, now.month, now.day), text: trimmed })
-    return ok(session, serializeDoc(doc))
-  }
-  return applyDumpParse(session, source, parseDump(trimmed))
+  if (!trimmed) return ok(session, source)
+  if (session.lens === 'dump') return applyNote(session, source, now, trimmed)
+  const query = trimmed.startsWith('/') ? trimmed.slice(1) : trimmed
+  return applyFind(session, source, query)
 }
 
 function applyLens(session: Session, source: string, raw: string): Result {
@@ -342,9 +303,39 @@ function applyAdd(session: Session, source: string, parent: number | null, statu
 function applyHitStmt(target: string, arg: string | number | undefined, session: Session, source: string): Result {
   const t = target.toUpperCase()
   if (t === 'FIELD') return { session: collapse(session), source }
-  if (t === 'PIPE') return { session: { ...collapse(session), selected: { kind: 'PIPE' }, lens: 'pipe' }, source }
-  if (t === 'NEST') return { session: { ...collapse(session), selected: { kind: 'NEST' }, lens: 'nest' }, source }
-  if (t === 'DUMP') return { session: { ...collapse(session), selected: { kind: 'DUMP' }, lens: 'dump' }, source }
+  if (t === 'PIPE') {
+    return {
+      session: {
+        ...collapse(session),
+        selected: { kind: 'PIPE' },
+        lens: 'pipe',
+        collapsed: session.collapsed.filter((o) => o !== 'PIPE'),
+      },
+      source,
+    }
+  }
+  if (t === 'NEST') {
+    return {
+      session: {
+        ...collapse(session),
+        selected: { kind: 'NEST' },
+        lens: 'nest',
+        collapsed: session.collapsed.filter((o) => o !== 'NEST'),
+      },
+      source,
+    }
+  }
+  if (t === 'DUMP') {
+    return {
+      session: {
+        ...collapse(session),
+        selected: { kind: 'DUMP' },
+        lens: 'dump',
+        collapsed: session.collapsed.filter((o) => o !== 'DUMP'),
+      },
+      source,
+    }
+  }
   if (t === 'CAL') return { session: { ...session, selected: { kind: 'CAL' } }, source }
   if (t === 'SEAL') return { session: { ...session, selected: { kind: 'SEAL' } }, source }
   if (t === 'SKULL') return { session: { ...session, selected: { kind: 'SKULL' } }, source }
@@ -437,13 +428,6 @@ export function applyHit(hit: HitBox, session: Session, source: string): Result 
       return { session: toggleNest(session, Number(hit.payload ?? 0)), source }
     case 'CLOSE': {
       const organ = String(hit.payload ?? 'PIPE') as OrganName
-      if (workFolded(parseDoc(source)) && (organ === 'PIPE' || organ === 'NEST')) {
-        const has = session.collapsed.includes('PIPE') || session.collapsed.includes('NEST')
-        const collapsed: OrganName[] = has
-          ? session.collapsed.filter((o) => o !== 'PIPE' && o !== 'NEST')
-          : [...session.collapsed, 'PIPE', 'NEST']
-        return { session: { ...session, collapsed }, source }
-      }
       return { session: toggleCollapsed(session, organ), source }
     }
     case 'LENS':
@@ -511,7 +495,7 @@ export function applyHit(hit: HitBox, session: Session, source: string): Result 
       return ok(session, toggleMaterial(source, flag), flag)
     }
     case 'RING':
-      return ok(session, source, session.echo || 'SHOVEL // FOCUS // SEE')
+      return ok(session, source, session.echo || 'MOVE // FIND // NOTE')
     case 'FIELD':
       return { session: collapse(session), source }
     case 'COMMIT':
@@ -528,7 +512,7 @@ function applyStmt(stmt: ReturnType<typeof parseCommand>, session: Session, sour
       return ok(session, source, src.length > 160 ? `${src.slice(0, 157)}…` : src)
     }
     case 'WORDS':
-      return ok(session, source, `${PAINT_OPS.join(' ')} // HIT SHOVEL FOCUS SEE CLEAR`)
+      return ok(session, source, `${PAINT_OPS.join(' ')} // MOVE FIND NOTE CLEAR HIT`)
     case 'CLEAR':
       return ok(freshSession(), SEED_SOURCE)
     case 'SHOVEL':
@@ -539,6 +523,12 @@ function applyStmt(stmt: ReturnType<typeof parseCommand>, session: Session, sour
       return applyStrike(session, source)
     case 'ADD':
       return applyAdd(session, source, parentForNew(session, parseDoc(source)))
+    case 'FIND':
+      return applyFind(session, source, stmt.query)
+    case 'NOTE':
+      return applyNote(session, source, now, stmt.text)
+    case 'GLYPH':
+      return applyGlyph(session, source, stmt.x, stmt.y, stmt.px, stmt.text)
     case 'COMMIT':
       if (session.field) return commitField(session, source)
       return commitOperator(session, source, now, session.buffer)
@@ -557,7 +547,6 @@ export function commitLine(line: string, session: Session, source: string, now: 
   const trimmed = line.trim()
   if (!trimmed) {
     if (session.field) return commitField(session, source)
-    if (session.pendingDump) return confirmPending(session, source)
     return ok(session, source)
   }
   if (isCommandLine(trimmed)) {

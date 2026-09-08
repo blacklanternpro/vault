@@ -44,7 +44,7 @@ export type Doc = {
 
 export const DEFAULT_PLACES: Place[] = [
   { organ: 'PIPE', x: 24, y: 48 },
-  { organ: 'NEST', x: 24, y: 48 },
+  { organ: 'NEST', x: 24, y: 560 },
   { organ: 'DUMP', x: 560, y: 540 },
   { organ: 'SEAL', x: 900, y: 48 },
   { organ: 'SKULL', x: 900, y: 280 },
@@ -73,7 +73,7 @@ NEST
 DUMP
   NOTE 09.07.26 "ridge"
 PLACE PIPE 24 48
-PLACE NEST 24 48
+PLACE NEST 24 560
 PLACE DUMP 560 540
 PLACE SEAL 900 48
 PLACE SKULL 900 280
@@ -381,16 +381,6 @@ export function serializeDoc(doc: Doc): string {
     lines.push(`GLYPH ${Math.round(g.x)} ${Math.round(g.y)} ${Math.round(g.px)} ${quote(g.text)}`)
   }
   return lines.join('\n')
-}
-
-export function hitchNotes(doc: Doc, id: number): Note[] {
-  return doc.notes.filter((n) => n.node === id)
-}
-
-export function workFolded(doc: Doc): boolean {
-  const pipe = placeOf(doc, 'PIPE')
-  const nest = placeOf(doc, 'NEST')
-  return pipe.x === nest.x && pipe.y === nest.y
 }
 
 export function placeOf(doc: Doc, organ: OrganName): Place {

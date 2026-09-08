@@ -1,4 +1,5 @@
-import type { EditBox, HitBox, Op, Session, WorkCompile } from '../ir'
+import type { EditBox, HitBox, Op, Session } from '../ir'
+import { matchesFind } from '../ir'
 import { childrenOf, openTaskCount, placeOf, type Doc, type GraphNode } from '../doc'
 import { CHROME_PAD, liveOval, paintChrome, type Buf } from './chrome'
 import { PAPER, POWER, RULE, WHITE, fontHelv } from '../tokens'
@@ -44,14 +45,12 @@ export function compileNest(
   session: Session,
   fieldW: number,
   edit: { box: EditBox | null },
-  opts?: WorkCompile,
 ): { ops: Op[]; hits: HitBox[]; x: number; y: number; w: number; h: number } {
   const origin = placeOf(doc, 'NEST')
-  const x = opts?.host?.x ?? origin.x
-  const y = opts?.host?.y ?? origin.y
-  const w = opts?.host?.w ?? Math.max(300, Math.min(440, fieldW - x - 16))
-  if (opts?.skip) return { ops: [], hits: [], x, y, w, h: 0 }
-  const collapsed = session.collapsed.includes('NEST') || (opts?.folded === true && session.collapsed.includes('PIPE'))
+  const x = origin.x
+  const y = origin.y
+  const w = Math.max(300, Math.min(440, fieldW - x - 16))
+  const collapsed = session.collapsed.includes('NEST')
   const buf: Buf = { ops: [], hits: [] }
   const roots = childrenOf(doc, null)
   const count = roots.reduce((m, n) => m + openTaskCount(doc, n.id), 0)
@@ -60,17 +59,11 @@ export function compileNest(
     x,
     y,
     w,
-    title: 'NEST // graph',
+    title: 'NEST // dir',
     organ: 'NEST' as const,
     count,
     live,
     scan: doc.scan,
-    lenses: opts?.ticks
-      ? [
-          { id: 'PIPE' as const, live: session.lens !== 'nest' },
-          { id: 'NEST' as const, live: session.lens === 'nest' },
-        ]
-      : undefined,
   }
 
   if (collapsed) {
@@ -144,12 +137,13 @@ export function compileNest(
       })
       liveOval(buf, x + 32, rowY + 1, chipW, ROW - 2)
     } else if (!editing) {
+      const found = matchesFind(session, row.node.title)
       buf.ops.push({
         op: 'STEM',
         x: x + 32,
         y: rowY + MID,
         text: row.prefix + (row.node.title || '_'),
-        color: row.node.urgent ? POWER : focused ? POWER : PAPER,
+        color: row.node.urgent || focused || found ? POWER : PAPER,
         font: FONT,
       })
     }
@@ -175,6 +169,26 @@ export function compileNest(
         slot: 'title',
       }
     }
+
+    buf.ops.push({
+      op: 'GLYPH',
+      x: x + w - 52,
+      y: rowY + MID,
+      text: '->',
+      color: POWER,
+      font: FONT_SM,
+      align: 'center',
+      baseline: 'middle',
+    })
+    buf.hits.push({
+      kind: 'SHOVEL',
+      x: x + w - 68,
+      y: rowY,
+      w: 24,
+      h: ROW,
+      z: 20,
+      payload: row.node.id,
+    })
 
     buf.ops.push({
       op: 'GLYPH',

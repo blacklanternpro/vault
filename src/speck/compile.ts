@@ -1,10 +1,10 @@
 import type { DockInput, EditBox, HitBox, Measure, Op, Program, Session } from './ir'
 import { nowOf } from './ir'
-import { parseDoc, workFolded } from './doc'
+import { parseDoc } from './doc'
 import { compileCal } from './organs/cal'
 import { compileDump } from './organs/dump'
 import { compileNest } from './organs/nest'
-import { compilePipe, pipeFrame, PIPE_ROWS } from './organs/pipe'
+import { compilePipe, PIPE_ROWS } from './organs/pipe'
 import { compileSeal } from './organs/seal'
 import { compileSkull } from './organs/skull'
 import { FIELD, INK_RULE, INK_RULE_DIM, PAPER, POWER, fontDisplay, fontHelv, ground, ink } from './tokens'
@@ -76,20 +76,8 @@ function compileField(world: World, measure: Measure, edit: { box: EditBox | nul
   const now = nowOf()
   const sheet = ground(doc.inv)
   const mark = ink(doc.inv)
-  const folded = workFolded(doc)
-  const nestLens = world.session.lens === 'nest'
-  const frame = pipeFrame(doc, width)
-  const pipe = compilePipe(doc, world.session, measure, width, edit, {
-    folded,
-    ticks: folded,
-    skip: folded && nestLens,
-  })
-  const nest = compileNest(doc, world.session, width, edit, {
-    folded,
-    ticks: folded,
-    skip: folded && !nestLens,
-    host: folded ? frame : undefined,
-  })
+  const pipe = compilePipe(doc, world.session, measure, width, edit)
+  const nest = compileNest(doc, world.session, width, edit)
   const dump = compileDump(doc, world.session, width)
   const seal = compileSeal(doc, world.session, width)
   const skull = compileSkull(doc, world.session, width)
@@ -151,9 +139,9 @@ function compileField(world: World, measure: Measure, edit: { box: EditBox | nul
 }
 
 function placeholder(session: Session): string {
-  if (session.pendingDump) return '↵ confirm · edit to reject'
   if (session.lens === 'dump') return 'note…'
-  return 'operator…'
+  if (session.find) return `find ${session.find}`
+  return 'find or place…'
 }
 
 function compileDock(world: World): { ops: Op[]; hits: HitBox[]; h: number; input: DockInput } {

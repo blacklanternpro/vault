@@ -65,4 +65,7 @@ export const COMMAND_WORDS = new Set<string>([
   'STRIKE',
   'ADD',
   'DOCK',
+  'FIND',
+  'NOTE',
+  'GLYPH',
 ])

@@ -1,7 +1,6 @@
 import { compile, PIPE_ROWS } from './compile'
 import { byId, childrenOf, parseDoc, SEED_SOURCE, serializeDoc } from './doc'
 import { applyHit, applyKey, commitLine, cycleField, freshSession, placeOrgan } from './machine'
-import { parseDump } from './parse-dump'
 import { PAINT_OPS, POWER } from './tokens'
 
 function measure(text: string): number {
@@ -44,18 +43,6 @@ export function runSpeckChecks(): string[] {
   if (byId(round, 102)?.body !== 'overlay leftover') fail('serialize body')
   if (byId(round, 104)?.parent !== 1) fail('serialize parent')
 
-  const dump = parseDump(
-    'new website project, site redesign of homepage, need to assess aesthetic, create repo',
-  )
-  if (dump.kind !== 'project') fail(`dump kind ${dump.kind}`)
-  else {
-    if (dump.title !== 'site redesign of homepage') fail(`dump title ${dump.title}`)
-    if (dump.children.join('|') !== 'assess aesthetic|create repo') fail(`dump kids ${dump.children.join('|')}`)
-  }
-
-  const amb = parseDump('new website project')
-  if (amb.kind !== 'ambiguous') fail(`dump amb ${amb.kind}`)
-
   let session = { ...freshSession(), selected: { kind: 'NODE' as const, id: 104 } }
   let result = commitLine('SHOVEL', session, SEED_SOURCE)
   let next = byId(parseDoc(result.source), 104)
@@ -74,18 +61,26 @@ export function runSpeckChecks(): string[] {
     SEED_SOURCE,
   )
   const dumped = parseDoc(result.source)
-  const project = dumped.nodes.find((n) => n.title === 'site redesign of homepage')
-  if (!project || project.status !== 'none') fail('dump project node')
-  else {
-    const kids = childrenOf(dumped, project.id).map((n) => n.title)
-    if (kids.join('|') !== 'assess aesthetic|create repo') fail(`dump applied ${kids.join('|')}`)
-    if (result.session.nestFocus !== project.id) fail('dump focus')
-    if (result.session.lens !== 'pipe') fail(`dump lens ${result.session.lens}`)
-    const firstKid = childrenOf(dumped, project.id)[0]
-    if (!firstKid || result.session.selected?.kind !== 'NODE' || result.session.selected.id !== firstKid.id) {
-      fail('dump selected child')
-    }
+  if (dumped.nodes.length !== parseDoc(SEED_SOURCE).nodes.length) fail('dock dump created nodes')
+  if (result.session.find !== 'new website project, site redesign of homepage, need to assess aesthetic, create repo') {
+    fail(`dock find ${result.session.find}`)
   }
+  if (result.session.echo !== 'FIND _') fail(`dock dump echo ${result.session.echo}`)
+
+  result = commitLine('FIND telemetry', freshSession(), SEED_SOURCE)
+  if (result.session.find !== 'telemetry') fail(`FIND query ${result.session.find}`)
+  if (result.session.echo !== 'FIND 1') fail(`FIND echo ${result.session.echo}`)
+  if (result.session.selected?.kind !== 'NODE' || result.session.selected.id !== 102) fail('FIND selects telemetry')
+
+  result = commitLine('NOTE scratch line', { ...freshSession(), lens: 'pipe' }, SEED_SOURCE)
+  if (!parseDoc(result.source).notes.some((n) => n.text === 'scratch line')) fail('NOTE append')
+
+  const dumpLive = commitLine('from dump', { ...freshSession(), lens: 'dump', selected: { kind: 'DUMP' } }, SEED_SOURCE)
+  if (!parseDoc(dumpLive.source).notes.some((n) => n.text === 'from dump')) fail('dump lens note')
+  if (parseDoc(dumpLive.source).nodes.length !== parseDoc(SEED_SOURCE).nodes.length) fail('dump lens created nodes')
+
+  result = commitLine('GLYPH 100 80 32 "MARK"', freshSession(), SEED_SOURCE)
+  if (!parseDoc(result.source).glyphs.some((g) => g.text === 'MARK' && g.x === 100 && g.y === 80)) fail('dock GLYPH')
 
   result = commitLine('WORDS', freshSession(), SEED_SOURCE)
   if (result.session.echo?.includes('CLIP')) fail('WORDS CLIP')
@@ -94,7 +89,10 @@ export function runSpeckChecks(): string[] {
   if (!result.session.echo?.includes('INV')) fail('WORDS INV')
   if (!result.session.echo?.includes('OVAL')) fail('WORDS OVAL')
   if (!result.session.echo?.includes('GLYPH')) fail('WORDS GLYPH')
-  if (!result.session.echo?.includes('FOCUS')) fail('WORDS FOCUS')
+  if (!result.session.echo?.includes('FIND')) fail('WORDS FIND')
+  if (result.session.echo?.includes('SEE CLEAR') || result.session.echo?.includes('SHOVEL FOCUS')) {
+    fail(`WORDS still REPL ${result.session.echo}`)
+  }
 
   result = commitLine('CLEAR', freshSession(), result.source)
   if (parseDoc(result.source).pipeName !== 'vault') fail('CLEAR seed')
@@ -115,6 +113,10 @@ export function runSpeckChecks(): string[] {
   if (!texts.some((t) => /STAGING/i.test(t))) fail('STAGING legend')
   if (!texts.some((t) => t === 'VAULT' || t === '07')) fail('free glyph paints')
   if (!texts.some((t) => /PIPE \/\//.test(t))) fail('pipe plaque')
+  if (!texts.some((t) => /NEST \/\//.test(t))) fail('nest plaque')
+  if (!texts.some((t) => /DUMP \/\//.test(t))) fail('dump plaque')
+  if (!texts.some((t) => t === '_ LINK' || t === '_ PIC' || t === '_ FILE')) fail('dump ghost slots')
+  if (!field.hits.some((h) => h.kind === 'SHOVEL' && h.payload === 11)) fail('nest shovel')
   if (!texts.some((t) => /CAL \/\//.test(t))) fail('cal plaque')
   if (!texts.some((t) => t.includes('[x]'))) fail('organ close')
   if (!texts.some((t) => t === 'SKULL')) fail('skull organ')
@@ -160,8 +162,17 @@ export function runSpeckChecks(): string[] {
   const chips = open.field.ops.filter((op) => op.op === 'CHIP')
   if (chips.some((c) => c.h > PIPE_ROWS + 30)) fail(`overlay cover chip h ${chips.map((c) => c.h).join(',')}`)
   if (!open.field.ops.some((op) => op.op === 'OVAL')) fail('oval select')
-  if (!open.field.ops.some((op) => op.op === 'GLYPH' && op.text.includes('........') && op.text.includes('overlay leftover'))) {
-    fail('expand body leaders')
+  if (!open.field.ops.some((op) => op.op === 'GLYPH' && op.text === 'overlay leftover')) {
+    fail('expand body type')
+  }
+  if (open.field.ops.some((op) => op.op === 'GLYPH' && op.text.includes('........'))) {
+    fail('cics body leaders still live')
+  }
+  if (open.field.ops.some((op) => (op.op === 'GLYPH' || op.op === 'CHIP') && /#\d+/.test(op.text))) {
+    fail('id ledger still live')
+  }
+  if (open.field.ops.some((op) => (op.op === 'GLYPH' || op.op === 'CHIP') && /^\[ \]|\[X\]/.test(op.text))) {
+    fail('checkbox ledger still live')
   }
   if (!open.field.ops.some((op) => op.op === 'CHIP' && op.text === 'ACTIVE')) {
     fail('status chip')
@@ -283,8 +294,8 @@ export function runSpeckChecks(): string[] {
 
   const pipeAt = doc.places.find((p) => p.organ === 'PIPE')
   const nestAt = doc.places.find((p) => p.organ === 'NEST')
-  if (!pipeAt || !nestAt || pipeAt.x !== nestAt.x || pipeAt.y !== nestAt.y) {
-    fail(`seed fold PLACE PIPE ${pipeAt?.x},${pipeAt?.y} NEST ${nestAt?.x},${nestAt?.y}`)
+  if (!pipeAt || !nestAt || (pipeAt.x === nestAt.x && pipeAt.y === nestAt.y)) {
+    fail(`seed unfold PLACE PIPE ${pipeAt?.x},${pipeAt?.y} NEST ${nestAt?.x},${nestAt?.y}`)
   }
 
   const hitchSrc = `${SEED_SOURCE.replace(
@@ -306,8 +317,8 @@ export function runSpeckChecks(): string[] {
     },
     measure,
   ).field
-  if (!hitchOpen.ops.some((op) => op.op === 'GLYPH' && op.text.includes('09.07.26') && op.text.includes('hitch leftover'))) {
-    fail('expand hitch')
+  if (hitchOpen.ops.some((op) => op.op === 'GLYPH' && op.text.includes('09.07.26') && op.text.includes('hitch leftover'))) {
+    fail('expand hitch identity')
   }
   const hitchCal = hitchOpen.ops.some((op) => op.op === 'LINE' && op.color === POWER && op.width === 2)
   if (!hitchCal) fail('hitch still underlines CAL')
@@ -322,45 +333,34 @@ export function runSpeckChecks(): string[] {
     return serializeDoc(d)
   }
 
-  const foldedSrc = withNestPlace(pipeAt?.x ?? 24, pipeAt?.y ?? 48)
-  const foldedField = compile({ ...world, source: foldedSrc }, measure).field
-  const foldedTexts = foldedField.ops.filter((op) => op.op === 'GLYPH' || op.op === 'STEM').map((op) => op.text)
-  const foldPlaques = foldedTexts.filter((t) => /^(PIPE|NEST) \/\//.test(t))
-  if (foldPlaques.length !== 1) fail(`fold plaques ${foldPlaques.join('|')}`)
-  if (!foldedTexts.some((t) => t === 'NEST') || !foldedTexts.some((t) => t === 'PIPE')) fail('fold ticks')
-  if (!foldedField.hits.some((h) => (h.kind as string) === 'LENS' && h.payload === 'NEST')) fail('lens hit NEST')
-  if (!foldedField.hits.some((h) => (h.kind as string) === 'LENS' && h.payload === 'PIPE')) fail('lens hit PIPE')
+  const seedPlaques = texts.filter((t) => /^(PIPE|NEST) \/\//.test(t))
+  if (seedPlaques.length !== 2) fail(`two windows ${seedPlaques.join('|')}`)
+  if (field.hits.some((h) => h.kind === 'LENS')) fail('lens ticks still live')
 
-  const splitSrc = withNestPlace(24, 540)
-  const splitTexts = compile({ ...world, source: splitSrc }, measure)
-    .field.ops.filter((op) => op.op === 'GLYPH' || op.op === 'STEM')
-    .map((op) => op.text)
-  const splitPlaques = splitTexts.filter((t) => /^(PIPE|NEST) \/\//.test(t))
-  if (splitPlaques.length !== 2) fail(`unfold plaques ${splitPlaques.join('|')}`)
+  const coincidentSrc = withNestPlace(pipeAt?.x ?? 24, pipeAt?.y ?? 48)
+  const coincidentField = compile({ ...world, source: coincidentSrc }, measure).field
+  const coincidentTexts = coincidentField.ops.filter((op) => op.op === 'GLYPH' || op.op === 'STEM').map((op) => op.text)
+  const coincidentPlaques = coincidentTexts.filter((t) => /^(PIPE|NEST) \/\//.test(t))
+  if (coincidentPlaques.length !== 2) fail(`overlap still two windows ${coincidentPlaques.join('|')}`)
+  if (coincidentField.hits.some((h) => h.kind === 'LENS')) fail('coincident fold ticks')
 
-  const lensTick = commitLine('HIT LENS NEST', freshSession(), foldedSrc)
-  if (lensTick.session.lens !== 'nest') fail(`hit lens ${lensTick.session.lens}`)
-  const nestFold = compile({ ...world, source: foldedSrc, session: { ...freshSession(), lens: 'nest' } }, measure).field
-  const nestFoldTexts = nestFold.ops.filter((op) => op.op === 'GLYPH' || op.op === 'STEM').map((op) => op.text)
-  if (!nestFoldTexts.some((t) => /NEST \/\//.test(t))) fail('fold nest plaque')
-  if (nestFoldTexts.some((t) => /PIPE \/\//.test(t))) fail('fold nest still paints PIPE plaque')
-  if (!nestFold.hits.some((h) => h.kind === 'STEM' && h.payload === 102)) fail('fold nest stems')
-
-  const closeFold = applyHit(
+  const closePipe = applyHit(
     { kind: 'CLOSE', x: 0, y: 0, w: 10, h: 10, z: 20, payload: 'PIPE' },
     freshSession(),
-    foldedSrc,
+    coincidentSrc,
   )
-  if (!closeFold.session.collapsed.includes('PIPE') || !closeFold.session.collapsed.includes('NEST')) {
-    fail(`fold close ${closeFold.session.collapsed.join('|')}`)
+  if (!closePipe.session.collapsed.includes('PIPE') || closePipe.session.collapsed.includes('NEST')) {
+    fail(`pipe close ${closePipe.session.collapsed.join('|')}`)
   }
 
-  const dragged = placeOrgan(foldedSrc, 'PIPE', 40, 60)
+  const dragged = placeOrgan(coincidentSrc, 'PIPE', 40, 60)
   const draggedDoc = parseDoc(dragged)
   const draggedPipe = draggedDoc.places.find((p) => p.organ === 'PIPE')
   const draggedNest = draggedDoc.places.find((p) => p.organ === 'NEST')
-  if (!draggedPipe || !draggedNest || draggedPipe.x !== 40 || draggedPipe.y !== 60) fail('fold drag PIPE')
-  else if (draggedNest.x !== draggedPipe.x || draggedNest.y !== draggedPipe.y) fail('fold drag pair')
+  if (!draggedPipe || draggedPipe.x !== 40 || draggedPipe.y !== 60) fail('drag PIPE')
+  else if (!draggedNest || (draggedNest.x === draggedPipe.x && draggedNest.y === draggedPipe.y)) {
+    fail('drag PIPE moved NEST')
+  }
 
   const down = applyKey(
     'ArrowDown',
