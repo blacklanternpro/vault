@@ -1,4 +1,4 @@
-import { Field } from './speck/Field'
+import { Studio } from './shell/Studio'
 import { runSpeckChecks } from './speck/check'
 
 if (import.meta.env.DEV) {
@@ -7,5 +7,5 @@ if (import.meta.env.DEV) {
 }
 
 export default function App() {
-  return <Field />
+  return <Studio />
 }

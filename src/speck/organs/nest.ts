@@ -1,57 +1,28 @@
-import type { EditBox, HitBox, Op, Session, WorkCompile } from '../ir'
-import { childrenOf, openTaskCount, placeOf, type Doc, type GraphNode } from '../doc'
+import type { EditBox, HitBox, Op, Session } from '../ir'
+import { matchesFind } from '../ir'
+import { childrenOf, openTaskCount, placeOf, type Doc } from '../doc'
+import { walkNest, type NestRow } from '../tree'
 import { CHROME_PAD, liveOval, paintChrome, type Buf } from './chrome'
 import { PAPER, POWER, RULE, WHITE, fontHelv } from '../tokens'
+
+export { visibleNestIds } from '../tree'
 
 const FONT = fontHelv(16, 400)
 const FONT_SM = fontHelv(13, 400)
 const ROW = 26
 const MID = ROW / 2
 
-function isClosed(session: Session, id: number): boolean {
-  return session.nestClosed.includes(id)
-}
-
-function walk(
-  doc: Doc,
-  parent: number | null,
-  depth: number,
-  session: Session,
-  out: { node: GraphNode; depth: number; last: boolean; prefix: string }[],
-  ancestorLast: boolean[],
-): void {
-  const kids = childrenOf(doc, parent)
-  kids.forEach((node, i) => {
-    const last = i === kids.length - 1
-    const bits = ancestorLast.map((l) => (l ? '    ' : '│   '))
-    const branch = last ? '└── ' : '├── '
-    const prefix = depth === 0 ? '' : `${bits.slice(1).join('')}${branch}`
-    out.push({ node, depth, last, prefix: depth === 0 ? '' : prefix })
-    if (!isClosed(session, node.id)) {
-      walk(doc, node.id, depth + 1, session, out, [...ancestorLast, last])
-    }
-  })
-}
-
-export function visibleNestIds(doc: Doc, session: Session): number[] {
-  const rows: { node: GraphNode; depth: number; last: boolean; prefix: string }[] = []
-  walk(doc, null, 0, session, rows, [true])
-  return rows.map((r) => r.node.id)
-}
-
 export function compileNest(
   doc: Doc,
   session: Session,
   fieldW: number,
   edit: { box: EditBox | null },
-  opts?: WorkCompile,
 ): { ops: Op[]; hits: HitBox[]; x: number; y: number; w: number; h: number } {
   const origin = placeOf(doc, 'NEST')
-  const x = opts?.host?.x ?? origin.x
-  const y = opts?.host?.y ?? origin.y
-  const w = opts?.host?.w ?? Math.max(300, Math.min(440, fieldW - x - 16))
-  if (opts?.skip) return { ops: [], hits: [], x, y, w, h: 0 }
-  const collapsed = session.collapsed.includes('NEST') || (opts?.folded === true && session.collapsed.includes('PIPE'))
+  const x = origin.x
+  const y = origin.y
+  const w = Math.max(300, Math.min(440, fieldW - x - 16))
+  const collapsed = session.collapsed.includes('NEST')
   const buf: Buf = { ops: [], hits: [] }
   const roots = childrenOf(doc, null)
   const count = roots.reduce((m, n) => m + openTaskCount(doc, n.id), 0)
@@ -60,17 +31,11 @@ export function compileNest(
     x,
     y,
     w,
-    title: 'NEST // graph',
+    title: 'NEST // dir',
     organ: 'NEST' as const,
     count,
     live,
     scan: doc.scan,
-    lenses: opts?.ticks
-      ? [
-          { id: 'PIPE' as const, live: session.lens !== 'nest' },
-          { id: 'NEST' as const, live: session.lens === 'nest' },
-        ]
-      : undefined,
   }
 
   if (collapsed) {
@@ -79,8 +44,8 @@ export function compileNest(
     return { ops: buf.ops, hits: buf.hits, x, y, w, h }
   }
 
-  const rows: { node: GraphNode; depth: number; last: boolean; prefix: string }[] = []
-  walk(doc, null, 0, session, rows, [true])
+  const rows: NestRow[] = []
+  walkNest(doc, null, 0, session, rows, [true])
   const emptySlot = true
   const h = CHROME_PAD + 8 + (rows.length + (emptySlot ? 1 : 0)) * ROW + 12
 
@@ -104,7 +69,7 @@ export function compileNest(
     const selected = session.selected?.kind === 'NODE' && session.selected.id === row.node.id && session.lens === 'nest'
     const focused = session.nestFocus === row.node.id
     const kids = childrenOf(doc, row.node.id)
-    const fold = kids.length ? (isClosed(session, row.node.id) ? '[+]' : '[-]') : ' · '
+    const fold = kids.length ? (session.nestClosed.includes(row.node.id) ? '[+]' : '[-]') : ' · '
     const editing = session.field?.id === row.node.id && session.field.slot === 'title' && session.lens === 'nest'
 
     buf.ops.push({
@@ -144,12 +109,13 @@ export function compileNest(
       })
       liveOval(buf, x + 32, rowY + 1, chipW, ROW - 2)
     } else if (!editing) {
+      const found = matchesFind(session, row.node.title)
       buf.ops.push({
         op: 'STEM',
         x: x + 32,
         y: rowY + MID,
         text: row.prefix + (row.node.title || '_'),
-        color: row.node.urgent ? POWER : focused ? POWER : PAPER,
+        color: row.node.urgent || focused || found ? POWER : PAPER,
         font: FONT,
       })
     }
@@ -175,6 +141,26 @@ export function compileNest(
         slot: 'title',
       }
     }
+
+    buf.ops.push({
+      op: 'GLYPH',
+      x: x + w - 52,
+      y: rowY + MID,
+      text: '->',
+      color: POWER,
+      font: FONT_SM,
+      align: 'center',
+      baseline: 'middle',
+    })
+    buf.hits.push({
+      kind: 'SHOVEL',
+      x: x + w - 68,
+      y: rowY,
+      w: 24,
+      h: ROW,
+      z: 20,
+      payload: row.node.id,
+    })
 
     buf.ops.push({
       op: 'GLYPH',

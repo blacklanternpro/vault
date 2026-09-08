@@ -44,17 +44,11 @@ export type Doc = {
 
 export const DEFAULT_PLACES: Place[] = [
   { organ: 'PIPE', x: 24, y: 48 },
-  { organ: 'NEST', x: 24, y: 48 },
+  { organ: 'NEST', x: 24, y: 660 },
   { organ: 'DUMP', x: 560, y: 540 },
-  { organ: 'SEAL', x: 900, y: 48 },
-  { organ: 'SKULL', x: 900, y: 280 },
-  { organ: 'CAL', x: 560, y: 48 },
 ]
 
-export const SEED_SOURCE = `INV
-GRAIN 0.14
-SCAN 0.1
-PIPE vault
+export const SEED_SOURCE = `PIPE vault
   COL backlog
   COL active
   COL staging
@@ -71,14 +65,7 @@ NEST
     NODE 101 "supabase link" status staging
     NODE 99 "baseline" status done
 DUMP
-  NOTE 09.07.26 "ridge"
-PLACE PIPE 24 48
-PLACE NEST 24 48
-PLACE DUMP 560 540
-PLACE SEAL 900 48
-PLACE SKULL 900 280
-PLACE CAL 560 48
-GLYPH 16 16 56 "VAULT"`
+  NOTE 09.07.26 "ridge"`
 
 function word(tok: Tok | undefined): string | null {
   if (!tok || tok.t !== 'WORD') return null
@@ -110,7 +97,7 @@ export function blankDoc(): Doc {
     cols: [...COL_ORDER],
     nodes: [],
     notes: [],
-    places: DEFAULT_PLACES.map((p) => ({ ...p })),
+    places: [],
     glyphs: [],
     inv: false,
     grain: 0,
@@ -132,6 +119,53 @@ export function nextNodeId(doc: Doc): number {
 
 export function isProject(doc: Doc, node: GraphNode): boolean {
   return childrenOf(doc, node.id).length > 0
+}
+
+export function isManagerCard(doc: Doc, node: GraphNode): boolean {
+  return childrenOf(doc, node.id).length > 0 || isBinderStatus(node.status)
+}
+
+export function laneOf(status: NodeStatus): (typeof COL_ORDER)[number] {
+  return status === 'none' ? 'backlog' : status
+}
+
+export function managerCards(doc: Doc, focus: number | null = null): GraphNode[] {
+  return doc.nodes.filter((n) => {
+    if (!isManagerCard(doc, n)) return false
+    if (focus == null) return true
+    return n.id === focus || inSubtree(doc, focus, n.id)
+  })
+}
+
+export function moveNodeBefore(doc: Doc, id: number, beforeId: number | null): boolean {
+  const from = doc.nodes.findIndex((n) => n.id === id)
+  if (from < 0) return false
+  const [node] = doc.nodes.splice(from, 1)
+  if (beforeId == null) {
+    doc.nodes.push(node)
+    return true
+  }
+  const to = doc.nodes.findIndex((n) => n.id === beforeId)
+  if (to < 0) {
+    doc.nodes.push(node)
+    return true
+  }
+  doc.nodes.splice(to, 0, node)
+  return true
+}
+
+export function moveNote(doc: Doc, from: number, to: number): boolean {
+  if (from < 0 || from >= doc.notes.length) return false
+  const clamped = Math.max(0, Math.min(doc.notes.length - 1, to))
+  if (from === clamped) return true
+  const [note] = doc.notes.splice(from, 1)
+  doc.notes.splice(clamped, 0, note)
+  return true
+}
+
+export function setNoteText(doc: Doc, index: number, text: string): void {
+  const note = doc.notes[index]
+  if (note) note.text = text
 }
 
 export function subtreeIds(doc: Doc, id: number): number[] {
@@ -346,7 +380,6 @@ export function parseDoc(src: string): Doc {
     }
   }
   if (doc.cols.length === 0) doc.cols = [...COL_ORDER]
-  if (doc.places.length === 0) doc.places = blankDoc().places
   return doc
 }
 
@@ -381,16 +414,6 @@ export function serializeDoc(doc: Doc): string {
     lines.push(`GLYPH ${Math.round(g.x)} ${Math.round(g.y)} ${Math.round(g.px)} ${quote(g.text)}`)
   }
   return lines.join('\n')
-}
-
-export function hitchNotes(doc: Doc, id: number): Note[] {
-  return doc.notes.filter((n) => n.node === id)
-}
-
-export function workFolded(doc: Doc): boolean {
-  const pipe = placeOf(doc, 'PIPE')
-  const nest = placeOf(doc, 'NEST')
-  return pipe.x === nest.x && pipe.y === nest.y
 }
 
 export function placeOf(doc: Doc, organ: OrganName): Place {

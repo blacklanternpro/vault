@@ -275,7 +275,7 @@ export function Field() {
             autoComplete="off"
             enterKeyHint="send"
             spellCheck={false}
-            aria-label="operator"
+            aria-label="command field"
           />
         </form>
       </div>

@@ -126,13 +126,6 @@ export type HitKind =
   | 'SEAL'
   | 'SKULL'
 
-export type WorkCompile = {
-  folded?: boolean
-  ticks?: boolean
-  skip?: boolean
-  host?: { x: number; y: number; w: number }
-}
-
 export type HitBox = {
   kind: HitKind
   x: number
@@ -187,16 +180,6 @@ export type Selected =
   | { kind: 'SKULL' }
   | { kind: 'CAL' }
 
-export type PendingDump = {
-  kind: 'project'
-  title: string
-  children: string[]
-} | {
-  kind: 'tasks'
-  titles: string[]
-  parent: number | null
-}
-
 export type Session = {
   selected: Selected | null
   lens: Lens
@@ -209,8 +192,14 @@ export type Session = {
   draftId: number | null
   buffer: string
   echo: string | null
-  pendingDump: PendingDump | null
+  find: string | null
   calDay: string | null
+}
+
+export function matchesFind(session: Session, title: string): boolean {
+  const q = session.find?.trim()
+  if (!q) return false
+  return title.toLowerCase().includes(q.toLowerCase())
 }
 
 export type Now = {
