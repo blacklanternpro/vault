@@ -12,11 +12,11 @@ web
 
 ## Product Purpose
 
-**[inferred]** VAULT WORLDWIDE is a local-first personal OS: a project/task machine spoken in SPECK. Success is being able to dump work, see it as a tree (NEST) and as a status binder (PIPE), click-and-type to edit, and operate from one dock line — on a paper sheet that speaks, without cards, a cloud personality, or month-as-OS as home.
+**[inferred]** VAULT WORLDWIDE is a local-first personal OS: four tools on a paper sheet (project manager, unix task directory, mixed scratchpad, command field), composed by SPECK. Success is staging real work, keeping a separate directory, scratching txt, and rearranging windows — without cards, a dump-parser REPL, or month-as-OS as home.
 
 ## Positioning
 
-**[inferred]** One work graph, two lenses. NEST is the outline; PIPE is the same nodes laid by status. The dock is an operator (commands + dump parser), not the place you type every title. Pixels are compiled from SPECK source, not a CSS component tree.
+**[inferred]** SPECK is the compositor (`PLACE`, paint, hit). It is not the app. One work graph: NEST is the unix directory; PIPE is the project manager (same nodes by stage). The dock places ink / searches; it does not create projects or tasks. Pixels are compiled from SPECK source, not a CSS component tree.
 
 ## Operating Context
 
@@ -29,20 +29,20 @@ web
 
 **In (locked):**
 
-- Unified graph: `id`, `title`, `body?`, `status` (`backlog|active|staging|done|none`), `parent`, ordered children, `urgent?`.
-- PIPE view: binder columns FOCUS (backlog / active) | GATEWAY (staging / done). Project plaques. In-place expand (rows reflow, body leaders, status CHIP, hitch notes). Empty ledger lines create. Nest project selection filters the binder. Arrow Up/Down moves selection.
-- NEST view: unix tree, expand/collapse, click-create/rename, indent/outdent, `[+]` adds a child. SHOVEL / status puts a node on the binder. CLIP-copy is dead. Coincident `PLACE PIPE` + `PLACE NEST` folds both into one chrome with `PIPE | NEST` ticks.
-- Field editor: native input over the active cell. TAB cycles `title → body → new subtask → status`. Space shovels / checks. Esc collapses.
-- Dock: operator plus a read-only legend rail. Commands or a dump line (`new … project, title, need to …`). Project dump lands on PIPE with that project focused. Legend HIT toggles `GRAIN` / `SCAN` / `INV`.
-- Organs sit where `PLACE` says. `GLYPH` is free ink. Salt organs: `SEAL`, `SKULL`, `CAL` (month digits in a window; DUMP notes underline days). Hitch: `NOTE MM.DD.YY NODE id "…"`. Organ `[x]` collapses that organ, not the app. Folded work `[x]` collapses the pair.
+- Unified graph: `id`, `title`, `body?`, `status` (`backlog|active|staging|done|none`), `parent`, ordered children, `urgent?`. IDs stay in source, not on manager rows.
+- PIPE project manager: binder columns FOCUS (backlog / active) | GATEWAY (staging / done). Oswald project names, Helvetica titles. In-place expand (rows reflow, body as type, status CHIP). Empty rows create. Nest project selection filters the binder. Arrow Up/Down moves selection. In-organ shovel / Space / status HIT stages work.
+- NEST tasks directory: unix tree, expand/collapse, click-create/rename, indent/outdent, `[+]` adds a child. Own `PLACE` window. SHOVEL / status lifts a node onto the manager. CLIP-copy is dead. Coincident origins overlap; they do not fold into `PIPE | NEST` ticks.
+- Field editor: native input over the active cell. TAB cycles `title → body → new subtask → status`. Space shovels. Esc collapses.
+- Dock: command field plus a read-only legend rail. `MOVE` / `GLYPH` / `FIND` / `NOTE` / `CLEAR`. Bare line searches titles in-session (or appends txt when DUMP is live). Does not parse work trees. Legend HIT toggles `GRAIN` / `SCAN` / `INV`.
+- Organs sit where `PLACE` says. `GLYPH` is free ink. Salt organs: `SEAL`, `SKULL`, `CAL` (month digits in a window; DUMP notes underline days). Organ `[x]` collapses that organ, not the app. DUMP looks like a mixed scratchpad; txt notes work this pass; LINK / PIC / FILE slots are inert ghosts.
 
-**Out (YAGNI / veto):** assignees, estimates, CRDT, PWA, harvest amber, cobalt lash, 3D knobs, second dock **input**, DateBlocks cards, month-as-OS as home, kanban cards, SaaS stacks. Calendar/globe/skull are in as salt organs, not as identity.
+**Out (YAGNI / veto):** assignees, estimates, CRDT, PWA, harvest amber, cobalt lash, 3D knobs, second dock **input**, DateBlocks cards, month-as-OS as home, kanban cards, SaaS stacks, dump-parser dock, `#id` checkbox ledgers, coincident-PLACE fold as OS chrome, media blobs. Calendar/globe/skull are in as salt organs, not as identity.
 
 ## Brand Commitments
 
 - Maker: BLACK LANTERN. Product: VAULT WORLDWIDE.
 - Locked visual world (user-pinned): office-sheet **paper ground** + pixel-GUI 1px black windows + IMP plaques, restamped onto paper / black / **power red**. Cobalt leaves.
-- Oswald 700 on plaques. Helvetica Neue / Helvetica / Arial on work. Radius 0. SPECK remains the substrate.
+- Oswald 700 on plaques. Helvetica Neue / Helvetica / Arial on work. Radius 0. SPECK remains the substrate (paint / PLACE), not a DOS costume.
 - Voice: terse machine. Empty is `_`. No dashboard welcome.
 
 ## Evidence on Hand
@@ -54,11 +54,11 @@ web
 
 ## Product Principles
 
-1. One graph. Two lenses. No duplicate models.
-2. Click-and-type in the field; the dock operates.
-3. Source is the program. If it cannot be said in SPECK, it is not in the work.
+1. One graph. Two looks (manager + directory). No duplicate models.
+2. Click-and-type in the field; the dock places and searches.
+3. SPECK paints placement. If it cannot be said in SPECK, it is not in the work — but SPECK is not a reason to ship a REPL taskmaster.
 4. One accent. Utility wearing attitude — not a costume cockpit.
-5. Collapse, dump, shovel, hit: short verbs, no settings app.
+5. Collapse, shovel, hit: short verbs, no settings app. Create work in the organs, not the dock.
 
 ## Accessibility & Inclusion
 

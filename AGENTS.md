@@ -8,7 +8,8 @@ the OS persists as a SPECK source string in `localStorage` (`speck-os-v1`).
 Running the Vite dev server is enough to exercise the product end to end.
 
 This is **not** a PWA and **not** a mobile month. It is a personal OS field:
-one work graph, NEST tree + PIPE status lens, DUMP tape, field editor, one operator dock.
+four tools on a sheet (PIPE manager, NEST directory, DUMP scratchpad, command field),
+one work graph, field editor, legend rail.
 
 Standard commands live in `README.md` and `package.json` scripts (`dev`, `build`,
 `lint`, `test`, `preview`). Package manager is **npm** (`package-lock.json`).
@@ -22,9 +23,10 @@ Non-obvious notes:
 - Lint is **oxlint** (`npm run lint`), configured via `.oxlintrc.json` — not ESLint.
 - Aesthetic contract is locked in `.cursorrules`. Full portable language: `docs/LANGUAGE.md`. Overnight brief: `docs/OVERNIGHT_PROMPT.md`. Product: `PRODUCT.md`.
 - Smoke: paper sheet, Oswald plaques, Helvetica work rows, power-red oval + chrome (not cobalt).
-  Split-page binder (FOCUS | spine | GATEWAY) with project plaques. Tap a row: expand in place,
-  rows below move. Click a title, type. `[+]` in nest adds a child. Dock dump:
-  `new website project, site redesign of homepage, need to assess aesthetic, create repo`.
+  Split-page binder (FOCUS | spine | GATEWAY) with Oswald project names, Helvetica titles
+  (not `#id` checkboxes). Tap a row: expand in place, rows below move. Click a title, type.
+  `[+]` in nest adds a child. In-organ `->` / Space shovels onto the manager. Dock places
+  (`MOVE`, `GLYPH`) or searches (`FIND telemetry`); DUMP-focused line appends txt.
   Legend rail toggles GRAIN / SCAN / INV. Organ `[x]` collapses that window.
   Salt organs SEAL / SKULL / CAL. Do not revive DateBlocks cards, beige UN identity,
   month-as-OS as home, overlay CHIP dossier, CLIP-copy, kanban cards, amber, or cobalt.

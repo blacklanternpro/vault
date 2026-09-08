@@ -1,6 +1,6 @@
 # OVERNIGHT PROMPT — paste this into a future agent
 
-**Month-as-OS is dead as home. DateBlocks, kanban cards, harvest amber, cobalt lash, overlay CHIP dossiers, and CLIP-copy are dead.** Keep **SPECK**. The field is a composed desktop canvas on a paper sheet: one work graph, NEST tree, PIPE status lens, DUMP tape, salt organs (SEAL / SKULL / CAL), field editor, legend rail + one-line operator dock. Persistence is SPECK source (`speck-os-v1`), not a task CRDT, not JSON-as-database.
+**Month-as-OS is dead as home. DateBlocks, kanban cards, harvest amber, cobalt lash, overlay CHIP dossiers, CLIP-copy, dump-parser docks, and DOS `#id` ledgers are dead.** Keep **SPECK** as the compositor (paint / `PLACE`), not a Forth REPL identity. The field is four tools on a paper sheet: typographic PIPE manager, unix NEST directory, DUMP scratchpad (txt this pass), command field for place + search. Salt organs (SEAL / SKULL / CAL). Persistence is SPECK source (`speck-os-v1`), not a task CRDT, not JSON-as-database.
 
 This is a **later-run** brief. The language is written. The runtime lives in `src/speck`. Do not ignore `docs/LANGUAGE.md`. It is canon. Product truth: `PRODUCT.md`.
 
@@ -16,7 +16,7 @@ You are building toward **VAULT WORLDWIDE** — a personal OS on top of an OS. C
 
 Jake (blacklanternpro) spent hours fighting agents that translated his vision into cards. DateBlocks made him almost throw up. The single-field prompt was “magic / Genius.” SPECK exists so pixels are owned by functions.
 
-**Tonight-of-that-future-run:** stay inside the language. Refine the graph, nest, pipe reflow, operator dump. Do not ship another stack of components and call it done.
+**Tonight-of-that-future-run:** stay inside the language. Refine the four tools. Do not ship a dump-parser taskmaster. Do not ship another stack of components and call it done.
 
 If Jake only wanted language docs, they are already in this repo. You are here to *use* them.
 
@@ -52,11 +52,11 @@ Oswald 700 on plaques. Helvetica Neue / Helvetica / Arial on work. Radius 0. No 
 
 One field. Desktop. One dock (operator). One graph.
 
-1. PIPE: FOCUS | spine | GATEWAY. Project plaques. Reflow expand. Shovel, not drag-cards. Empty ledger rows stay and create.
-2. NEST tree. `[+]` adds. SHOVEL onto the binder. CLIP is dead.
-3. DUMP tape.
-4. PLACE / GLYPH. Window chrome. Salt organs SEAL / SKULL / CAL. Overlap legal.
-5. Click-and-type + TAB. Dock dumps and commands. Legend rail toggles GRAIN / SCAN / INV.
+1. PIPE manager: FOCUS | spine | GATEWAY. Oswald project names, Helvetica titles. Reflow expand. In-organ shovel, not drag-cards. Empty rows stay and create. No `#id` checkbox ledger.
+2. NEST directory. Own window. `[+]` adds. SHOVEL onto the manager. CLIP is dead.
+3. DUMP scratchpad look. Txt notes live; link/pic/file slots inert this pass.
+4. PLACE / GLYPH. Window chrome. Salt organs SEAL / SKULL / CAL. Overlap legal. Coincident PLACE is overlap, not a fold.
+5. Click-and-type + TAB. Dock places and searches — it does not create work. Legend rail toggles GRAIN / SCAN / INV.
 
 You may refine density. You may not add hardware bays, card grids, a second input, month-as-OS as home, cobalt, or PROJECTS/ROSTER/FLEET/LOGS tabs.
 
@@ -72,9 +72,9 @@ Full list: `docs/LANGUAGE.md` §8.
 
 ## What already works (keep)
 
-- Prompt Dock as operator. Field editor as writer.
+- Prompt Dock as command field. Field editor as writer.
 - SPECK runtime in `src/speck` (lex / parse / compile / paint / machine)
-- One graph; PIPE and NEST are lenses
+- One graph; PIPE manager + NEST directory
 - Source as program (`speck-os-v1`)
 
 Do not throw SPECK away. Do not rebuild a Tailwind notebook. Do not make the month the OS. Salt organs are salt.

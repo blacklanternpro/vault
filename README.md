@@ -10,10 +10,10 @@ Product truth: [`PRODUCT.md`](PRODUCT.md).
 
 Black desktop field. Power red. Not a PWA. Not a month.
 
-1. **One graph** — NEST is the tree; PIPE is the same nodes by status (FOCUS | GATEWAY)
+1. **One graph** — NEST is the unix directory; PIPE is the project manager (FOCUS | GATEWAY)
 2. Click a title to type. TAB cycles title → body → subtask → status. HIT expands in place.
-3. **Dock** is the operator: commands or a dump line
-4. `[+]` adds a child. `SHOVEL` puts a node on the binder. Organ `[x]` collapses that window.
+3. **Dock** places (`MOVE`, `GLYPH`) and searches (`FIND`); it does not create work
+4. `[+]` adds a child. In-organ `SHOVEL` puts a node on the binder. Organ `[x]` collapses that window.
 
 ```
 src/
@@ -21,8 +21,7 @@ src/
     Field.tsx         host: canvas + cell editor + operator dock
     compile.ts        field + PLACE
     organs/           pipe binder, nest tree, dump tape, window chrome
-    machine.ts        shovel, focus, dump, field cycle
-    parse-dump.ts     operator dump
+    machine.ts        shovel, find, place, field cycle
     source.ts         localStorage speck-os-v1
 ```
 
@@ -32,7 +31,7 @@ NEST
     NODE 104 "ingress routing" status backlog
 ```
 
-Dock: `SEE` `WORDS` `CLEAR` `SHOVEL` `FOCUS` or `new website project, site redesign of homepage, need to assess aesthetic, create repo`.
+Dock: `FIND telemetry` · `MOVE NEST 24 560` · `GLYPH 100 80 32 "MARK"` · `NOTE ridge` · `CLEAR`.
 
 ## Development
 

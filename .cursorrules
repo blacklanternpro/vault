@@ -14,10 +14,11 @@ TYPE: Oswald 700 on plaques. Helvetica Neue / Helvetica / Arial on work. No JetB
 
 COMPOSITION (desktop field, not a PWA, not mobile-first):
 1. Paper sheet. Organs are black 1px windows (`PLACE`). Title bar, Oswald plaque, `[x] ···`, tick ruler, octagon counts. Grain / scan / oval are SPECK.
-2. One work graph. NEST is the tree. PIPE is the same nodes by status (FOCUS | GATEWAY). Empty ledger rows stay and create. HIT a task expands in place — rows below move down. Oval + CHIP, not overlay dossier.
-3. Click-and-type on the cell. TAB cycles title → body → subtask → status. Dock is operator (commands + dump). Legend rail above it toggles GRAIN / SCAN / INV. Never a second input.
-4. SHOVEL / status puts a node on the binder. `[+]` adds a child. CLIP-copy is dead.
-5. Salt organs SEAL / SKULL / CAL are PLACE-able, not identity. CAL is a month window, not month-as-OS home.
+2. SPECK is paint / PLACE — not a Forth/DOS taskmaster. Four tools: typographic PIPE manager, unix NEST directory (own window), DUMP scratchpad (txt this pass), command field for place + search.
+3. One work graph. NEST is the tree. PIPE is the same nodes by status (FOCUS | GATEWAY). Empty manager rows stay and create. HIT a task expands in place — rows below move. Oval + CHIP, not overlay dossier. No `#id` checkbox ledger.
+4. Click-and-type on the cell. TAB cycles title → body → subtask → status. Dock places (`MOVE`, `GLYPH`) and searches (`FIND`); it does not create projects or tasks. Legend rail above it toggles GRAIN / SCAN / INV. Never a second input.
+5. In-organ SHOVEL / status puts a node on the binder. `[+]` adds a child. CLIP-copy is dead.
+6. Salt organs SEAL / SKULL / CAL are PLACE-able, not identity. CAL is a month window, not month-as-OS home.
 
-HARD VETO: DateBlocks cards, jagged day cards, SaaS kanban cards, amber theme, JSON-as-database, second prompt, cobalt lash.
+HARD VETO: DateBlocks cards, jagged day cards, SaaS kanban cards, amber theme, JSON-as-database, second prompt, cobalt lash, dump-parser dock, coincident PIPE|NEST fold as OS chrome.
 Do not revive beige cassette as the OS identity, month-as-OS as home, todo nest, or a Tailwind binder.

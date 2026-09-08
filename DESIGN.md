@@ -1,6 +1,6 @@
 ---
 name: VAULT WORLDWIDE
-description: Local-first personal OS field on a paper sheet — one work graph, two lenses, salt organs, operator dock.
+description: Local-first personal OS field on a paper sheet — four tools, one graph, salt organs, command field.
 colors:
   paper: "#F4F4F0"
   field: "#000000"
@@ -11,9 +11,9 @@ colors:
 typography:
   work:
     fontFamily: "Helvetica Neue, Helvetica, Arial, sans-serif"
-    fontSize: "16px"
+    fontSize: "18px"
     fontWeight: 400
-    lineHeight: "26px"
+    lineHeight: "32px"
     letterSpacing: "normal"
   plaque:
     fontFamily: "Oswald, Helvetica Neue, Helvetica, Arial, sans-serif"
@@ -42,7 +42,7 @@ typography:
 rounded:
   none: "0px"
 spacing:
-  row: "26px"
+  row: "32px"
   chrome-head: "44px"
   chrome-ticks: "12px"
   organ-gap: "16px"
@@ -60,14 +60,14 @@ components:
     textColor: "{colors.white}"
     typography: "{typography.work}"
     rounded: "{rounded.none}"
-    height: "24px"
+    height: "30px"
     padding: "0 6px"
   field-editor:
     backgroundColor: "{colors.power}"
     textColor: "{colors.white}"
     typography: "{typography.work}"
     rounded: "{rounded.none}"
-    height: "24px"
+    height: "30px"
     padding: "0 6px"
   dock-caret:
     backgroundColor: "{colors.field}"
@@ -86,7 +86,7 @@ components:
 
 ## Overview
 
-VAULT is a composed desktop field on an office sheet, not a dashboard. Default ground is paper `#F4F4F0` (`INV`). Organs are black 1px windows: filled title bar, Oswald plaque, `[x] ···`, tick ruler, octagon counters, scanlines. One work graph. NEST is the tree; PIPE is the same nodes by status (FOCUS | GATEWAY). Power red is the only accent. Grain and scan are SPECK plus one material overlay. The dock is an operator under a read-only legend rail. Titles are typed in a native input over the active cell. Salt organs SEAL, SKULL, and CAL sit where `PLACE` says. Home is PIPE / NEST.
+VAULT is a composed desktop field on an office sheet, not a dashboard. Default ground is paper `#F4F4F0` (`INV`). Organs are black 1px windows: filled title bar, Oswald plaque, `[x] ···`, tick ruler, octagon counters, scanlines. SPECK paints placement; it is not a DOS REPL. Four tools: typographic PIPE manager, unix NEST directory (own window), DUMP scratchpad, command field. One work graph. Power red is the only accent. Grain and scan are SPECK plus one material overlay. Titles are typed in a native input over the active cell. Salt organs SEAL, SKULL, and CAL sit where `PLACE` says.
 
 ## Colors
 
@@ -102,11 +102,11 @@ No second accent. Strike and URGENT are power red. Cobalt is not in the system. 
 
 ## Typography
 
-Oswald 700 for plaques and free `GLYPH` stamps (self-hosted woff2). Helvetica Neue / Helvetica / Arial for binder, nest, dump, dock, and `[x] ···`. Work 16px / row 26. Plaques 32px / title bar 44. Legends 11px tracked. Dock 18px. Uppercase for plaques, column legends, status ticks, legend rail. No JetBrains, Space Grotesk, Inter, VT323, or pixel novelty faces on titles.
+Oswald 700 for plaques, project names, and free `GLYPH` stamps (self-hosted woff2). Helvetica Neue / Helvetica / Arial for manager titles, nest, dump, dock, and `[x] ···`. Manager work 18–22px / row 32. Nest directory 16px / row 26. Plaques 32px / title bar 44. Legends 11px tracked. Dock 18px. Uppercase for plaques, column legends, status ticks, legend rail. No JetBrains, Space Grotesk, Inter, VT323, or pixel novelty faces on titles.
 
 ## Layout
 
-Desktop field. Organs sit at SPECK `PLACE` origins and may overlap. PIPE is a split page: FOCUS left, GATEWAY right, double power-red spine with a scanline meter. Empty ledger rows stay (6 minimum per column) and create. HIT a binder node expands in place and everything below moves down. NEST is a unix tree. DUMP is a short tape. CAL is a 7-across month inside a window. SEAL and SKULL are small theatre windows. Legend rail 22px + operator, locked to the viewport bottom. Cell editor is positioned on the compiled hit box of the active slot. Paper registration ticks sit on the sheet; a dashed register runs through the binder spine.
+Desktop field. Organs sit at SPECK `PLACE` origins and may overlap. PIPE is a split page: FOCUS left, GATEWAY right, double power-red spine with a scanline meter. Empty rows stay (6 minimum per column) and create. HIT a manager node expands in place and everything below moves down. NEST is a unix directory in its own window. DUMP is a mixed scratchpad (txt live; link/pic/file ghosts). CAL is a 7-across month inside a window. SEAL and SKULL are small theatre windows. Legend rail 22px + command field, locked to the viewport bottom. Cell editor is positioned on the compiled hit box of the active slot. Paper registration ticks sit on the sheet; a dashed register runs through the binder spine.
 
 ## Elevation & Depth
 
@@ -119,18 +119,19 @@ Radius 0 everywhere, including native inputs. Selection is a rectangular CHIP th
 ## Components
 
 - **Organ window** — Oswald `PIPE // vault` plaque, tick ruler, octagon count, `···`, `[x]` (collapses that organ).
-- **Project plaque** — tracked uppercase parent title above a group of binder rows.
-- **Row** — `[ ]` / `[X]`, `#id`, title, shovel `->`. Done rows take a power-red strike. Live row: CHIP + OVAL.
-- **Expand** — body line, child checklist, `+ subtask`, status words with the live status in power red.
-- **Nest row** — fold `[-]`/`[+]`, stem prefix, title, `[+]` add. Live row inverts + oval.
+- **Project plaque** — Oswald parent title above a group of manager rows.
+- **Row** — title, shovel `->`. No `#id`, no checkbox ledger. Done rows take a power-red strike. Live row: CHIP + OVAL. Find matches shout in power red.
+- **Expand** — body as a line of type, child titles, `+ subtask`, status words with the live status in power red.
+- **Nest row** — fold `[-]`/`[+]`, stem prefix, title, `[+]` add, shovel `->`. Live row inverts + oval.
+- **Dump** — date + txt notes; ghost `_ LINK` `_ PIC` `_ FILE` slots.
 - **Field editor** — native `<input>` over the cell, power-red fill, white type. TAB: title → body → subtask → status.
 - **Legend rail** — `GRAIN SCAN INV OVAL · PIPE NEST DUMP SEAL SKULL CAL · FOCUS`. HIT material words toggle source. Not an input.
-- **Dock** — `>` caret, underline, `↵`. Echo line between legend and operator when the machine speaks.
+- **Dock** — `>` caret, underline, `↵`. Echo line between legend and command field when the machine speaks.
 - **CAL** — month digits, power-red underline on DUMP dates, drop list on HIT.
 - **SEAL / SKULL** — wireframe globe + stencil mark; pixel skull. Drag and `[x]` only.
 
 ## Do's and Don'ts
 
-**Do:** say new features in SPECK; keep one graph and two lenses; click-and-type in the cell; dump from the dock; shovel onto the binder; restamp office-sheet ticks, pixel-GUI chrome, and IMP plaques onto paper / black / power red; pare grain/scan with legend HIT.
+**Do:** say new features in SPECK; keep one graph and two looks (manager + directory); click-and-type in the cell; place and search from the dock; shovel onto the binder in-organ; restamp office-sheet ticks, pixel-GUI chrome, and IMP plaques onto paper / black / power red; pare grain/scan with legend HIT.
 
-**Don't:** DateBlocks cards, rounded corners, shadows, cobalt, harvest amber, CLIP-copy, overlay CHIP dossiers, month-as-OS as home, beige UN as identity, kanban boards, a second dock input, Win95 gray, 3D knobs, or novelty pixel fonts on titles.
+**Don't:** DateBlocks cards, rounded corners, shadows, cobalt, harvest amber, CLIP-copy, overlay CHIP dossiers, month-as-OS as home, beige UN as identity, kanban boards, a second dock input, dump-parser dock, `#id` checkbox ledgers, PIPE|NEST fold ticks, Win95 gray, 3D knobs, or novelty pixel fonts on titles.
