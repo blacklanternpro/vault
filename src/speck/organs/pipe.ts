@@ -1,5 +1,5 @@
-import type { EditBox, HitBox, Measure, Op, Session } from '../ir'
-import { byId, childrenOf, placeOf, plaqueOf, type Doc, type GraphNode } from '../doc'
+import type { EditBox, HitBox, Measure, Op, Session, WorkCompile } from '../ir'
+import { byId, childrenOf, hitchNotes, placeOf, plaqueOf, type Doc, type GraphNode } from '../doc'
 import { CHROME_PAD, liveOval, paintChrome, type Buf } from './chrome'
 import { COL_ORDER, PAPER, POWER, RULE, WHITE, fontHelv, isBinderStatus } from '../tokens'
 
@@ -42,6 +42,19 @@ function grouped(doc: Doc, nodes: GraphNode[]): { plaque: GraphNode | null; node
     const last = out[out.length - 1]
     if (last && last.plaque?.id === plaque?.id) last.nodes.push(node)
     else out.push({ plaque, nodes: [node] })
+  }
+  return out
+}
+
+export function pipeFrame(doc: Doc, fieldW: number): { x: number; y: number; w: number } {
+  const origin = placeOf(doc, 'PIPE')
+  return { x: origin.x, y: origin.y, w: Math.max(560, Math.min(fieldW - origin.x - 16, 980)) }
+}
+
+export function visibleBinderIds(doc: Doc, focus: number | null): number[] {
+  const out: number[] = []
+  for (const col of COL_ORDER) {
+    for (const n of tasksIn(doc, col, focus)) out.push(n.id)
   }
   return out
 }
@@ -244,7 +257,7 @@ function compileExpand(
     op: 'GLYPH',
     x: x + 18,
     y: rowY + MID,
-    text: body || 'body _',
+    text: `body ........ ${body || '_'}`,
     color: body ? PAPER : RULE,
     font: FONT_SM,
     baseline: 'middle',
@@ -318,25 +331,41 @@ function compileExpand(
   for (const st of ['none', ...COL_ORDER]) {
     const live = task.status === st
     const label = st.toUpperCase()
-    buf.ops.push({
-      op: 'GLYPH',
-      x: sx,
-      y: rowY + MID,
-      text: label,
-      color: live ? POWER : RULE,
-      font: FONT_SM,
-      baseline: 'middle',
-    })
+    const tw = label.length * 7 + 12
+    if (live) {
+      buf.ops.push({
+        op: 'CHIP',
+        x: sx,
+        y: rowY,
+        w: tw,
+        h: PIPE_ROW_H - 2,
+        text: label,
+        fg: WHITE,
+        bg: POWER,
+        font: FONT_SM,
+        padX: 4,
+      })
+    } else {
+      buf.ops.push({
+        op: 'GLYPH',
+        x: sx + 4,
+        y: rowY + MID,
+        text: label,
+        color: RULE,
+        font: FONT_SM,
+        baseline: 'middle',
+      })
+    }
     buf.hits.push({
       kind: 'STATUS',
       x: sx - 2,
       y: rowY,
-      w: label.length * 7 + 8,
+      w: tw,
       h: PIPE_ROW_H,
       z: 16,
       payload: `${task.id}:${st}`,
     })
-    sx += label.length * 7 + 12
+    sx += tw + 8
   }
   buf.hits.push({
     kind: 'SLOT',
@@ -349,6 +378,19 @@ function compileExpand(
   })
   setEdit(edit, session, task.id, 'status', x + 10, rowY, w - 20, task.status, 'status')
   rowY += PIPE_ROW_H
+
+  for (const note of hitchNotes(doc, task.id)) {
+    buf.ops.push({
+      op: 'GLYPH',
+      x: x + 18,
+      y: rowY + MID,
+      text: `${note.date} · ${note.text}`,
+      color: POWER,
+      font: FONT_SM,
+      baseline: 'middle',
+    })
+    rowY += PIPE_ROW_H
+  }
   return rowY
 }
 
@@ -358,14 +400,16 @@ export function compilePipe(
   measure: Measure,
   fieldW: number,
   edit: { box: EditBox | null },
+  opts?: WorkCompile,
 ): { ops: Op[]; hits: HitBox[]; x: number; y: number; w: number; h: number } {
-  const origin = placeOf(doc, 'PIPE')
-  const x = origin.x
-  const y = origin.y
-  const w = Math.max(560, Math.min(fieldW - x - 16, 980))
+  const frame = pipeFrame(doc, fieldW)
+  const x = opts?.host?.x ?? frame.x
+  const y = opts?.host?.y ?? frame.y
+  const w = opts?.host?.w ?? frame.w
+  if (opts?.skip) return { ops: [], hits: [], x, y, w, h: 0 }
   const spineW = 42
   const pageW = (w - spineW) / 2
-  const collapsed = session.collapsed.includes('PIPE')
+  const collapsed = session.collapsed.includes('PIPE') || (opts?.folded === true && session.collapsed.includes('NEST'))
   const buf: Buf = { ops: [], hits: [] }
   const open = binderNodesCount(doc, session.nestFocus)
   const live = session.lens === 'pipe' || session.selected?.kind === 'PIPE' || session.selected?.kind === 'NODE'
@@ -378,6 +422,12 @@ export function compilePipe(
     count: open,
     live,
     scan: doc.scan,
+    lenses: opts?.ticks
+      ? [
+          { id: 'PIPE' as const, live: session.lens !== 'nest' },
+          { id: 'NEST' as const, live: session.lens === 'nest' },
+        ]
+      : undefined,
   }
 
   if (collapsed) {

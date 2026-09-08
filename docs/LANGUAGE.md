@@ -98,9 +98,9 @@ The dock is locked to the viewport bottom. A **legend rail** sits above the oper
 **VAULT instance (SPECK machine — composed desktop field):**
 
 1. **One graph.** Every node: `id`, `title`, `body?`, `status` (`backlog|active|staging|done|none`), `parent`, ordered children, `urgent?`. Projects are nodes with children. Tasks appear on PIPE when status is a binder column.
-2. **PIPE** — a *view* of binder-status nodes, grouped under project plaques. Left page FOCUS (`backlog` / `active`). Right page GATEWAY (`staging` / `done`). ASCII spine, scanline meter, ring hits. Empty ledger rows stay and **create**. HIT expands in place (body, subtasks, status ticks); everything below **moves down**. Shovel (`->` or `SHOVEL`) advances status. Nest project selection filters the binder to that subtree. Not kanban cards. Not overlay chips.
-3. **NEST** — the same graph as a unix tree. Expand/collapse. Click name to rename. `[+]` or empty child slot adds. Indent/outdent. `SHOVEL` puts a node on the binder. CLIP-copy is dead.
-4. **DUMP** — scratch tape. `NOTE MM.DD.YY "…"`. Not the work graph.
+2. **PIPE** — a *view* of binder-status nodes, grouped under project plaques. Left page FOCUS (`backlog` / `active`). Right page GATEWAY (`staging` / `done`). ASCII spine, scanline meter, ring hits. Empty ledger rows stay and **create**. HIT expands in place (body leaders, subtasks, status CHIP); hitch `NOTE`s for that node list in the expand. Everything below **moves down**. Shovel (`->` or `SHOVEL`) advances status. Nest project selection filters the binder to that subtree. Not kanban cards. Not overlay chips.
+3. **NEST** — the same graph as a unix tree. Expand/collapse. Click name to rename. `[+]` or empty child slot adds. Indent/outdent. `SHOVEL` puts a node on the binder. CLIP-copy is dead. If `PLACE NEST` equals `PLACE PIPE`, NEST is a **fold** of the same chrome (ticks `PIPE | NEST`), not a second window.
+4. **DUMP** — scratch tape. `NOTE MM.DD.YY "…"`. Optional hitch: `NOTE MM.DD.YY NODE 102 "…"`. Not the work graph.
 5. **PLACE / GLYPH** — organs sit where source says. Window chrome: title bar, Oswald plaque, `[x] ···`, tick ruler, octagon counts. Drag the plaque to rewrite `PLACE`. Dither is salt.
 6. **Salt organs** — `SEAL` (wireframe globe), `SKULL` (pixel skull), `CAL` (month digits in a window, 7-across, no weekday offset). PLACE-able, `[x]`-collapsible. None is identity. Home remains PIPE / NEST. CAL underlines days that have DUMP notes. HIT a day lists those notes in the window.
 7. **Dock** — legend rail + ONE one-line **operator**. Legend HIT toggles `GRAIN` / `SCAN` / `INV`. Operator: commands or a dump line. Never three forms. Never CTX chips in a header.
@@ -182,7 +182,7 @@ NEST
 DUMP
   NOTE 09.07.26 "ridge"
 PLACE PIPE 24 48
-PLACE NEST 24 540
+PLACE NEST 24 48
 PLACE DUMP 560 540
 PLACE SEAL 900 48
 PLACE SKULL 900 280
@@ -213,7 +213,7 @@ These name the field. They compile to paint ops. Do not add a noun unless the fi
 | `NODE` | a graph node: `id`, title, `status`, indent = parent |
 | `BODY` | optional body on the current node |
 | `DUMP` | scratch tape |
-| `NOTE` | a dump line |
+| `NOTE` | a dump line. Optional hitch: `NOTE 09.07.26 NODE 102 "…"` |
 | `PLACE` | organ origin `x y` |
 | `GLYPH` | free field ink `x y px "text"` |
 | `DOCK` | the operator (always compiled) plus a read-only legend rail |
@@ -259,6 +259,7 @@ Pointer and keys are SPECK. The host does not own behavior; it forwards.
 HIT NODE 102
 HIT ADD 20
 HIT SHOVEL 102
+HIT LENS NEST
 HIT FIELD
 SHOVEL
 FOCUS
@@ -269,14 +270,14 @@ SEE
 WORDS
 ```
 
-HIT a binder node to expand it in place and edit. HIT empty field / Esc to collapse. HIT a CAL day to list DUMP notes for that date. Never three forms. Never CTX chips in a header.
+HIT a binder node to expand it in place and edit. HIT empty field / Esc to collapse. HIT a CAL day to list DUMP notes for that date. HIT `LENS PIPE` / `LENS NEST` folds the work chrome when origins coincide. Never three forms. Never CTX chips in a header.
 
 ### 7.5 Dock operator
 
 The Prompt Dock is the **operator**. One line. Titles are typed in the field editor.
 
 - If the line **parses as a command** (`SEE`, `WORDS`, `CLEAR`, `HIT`, `COMMIT`, `SHOVEL`, `FOCUS`, `MOVE`, `STRIKE`): execute it.
-- Else it is a **dump**. Cue `new … project` / `create project` → project node; next clause is the title (do not auto-abbreviate); remaining clauses (commas / `need to` / `and`) → child tasks at `backlog`. Bare dumps → tasks under the focused project, or inbox. Ambiguous parse echoes `?` plus the guessed tree; empty Enter confirms.
+- Else it is a **dump**. Cue `new … project` / `create project` → project node; next clause is the title (do not auto-abbreviate); remaining clauses (commas / `need to` / `and`) → child tasks at `backlog`. The new project is `FOCUS`ed and the lens stays **PIPE** so backlog rows land on the spread. Bare dumps → tasks under the focused project, or inbox. Ambiguous parse echoes `?` plus the guessed tree; empty Enter confirms.
 - Empty commit is a no-op unless a pending dump is waiting.
 
 Examples: `SEE` · `WORDS` · `SHOVEL` · `FOCUS` · `new website project, site redesign of homepage, need to assess aesthetic, create repo`

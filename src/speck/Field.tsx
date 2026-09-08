@@ -170,9 +170,10 @@ export function Field() {
 
     const onWinKey = (e: globalThis.KeyboardEvent) => {
       if (sessionRef.current.field) return
-      const keys = ['Escape', 'Tab', ' ', '[', ']', 'ArrowLeft', 'ArrowRight']
+      if (document.activeElement === inputRef.current && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) return
+      const keys = ['Escape', 'Tab', ' ', '[', ']', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown']
       if (!keys.includes(e.key)) return
-      if (e.key === 'Tab' || e.key === ' ') e.preventDefault()
+      if (e.key === 'Tab' || e.key === ' ' || e.key === 'ArrowUp' || e.key === 'ArrowDown') e.preventDefault()
       const result = applyKey(e.key, e.shiftKey, sessionRef.current, sourceRef.current)
       setSession(result.session)
       setSource(result.source)

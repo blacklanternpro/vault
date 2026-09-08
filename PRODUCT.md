@@ -30,11 +30,11 @@ web
 **In (locked):**
 
 - Unified graph: `id`, `title`, `body?`, `status` (`backlog|active|staging|done|none`), `parent`, ordered children, `urgent?`.
-- PIPE view: binder columns FOCUS (backlog / active) | GATEWAY (staging / done). Project plaques. In-place expand (rows reflow). Empty ledger lines create. Nest project selection filters the binder.
-- NEST view: unix tree, expand/collapse, click-create/rename, indent/outdent, `[+]` adds a child. SHOVEL / status puts a node on the binder. CLIP-copy is dead.
+- PIPE view: binder columns FOCUS (backlog / active) | GATEWAY (staging / done). Project plaques. In-place expand (rows reflow, body leaders, status CHIP, hitch notes). Empty ledger lines create. Nest project selection filters the binder. Arrow Up/Down moves selection.
+- NEST view: unix tree, expand/collapse, click-create/rename, indent/outdent, `[+]` adds a child. SHOVEL / status puts a node on the binder. CLIP-copy is dead. Coincident `PLACE PIPE` + `PLACE NEST` folds both into one chrome with `PIPE | NEST` ticks.
 - Field editor: native input over the active cell. TAB cycles `title → body → new subtask → status`. Space shovels / checks. Esc collapses.
-- Dock: operator plus a read-only legend rail. Commands or a dump line (`new … project, title, need to …`). Legend HIT toggles `GRAIN` / `SCAN` / `INV`.
-- Organs sit where `PLACE` says. `GLYPH` is free ink. Salt organs: `SEAL`, `SKULL`, `CAL` (month digits in a window; DUMP notes underline days). Organ `[x]` collapses that organ, not the app.
+- Dock: operator plus a read-only legend rail. Commands or a dump line (`new … project, title, need to …`). Project dump lands on PIPE with that project focused. Legend HIT toggles `GRAIN` / `SCAN` / `INV`.
+- Organs sit where `PLACE` says. `GLYPH` is free ink. Salt organs: `SEAL`, `SKULL`, `CAL` (month digits in a window; DUMP notes underline days). Hitch: `NOTE MM.DD.YY NODE id "…"`. Organ `[x]` collapses that organ, not the app. Folded work `[x]` collapses the pair.
 
 **Out (YAGNI / veto):** assignees, estimates, CRDT, PWA, harvest amber, cobalt lash, 3D knobs, second dock **input**, DateBlocks cards, month-as-OS as home, kanban cards, SaaS stacks. Calendar/globe/skull are in as salt organs, not as identity.
 

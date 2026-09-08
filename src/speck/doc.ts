@@ -14,6 +14,7 @@ export type GraphNode = {
 export type Note = {
   date: string
   text: string
+  node?: number
 }
 
 export type Place = {
@@ -43,7 +44,7 @@ export type Doc = {
 
 export const DEFAULT_PLACES: Place[] = [
   { organ: 'PIPE', x: 24, y: 48 },
-  { organ: 'NEST', x: 24, y: 540 },
+  { organ: 'NEST', x: 24, y: 48 },
   { organ: 'DUMP', x: 560, y: 540 },
   { organ: 'SEAL', x: 900, y: 48 },
   { organ: 'SKULL', x: 900, y: 280 },
@@ -72,7 +73,7 @@ NEST
 DUMP
   NOTE 09.07.26 "ridge"
 PLACE PIPE 24 48
-PLACE NEST 24 540
+PLACE NEST 24 48
 PLACE DUMP 560 540
 PLACE SEAL 900 48
 PLACE SKULL 900 280
@@ -336,7 +337,12 @@ export function parseDoc(src: string): Doc {
       const dateTok = line.toks[1]
       const date = dateTok?.t === 'DATE' ? dateTok.v : ''
       const text = strOf(line.toks)
-      if (text) doc.notes.push({ date, text })
+      let node: number | undefined
+      for (let i = 0; i < line.toks.length; i++) {
+        const nxt = line.toks[i + 1]
+        if (word(line.toks[i]) === 'NODE' && nxt?.t === 'NUM') node = nxt.v
+      }
+      if (text) doc.notes.push(node != null ? { date, text, node } : { date, text })
     }
   }
   if (doc.cols.length === 0) doc.cols = [...COL_ORDER]
@@ -366,12 +372,25 @@ export function serializeDoc(doc: Doc): string {
   lines.push('NEST')
   writeTree(doc, null, 1, lines)
   lines.push('DUMP')
-  for (const n of doc.notes) lines.push(`  NOTE ${n.date} ${quote(n.text)}`)
+  for (const n of doc.notes) {
+    const hitch = n.node != null ? ` NODE ${n.node}` : ''
+    lines.push(`  NOTE ${n.date}${hitch} ${quote(n.text)}`)
+  }
   for (const p of doc.places) lines.push(`PLACE ${p.organ} ${Math.round(p.x)} ${Math.round(p.y)}`)
   for (const g of doc.glyphs) {
     lines.push(`GLYPH ${Math.round(g.x)} ${Math.round(g.y)} ${Math.round(g.px)} ${quote(g.text)}`)
   }
   return lines.join('\n')
+}
+
+export function hitchNotes(doc: Doc, id: number): Note[] {
+  return doc.notes.filter((n) => n.node === id)
+}
+
+export function workFolded(doc: Doc): boolean {
+  const pipe = placeOf(doc, 'PIPE')
+  const nest = placeOf(doc, 'NEST')
+  return pipe.x === nest.x && pipe.y === nest.y
 }
 
 export function placeOf(doc: Doc, organ: OrganName): Place {
