@@ -31,7 +31,7 @@ NEST
     NODE 104 "ingress routing" status backlog
 ```
 
-Dock: `FIND telemetry` · `MOVE NEST 24 560` · `GLYPH 100 80 32 "MARK"` · `NOTE ridge` · `CLEAR`.
+Dock: `FIND telemetry` · `MOVE NEST 24 660` · `GLYPH 100 80 32 "MARK"` · `NOTE ridge` · `CLEAR`.
 
 ## Development
 

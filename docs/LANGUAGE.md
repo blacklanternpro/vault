@@ -184,7 +184,7 @@ NEST
 DUMP
   NOTE 09.07.26 "ridge"
 PLACE PIPE 24 48
-PLACE NEST 24 560
+PLACE NEST 24 660
 PLACE DUMP 560 540
 PLACE SEAL 900 48
 PLACE SKULL 900 280
@@ -283,7 +283,7 @@ The Prompt Dock is the **command field**. One line. Titles are typed in the fiel
 - Else a bare line is search, never a project tree.
 - Empty commit is a no-op.
 
-Examples: `FIND telemetry` · `MOVE NEST 24 560` · `GLYPH 100 80 32 "MARK"` · `NOTE ridge` · `CLEAR`
+Examples: `FIND telemetry` · `MOVE NEST 24 660` · `GLYPH 100 80 32 "MARK"` · `NOTE ridge` · `CLEAR`
 
 ### 7.6 Runtime contract
 

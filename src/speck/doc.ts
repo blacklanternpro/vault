@@ -44,7 +44,7 @@ export type Doc = {
 
 export const DEFAULT_PLACES: Place[] = [
   { organ: 'PIPE', x: 24, y: 48 },
-  { organ: 'NEST', x: 24, y: 560 },
+  { organ: 'NEST', x: 24, y: 660 },
   { organ: 'DUMP', x: 560, y: 540 },
   { organ: 'SEAL', x: 900, y: 48 },
   { organ: 'SKULL', x: 900, y: 280 },
@@ -73,7 +73,7 @@ NEST
 DUMP
   NOTE 09.07.26 "ridge"
 PLACE PIPE 24 48
-PLACE NEST 24 560
+PLACE NEST 24 660
 PLACE DUMP 560 540
 PLACE SEAL 900 48
 PLACE SKULL 900 280
