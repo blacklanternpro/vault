@@ -31,8 +31,7 @@ export function Directory({
 }: Props) {
   const rows = nestRows(doc, session)
   const selectedId = session.selected?.kind === 'NODE' ? session.selected.id : null
-  const addParent =
-    selectedId != null ? selectedId : session.nestFocus != null ? session.nestFocus : null
+  const addParent = selectedId != null ? selectedId : session.nestFocus != null ? session.nestFocus : null
 
   function onPane(e: MouseEvent<HTMLElement>) {
     if (e.target === e.currentTarget) onClearFocus()
@@ -47,30 +46,26 @@ export function Directory({
         const editing = session.field?.id === id && session.field.slot === 'title'
         const found = matchesFind(session, row.node.title)
         const closed = session.nestClosed.includes(id)
+        const stem = `${row.prefix}${closed && kids.length ? '+ ' : ''}`
         return (
           <div
             key={id}
             className={`dir-row${selected ? ' is-selected' : ''}${found ? ' is-found' : ''}${row.node.urgent ? ' is-urgent' : ''}`}
             data-node-id={id}
           >
-            {kids.length ? (
-              <button
-                type="button"
-                className="dir-fold"
-                aria-label={closed ? 'Expand' : 'Collapse'}
-                onClick={(e) => {
-                  e.stopPropagation()
-                  onToggle(id)
-                }}
-              >
-                {closed ? '+' : '−'}
-              </button>
-            ) : (
-              <span className="dir-fold is-leaf" />
-            )}
-            <span className="dir-stem" aria-hidden>
-              {row.prefix || (row.depth === 0 ? '' : '')}
-            </span>
+            <button
+              type="button"
+              className={`dir-stem${kids.length ? ' is-fold' : ''}`}
+              aria-hidden={!kids.length && !stem}
+              aria-label={kids.length ? (closed ? 'Expand' : 'Collapse') : undefined}
+              tabIndex={kids.length ? 0 : -1}
+              onClick={(e) => {
+                e.stopPropagation()
+                if (kids.length) onToggle(id)
+              }}
+            >
+              {stem}
+            </button>
             {editing ? (
               <input
                 className="dir-input"
@@ -123,8 +118,7 @@ export function Directory({
           onAdd(addParent)
         }}
       >
-        {rows.length ? '    └── ' : ''}
-        _
+        {rows.length ? '└── _' : '_'}
       </button>
     </section>
   )

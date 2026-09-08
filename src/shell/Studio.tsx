@@ -24,7 +24,6 @@ export function Studio() {
   const [source, setSource] = useState(loadSource)
   const sessionRef = useRef(session)
   const sourceRef = useRef(source)
-  const hostRef = useRef<HTMLDivElement>(null)
   sessionRef.current = session
   sourceRef.current = source
 
@@ -35,8 +34,15 @@ export function Studio() {
   }, [source])
 
   function apply(result: Result) {
+    sessionRef.current = result.session
+    sourceRef.current = result.source
     setSession(result.session)
     setSource(result.source)
+  }
+
+  function setLive(next: Session) {
+    sessionRef.current = next
+    setSession(next)
   }
 
   useEffect(() => {
@@ -94,12 +100,26 @@ export function Studio() {
     )
   }
 
+  function commitTitle() {
+    const r = commitFieldLine(sessionRef.current, sourceRef.current)
+    apply({
+      session: {
+        ...r.session,
+        field: null,
+        fieldBuffer: '',
+        draftId: null,
+      },
+      source: r.source,
+    })
+  }
+
   function onFindChange(value: string) {
-    const noting = session.lens === 'dump' || session.selected?.kind === 'NOTE' || session.selected?.kind === 'DUMP'
-    setSession({
-      ...session,
+    const cur = sessionRef.current
+    const noting = cur.lens === 'dump' || cur.selected?.kind === 'NOTE' || cur.selected?.kind === 'DUMP'
+    setLive({
+      ...cur,
       buffer: value,
-      find: noting ? session.find : value.trim() || null,
+      find: noting ? cur.find : value.trim() || null,
       echo: null,
     })
   }
@@ -109,15 +129,15 @@ export function Studio() {
   }
 
   function onFindFocus() {
-    setSession({
-      ...session,
+    setLive({
+      ...sessionRef.current,
       lens: 'pipe',
       echo: null,
     })
   }
 
   return (
-    <div className="studio" ref={hostRef} data-testid="studio">
+    <div className="studio" data-testid="studio">
       <div className="studio-main">
         <Manager
           doc={doc}
@@ -126,8 +146,8 @@ export function Studio() {
           onFocus={(id) => apply(commitLine(`FOCUS ${id}`, sessionRef.current, sourceRef.current))}
           onRename={(id) => hit('SLOT', `${id}:title`)}
           onCreate={(status: ColName) => hit('EMPTY', status)}
-          onTitle={(value) => setSession(typeField(session, value))}
-          onTitleCommit={() => apply(commitFieldLine(sessionRef.current, sourceRef.current))}
+          onTitle={(value) => setLive(typeField(sessionRef.current, value))}
+          onTitleCommit={commitTitle}
         />
         <Directory
           doc={doc}
@@ -138,8 +158,8 @@ export function Studio() {
           onAdd={(parent) => hit('ADD', parent ?? 0)}
           onShovel={(id) => hit('SHOVEL', id)}
           onClearFocus={() => apply(commitLine('FOCUS _', sessionRef.current, sourceRef.current))}
-          onTitle={(value) => setSession(typeField(session, value))}
-          onTitleCommit={() => apply(commitFieldLine(sessionRef.current, sourceRef.current))}
+          onTitle={(value) => setLive(typeField(sessionRef.current, value))}
+          onTitleCommit={commitTitle}
         />
       </div>
       <Scratch
@@ -149,8 +169,8 @@ export function Studio() {
         onFindSubmit={onFindSubmit}
         onFindFocus={onFindFocus}
         onNoteFocus={(index) =>
-          setSession({
-            ...session,
+          setLive({
+            ...sessionRef.current,
             selected: { kind: 'NOTE', index },
             lens: 'dump',
             echo: null,

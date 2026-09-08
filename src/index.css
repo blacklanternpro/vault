@@ -173,38 +173,33 @@
   overflow: auto;
   padding: 16px 22px 28px;
   border-top: 1px solid var(--color-hair);
-  font-size: 13.5px;
+  font-size: 13px;
   line-height: 22px;
 }
 
 .dir-row {
   display: grid;
-  grid-template-columns: 14px max-content minmax(0, 1fr) 18px;
+  grid-template-columns: max-content minmax(0, 1fr) 18px;
   align-items: center;
   gap: 0 2px;
   min-height: 22px;
 }
 
-.dir-fold {
-  width: 14px;
-  height: 18px;
+.dir-stem {
+  margin: 0;
   padding: 0;
   border: 0;
   background: transparent;
   color: var(--color-muted);
-  font-size: 11px;
-  line-height: 18px;
-  cursor: pointer;
-}
-
-.dir-fold.is-leaf {
-  display: block;
-}
-
-.dir-stem {
-  color: var(--color-muted);
   white-space: pre;
   font-size: 13px;
+  line-height: 22px;
+  text-align: left;
+  font-variant-ligatures: none;
+}
+
+.dir-stem.is-fold {
+  cursor: pointer;
 }
 
 .dir-name {
@@ -215,7 +210,7 @@
   border: 0;
   background: transparent;
   color: var(--color-ink);
-  font-size: 13.5px;
+  font-size: 13px;
   line-height: 20px;
   text-align: left;
   cursor: text;
@@ -247,7 +242,7 @@
   border: 0;
   background: var(--color-mark);
   color: var(--color-mark-ink);
-  font-size: 13.5px;
+  font-size: 13px;
   line-height: 20px;
   outline: none;
   caret-color: var(--color-mark-ink);
@@ -274,11 +269,11 @@
 .dir-ghost {
   display: block;
   margin: 2px 0 0;
-  padding: 1px 0 1px 16px;
+  padding: 1px 0;
   border: 0;
   background: transparent;
   color: var(--color-hair);
-  font-size: 13.5px;
+  font-size: 13px;
   line-height: 22px;
   text-align: left;
   cursor: text;
@@ -356,7 +351,7 @@
 
 .scratch-date {
   margin: 0 0 6px;
-  font-size: 10px;
+  font-size: 11px;
   letter-spacing: 0.06em;
   color: var(--color-muted);
 }
@@ -370,7 +365,7 @@
   resize: none;
   background: transparent;
   color: var(--color-ink);
-  font-size: 13.5px;
+  font-size: 13px;
   line-height: 1.45;
   outline: none;
   caret-color: var(--color-mark);

@@ -117,7 +117,7 @@ export function Scratch({
           id="studio-find"
           className="find-input"
           value={session.buffer}
-          placeholder={noting ? 'txt' : 'title'}
+          placeholder="_"
           autoComplete="off"
           spellCheck={false}
           aria-label={noting ? 'Note' : 'Find'}
