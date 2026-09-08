@@ -4,6 +4,7 @@ import {
   applyHit,
   applyKey,
   applyNoteOrder,
+  commitFieldLine,
   commitLine,
   cycleField,
   freshSession,
@@ -133,11 +134,14 @@ NEST
   if (opsKids[0] !== 104) fail(`reorder siblings ${opsKids.join(',')}`)
 
   const nestedAdd = addNested(freshSession(), seed, 104)
-  const nestDoc = parseDoc(nestedAdd.source)
-  const nestKids = nestedOf(nestDoc, 104)
+  const nestDraft = parseDoc(nestedAdd.source)
+  const nestKids = nestedOf(nestDraft, 104)
   if (nestKids.length !== 1) fail('first nested insert')
-  if (byId(nestDoc, 104)?.status !== 'active') fail('first nested promotes pending')
-  if (nestKids[0]?.status !== 'active') fail('nested inherits active')
+  if (byId(nestDraft, 104)?.status !== 'pending') fail('draft nested stays pending')
+  const named = commitFieldLine({ ...nestedAdd.session, fieldBuffer: 'assess aesthetic' }, nestedAdd.source)
+  const namedDoc = parseDoc(named.source)
+  if (byId(namedDoc, 104)?.status !== 'active') fail('first nested commit promotes pending')
+  if (nestedOf(namedDoc, 104)[0]?.status !== 'active') fail('nested inherits active')
 
   const pulled = pullCard(freshSession(), seed, 11, 'rnd')
   const pulledNode = byId(parseDoc(pulled.source), 11)

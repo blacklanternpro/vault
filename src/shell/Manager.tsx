@@ -1,5 +1,5 @@
 import { useRef, type KeyboardEvent, type PointerEvent, type ReactNode } from 'react'
-import { laneOf, managerCards, nestedOf, projectIdOf, type Doc, type GraphNode } from '../speck/doc'
+import { laneOf, managerCards, nestedOf, projectIdOf, childrenOf, type Doc, type GraphNode } from '../speck/doc'
 import { matchesFind, type Session } from '../speck/ir'
 import { COL_ORDER, LANE_PLAQUE, isBinderStatus, type ColName, type NodeStatus } from '../speck/tokens'
 import { Filament } from './Filament'
@@ -90,6 +90,15 @@ export function Manager({
     else onStage(drag.id, hit.lane, before)
   }
 
+  function beginCardDrag(e: PointerEvent<HTMLElement>, id: number) {
+    if ((e.target as HTMLElement).closest('[data-well],[data-nested-id]')) return
+    beginDrag(e, id, 'card')
+  }
+
+  function showsJack(node: GraphNode) {
+    return Boolean(node.loose) || childrenOf(doc, node.id).some((c) => c.loose)
+  }
+
   function beginDrag(e: PointerEvent<HTMLElement>, id: number, kind: Drag['kind']) {
     if (e.button !== 0) return
     e.currentTarget.setPointerCapture(e.pointerId)
@@ -147,7 +156,10 @@ export function Manager({
           aria-label={label}
           placeholder="_"
           onChange={(e) => onTitle(e.target.value)}
-          onBlur={onTitleCommit}
+          onBlur={() => {
+            if (session.draftId === node.id && !session.fieldBuffer.trim()) return
+            onTitleCommit()
+          }}
           onKeyDown={(e: KeyboardEvent<HTMLInputElement>) => {
             if (e.key === 'Enter') {
               e.preventDefault()
@@ -182,7 +194,9 @@ export function Manager({
           onPointerCancel={finishDrag}
         >
           {titleField(node, 'nested')}
-          <span className="jack" data-jack={node.id} aria-hidden="true" />
+          {showsJack(node) ? <span className="jack" data-jack={node.id} aria-hidden="true" /> : (
+            <span data-jack={node.id} className="jack-anchor" aria-hidden="true" />
+          )}
         </div>
         {nestedTree(node.id, depth + 1)}
       </div>
@@ -221,14 +235,28 @@ export function Manager({
                   key={node.id}
                   className={`card${sat ? ' is-sat' : ' is-job'}${live ? ' is-live' : ''}${found ? ' is-found' : ''}${node.urgent ? ' is-urgent' : ''}${node.status === 'done' || node.status === 'dusted' ? ' is-quiet' : ''}`}
                   data-card-id={node.id}
-                  onPointerDown={(e) => beginDrag(e, node.id, 'card')}
+                  onPointerDown={(e) => beginCardDrag(e, node.id)}
                   onPointerMove={onCardMove}
                   onPointerUp={finishDrag}
                   onPointerCancel={finishDrag}
                 >
-                  <span className="jack" data-jack={node.id} aria-hidden="true" />
+                  {showsJack(node) ? <span className="jack" data-jack={node.id} aria-hidden="true" /> : (
+                    <span data-jack={node.id} className="jack-anchor" aria-hidden="true" />
+                  )}
                   {titleField(node, sat ? 'sat' : 'job')}
-                  <div className="job-well" data-well>
+                  <div
+                    className="job-well"
+                    data-well
+                    onPointerDown={(e) => {
+                      if ((e.target as HTMLElement).closest('[data-nested-id],input')) return
+                      e.stopPropagation()
+                    }}
+                    onClick={(e) => {
+                      if ((e.target as HTMLElement).closest('[data-nested-id],input')) return
+                      e.stopPropagation()
+                      onAddNested(node.id)
+                    }}
+                  >
                     {nestedTree(node.id, 0)}
                     {nested.length === 0 ? <span className="well-ghost">_</span> : null}
                   </div>

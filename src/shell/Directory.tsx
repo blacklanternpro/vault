@@ -1,5 +1,5 @@
 import type { KeyboardEvent, MouseEvent } from 'react'
-import { childrenOf, type Doc } from '../speck/doc'
+import { childrenOf, isBoardVisible, type Doc } from '../speck/doc'
 import { matchesFind, type Session } from '../speck/ir'
 import { nestRows } from '../speck/tree'
 import { Mark } from './Mark'
@@ -43,7 +43,10 @@ export function Directory({
         const id = row.node.id
         const kids = childrenOf(doc, id)
         const selected = selectedId === id
-        const editing = session.field?.id === id && session.field.slot === 'title'
+        const editing =
+          session.field?.id === id &&
+          session.field.slot === 'title' &&
+          !isBoardVisible(doc, session.projectId, id)
         const found = matchesFind(session, row.node.title)
         const closed = session.nestClosed.includes(id)
         const stem = `${row.prefix}${closed && kids.length ? '+ ' : ''}`

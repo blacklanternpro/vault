@@ -178,6 +178,14 @@ export function managerCards(doc: Doc, projectId: number | null = null): GraphNo
   return doc.nodes.filter((n) => wanted.has(n.id))
 }
 
+export function isBoardVisible(doc: Doc, projectId: number | null, id: number): boolean {
+  const cards = managerCards(doc, projectId)
+  if (cards.some((c) => c.id === id)) return true
+  const node = byId(doc, id)
+  if (!node || node.loose) return false
+  return cards.some((c) => inSubtree(doc, c.id, id))
+}
+
 export function moveNodeBefore(doc: Doc, id: number, beforeId: number | null): boolean {
   const from = doc.nodes.findIndex((n) => n.id === id)
   if (from < 0) return false
@@ -535,6 +543,7 @@ export function followNested(doc: Doc, id: number, status: NodeStatus): void {
 export function promotePending(doc: Doc, id: number): void {
   const node = byId(doc, id)
   if (!node || node.status !== 'pending') return
-  if (nestedOf(doc, id).length > 0) return
+  if (nestedOf(doc, id).length === 0) return
   node.status = 'active'
+  followNested(doc, id, 'active')
 }

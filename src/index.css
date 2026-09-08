@@ -351,9 +351,27 @@
   left: -3px;
 }
 
-.nested-row .jack {
-  top: 8px;
-  right: 4px;
+.jack-anchor {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.card.is-job > .jack-anchor {
+  top: 18px;
+  right: 0;
+}
+
+.card.is-sat > .jack-anchor {
+  top: 16px;
+  left: 0;
+}
+
+.nested-row .jack-anchor {
+  top: 10px;
+  right: 8px;
 }
 
 .job-well {

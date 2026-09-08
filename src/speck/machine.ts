@@ -172,9 +172,7 @@ export function addNested(session: Session, source: string, parentId: number): R
   const doc = parseDoc(source)
   const parent = byId(doc, parentId)
   if (!parent) return ok(session, source, '? ADD')
-  promotePending(doc, parentId)
-  const fresh = byId(doc, parentId)
-  const status = fresh && isBinderStatus(fresh.status) ? fresh.status : 'pending'
+  const status = parent && isBinderStatus(parent.status) ? parent.status : 'pending'
   const node = insertNode(doc, { title: '', status, parent: parentId })
   return {
     session: openField(
@@ -281,9 +279,7 @@ function inheritAddStatus(doc: Doc, parent: number | null, status: NodeStatus): 
   const p = byId(doc, parent)
   if (!p) return status
   if (p.parent == null) return isBinderStatus(status) ? status : 'pending'
-  promotePending(doc, parent)
-  const fresh = byId(doc, parent)
-  if (fresh && isBinderStatus(fresh.status)) return fresh.status
+  if (p && isBinderStatus(p.status)) return p.status
   return isBinderStatus(status) ? status : 'pending'
 }
 
@@ -343,6 +339,8 @@ function commitField(session: Session, source: string): Result {
       return ok(collapse(session), serializeDoc(doc))
     }
     setNodeTitle(doc, id, text.trim() || byId(doc, id)?.title || '_')
+    const child = byId(doc, id)
+    if (child?.parent != null && !child.loose) promotePending(doc, child.parent)
     return ok({ ...session, fieldBuffer: byId(parseDoc(serializeDoc(doc)), id)?.title ?? text, draftId: null }, serializeDoc(doc))
   }
   if (slot === 'body') {
@@ -356,6 +354,7 @@ function commitField(session: Session, source: string): Result {
     const parent = byId(doc, id)
     const status = parent && isBinderStatus(parent.status) ? parent.status : 'pending'
     const child = insertNode(doc, { title, status, parent: id })
+    promotePending(doc, id)
     return ok(
       { ...session, fieldBuffer: '', selected: { kind: 'NODE', id: child.id }, pipeOpen: session.pipeOpen ?? id },
       serializeDoc(doc),

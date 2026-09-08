@@ -39,17 +39,24 @@ export function Filament({ doc, projectId, hostRef }: Props) {
   }, [doc, hostRef, projectId])
 
   useLayoutEffect(() => {
-    measure()
+    let raf = 0
+    let t = 0
+    const run = () => measure()
+    run()
+    raf = requestAnimationFrame(run)
+    t = window.setTimeout(run, 50)
     const host = hostRef.current
     if (!host) return
-    const ro = new ResizeObserver(measure)
+    const ro = new ResizeObserver(run)
     ro.observe(host)
-    host.addEventListener('scroll', measure)
-    window.addEventListener('resize', measure)
+    host.addEventListener('scroll', run)
+    window.addEventListener('resize', run)
     return () => {
+      cancelAnimationFrame(raf)
+      window.clearTimeout(t)
       ro.disconnect()
-      host.removeEventListener('scroll', measure)
-      window.removeEventListener('resize', measure)
+      host.removeEventListener('scroll', run)
+      window.removeEventListener('resize', run)
     }
   }, [hostRef, measure])
 
