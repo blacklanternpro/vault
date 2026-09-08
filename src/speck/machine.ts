@@ -1,6 +1,7 @@
 import { isOrganName, nextSlot, nowOf, tapeDate, type FieldSlot, type HitBox, type Now, type OrganName, type Selected, type Session } from './ir'
 import {
   byId,
+  childrenOf,
   indentNode,
   insertNode,
   isProject,
@@ -12,11 +13,14 @@ import {
   setNodeBody,
   setNodeStatus,
   setNodeTitle,
+  workFolded,
   type Doc,
 } from './doc'
 import { formatDumpGuess, parseDump, type DumpParse } from './parse-dump'
 import { isCommandLine, parseCommand } from './parse'
 import { COL_ORDER, isBinderStatus, PAINT_OPS, type NodeStatus } from './tokens'
+import { visibleBinderIds } from './organs/pipe'
+import { visibleNestIds } from './organs/nest'
 
 export type Result = {
   session: Session
@@ -110,12 +114,16 @@ function applyStrike(session: Session, source: string): Result {
 
 export function placeOrgan(source: string, organ: OrganName, x: number, y: number): string {
   const doc = parseDoc(source)
-  const found = doc.places.find((p) => p.organ === organ)
-  if (found) {
-    found.x = x
-    found.y = y
-  } else {
-    doc.places.push({ organ, x, y })
+  const pair = workFolded(doc) && (organ === 'PIPE' || organ === 'NEST')
+  const other: OrganName | null = pair ? (organ === 'PIPE' ? 'NEST' : 'PIPE') : null
+  for (const name of other ? [organ, other] : [organ]) {
+    const found = doc.places.find((p) => p.organ === name)
+    if (found) {
+      found.x = x
+      found.y = y
+    } else {
+      doc.places.push({ organ: name, x, y })
+    }
   }
   return serializeDoc(doc)
 }
@@ -204,11 +212,12 @@ function commitDump(
     for (const title of dump.children) {
       insertNode(doc, { title, status: 'backlog', parent: project.id })
     }
+    const first = childrenOf(doc, project.id)[0]
     return ok(
       {
         ...session,
-        selected: { kind: 'NODE', id: project.id },
-        lens: 'nest',
+        selected: { kind: 'NODE', id: first?.id ?? project.id },
+        lens: 'pipe',
         nestFocus: project.id,
         pendingDump: null,
       },
@@ -290,6 +299,18 @@ function commitOperator(session: Session, source: string, now: Now, text: string
   return applyDumpParse(session, source, parseDump(trimmed))
 }
 
+function applyLens(session: Session, source: string, raw: string): Result {
+  const nest = raw.toUpperCase() === 'NEST'
+  return {
+    session: {
+      ...closeField(session),
+      lens: nest ? 'nest' : 'pipe',
+      selected: nest ? { kind: 'NEST' } : { kind: 'PIPE' },
+    },
+    source,
+  }
+}
+
 function applyFocus(session: Session, source: string, id?: number, clear?: boolean): Result {
   if (clear) return ok(focusNest(session, null), source, 'FOCUS _')
   if (id != null) return ok(focusNest(session, id), source, `FOCUS #${id}`)
@@ -346,6 +367,9 @@ function applyHitStmt(target: string, arg: string | number | undefined, session:
   }
   if (t === 'FOCUS') {
     return applyFocus(session, source, typeof arg === 'number' ? arg : undefined)
+  }
+  if (t === 'LENS') {
+    return applyLens(session, source, String(arg ?? ''))
   }
   if (t === 'CLEAR') return ok(freshSession(), SEED_SOURCE)
   if (t === 'CLOSE' && arg != null) {
@@ -411,8 +435,19 @@ export function applyHit(hit: HitBox, session: Session, source: string): Result 
       return applyAdd(session, source, Number(hit.payload ?? 0) || null, 'none')
     case 'TOGGLE':
       return { session: toggleNest(session, Number(hit.payload ?? 0)), source }
-    case 'CLOSE':
-      return { session: toggleCollapsed(session, String(hit.payload ?? 'PIPE') as OrganName), source }
+    case 'CLOSE': {
+      const organ = String(hit.payload ?? 'PIPE') as OrganName
+      if (workFolded(parseDoc(source)) && (organ === 'PIPE' || organ === 'NEST')) {
+        const has = session.collapsed.includes('PIPE') || session.collapsed.includes('NEST')
+        const collapsed: OrganName[] = has
+          ? session.collapsed.filter((o) => o !== 'PIPE' && o !== 'NEST')
+          : [...session.collapsed, 'PIPE', 'NEST']
+        return { session: { ...session, collapsed }, source }
+      }
+      return { session: toggleCollapsed(session, organ), source }
+    }
+    case 'LENS':
+      return applyLens(session, source, String(hit.payload ?? 'PIPE'))
     case 'STATUS': {
       const raw = String(hit.payload ?? '')
       const [idStr, col] = raw.split(':')
@@ -556,9 +591,27 @@ export function cycleField(session: Session, source: string, dir: 1 | -1): Resul
   }
 }
 
+function moveSelection(session: Session, source: string, dir: 1 | -1): Result {
+  if (session.lens === 'dump') return { session, source }
+  const doc = parseDoc(source)
+  const ids = session.lens === 'nest' ? visibleNestIds(doc, session) : visibleBinderIds(doc, session.nestFocus)
+  if (ids.length === 0) return { session, source }
+  const cur = nodeIdOf(session.selected)
+  const at = cur == null ? -1 : ids.indexOf(cur)
+  const next =
+    dir > 0 ? (at < 0 ? 0 : Math.min(ids.length - 1, at + 1)) : at < 0 ? ids.length - 1 : Math.max(0, at - 1)
+  return {
+    session: { ...session, selected: { kind: 'NODE', id: ids[next] } },
+    source,
+  }
+}
+
 export function applyKey(key: string, shift: boolean, session: Session, source: string): Result {
   if (key === 'Escape') return { session: collapse(session), source }
   if (key === 'Tab' && session.field) return cycleField(session, source, shift ? -1 : 1)
+  if ((key === 'ArrowUp' || key === 'ArrowDown') && !session.field) {
+    return moveSelection(session, source, key === 'ArrowDown' ? 1 : -1)
+  }
   if (key === ' ' && !session.field) {
     const id = nodeIdOf(session.selected)
     if (id == null) return { session, source }

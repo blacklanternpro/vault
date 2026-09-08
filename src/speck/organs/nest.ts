@@ -1,4 +1,4 @@
-import type { EditBox, HitBox, Op, Session } from '../ir'
+import type { EditBox, HitBox, Op, Session, WorkCompile } from '../ir'
 import { childrenOf, openTaskCount, placeOf, type Doc, type GraphNode } from '../doc'
 import { CHROME_PAD, liveOval, paintChrome, type Buf } from './chrome'
 import { PAPER, POWER, RULE, WHITE, fontHelv } from '../tokens'
@@ -33,25 +33,49 @@ function walk(
   })
 }
 
+export function visibleNestIds(doc: Doc, session: Session): number[] {
+  const rows: { node: GraphNode; depth: number; last: boolean; prefix: string }[] = []
+  walk(doc, null, 0, session, rows, [true])
+  return rows.map((r) => r.node.id)
+}
+
 export function compileNest(
   doc: Doc,
   session: Session,
   fieldW: number,
   edit: { box: EditBox | null },
+  opts?: WorkCompile,
 ): { ops: Op[]; hits: HitBox[]; x: number; y: number; w: number; h: number } {
   const origin = placeOf(doc, 'NEST')
-  const x = origin.x
-  const y = origin.y
-  const w = Math.max(300, Math.min(440, fieldW - x - 16))
-  const collapsed = session.collapsed.includes('NEST')
+  const x = opts?.host?.x ?? origin.x
+  const y = opts?.host?.y ?? origin.y
+  const w = opts?.host?.w ?? Math.max(300, Math.min(440, fieldW - x - 16))
+  if (opts?.skip) return { ops: [], hits: [], x, y, w, h: 0 }
+  const collapsed = session.collapsed.includes('NEST') || (opts?.folded === true && session.collapsed.includes('PIPE'))
   const buf: Buf = { ops: [], hits: [] }
   const roots = childrenOf(doc, null)
   const count = roots.reduce((m, n) => m + openTaskCount(doc, n.id), 0)
   const live = session.lens === 'nest' || session.selected?.kind === 'NEST'
+  const chrome = {
+    x,
+    y,
+    w,
+    title: 'NEST // graph',
+    organ: 'NEST' as const,
+    count,
+    live,
+    scan: doc.scan,
+    lenses: opts?.ticks
+      ? [
+          { id: 'PIPE' as const, live: session.lens !== 'nest' },
+          { id: 'NEST' as const, live: session.lens === 'nest' },
+        ]
+      : undefined,
+  }
 
   if (collapsed) {
     const h = CHROME_PAD + 4
-    paintChrome(buf, { x, y, w, h, title: 'NEST // graph', organ: 'NEST', count, live, scan: doc.scan })
+    paintChrome(buf, { ...chrome, h })
     return { ops: buf.ops, hits: buf.hits, x, y, w, h }
   }
 
@@ -60,7 +84,7 @@ export function compileNest(
   const emptySlot = true
   const h = CHROME_PAD + 8 + (rows.length + (emptySlot ? 1 : 0)) * ROW + 12
 
-  paintChrome(buf, { x, y, w, h, title: 'NEST // graph', organ: 'NEST', count, live, scan: doc.scan })
+  paintChrome(buf, { ...chrome, h })
   buf.hits.push({ kind: 'NEST', x, y, w, h, z: 4 })
 
   if (rows.length === 0) {

@@ -1,10 +1,10 @@
 import type { DockInput, EditBox, HitBox, Measure, Op, Program, Session } from './ir'
-import { parseDoc } from './doc'
 import { nowOf } from './ir'
+import { parseDoc, workFolded } from './doc'
 import { compileCal } from './organs/cal'
 import { compileDump } from './organs/dump'
 import { compileNest } from './organs/nest'
-import { compilePipe, PIPE_ROWS } from './organs/pipe'
+import { compilePipe, pipeFrame, PIPE_ROWS } from './organs/pipe'
 import { compileSeal } from './organs/seal'
 import { compileSkull } from './organs/skull'
 import { FIELD, INK_RULE, INK_RULE_DIM, PAPER, POWER, fontDisplay, fontHelv, ground, ink } from './tokens'
@@ -76,8 +76,20 @@ function compileField(world: World, measure: Measure, edit: { box: EditBox | nul
   const now = nowOf()
   const sheet = ground(doc.inv)
   const mark = ink(doc.inv)
-  const pipe = compilePipe(doc, world.session, measure, width, edit)
-  const nest = compileNest(doc, world.session, width, edit)
+  const folded = workFolded(doc)
+  const nestLens = world.session.lens === 'nest'
+  const frame = pipeFrame(doc, width)
+  const pipe = compilePipe(doc, world.session, measure, width, edit, {
+    folded,
+    ticks: folded,
+    skip: folded && nestLens,
+  })
+  const nest = compileNest(doc, world.session, width, edit, {
+    folded,
+    ticks: folded,
+    skip: folded && !nestLens,
+    host: folded ? frame : undefined,
+  })
   const dump = compileDump(doc, world.session, width)
   const seal = compileSeal(doc, world.session, width)
   const skull = compileSkull(doc, world.session, width)

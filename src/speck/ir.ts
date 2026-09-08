@@ -121,9 +121,17 @@ export type HitKind =
   | 'DOCK'
   | 'DAY'
   | 'LEGEND'
+  | 'LENS'
   | 'CAL'
   | 'SEAL'
   | 'SKULL'
+
+export type WorkCompile = {
+  folded?: boolean
+  ticks?: boolean
+  skip?: boolean
+  host?: { x: number; y: number; w: number }
+}
 
 export type HitBox = {
   kind: HitKind
