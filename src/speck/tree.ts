@@ -1,5 +1,5 @@
 import type { Session } from './ir'
-import { byId, childrenOf, type Doc, type GraphNode } from './doc'
+import { childrenOf, type Doc, type GraphNode } from './doc'
 
 export type NestRow = {
   node: GraphNode
@@ -35,13 +35,6 @@ export function walkNest(
 
 export function nestRows(doc: Doc, session: Session): NestRow[] {
   const rows: NestRow[] = []
-  if (session.nestFocus != null) {
-    const node = byId(doc, session.nestFocus)
-    if (!node) return rows
-    rows.push({ node, depth: 0, last: true, prefix: '' })
-    if (!isClosed(session, node.id)) walkNest(doc, node.id, 1, session, rows, [true])
-    return rows
-  }
   walkNest(doc, null, 0, session, rows, [true])
   return rows
 }

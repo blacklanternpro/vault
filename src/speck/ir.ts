@@ -186,6 +186,7 @@ export type Session = {
   nestClosed: number[]
   pipeOpen: number | null
   nestFocus: number | null
+  projectId: number | null
   field: { id: number; slot: FieldSlot } | null
   fieldBuffer: string
   collapsed: OrganName[]

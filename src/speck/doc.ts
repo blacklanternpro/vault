@@ -9,6 +9,7 @@ export type GraphNode = {
   status: NodeStatus
   parent: number | null
   urgent?: boolean
+  loose?: boolean
 }
 
 export type Note = {
@@ -49,21 +50,25 @@ export const DEFAULT_PLACES: Place[] = [
 ]
 
 export const SEED_SOURCE = `PIPE vault
-  COL backlog
+  COL pending
+  COL rnd
   COL active
-  COL staging
   COL done
+  COL dusted
 NEST
   NODE 1 "ops" status none
-    NODE 10 "lab" status none
-      NODE 11 "scout_ridge_a" status none URGENT
-    NODE 20 "net" status none
-      NODE 21 "flush_stale_resolvers.sh" status none
-      NODE 102 "telemetry ui" status active
+    NODE 10 "LAB" status active
+      NODE 11 "scout ridge" status active URGENT
+    NODE 20 "NET" status active
+      NODE 21 "flush stale resolvers" status active
+      NODE 102 "telemetry overlay" status rnd LOOSE
         BODY "overlay leftover"
-    NODE 104 "ingress routing" status backlog
-    NODE 101 "supabase link" status staging
-    NODE 99 "baseline" status done
+    NODE 104 "INGRESS ROUTING" status pending
+    NODE 101 "SUPABASE LINK" status rnd
+    NODE 99 "BASELINE" status done
+    NODE 88 "OLD SPIKE" status dusted
+  NODE 2 "archive" status none
+    NODE 201 "COLD STORAGE" status pending
 DUMP
   NOTE 09.07.26 "ridge"`
 
@@ -87,7 +92,9 @@ function quote(text: string): string {
 
 function parseStatus(raw: string): NodeStatus {
   const s = raw.toLowerCase()
-  if (s === 'backlog' || s === 'active' || s === 'staging' || s === 'done' || s === 'none') return s
+  if (s === 'backlog') return 'pending'
+  if (s === 'staging') return 'rnd'
+  if (s === 'pending' || s === 'rnd' || s === 'active' || s === 'done' || s === 'dusted' || s === 'none') return s
   return 'none'
 }
 
@@ -117,24 +124,58 @@ export function nextNodeId(doc: Doc): number {
   return doc.nodes.reduce((m, n) => Math.max(m, n.id), 0) + 1
 }
 
-export function isProject(doc: Doc, node: GraphNode): boolean {
-  return childrenOf(doc, node.id).length > 0
+export function isProject(_doc: Doc, node: GraphNode): boolean {
+  return node.parent === null
 }
 
-export function isManagerCard(doc: Doc, node: GraphNode): boolean {
-  return childrenOf(doc, node.id).length > 0 || isBinderStatus(node.status)
+export function projectsOf(doc: Doc): GraphNode[] {
+  return childrenOf(doc, null)
+}
+
+export function projectIdOf(doc: Doc, projectId: number | null): number | null {
+  if (projectId != null) {
+    const node = byId(doc, projectId)
+    if (node && node.parent === null) return projectId
+  }
+  return projectsOf(doc)[0]?.id ?? null
+}
+
+export function isManagerCard(doc: Doc, node: GraphNode, projectId: number | null): boolean {
+  const pid = projectIdOf(doc, projectId)
+  if (pid == null || node.id === pid || !inSubtree(doc, pid, node.id)) return false
+  if (node.loose) return true
+  return node.parent === pid
 }
 
 export function laneOf(status: NodeStatus): (typeof COL_ORDER)[number] {
-  return status === 'none' ? 'backlog' : status
+  return status === 'none' ? 'pending' : status
 }
 
-export function managerCards(doc: Doc, focus: number | null = null): GraphNode[] {
-  return doc.nodes.filter((n) => {
-    if (!isManagerCard(doc, n)) return false
-    if (focus == null) return true
-    return n.id === focus || inSubtree(doc, focus, n.id)
-  })
+export function nestedOf(doc: Doc, id: number): GraphNode[] {
+  return childrenOf(doc, id).filter((n) => !n.loose)
+}
+
+export function jobsOf(doc: Doc, projectId: number | null): GraphNode[] {
+  const pid = projectIdOf(doc, projectId)
+  if (pid == null) return []
+  return childrenOf(doc, pid).filter((n) => !n.loose)
+}
+
+export function satellitesOf(doc: Doc, projectId: number | null): GraphNode[] {
+  const pid = projectIdOf(doc, projectId)
+  if (pid == null) return []
+  return doc.nodes.filter((n) => Boolean(n.loose) && n.id !== pid && inSubtree(doc, pid, n.id))
+}
+
+export function managerCards(doc: Doc, projectId: number | null = null): GraphNode[] {
+  const pid = projectIdOf(doc, projectId)
+  if (pid == null) return []
+  const jobs = jobsOf(doc, pid)
+  const sats = satellitesOf(doc, pid)
+  const ids = new Set(jobs.map((n) => n.id))
+  const extra = sats.filter((n) => !ids.has(n.id))
+  const wanted = new Set([...jobs, ...extra].map((n) => n.id))
+  return doc.nodes.filter((n) => wanted.has(n.id))
 }
 
 export function moveNodeBefore(doc: Doc, id: number, beforeId: number | null): boolean {
@@ -201,7 +242,15 @@ export function openTaskCount(doc: Doc, id: number): number {
 
 export function insertNode(
   doc: Doc,
-  partial: { title: string; status?: NodeStatus; parent?: number | null; body?: string; urgent?: boolean; id?: number },
+  partial: {
+    title: string
+    status?: NodeStatus
+    parent?: number | null
+    body?: string
+    urgent?: boolean
+    loose?: boolean
+    id?: number
+  },
 ): GraphNode {
   const node: GraphNode = {
     id: partial.id ?? nextNodeId(doc),
@@ -211,6 +260,7 @@ export function insertNode(
   }
   if (partial.body) node.body = partial.body
   if (partial.urgent) node.urgent = true
+  if (partial.loose) node.loose = true
   doc.nodes.push(node)
   return node
 }
@@ -243,22 +293,24 @@ function parseNodeLine(toks: Tok[]): Omit<GraphNode, 'parent'> | null {
   let id = 0
   let status: NodeStatus = 'none'
   let urgent = false
+  let loose = false
   for (let i = 0; i < toks.length; i++) {
     const w = word(toks[i])
     const nxt = toks[i + 1]
     if (w === 'ID' && nxt?.t === 'NUM') id = nxt.v
     if (w === 'STATUS' && nxt) status = parseStatus(nxt.t === 'WORD' ? nxt.v : nxt.raw)
     if (w === 'URGENT') urgent = true
+    if (w === 'LOOSE') loose = true
   }
   if (!id) {
     const n = toks.find((t) => t.t === 'NUM')
     if (n) id = n.v
   }
-  return { id, title, status, urgent: urgent || undefined }
+  return { id, title, status, urgent: urgent || undefined, loose: loose || undefined }
 }
 
 function parseLegacyTask(toks: Tok[]): { col: string; title: string; id: number; nest?: string } | null {
-  const col = (word(toks[1]) || 'backlog').toLowerCase()
+  const col = parseStatus(word(toks[1]) || 'pending')
   const title = strOf(toks)
   if (!title) return null
   let id = 0
@@ -326,8 +378,8 @@ export function parseDoc(src: string): Doc {
       continue
     }
     if (head === 'COL') {
-      const col = (word(line.toks[1]) || '').toLowerCase()
-      if (col && !doc.cols.includes(col)) doc.cols.push(col)
+      const col = parseStatus((word(line.toks[1]) || '').toLowerCase())
+      if (col !== 'none' && !doc.cols.includes(col)) doc.cols.push(col)
     } else if (head === 'NODE') {
       const parsed = parseNodeLine(line.toks)
       if (!parsed) continue
@@ -341,6 +393,7 @@ export function parseDoc(src: string): Doc {
         parent,
       }
       if (parsed.urgent) node.urgent = true
+      if (parsed.loose) node.loose = true
       doc.nodes.push(node)
       stack.push({ indent: line.indent, id })
     } else if (head === 'BODY') {
@@ -379,7 +432,7 @@ export function parseDoc(src: string): Doc {
       if (text) doc.notes.push(node != null ? { date, text, node } : { date, text })
     }
   }
-  if (doc.cols.length === 0) doc.cols = [...COL_ORDER]
+  doc.cols = [...COL_ORDER]
   return doc
 }
 
@@ -387,7 +440,7 @@ function writeTree(doc: Doc, parent: number | null, indent: number, lines: strin
   const pad = '  '.repeat(indent)
   for (const n of childrenOf(doc, parent)) {
     lines.push(
-      `${pad}NODE ${n.id} ${quote(n.title)} status ${n.status}${n.urgent ? ' URGENT' : ''}`,
+      `${pad}NODE ${n.id} ${quote(n.title)} status ${n.status}${n.urgent ? ' URGENT' : ''}${n.loose ? ' LOOSE' : ''}`,
     )
     if (n.body) lines.push(`${pad}  BODY ${quote(n.body)}`)
     writeTree(doc, n.id, indent + 1, lines)
@@ -400,8 +453,7 @@ export function serializeDoc(doc: Doc): string {
   if (doc.grain > 0) lines.push(`GRAIN ${doc.grain}`)
   if (doc.scan > 0) lines.push(`SCAN ${doc.scan}`)
   lines.push(`PIPE ${doc.pipeName}`)
-  const cols = doc.cols.length ? doc.cols : [...COL_ORDER]
-  for (const col of cols) lines.push(`  COL ${col}`)
+  for (const col of COL_ORDER) lines.push(`  COL ${col}`)
   lines.push('NEST')
   writeTree(doc, null, 1, lines)
   lines.push('DUMP')
@@ -463,4 +515,26 @@ export function setNodeBody(doc: Doc, id: number, body: string): void {
 export function setNodeStatus(doc: Doc, id: number, status: NodeStatus): void {
   const node = byId(doc, id)
   if (node) node.status = status
+}
+
+export function setNodeLoose(doc: Doc, id: number, loose: boolean): void {
+  const node = byId(doc, id)
+  if (!node) return
+  if (loose) node.loose = true
+  else delete node.loose
+}
+
+export function followNested(doc: Doc, id: number, status: NodeStatus): void {
+  for (const child of childrenOf(doc, id)) {
+    if (child.loose) continue
+    child.status = status
+    followNested(doc, child.id, status)
+  }
+}
+
+export function promotePending(doc: Doc, id: number): void {
+  const node = byId(doc, id)
+  if (!node || node.status !== 'pending') return
+  if (nestedOf(doc, id).length > 0) return
+  node.status = 'active'
 }

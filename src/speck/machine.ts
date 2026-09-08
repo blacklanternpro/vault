@@ -1,6 +1,7 @@
 import { isOrganName, nextSlot, nowOf, tapeDate, type FieldSlot, type HitBox, type Now, type OrganName, type Selected, type Session } from './ir'
 import {
   byId,
+  followNested,
   indentNode,
   insertNode,
   isProject,
@@ -8,10 +9,13 @@ import {
   moveNote,
   outdentNode,
   parseDoc,
+  projectIdOf,
+  promotePending,
   removeNode,
   SEED_SOURCE,
   serializeDoc,
   setNodeBody,
+  setNodeLoose,
   setNodeStatus,
   setNoteText,
   setNodeTitle,
@@ -34,6 +38,7 @@ export function freshSession(): Session {
     nestClosed: [],
     pipeOpen: null,
     nestFocus: null,
+    projectId: null,
     field: null,
     fieldBuffer: '',
     collapsed: [],
@@ -83,9 +88,10 @@ function openField(session: Session, id: number, slot: FieldSlot, value: string)
 }
 
 function shovelStatus(status: NodeStatus, delta: number): NodeStatus {
-  if (status === 'none' && delta > 0) return 'backlog'
+  if (status === 'none' && delta > 0) return 'pending'
   const i = COL_ORDER.indexOf(status as (typeof COL_ORDER)[number])
-  if (i < 0) return delta > 0 ? 'backlog' : 'none'
+  if (i < 0) return delta > 0 ? 'pending' : 'none'
+  if (delta < 0 && i === 0) return 'none'
   const next = Math.max(0, Math.min(COL_ORDER.length - 1, i + delta))
   return COL_ORDER[next]
 }
@@ -115,12 +121,75 @@ export function stageCard(
   const node = byId(doc, id)
   if (!node) return ok(session, source, '? STAGE')
   node.status = status
+  followNested(doc, id, status)
   if (beforeId !== undefined) moveNodeBefore(doc, id, beforeId)
   return ok(
     { ...session, selected: { kind: 'NODE', id }, lens: 'pipe' },
     serializeDoc(doc),
     `STAGE #${id} ${status}`,
   )
+}
+
+export function pullCard(
+  session: Session,
+  source: string,
+  id: number,
+  status: NodeStatus,
+  beforeId?: number | null,
+): Result {
+  const doc = parseDoc(source)
+  const node = byId(doc, id)
+  if (!node || node.parent == null) return ok(session, source, '? PULL')
+  setNodeLoose(doc, id, true)
+  node.status = status
+  followNested(doc, id, status)
+  if (beforeId !== undefined) moveNodeBefore(doc, id, beforeId)
+  return ok(
+    { ...session, selected: { kind: 'NODE', id }, lens: 'pipe' },
+    serializeDoc(doc),
+    `PULL #${id} ${status}`,
+  )
+}
+
+export function setProject(session: Session, source: string, id: number): Result {
+  const doc = parseDoc(source)
+  const node = byId(doc, id)
+  if (!node || node.parent != null) return ok(session, source, '? PROJECT')
+  return ok(
+    {
+      ...session,
+      projectId: id,
+      nestFocus: id,
+      selected: { kind: 'NODE', id },
+      lens: 'pipe',
+    },
+    source,
+    `PROJECT #${id}`,
+  )
+}
+
+export function addNested(session: Session, source: string, parentId: number): Result {
+  const doc = parseDoc(source)
+  const parent = byId(doc, parentId)
+  if (!parent) return ok(session, source, '? ADD')
+  promotePending(doc, parentId)
+  const fresh = byId(doc, parentId)
+  const status = fresh && isBinderStatus(fresh.status) ? fresh.status : 'pending'
+  const node = insertNode(doc, { title: '', status, parent: parentId })
+  return {
+    session: openField(
+      {
+        ...session,
+        draftId: node.id,
+        nestFocus: parentId,
+        lens: 'nest',
+      },
+      node.id,
+      'title',
+      '',
+    ),
+    source: serializeDoc(doc),
+  }
 }
 
 export function applyNoteOrder(session: Session, source: string, from: number, to: number): Result {
@@ -204,7 +273,18 @@ function parentForNew(session: Session, doc: Doc): number | null {
     if (node && isProject(doc, node)) return sid
     if (node) return node.parent
   }
-  return null
+  return projectIdOf(doc, session.projectId)
+}
+
+function inheritAddStatus(doc: Doc, parent: number | null, status: NodeStatus): NodeStatus {
+  if (parent == null) return status
+  const p = byId(doc, parent)
+  if (!p) return status
+  if (p.parent == null) return isBinderStatus(status) ? status : 'pending'
+  promotePending(doc, parent)
+  const fresh = byId(doc, parent)
+  if (fresh && isBinderStatus(fresh.status)) return fresh.status
+  return isBinderStatus(status) ? status : 'pending'
 }
 
 export function addChild(source: string, parent: number | null, title = '', status: NodeStatus = 'none'): { source: string; id: number } {
@@ -272,7 +352,10 @@ function commitField(session: Session, source: string): Result {
   if (slot === 'subtask') {
     const title = text.trim()
     if (!title) return ok({ ...session, fieldBuffer: '' }, source)
-    const child = insertNode(doc, { title, status: 'none', parent: id })
+    promotePending(doc, id)
+    const parent = byId(doc, id)
+    const status = parent && isBinderStatus(parent.status) ? parent.status : 'pending'
+    const child = insertNode(doc, { title, status, parent: id })
     return ok(
       { ...session, fieldBuffer: '', selected: { kind: 'NODE', id: child.id }, pipeOpen: session.pipeOpen ?? id },
       serializeDoc(doc),
@@ -316,21 +399,26 @@ function applyFocus(session: Session, source: string, id?: number, clear?: boole
 }
 
 function applyAdd(session: Session, source: string, parent: number | null, status: NodeStatus = 'none'): Result {
-  const made = addChild(source, parent && parent > 0 ? parent : null, '', status)
-  const node = byId(parseDoc(made.source), made.id)
+  const doc = parseDoc(source)
+  const pid = parent && parent > 0 ? parent : null
+  const next = inheritAddStatus(doc, pid, status)
+  const node = insertNode(doc, { title: '', status: next, parent: pid })
+  const isRoot = pid == null
   return {
     session: openField(
       {
         ...session,
-        draftId: made.id,
+        draftId: node.id,
+        projectId: isRoot ? node.id : session.projectId,
         pipeOpen: status === 'none' ? session.pipeOpen : session.pipeOpen,
-        lens: status === 'none' ? 'nest' : 'pipe',
+        lens: status === 'none' && isRoot ? 'pipe' : pid == null || byId(doc, pid)?.parent == null ? 'pipe' : 'nest',
+        nestFocus: isRoot ? node.id : session.nestFocus,
       },
-      made.id,
+      node.id,
       'title',
-      node?.title ?? '',
+      node.title ?? '',
     ),
-    source: made.source,
+    source: serializeDoc(doc),
   }
 }
 
@@ -494,13 +582,14 @@ export function applyHit(hit: HitBox, session: Session, source: string): Result 
       }
     }
     case 'EMPTY': {
-      const col = String(hit.payload ?? 'backlog')
-      const status = isBinderStatus(col) ? col : 'backlog'
-      const parent = parentForNew(session, parseDoc(source))
+      const col = String(hit.payload ?? 'pending')
+      const status = isBinderStatus(col) ? col : 'pending'
+      const doc = parseDoc(source)
+      const parent = projectIdOf(doc, session.projectId)
       return applyAdd({ ...session, lens: 'pipe' }, source, parent, status)
     }
     case 'COL':
-      return { session: { ...session, selected: { kind: 'COL', col: String(hit.payload ?? 'backlog') }, lens: 'pipe' }, source }
+      return { session: { ...session, selected: { kind: 'COL', col: String(hit.payload ?? 'pending') }, lens: 'pipe' }, source }
     case 'PIPE':
     case 'ORGAN': {
       const organ = String(hit.payload ?? 'PIPE')
