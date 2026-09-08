@@ -1,8 +1,8 @@
 # OVERNIGHT PROMPT — paste this into a future agent
 
-**Month-as-OS is dead as home. DateBlocks, kanban cards, harvest amber, cobalt lash, overlay CHIP dossiers, CLIP-copy, dump-parser docks, and DOS `#id` ledgers are dead.** Keep **SPECK** as the compositor (paint / `PLACE`), not a Forth REPL identity. The field is four tools on a paper sheet: typographic PIPE manager, unix NEST directory, DUMP scratchpad (txt this pass), command field for place + search. Salt organs (SEAL / SKULL / CAL). Persistence is SPECK source (`speck-os-v1`), not a task CRDT, not JSON-as-database.
+**Month-as-OS is dead as home. DateBlocks, SaaS kanban chrome, harvest amber, cobalt lash, dump-parser docks, DOS `#id` ledgers, salt organs, and the paper/black IMP canvas are dead.** Keep **SPECK** as the save format (graph + dump source), not a Forth REPL and not a paint/PLACE compositor identity. The studio is four tools as a **fixed DOM layout**: quiet project cards on top, unix directory underneath, scratch sidebar with FIND. Persistence is SPECK source (`speck-os-v1`), not a task CRDT, not JSON-as-database.
 
-This is a **later-run** brief. The language is written. The runtime lives in `src/speck`. Do not ignore `docs/LANGUAGE.md`. It is canon. Product truth: `PRODUCT.md`.
+This is a **later-run** brief. The language is written. Graph ops live in `src/speck`. The shell lives in `src/shell`. Do not ignore `docs/LANGUAGE.md`. It is canon. Product truth: `PRODUCT.md`.
 
 Read this whole file. Then read `docs/LANGUAGE.md`. Then read `.cursorrules`. Then look at the current shell. Then go.
 
@@ -12,11 +12,11 @@ Read this whole file. Then read `docs/LANGUAGE.md`. Then read `.cursorrules`. Th
 
 Grasp the vision. Put a spin on it. Go further from the boring. Stay utility.
 
-You are building toward **VAULT WORLDWIDE** — a personal OS on top of an OS. Cassette-futurism *machine*, spoken in SPECK. Desktop field. Not a phone PWA. Not a website. Not Linear.
+You are building toward **VAULT WORLDWIDE** — a personal OS on top of an OS. Dark studio. Desktop. Not a phone PWA. Not a website. Not Linear. Not a canvas organ field.
 
-Jake (blacklanternpro) spent hours fighting agents that translated his vision into cards. DateBlocks made him almost throw up. The single-field prompt was “magic / Genius.” SPECK exists so pixels are owned by functions.
+Jake (blacklanternpro) spent hours fighting agents that translated his vision into DateBlocks, then into a DOS/IMP taskmaster. SPECK exists so the graph is owned by source. The shell is React/DOM because he asked for a studio, not another paint engine.
 
-**Tonight-of-that-future-run:** stay inside the language. Refine the four tools. Do not ship a dump-parser taskmaster. Do not ship another stack of components and call it done.
+**Tonight-of-that-future-run:** stay inside the language. Refine the four tools. Do not ship a dump-parser taskmaster. Do not revive CAL/SEAL/SKULL. Do not drag the main sections.
 
 If Jake only wanted language docs, they are already in this repo. You are here to *use* them.
 
@@ -30,41 +30,41 @@ Jake / BLACK LANTERN. Personal OS. Not a store product. Not a SaaS. Local-first,
 
 ## Canon (read in this order)
 
-1. **`docs/LANGUAGE.md`** — the grand language. Tokens, taste stack, grammar, vetoes, take/leave, SPECK. **Primary.**
+1. **`docs/LANGUAGE.md`** — the grand language. Tokens, grammar, vetoes, SPECK save format. **Primary.**
 2. **`.cursorrules`** — short law. Obey it. It points here.
-3. **Current shell** — `src/App.tsx` hosts `<Field />`. Runtime is `src/speck`. Split-page PIPE. Paper `INV` ground. Grain/scan/oval live. Salt organs SEAL/SKULL/CAL. Legend rail. The React calendar/todo/scratch components are a corpse; do not restore them. CAL is an organ, not the destination.
-4. **History** — Gemini neo-brutal TUI blueprint. PRs #8–#11 (fried TUI → burn the box). PR #7 DateBlocks = warning. PR #14 month field = recovery, not home.
-5. **Pinned world** — office sheet + pixel GUI chrome + IMP plaques, restamped onto field / paper / power red.
+3. **Current shell** — `src/App.tsx` hosts `<Studio />`. Runtime graph is `src/speck`. Layout is manager / directory / scratch. Charcoal ground. Highlighter red. The canvas `Field` and salt organs are a corpse; do not restore them.
+4. **History** — Gemini neo-brutal TUI. PRs #8–#11 (fried TUI → burn the box). PR #7 DateBlocks = warning. PR #14 month field = recovery, not home. Paper/IMP canvas = anti-reference.
+5. **Pinned world** — dark studio (charcoal/slate, off-white, highlighter). Quiet cards. Naked directory. No section titles.
 
 ---
 
 ## Locked tokens
 
-- Paper `#F4F4F0` — the sheet (`INV` default)
-- Field `#000000` — ink, organ plates, dock
-- Power red `#E10600` — oval, caret, ticks, `[+]` / shovel, strike / URGENT (one red)
+- Ground charcoal, panel/card slate steps
+- Off-white type, muted secondary
+- Highlighter red — selection, FIND, urgent, caret (not `#E10600`)
 
-Oswald 700 on plaques. Helvetica Neue / Helvetica / Arial on work. Radius 0. No amber. No cobalt.
+Helvetica Neue / Helvetica / Arial only. Modest radius on cards. No amber. No cobalt. No Oswald identity.
 
 ---
 
 ## Composition law
 
-One field. Desktop. One dock (operator). One graph.
+Desktop. One FIND/NOTE field. One graph. Sections do not drag.
 
-1. PIPE manager: FOCUS | spine | GATEWAY. Oswald project names, Helvetica titles. Reflow expand. In-organ shovel, not drag-cards. Empty rows stay and create. No `#id` checkbox ledger.
-2. NEST directory. Own window. `[+]` adds. SHOVEL onto the manager. CLIP is dead.
-3. DUMP scratchpad look. Txt notes live; link/pic/file slots inert this pass.
-4. PLACE / GLYPH. Window chrome. Salt organs SEAL / SKULL / CAL. Overlap legal. Coincident PLACE is overlap, not a fold.
-5. Click-and-type + TAB. Dock places and searches — it does not create work. Legend rail toggles GRAIN / SCAN / INV.
+1. Manager on top. Silent stage lanes. Project text cards. Lane drag rewrites status. In-lane drag reorders. Empty lane creates. No billboard titles.
+2. Directory under it. Unix stems. Highlighter selection. `_` adds. SHOVEL onto the manager. CLIP is dead.
+3. Scratch on the right. Txt blocks snap-reorder. Link/pic/file slots inert this pass.
+4. FIND in the sidebar. NOTE when a txt block is focused. `CLEAR` typed. No DOS `>` slab.
+5. Click-and-type. FIND searches — it does not create work.
 
-You may refine density. You may not add hardware bays, card grids, a second input, month-as-OS as home, cobalt, or PROJECTS/ROSTER/FLEET/LOGS tabs.
+You may refine density. You may not add hardware bays, KPI rows, a second input, month-as-OS as home, cobalt, PLACE-drag, or PROJECTS/ROSTER/FLEET/LOGS tabs.
 
 ---
 
 ## Hard vetoes
 
-DateBlocks · jagged day cards · SaaS kanban cards · rounded corners · soft shadows · acid watermarks · giant boxed logos · Inter · green-on-black notes · amber boxed terminals · harvest amber theme · header CTX chips · three forms · demo BUY MILK · Alien Isolation cosplay · chunky skeuomorphic knobs · vaporwave neon · VT323/Orbitron · Matrix/Kali costume · rave-flyer sleaze takeover · NEXUS-HUD chrome (GRADE D, waveforms, tabs-as-apps, cyan-on-black) · cobalt lash · overlay CHIP covering neighbors
+DateBlocks · jagged day cards · SaaS kanban chrome · avatars / KPI / progress bars / “+ New Deal” · soft shadows · acid watermarks · giant boxed logos · Inter · green-on-black notes · amber boxed terminals · harvest amber theme · header CTX chips · three forms · demo BUY MILK · Alien Isolation cosplay · chunky skeuomorphic knobs · vaporwave neon · VT323/Orbitron · Matrix/Kali costume · rave-flyer sleaze takeover · NEXUS-HUD chrome · cobalt lash · paper/black IMP canvas · salt organs as identity · organ PLACE-drag
 
 Full list: `docs/LANGUAGE.md` §8.
 
@@ -72,12 +72,12 @@ Full list: `docs/LANGUAGE.md` §8.
 
 ## What already works (keep)
 
-- Prompt Dock as command field. Field editor as writer.
-- SPECK runtime in `src/speck` (lex / parse / compile / paint / machine)
-- One graph; PIPE manager + NEST directory
+- SPECK graph in `src/speck` (lex / parse / serialize / machine)
+- One graph; manager cards + directory
 - Source as program (`speck-os-v1`)
+- Studio layout in `src/shell`
 
-Do not throw SPECK away. Do not rebuild a Tailwind notebook. Do not make the month the OS. Salt organs are salt.
+Do not throw SPECK away. Do not rebuild a dump-parser. Do not make the month the OS. Do not restore the canvas field.
 
 ---
 
@@ -87,10 +87,9 @@ Do not throw SPECK away. Do not rebuild a Tailwind notebook. Do not make the mon
 - “whatever you do dont have the disgusting date blocks… i almost threw up”
 - “The single field prompt is magic idea. Genius.”
 - “This is now its own lil os, not a stack of style sheets and sections”
-- “the only way we can do something like this to the level of design obsessiveness is to abandon the language we are coding with and go custom speck”
 - “craft something out of the raw ether to run as an actual program”
-- “I want this to be a primarily project management - task tracker custom OS that i can rearrange/build/layout however I like”
-- cassette futurism board: “Thats where are program is going to be living. with its own twists and refinement, a little more minimal and refined rawness”
+- “I want this to be a primarily project management - task tracker custom OS”
+- Dark studio, DOM shell, four tools as a layout — manager top, directory under, scratch sidebar, no CAL/SEAL/SKULL, no dragging the main sections
 
 Further from the norm. Firmly in utility. Order from chaos.
 
@@ -100,10 +99,10 @@ Further from the norm. Firmly in utility. Order from chaos.
 
 Propose and make bold changes **inside the language**.
 
-Do not propose a new palette. Do not “just use Tailwind a bit more carefully.” Do not revive DateBlocks. Do not build NEXUS HUD and stamp VAULT on it.
+Do not propose a new palette. Do not revive DateBlocks. Do not build NEXUS HUD and stamp VAULT on it. Do not restore paper IMP.
 
-New features must be SPECK-sayable.
+New features must be SPECK-sayable as source.
 
-When in doubt: power red on the sheet, black windows, one dock, legend rail, overlap is allowed, red is the only alarm, empty is `_`.
+When in doubt: charcoal studio, highlighter on the live name, one FIND, empty is `_`.
 
 Go.

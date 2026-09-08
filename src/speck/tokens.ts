@@ -1,32 +1,42 @@
-/** VAULT desktop field. Paper sheet / black windows / power red. */
+/** VAULT dark studio. Charcoal / slate / highlighter. */
 
-export const FIELD = '#000000'
-export const PAPER = '#F4F4F0'
-export const POWER = '#E10600'
+export const GROUND = '#111318'
+export const PANEL = '#181b22'
+export const CARD = '#22262f'
+export const CARD_2 = '#2a2f3a'
+export const INK = '#eeeae4'
+export const MUTED = '#a8adb8'
+export const HAIR = '#2c313c'
+export const MARK = '#ff3355'
+export const MARK_INK = '#14080a'
+
+export const FIELD = GROUND
+export const PAPER = GROUND
+export const POWER = MARK
 export const WHITE = '#FFFFFF'
-export const URGENT = POWER
-export const RULE = 'rgba(244,244,240,0.22)'
-export const RULE_DIM = 'rgba(244,244,240,0.1)'
+export const URGENT = MARK
+export const RULE = 'rgba(238,234,228,0.18)'
+export const RULE_DIM = 'rgba(238,234,228,0.08)'
 export const INK_RULE = 'rgba(0,0,0,0.22)'
 export const INK_RULE_DIM = 'rgba(0,0,0,0.1)'
 
 export const FONT_HELV = '"Helvetica Neue", Helvetica, Arial, sans-serif'
-export const FONT_OSWALD = '"Oswald", "Helvetica Neue", Helvetica, Arial, sans-serif'
+export const FONT_OSWALD = FONT_HELV
 
 export function fontHelv(px: number, weight = 400): string {
   return `${weight} ${px}px ${FONT_HELV}`
 }
 
 export function fontDisplay(px: number, weight = 700): string {
-  return `${weight} ${px}px ${FONT_OSWALD}`
+  return `${weight} ${px}px ${FONT_HELV}`
 }
 
-export function ground(inv: boolean): string {
-  return inv ? PAPER : FIELD
+export function ground(_inv?: boolean): string {
+  return GROUND
 }
 
-export function ink(inv: boolean): string {
-  return inv ? FIELD : PAPER
+export function ink(_inv?: boolean): string {
+  return INK
 }
 
 export const PAINT_OPS = [

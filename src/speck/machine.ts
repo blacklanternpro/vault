@@ -4,6 +4,8 @@ import {
   indentNode,
   insertNode,
   isProject,
+  moveNodeBefore,
+  moveNote,
   outdentNode,
   parseDoc,
   removeNode,
@@ -11,13 +13,14 @@ import {
   serializeDoc,
   setNodeBody,
   setNodeStatus,
+  setNoteText,
   setNodeTitle,
   type Doc,
 } from './doc'
 import { isCommandLine, parseCommand } from './parse'
 import { COL_ORDER, isBinderStatus, PAINT_OPS, type NodeStatus } from './tokens'
 import { visibleBinderIds } from './organs/pipe'
-import { visibleNestIds } from './organs/nest'
+import { visibleNestIds } from './tree'
 
 export type Result = {
   session: Session
@@ -99,6 +102,37 @@ function applyShovel(session: Session, source: string, id: number | null, delta:
     serializeDoc(doc),
     `SHOVEL #${tid} ${node.status}`,
   )
+}
+
+export function stageCard(
+  session: Session,
+  source: string,
+  id: number,
+  status: NodeStatus,
+  beforeId?: number | null,
+): Result {
+  const doc = parseDoc(source)
+  const node = byId(doc, id)
+  if (!node) return ok(session, source, '? STAGE')
+  node.status = status
+  if (beforeId !== undefined) moveNodeBefore(doc, id, beforeId)
+  return ok(
+    { ...session, selected: { kind: 'NODE', id }, lens: 'pipe' },
+    serializeDoc(doc),
+    `STAGE #${id} ${status}`,
+  )
+}
+
+export function applyNoteOrder(session: Session, source: string, from: number, to: number): Result {
+  const doc = parseDoc(source)
+  if (!moveNote(doc, from, to)) return ok(session, source)
+  return ok(session, serializeDoc(doc))
+}
+
+export function applyNoteText(session: Session, source: string, index: number, text: string): Result {
+  const doc = parseDoc(source)
+  setNoteText(doc, index, text)
+  return ok(session, serializeDoc(doc))
 }
 
 function applyStrike(session: Session, source: string): Result {
