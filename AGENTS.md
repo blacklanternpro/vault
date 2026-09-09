@@ -8,7 +8,7 @@ the OS persists as a SPECK source string in `localStorage` (`speck-os-v2`).
 Running the Vite dev server is enough to exercise the product end to end.
 
 This is **not** a PWA and **not** a mobile month. It is a personal OS studio:
-one work graph, cassette theatre on top, elite TUI directory underneath, scratch sidebar
+one work graph, paste-up mechanical on top, elite TUI directory underneath, tissue scratch sidebar
 with FIND, no canvas organ field. Maker: **BAD FORM**. Product: VAULT WORLDWIDE.
 
 Standard commands live in `README.md` and `package.json` scripts (`dev`, `build`,
@@ -22,10 +22,10 @@ Non-obvious notes:
   bundling error).
 - Lint is **oxlint** (`npm run lint`), configured via `.oxlintrc.json` — not ESLint.
 - Aesthetic contract is locked in `.cursorrules`. Full portable language: `docs/LANGUAGE.md`. Overnight brief: `docs/OVERNIGHT_PROMPT.md`. Product: `PRODUCT.md`.
-- Smoke: charcoal/slate studio, Helvetica work, Oswald plaques, live orange leash + danger red (not IMP `#E10600`, not cobalt).
-  Cassette theatre on top (housing, transport plaques, RECORD, five hairline gutters, square slabs, boxed nest lines, satellite slugs, slack leashes, ghost `+`).
+- Smoke: mechanical board, Helvetica work, Archivo Narrow plaques, process-red select + non-repro blue register (not cassette orange, not IMP `#E10600`, not cobalt).
+  Paste-up theatre on top (crop marks, BOARD / REG, RECORD, five hairline gutters, square slabs, boxed nest lines, satellite slugs, slack leashes, ghost `+`).
   HIT a job slab to enter the folio; Esc / `[x]` returns. Nested rows are boxed, never `├──`.
   Pull a boxed line to a gutter, then drop the slug back onto the parent card to dock.
-  Directory under it (unix stems, orange name-block, first click selects, `ON` stages). Scratch sidebar with FIND (search only). Pointer `_` adds a note.
+  Directory under it (unix stems, process-red name-block, first click selects, `ON` stages). Tissue scratch sidebar with FIND (search only). Pointer `_` adds a note.
   Do not revive DateBlocks cards, beige UN identity, month-as-OS as home, paper/black
-  IMP canvas, dump-parser, SaaS kanban chrome, cream cassette OS, rounded-in-rect, unix-on-cards, boxed directory rows, NEXUS HUD, VU KPIs, CRT wells, or cobalt.
+  IMP canvas, dump-parser, SaaS kanban chrome, cream cassette OS, charcoal cassette housing, rounded-in-rect, unix-on-cards, boxed directory rows, NEXUS HUD, VU KPIs, CRT wells, or cobalt.

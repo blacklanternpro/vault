@@ -1,36 +1,39 @@
-/** VAULT dark studio. Charcoal / slate / live orange / danger red. */
+/** VAULT paste-up mechanical. Board / process black / non-repro blue / process red. */
 
-export const GROUND = '#111318'
-export const PANEL = '#181b22'
-export const CARD = '#22262f'
-export const CARD_2 = '#2a2f3a'
-export const INK = '#eeeae4'
-export const MUTED = '#a8adb8'
-export const HAIR = '#3a414e'
-export const LIVE = '#FF5C1A'
-export const LIVE_INK = '#14080a'
-export const MARK = '#ff3355'
-export const MARK_INK = '#14080a'
+export const GROUND = '#F2F0EA'
+export const SHOP = '#E4E2DC'
+export const PANEL = '#E8E4DC'
+export const CARD = '#FAF8F3'
+export const CARD_2 = '#F4F1EA'
+export const INK = '#141414'
+export const MUTED = '#3F3D3A'
+export const HAIR = '#C4C0B8'
+export const LIVE = '#ED1C24'
+export const LIVE_INK = '#FAF8F3'
+export const MARK = '#ED1C24'
+export const MARK_INK = '#FAF8F3'
+export const BLUE = '#2F5A72'
 
 export const FIELD = GROUND
 export const PAPER = GROUND
 export const POWER = LIVE
 export const WHITE = '#FFFFFF'
 export const URGENT = MARK
-export const RULE = 'rgba(238,234,228,0.18)'
-export const RULE_DIM = 'rgba(238,234,228,0.08)'
+export const RULE = 'rgba(20,20,20,0.16)'
+export const RULE_DIM = 'rgba(20,20,20,0.08)'
 export const INK_RULE = 'rgba(0,0,0,0.22)'
 export const INK_RULE_DIM = 'rgba(0,0,0,0.1)'
 
 export const FONT_HELV = '"Helvetica Neue", Helvetica, Arial, sans-serif'
-export const FONT_OSWALD = 'Oswald, "Helvetica Neue", Helvetica, Arial, sans-serif'
+export const FONT_PLAQUE = '"Archivo Narrow", "Helvetica Neue", Helvetica, Arial, sans-serif'
+export const FONT_OSWALD = FONT_PLAQUE
 
 export function fontHelv(px: number, weight = 400): string {
   return `${weight} ${px}px ${FONT_HELV}`
 }
 
 export function fontDisplay(px: number, weight = 700): string {
-  return `${weight} ${px}px ${FONT_OSWALD}`
+  return `${weight} ${px}px ${FONT_PLAQUE}`
 }
 
 export function ground(_inv?: boolean): string {

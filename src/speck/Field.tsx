@@ -100,7 +100,7 @@ export function Field() {
       }
     }
     drawRef.current = frame
-    void document.fonts.load('700 32px Oswald').finally(() => frame())
+    void document.fonts.load('700 32px "Archivo Narrow"').finally(() => frame())
     void document.fonts.ready.then(() => frame())
     frame()
 
