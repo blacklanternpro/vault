@@ -216,6 +216,17 @@ export function setNoteText(doc: Doc, index: number, text: string): void {
   if (note) note.text = text
 }
 
+export function setNoteHitch(doc: Doc, index: number, nodeId: number | null): void {
+  const note = doc.notes[index]
+  if (!note) return
+  if (nodeId == null) {
+    delete note.node
+    return
+  }
+  if (!byId(doc, nodeId)) return
+  note.node = nodeId
+}
+
 export function subtreeIds(doc: Doc, id: number): number[] {
   const out = [id]
   for (const child of childrenOf(doc, id)) out.push(...subtreeIds(doc, child.id))
@@ -275,6 +286,9 @@ export function insertNode(
 export function removeNode(doc: Doc, id: number): void {
   const ids = new Set(subtreeIds(doc, id))
   doc.nodes = doc.nodes.filter((n) => !ids.has(n.id))
+  for (const note of doc.notes) {
+    if (note.node != null && ids.has(note.node)) delete note.node
+  }
 }
 
 function ensurePath(doc: Doc, path: string, nestRoot: string): number | null {

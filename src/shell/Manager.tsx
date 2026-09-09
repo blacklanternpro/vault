@@ -23,10 +23,12 @@ type Props = {
   onPull: (id: number, status: NodeStatus, beforeId: number | null | undefined) => void
   onFocus: (id: number) => void
   onRename: (id: number) => void
+  onEditBody: (id: number) => void
   onAddNested: (parentId: number) => void
   onCreateJob: () => void
   onTitle: (value: string) => void
   onTitleCommit: () => void
+  onFieldBlur: (id: number, slot: 'title' | 'body' | 'subtask' | 'status') => void
 }
 
 type Drag = {
@@ -46,10 +48,12 @@ export function Manager({
   onPull,
   onFocus,
   onRename,
+  onEditBody,
   onAddNested,
   onCreateJob,
   onTitle,
   onTitleCommit,
+  onFieldBlur,
 }: Props) {
   const dragRef = useRef<Drag | null>(null)
   const ghostRef = useRef<HTMLDivElement | null>(null)
@@ -105,10 +109,18 @@ export function Manager({
     e.stopPropagation()
     if (!drag) return
     if (!drag.live) {
-      const target = e.target as HTMLElement
-      if (drag.kind === 'nested') onFocus(drag.id)
-      else if (target.closest('[data-title]')) onRename(drag.id)
-      else onAddNested(drag.id)
+      const hit = document.elementFromPoint(e.clientX, e.clientY)
+      const target = hit instanceof Element ? hit : (e.target as Element)
+      if (target.closest('[data-nest-add]')) return
+      if (target.closest('[data-body]')) {
+        onEditBody(drag.id)
+        return
+      }
+      if (target.closest('[data-title]')) {
+        onRename(drag.id)
+        return
+      }
+      onFocus(drag.id)
       return
     }
     const hit = dropAt(e.clientX, e.clientY)
@@ -119,7 +131,9 @@ export function Manager({
   }
 
   function beginCardDrag(e: PointerEvent<HTMLElement>, id: number) {
-    if ((e.target as HTMLElement).closest('[data-nested-id],input')) return
+    if ((e.target as HTMLElement).closest('[data-nested-id], [data-body], [data-nest-add], input, textarea, button')) {
+      return
+    }
     beginDrag(e, id, 'card')
   }
 
@@ -206,10 +220,7 @@ export function Manager({
           aria-label={label}
           placeholder="_"
           onChange={(e) => onTitle(e.target.value)}
-          onBlur={() => {
-            if (session.draftId === node.id && !session.fieldBuffer.trim()) return
-            onTitleCommit()
-          }}
+          onBlur={() => onFieldBlur(node.id, 'title')}
           onKeyDown={(e: KeyboardEvent<HTMLInputElement>) => {
             if (e.key === 'Enter') {
               e.preventDefault()
@@ -228,6 +239,117 @@ export function Manager({
     )
   }
 
+  function bodyField(node: GraphNode, kind: 'job' | 'sat' | 'nested', live: boolean) {
+    const editing = session.field?.id === node.id && session.field.slot === 'body'
+    const show = editing || Boolean(node.body) || (kind !== 'nested' && live)
+    if (!show) return null
+    const inputClass = kind === 'nested' ? 'nested-body-input' : 'card-body-input'
+    const bodyClass = kind === 'nested' ? 'nested-body' : 'card-body'
+    if (editing) {
+      return (
+        <input
+          className={inputClass}
+          data-body
+          data-testid={`body-${node.id}`}
+          value={session.fieldBuffer}
+          autoFocus
+          aria-label="Body"
+          placeholder="_"
+          onChange={(e) => onTitle(e.target.value)}
+          onBlur={() => onFieldBlur(node.id, 'body')}
+          onKeyDown={(e: KeyboardEvent<HTMLInputElement>) => {
+            if (e.key === 'Enter') {
+              e.preventDefault()
+              onTitleCommit()
+            }
+          }}
+          onPointerDown={(e) => e.stopPropagation()}
+        />
+      )
+    }
+    return (
+      <p
+        className={bodyClass}
+        data-body
+        data-testid={`body-${node.id}`}
+        onPointerDown={(e) => e.stopPropagation()}
+        onClick={() => onEditBody(node.id)}
+      >
+        {node.body || '_'}
+      </p>
+    )
+  }
+
+  function statusField(node: GraphNode) {
+    if (session.field?.id !== node.id || session.field.slot !== 'status') return null
+    return (
+      <input
+        className="card-body-input"
+        value={session.fieldBuffer}
+        autoFocus
+        aria-label="Status"
+        onChange={(e) => onTitle(e.target.value)}
+        onBlur={() => onFieldBlur(node.id, 'status')}
+        onKeyDown={(e: KeyboardEvent<HTMLInputElement>) => {
+          if (e.key === 'Enter') {
+            e.preventDefault()
+            onTitleCommit()
+          }
+        }}
+        onPointerDown={(e) => e.stopPropagation()}
+      />
+    )
+  }
+
+  function nestTick(id: number) {
+    const editing = session.field?.id === id && session.field.slot === 'subtask'
+    if (editing) {
+      return (
+        <input
+          className="nested-input"
+          data-nest-add
+          data-testid={`nest-add-${id}`}
+          value={session.fieldBuffer}
+          autoFocus
+          aria-label="Subtask"
+          placeholder="+"
+          onChange={(e) => onTitle(e.target.value)}
+          onBlur={() => onFieldBlur(id, 'subtask')}
+          onKeyDown={(e: KeyboardEvent<HTMLInputElement>) => {
+            if (e.key === 'Enter') {
+              e.preventDefault()
+              onTitleCommit()
+            }
+          }}
+          onPointerDown={(e) => e.stopPropagation()}
+        />
+      )
+    }
+    return (
+      <button
+        type="button"
+        className="nest-tick"
+        data-nest-add
+        data-testid={`nest-add-${id}`}
+        aria-label="Add nested"
+        onPointerDown={(e) => e.stopPropagation()}
+        onClick={() => onAddNested(id)}
+      >
+        +
+      </button>
+    )
+  }
+
+  function hitchType(id: number) {
+    const n = doc.notes.filter((note) => note.node === id).length
+    if (n === 0) return null
+    return (
+      <p className="card-hitch">
+        {n} hitch
+      </p>
+    )
+  }
+
   function nestedTree(parentId: number, depth: number): ReactNode {
     return nestedOf(doc, parentId).map((node) => (
       <div key={node.id} className="nested-block">
@@ -237,6 +359,7 @@ export function Manager({
           style={{ paddingLeft: 6 + depth * 10 }}
           onPointerDown={(e) => {
             e.stopPropagation()
+            if ((e.target as HTMLElement).closest('[data-body], [data-nest-add], input, button')) return
             beginDrag(e, node.id, 'nested')
           }}
           onPointerMove={onCardMove}
@@ -248,7 +371,10 @@ export function Manager({
             <span data-jack={node.id} className="jack-anchor" aria-hidden="true" />
           )}
         </div>
+        {bodyField(node, 'nested', false)}
+        {statusField(node)}
         {nestedTree(node.id, depth + 1)}
+        {nestTick(node.id)}
       </div>
     ))
   }
@@ -270,13 +396,11 @@ export function Manager({
               <span className="lane-count">{items.length}</span>
             </div>
             {items.map((node) => {
-              const nested = nestedOf(doc, node.id)
               const live =
                 session.nestFocus === node.id ||
                 (session.selected?.kind === 'NODE' && session.selected.id === node.id)
               const found = matchesFind(session, node.title)
               const sat = Boolean(node.loose)
-              const showNest = nested.length > 0
               return (
                 <article
                   key={node.id}
@@ -293,11 +417,13 @@ export function Manager({
                     <span data-jack={node.id} className="jack-anchor" aria-hidden="true" />
                   )}
                   {titleField(node, sat ? 'sat' : 'job')}
-                  {showNest ? (
-                    <div className="nest-list">
-                      {nestedTree(node.id, 0)}
-                    </div>
-                  ) : null}
+                  {bodyField(node, sat ? 'sat' : 'job', live)}
+                  {statusField(node)}
+                  {hitchType(node.id)}
+                  <div className="nest-list">
+                    {nestedTree(node.id, 0)}
+                    {nestTick(node.id)}
+                  </div>
                 </article>
               )
             })}

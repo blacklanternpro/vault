@@ -8,6 +8,7 @@ import {
   commitFieldLine,
   commitLine,
   freshSession,
+  hitchNote,
   pullCard,
   setProject,
   stageCard,
@@ -70,12 +71,13 @@ export function Studio() {
       if (typing && sessionRef.current.field) {
         if (e.key === 'Tab') {
           e.preventDefault()
-          if (sessionRef.current.lens === 'nest') {
-            apply(applyKey('Tab', e.shiftKey, sessionRef.current, sourceRef.current))
-          } else {
-            apply(commitFieldLine(sessionRef.current, sourceRef.current))
-          }
+          apply(applyKey('Tab', e.shiftKey, sessionRef.current, sourceRef.current))
         }
+        return
+      }
+      if (!typing && (e.key === 'Backspace' || e.key === 'Delete')) {
+        e.preventDefault()
+        apply(applyKey(e.key, false, sessionRef.current, sourceRef.current))
         return
       }
       const keys = ['Tab', ' ', '[', ']', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown']
@@ -116,6 +118,13 @@ export function Studio() {
       },
       source: r.source,
     })
+  }
+
+  function onFieldBlur(id: number, slot: 'title' | 'body' | 'subtask' | 'status') {
+    const live = sessionRef.current
+    if (live.field?.id === id && live.field.slot !== slot) return
+    if (live.draftId === id && !live.fieldBuffer.trim()) return
+    commitTitle()
   }
 
   function onFindChange(value: string) {
@@ -184,10 +193,12 @@ export function Studio() {
             }
             onFocus={(id) => apply(commitLine(`FOCUS ${id}`, sessionRef.current, sourceRef.current))}
             onRename={(id) => hit('SLOT', `${id}:title`)}
+            onEditBody={(id) => hit('SLOT', `${id}:body`)}
             onAddNested={(parentId) => apply(addNested(sessionRef.current, sourceRef.current, parentId))}
             onCreateJob={() => hit('EMPTY', 'pending')}
             onTitle={(value) => setLive(typeField(sessionRef.current, value))}
             onTitleCommit={commitTitle}
+            onFieldBlur={onFieldBlur}
           />
         </div>
         <Directory
@@ -219,6 +230,8 @@ export function Studio() {
         }
         onNoteEdit={(index, text) => apply(applyNoteText(sessionRef.current, sourceRef.current, index, text))}
         onReorder={(from, to) => apply(applyNoteOrder(sessionRef.current, sourceRef.current, from, to))}
+        onHitch={(index, nodeId) => apply(hitchNote(sessionRef.current, sourceRef.current, index, nodeId))}
+        onUnhitch={(index) => apply(hitchNote(sessionRef.current, sourceRef.current, index, null))}
       />
     </div>
   )

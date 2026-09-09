@@ -90,10 +90,10 @@ Manager is fixed on **top**. Directory is fixed **under it**. Scratch is a **rig
 SPECK stores the graph (`NODE`, `NOTE`, status, indent). It is not a Forth/DOS taskmaster, not a paint engine, and not the product personality.
 
 1. **One graph.** Every node: `id`, `title`, `body?`, `status` (`pending|rnd|active|done|dusted|none`), `parent`, ordered children, `urgent?`, `loose?`. Projects are roots (`parent` null). IDs live in source, not on the card.
-2. **Manager** — a **section**, not a window. No outer plate, no fasteners-as-frame, no five CRT wells. Cassette **deck**: five gutters divided by chrome hairlines (PENDING · R&D · ACTIVE · DONE · DUSTED). Jobs are square **slabs** (uppercase). Empty jobs have no well. Click the slab body to spawn a sentence-case ledger line. Pull that line onto a gutter to make a **slug** satellite (`LOOSE`). Satellites grow a nest list only if they themselves have nested children. First nested promotes PENDING → ACTIVE. Physics A: slab moves, nested follow, loose stay. **Leash** is a slack patch-cable (sag at rest, tension on drag, rAF follow, ~220ms settle). Orange conductor, dark jacket. Ghost `+` in PENDING is a dashed ledger tick. Click title to rename. Oswald plaques on the deck. Not kanban chrome. Not nest stems.
+2. **Manager** — a **section**, not a window. No outer plate, no fasteners-as-frame, no five CRT wells. Cassette **deck**: five gutters divided by chrome hairlines (PENDING · R&D · ACTIVE · DONE · DUSTED). Jobs are square **slabs** (uppercase). Empty jobs have no well. Click the body line to write the thought. `[+]` nest tick adds a sentence-case ledger line. Pull that line onto a gutter to make a **slug** satellite (`LOOSE`). Satellites grow a nest list only if they themselves have nested children. First nested promotes PENDING → ACTIVE. Physics A: slab moves, nested follow, loose stay. **Leash** is a slack patch-cable (sag at rest, tension on drag, rAF follow, ~220ms settle). Orange conductor, dark jacket. Ghost `+` in PENDING is a dashed ledger tick. Click title to rename. Backspace / Delete kills the selected non-root (subtree). Oswald plaques on the deck. Not kanban chrome. Not nest stems.
 3. **Directory** — the same graph as a naked unix tree of the entire catalogue. Stems `│ ├── └──`. Orange block behind the live name. Click name to rename. Trailing `_` adds a child. Indent/outdent. Space / shovel stages a node onto the manager (`none` → `pending`, or advance). CLIP-copy is dead.
-4. **Scratch** — txt notes as blocks. Vertical drag, snap into place, others shift. Persist order on `Doc.notes`. Ghost `_ LINK` / `_ PIC` / `_ FILE` stay inert. Hitch `NODE id` on a note is parked, not product identity.
-5. **FIND / NOTE** — one command field, top of the sidebar. Bare line searches titles (session highlight). When a scratch txt block is focused, a line appends a note. `CLEAR` restores seed. No DOS `>` operator bar. No legend rail. No `MOVE` / `GLYPH` as product chrome.
+4. **Scratch** — txt notes as blocks. Vertical drag, snap into place, others shift. Persist order on `Doc.notes`. Drop a block onto a slab to hitch (`NOTE … NODE id`). Plaque `→ TITLE`; `[x]` unhitches. Ghost `_ LINK` / `_ PIC` / `_ FILE` stay inert.
+5. **FIND / NOTE** — one command field, top of the sidebar. Bare line searches titles (session highlight). When a scratch txt block is focused, a line appends a note. `CLEAR` restores seed. FIND does not create projects or tasks. No DOS `>` operator bar. No legend rail. No `MOVE` / `GLYPH` as product chrome.
 6. **No salt organs.** CAL, SEAL, SKULL are out. Organ `PLACE`-drag is out. Grain / scan / INV-as-paper are out.
 
 A later agent may refine density **inside this studio**. It may not bring back DateBlocks cards, month-as-OS as home, beige cassette as the OS identity, paper/IMP canvas, a Tailwind binder dashboard, harvest amber, cobalt, CLIP-copy, or a second command input.
@@ -210,7 +210,7 @@ NOTE "type ramp 700 / 400"
 CLEAR
 ```
 
-HIT a card body to add a nested subtask. HIT a title to rename. HIT `+` to create a job. Never three forms. Never CTX chips in a header.
+HIT a body line to write. HIT `+` to nest. HIT a title to rename. HIT ghost `+` to create a job. Never three forms. Never CTX chips in a header.
 
 ### 7.4 Command field
 
