@@ -918,6 +918,7 @@
   background: var(--color-card);
   border: 1px solid var(--color-hair);
   cursor: grab;
+  overflow: auto;
 }
 
 .folio-doc.is-job > .jack,
