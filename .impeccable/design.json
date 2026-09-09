@@ -1,0 +1,65 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-09T13:42:00.000Z",
+  "title": "Design System: VAULT WORLDWIDE",
+  "extensions": {
+    "colorMeta": {
+      "shop": { "role": "neutral", "displayName": "Shop dimmer" },
+      "ground": { "role": "neutral", "displayName": "Mechanical" },
+      "live": { "role": "primary", "displayName": "Process red" },
+      "blue": { "role": "secondary", "displayName": "Non-repro" }
+    },
+    "typographyMeta": {
+      "plaque": { "displayName": "Marks", "purpose": "Lane, transport, FIND labels." },
+      "card": { "displayName": "Job title", "purpose": "Uppercase waxed slabs." }
+    },
+    "shadows": [],
+    "motion": [
+      { "name": "working-light", "value": "180ms ease", "purpose": "Rack shop field to folio mechanical." },
+      { "name": "leash-settle", "value": "220ms cubic", "purpose": "Tape leash after drop." }
+    ],
+    "breakpoints": [
+      { "name": "desktop", "value": "1440px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "RECORD",
+      "kind": "button",
+      "refersTo": "rack-add",
+      "description": "Creates a job on the current deck.",
+      "html": "<button class=\"ds-record\" type=\"button\">RECORD</button>",
+      "css": ".ds-record { padding: 4px 10px; border: 1px solid var(--color-live); background: var(--color-live); color: var(--color-live-ink); font-family: var(--font-plaque); font-size: 11px; font-weight: 700; letter-spacing: 0.16em; border-radius: 0; cursor: pointer; } .ds-record:hover { background: var(--color-ink); border-color: var(--color-ink); color: var(--color-ground); } .ds-record:focus-visible { outline: 1px solid var(--color-live); outline-offset: 2px; }"
+    },
+    {
+      "name": "Job slab",
+      "kind": "card",
+      "refersTo": "job-slab",
+      "description": "Waxed art on the mechanical. HIT enters the folio.",
+      "html": "<article class=\"ds-slab\"><h2>HOME PAGE</h2></article>",
+      "css": ".ds-slab { background: var(--color-card); border: 1px solid var(--color-ink); border-radius: 0; padding: 10px 12px 9px; } .ds-slab h2 { margin: 0; font-size: 13px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; } .ds-slab:hover { background: var(--color-card-2); }"
+    },
+    {
+      "name": "Directory select",
+      "kind": "chip",
+      "refersTo": "directory-select",
+      "description": "Process-red block behind the live stem name.",
+      "html": "<button class=\"ds-dir-on\" type=\"button\">REPO</button>",
+      "css": ".ds-dir-on { padding: 1px 6px; border: 0; border-radius: 0; background: var(--color-live); color: var(--color-live-ink); font-size: 13px; line-height: 18px; } .ds-dir-on:focus-visible { outline: 1px solid var(--color-live); outline-offset: 2px; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "Paste-up Mechanical",
+    "overview": "The studio is one prepress board. Jobs are waxed art. Nested work is strips. The catalogue is unused copy in a stem galley.",
+    "keyCharacteristics": [
+      "Crop-mark frame",
+      "Working light on folio enter",
+      "Two languages: boxed nest vs TUI stems"
+    ],
+    "rules": [
+      { "name": "Two languages", "body": "PM never draws stems. Directory never draws boxed jobs.", "section": "layout" }
+    ],
+    "dos": ["Do enter the job. Do keep FIND as search."],
+    "donts": ["Don't revive cassette housing, Oswald, or live orange."]
+  }
+}

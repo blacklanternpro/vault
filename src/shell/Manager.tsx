@@ -447,7 +447,12 @@ export function Manager({
         </header>
         <div className="folio-transport" aria-label="Lanes">
           {COL_ORDER.map((col) => (
-            <div key={col} className="folio-lane" data-lane={col} data-testid={`folio-lane-${col}`}>
+            <div
+              key={col}
+              className={`folio-lane${laneOf(folio.status) === col ? ' is-now' : ''}`}
+              data-lane={col}
+              data-testid={`folio-lane-${col}`}
+            >
               <span>{LANE_PLAQUE[col]}</span>
             </div>
           ))}

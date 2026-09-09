@@ -161,11 +161,13 @@ export function Studio() {
 
   return (
     <div className={`studio${inFolio ? ' is-folio' : ''}`} data-testid="studio">
+      <span className="crop-bl" aria-hidden />
+      <span className="crop-br" aria-hidden />
       <div className="studio-main">
         <div className="studio-rack">
           <header className="rack-bar">
             <span className="rack-plaque" aria-hidden>
-              TAPE
+              BOARD
             </span>
             <label className="rack-project">
               <span className="rack-label">PROJECT</span>
@@ -183,7 +185,7 @@ export function Studio() {
               </select>
             </label>
             <span className="rack-plaque" aria-hidden>
-              REC
+              REG
             </span>
             <button
               type="button"

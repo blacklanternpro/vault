@@ -1,30 +1,33 @@
 ---
 name: VAULT WORLDWIDE
-description: Local-first personal OS as a dark DOM studio — BAD FORM cassette theatre, elite TUI directory, scratch, FIND.
+description: Local-first personal OS as a paste-up mechanical — BAD FORM, elite TUI directory, tissue scratch, FIND.
 colors:
-  ground: "#111318"
-  panel: "#181b22"
-  card: "#22262f"
-  card-2: "#2a2f3a"
-  well: "#0a0b0e"
-  ink: "#eeeae4"
-  muted: "#a8adb8"
-  hair: "#3a414e"
-  chrome: "rgba(238, 234, 228, 0.2)"
-  jacket: "#1c1410"
-  live: "#FF5C1A"
-  live-ink: "#14080a"
-  mark: "#ff3355"
-  mark-ink: "#14080a"
+  shop: "#E4E2DC"
+  ground: "#F2F0EA"
+  panel: "#E8E4DC"
+  card: "#FAF8F3"
+  card-2: "#F4F1EA"
+  well: "#ECEAE4"
+  ink: "#141414"
+  muted: "#3F3D3A"
+  hair: "#C4C0B8"
+  chrome: "rgba(20, 20, 20, 0.16)"
+  jacket: "#8A8680"
+  live: "#ED1C24"
+  live-ink: "#FAF8F3"
+  mark: "#ED1C24"
+  mark-ink: "#FAF8F3"
+  blue: "#2F5A72"
+  grid: "#8FB7C9"
 typography:
   plaque:
-    fontFamily: "Oswald, Helvetica Neue, Helvetica, Arial, sans-serif"
+    fontFamily: "Archivo Narrow, Helvetica Neue, Helvetica, Arial, sans-serif"
     fontSize: "12px"
     fontWeight: 700
     lineHeight: "1.2"
     letterSpacing: "0.14em"
   project:
-    fontFamily: "Oswald, Helvetica Neue, Helvetica, Arial, sans-serif"
+    fontFamily: "Archivo Narrow, Helvetica Neue, Helvetica, Arial, sans-serif"
     fontSize: "18px"
     fontWeight: 700
     lineHeight: "1.2"
@@ -41,6 +44,12 @@ typography:
     fontWeight: 700
     lineHeight: "1.15"
     letterSpacing: "0.04em"
+  folio-sat:
+    fontFamily: "Helvetica Neue, Helvetica, Arial, sans-serif"
+    fontSize: "22px"
+    fontWeight: 700
+    lineHeight: "1.15"
+    letterSpacing: "normal"
   nested:
     fontFamily: "Helvetica Neue, Helvetica, Arial, sans-serif"
     fontSize: "12px"
@@ -58,6 +67,12 @@ typography:
     fontSize: "14px"
     fontWeight: 400
     lineHeight: "1.4"
+    letterSpacing: "normal"
+  body:
+    fontFamily: "Helvetica Neue, Helvetica, Arial, sans-serif"
+    fontSize: "15px"
+    fontWeight: 400
+    lineHeight: "24px"
     letterSpacing: "normal"
   count:
     fontFamily: "Helvetica Neue, Helvetica, Arial, sans-serif"
@@ -102,7 +117,7 @@ components:
     rounded: "0px"
     padding: "4px 0"
   scratch-block:
-    backgroundColor: "{colors.card}"
+    backgroundColor: "{colors.ground}"
     textColor: "{colors.ink}"
     typography: "{typography.directory}"
     rounded: "{rounded.card}"
@@ -113,60 +128,62 @@ components:
 
 ## Overview
 
-VAULT is a dark desktop studio, not a dashboard and not a canvas organ field. Maker: **BAD FORM**. Charcoal ground, slate slabs, off-white type. Two signals: safety orange for live/select/leash, highlighter red for URGENT/RECORD/CLEAR. The Manager is a black cassette **theatre**: housing, transport plaques, RECORD, jacks, five hairline gutters, square slabs. HIT a slab enters the **folio** (the job as a document). Nested work is sleek boxed lines — never unix stems. Pulled subtasks are slugs on slack patch-cables; drop a slug on a parent card to dock it back. Directory under the deck is an elite TUI listing. Scratch sidebar with FIND (search only). SPECK source is the save format. Sections do not drag.
+VAULT is a paste-up mechanical on a making desk, not a dashboard and not a canvas organ field. Maker: **BAD FORM**. Shop-dimmer field, mechanical-white board, process-black type. Two signals: process red for live/select/URGENT/RECORD, non-repro blue for register and marks. The Manager is paste-up **theatre**: crop-mark frame, BOARD / REG plaques, RECORD, register targets, five hairline gutters, square waxed slabs. HIT a slab enters the **folio** (the job as a document) and raises working light. Nested work is sleek boxed lines — never unix stems. Pulled subtasks are slugs on slack tape; drop a slug on a parent card to dock it back. Directory under the deck is an elite TUI listing. Tissue scratch sidebar with FIND (search only). SPECK source is the save format. Sections do not drag.
 
 ## Colors
 
 | Token | Hex | Use |
 | --- | --- | --- |
-| Ground | `#111318` | Studio field |
-| Panel | `#181b22` | Scratch sidebar |
-| Card | `#22262f` | Job / satellite / boxed line / note slabs |
-| Card 2 | `#2a2f3a` | Slab hover |
-| Well | `#0a0b0e` | Cassette transport window, nest well |
-| Ink | `#eeeae4` | Work type |
-| Muted | `#a8adb8` | Counts, stems, plaques |
-| Hair | `#3a414e` | Quiet rules, card edges |
-| Chrome | `rgba(238,234,228,0.2)` | Gutter and transport hairlines |
-| Jacket | `#1c1410` | Leash cable jacket |
-| Live | `#FF5C1A` | Directory select, FIND mark, leash conductor, caret, live slab |
-| Live ink | `#14080a` | Type on orange |
-| Mark | `#ff3355` | URGENT, RECORD, strike, CLEAR-class danger |
-| Mark ink | `#14080a` | Type on red |
+| Shop | `#E4E2DC` | Dimmer field around the board (rack) |
+| Ground | `#F2F0EA` | Mechanical white; folio working light |
+| Panel | `#E8E4DC` | Tissue scratch sidebar |
+| Card | `#FAF8F3` | Waxed job / satellite / boxed line |
+| Card 2 | `#F4F1EA` | Slab hover |
+| Well | `#ECEAE4` | Nested well |
+| Ink | `#141414` | Work type, keylines, crop marks |
+| Muted | `#3F3D3A` | Counts, stems, ghosts |
+| Hair | `#C4C0B8` | Quiet rules |
+| Chrome | `rgba(20,20,20,0.16)` | Transport hairlines |
+| Jacket | `#8A8680` | Tape leash jacket, tissue dash |
+| Live | `#ED1C24` | Directory select, FIND mark, taut leash, caret, live slab, RECORD |
+| Live ink | `#FAF8F3` | Type on process red |
+| Mark | `#ED1C24` | URGENT (same ink as live) |
+| Blue | `#2F5A72` | Register, plaques, FIND label, leash at rest |
+| Grid | `#8FB7C9` | Non-repro blue baselines and gutter rules |
 
-Not IMP `#E10600`. Cobalt is not in the system. Harvest amber is not identity. Cream cassette is not the plate. Black housing is. Dark is native; paper invert is not identity.
+Not IMP `#E10600`. Cobalt is not in the system. Harvest amber is not identity. Cassette orange `#FF5C1A` and charcoal housing are discarded.
 
 ## Typography
 
-Helvetica Neue / Helvetica / Arial on work. Oswald 700 on plaques (lane names, project window, project name, FIND, transport). Job titles 13px / 700 / tracked / uppercase. Folio title 28px / 700 / uppercase. Boxed lines and satellite slugs 12px / 400 / sentence case. Directory 13px / row 20. FIND 14px. No JetBrains, Space Grotesk, Inter, VT323, or pixel novelty faces.
+Helvetica Neue / Helvetica / Arial on work. Archivo Narrow 700 on plaques (lane names, project window, project name, FIND, transport), self-hosted latin woff2. Job titles 13px / 700 / tracked / uppercase. Folio title 28px / 700 / uppercase. Satellite folio title 22px. Folio body 15px / 24px (on the non-repro grid). Boxed lines and satellite slugs 12px / 400 / sentence case. Directory 13px / row 20. FIND 14px. Counts and `ON` 11px. No JetBrains, Space Grotesk, Inter, Oswald, VT323, or pixel novelty faces.
 
 ## Layout
 
-Desktop (~1440). Main column is the deck (~52% height) over the directory. Transport strip: cassette window (project select) + RECORD, Oswald project name, then five gutters (PENDING · R&D · ACTIVE · DONE · DUSTED) divided by chrome hairlines — or an entered folio with a thin lane rail. No plate box, no fasteners-as-frame, no CRT wells, no NEXUS HUD, no VU KPIs. Right sidebar 320px: FIND, snap-reorderable notes, pointer `_`, inert `_ LINK` `_ PIC` `_ FILE`. Scratch blocks reorder vertically; the three main regions stay put.
+Desktop (~1440). Main column is the deck (~52% height) over the directory. Transport strip: BOARD + project window + RECORD, Archivo Narrow project name, then five gutters (PENDING · R&D · ACTIVE · DONE · DUSTED) divided by non-repro hairlines — or an entered folio with a thin lane rail (current gutter inked). Crop marks at the studio corners; register targets across the mechanical. No plate box, no fasteners-as-frame, no CRT wells, no NEXUS HUD, no VU KPIs. Right sidebar 320px: FIND, tissue notes, pointer `_`, inert `_ LINK` `_ PIC` `_ FILE`. Scratch blocks reorder vertically; the three main regions stay put.
 
 ## Elevation & Depth
 
-No soft shadows, no glass, no whole-OS grain/scan overlay. Depth is slate steps on charcoal. Quiet grain in the DUSTED gutter only. Live slab: 1px orange hairline. Leash: dark jacket + orange conductor, slack catenary, live tension, ~220ms settle. Drag ghost: opacity. Origin dims while the ghost is live. Cassette housing is a 1px chrome inset around the gutters.
+No soft shadows, no glass, no whole-OS grain/scan overlay. Depth is waxed white on the board, keyline 1px ink. Quiet grain in the DUSTED gutter only. Live slab: 1px process-red keyline. Leash: tape jacket + blue conductor, process red when taut, slack catenary, ~220ms settle. Drag ghost: opacity. Origin dims while the ghost is live. Working light: shop `#E4E2DC` on the rack, ground `#F2F0EA` when a folio is open.
 
 ## Shapes
 
-Radius 0 on job slabs, satellite slugs, boxed lines, scratch blocks. The only radius is the jack hole (ring + dark hole; orange pin when that cable is live). Directory name block is square. Selection is an orange rectangle behind the directory name — not an oval, not a pill overlay. PM GUI never draws nest stems. Directory never draws boxed job homes.
+Radius 0 on job slabs, satellite slugs, boxed lines, scratch blocks. The only radius is the register target (circle + crosshair; process red when that tape is live). Directory name block is square. Selection is a process-red rectangle behind the directory name — not an oval, not a pill overlay. PM GUI never draws nest stems. Directory never draws boxed job homes.
 
 ## Components
 
-- **Transport** — cassette window for PROJECT select; RECORD as a small control (red dot = danger, not a VU). TAPE / REC plaques. Project name as an Oswald plaque on the deck.
-- **Job slab** — square, uppercase title. HIT enters the folio (does not rename). No empty inner well. Click body to write. `[+]` adds a boxed line. First nested promotes PENDING → ACTIVE. Drag between gutters to stage; nested children follow; loose satellites stay.
-- **Folio** — entered job. Large title, real writing surface, boxed-line outline, hitch strip. Esc / plaque / `[x]` returns. Second click on the title renames. Thin lane rail stays a drop target (pull / stage), not five CRT wells.
-- **Boxed line** — radius 0, inset slate, hairline. Sentence case. Pull onto a gutter to make a satellite (`LOOSE`). Drop a satellite onto a parent slab to dock (drop `LOOSE`). Preview leash while the row is mid-pull.
-- **Satellite slug** — half height, sentence case, jack hole, no empty inner box. Nest list only if it has nested children.
-- **Leash** — quadratic slack patch-cable. Rest sag ≈ `min(42px, 0.18 * distance)`, floor 8px. Drag tightens with tension, never perfectly straight. Drop springs for ~220ms.
-- **Directory row** — ascii stem `│ ├── └──`, name, `ON`. First click selects (orange block). Second click / Enter renames. `ON` / drag onto a gutter stages. Space is a silent shortcut. Trailing `_` adds a child. Full catalogue as columns of stem text if the pane is wide. No boxes.
+- **Transport** — BOARD / PROJECT select; RECORD as a filled process-red control. REG plaque. Project name as an Archivo Narrow plaque on the deck.
+- **Job slab** — square, uppercase title, ink keyline. HIT enters the folio (does not rename). No empty inner well. Click body to write. `[+]` adds a boxed line. First nested promotes PENDING → ACTIVE. Drag between gutters to stage; nested children follow; loose satellites stay.
+- **Folio** — entered job. Large title, lined writing surface, boxed-line outline, hitch strip. Esc / plaque / `[x]` returns (Esc commits a live field first). Second click on the title renames. Thin lane rail stays a drop target; the job's gutter is inked (`is-now`).
+- **Boxed line** — radius 0, inset well, hairline. Sentence case. Pull onto a gutter to make a satellite (`LOOSE`). Drop a satellite onto a parent slab to dock (drop `LOOSE`). Preview leash while the row is mid-pull.
+- **Satellite slug** — half height, sentence case, register target, no empty inner box. Nest list only if it has nested children.
+- **Leash** — quadratic slack tape. Rest sag ≈ `min(42px, 0.18 * distance)`, floor 8px. Drag tightens with tension, never perfectly straight. Drop springs for ~220ms.
+- **Directory row** — ascii stem `│ ├── └──`, name, `ON`. First click selects (process-red block); other rows fade. Second click / Enter renames. `ON` / drag onto a gutter stages. Space is a silent shortcut. Trailing `_` adds a child. Full catalogue as columns of stem text if the pane is wide. No boxes.
 - **FIND** — one search field. Echo line. Bare line searches. Pointer `_` in scratch adds a note. Hitch is drop. Not a codebook.
-- **Scratch block** — square, date + textarea. Vertical snap-reorder. Ghost media slots inert.
-- **Field editor** — native input on the live title / body, orange caret, no second dock slab.
+- **Scratch block** — tissue, dashed tape edge, date + textarea. Vertical snap-reorder. Ghost media slots inert.
+- **Field editor** — native input on the live title / body, process-red caret, no second dock slab.
 
 ## Do's and Don'ts
 
-**Do:** one graph, two languages (cassette theatre + TUI directory); enter the job; boxed nest on the PM; stems only in the directory; pointer-first; FIND searches; ON or lane-drop to stage; dock back; slack leashes; snap-reorder notes; charcoal / slate / live orange / danger red.
+**Do:** one graph, two languages (paste-up theatre + TUI directory); enter the job; boxed nest on the PM; stems only in the directory; pointer-first; FIND searches; ON or lane-drop to stage; dock back; slack leashes; snap-reorder notes; mechanical white / process black / non-repro blue / process red.
 
-**Don't:** DateBlocks, SaaS kanban chrome, rounded-in-rect, five CRT wells, fasteners-as-frame, taut tuner-needle filaments, section billboards, paper/IMP canvas, salt organs, organ PLACE-drag, DOS `>` dock, dump-parser, cobalt, harvest amber as identity, cream cassette OS, 3D knobs, VU KPIs, NEXUS HUD, PM nest stems, unix-on-cards, boxed directory rows, CLIP-copy, month-as-OS as home, sit-down verb codebook, BLACK LANTERN as maker.
+**Don't:** DateBlocks, SaaS kanban chrome, rounded-in-rect, five CRT wells, fasteners-as-frame, taut tuner-needle filaments, section billboards, paper/IMP canvas, salt organs, organ PLACE-drag, DOS `>` dock, dump-parser, cobalt, harvest amber as identity, cream cassette OS, charcoal cassette housing, live orange `#FF5C1A`, Oswald plaques, 3D knobs, VU KPIs, NEXUS HUD, PM nest stems, unix-on-cards, boxed directory rows, CLIP-copy, month-as-OS as home, sit-down verb codebook, BLACK LANTERN as maker.

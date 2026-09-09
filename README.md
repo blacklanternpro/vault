@@ -1,6 +1,6 @@
 # vault
 
-VAULT WORLDWIDE — local-first personal OS. Dark studio shell (React/DOM). Maker: **BAD FORM**. The live program is a **SPECK** source string (`localStorage` key `speck-os-v2`).
+VAULT WORLDWIDE — local-first personal OS. Paste-up studio shell (React/DOM). Maker: **BAD FORM**. The live program is a **SPECK** source string (`localStorage` key `speck-os-v2`).
 
 Design language (portable): [`docs/LANGUAGE.md`](docs/LANGUAGE.md) — SPECK spec in §7.
 Overnight agent brief: [`docs/OVERNIGHT_PROMPT.md`](docs/OVERNIGHT_PROMPT.md).
@@ -8,9 +8,9 @@ Product truth: [`PRODUCT.md`](PRODUCT.md).
 
 ## Composition
 
-Charcoal studio. Cassette theatre. Live orange leash. Danger red. Not a PWA. Not a month. Not a canvas organ field.
+Mechanical board. Paste-up theatre. Process-red select. Non-repro blue register. Not a PWA. Not a month. Not a canvas organ field.
 
-1. **One graph** — directory is the TUI catalogue; manager is cassette theatre (rack slabs + entered folio)
+1. **One graph** — directory is the TUI catalogue; manager is paste-up theatre (rack slabs + entered folio)
 2. HIT a job to enter it. Type the body. `[+]` adds a boxed line. Pull a line to make a slug; drop the slug on a parent card to dock it back. Trailing `_` adds a child. Ghost `+` creates a job. `ON` stages a stem onto the deck.
 3. **FIND** searches (`loop`); it does not create work. Pointer `_` in scratch adds a note. Hitch is drop.
 4. Space is a silent stage shortcut. Scratch blocks snap-reorder vertically.

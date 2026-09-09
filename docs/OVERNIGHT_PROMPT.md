@@ -1,6 +1,6 @@
 # OVERNIGHT PROMPT — paste this into a future agent
 
-**Month-as-OS is dead as home. DateBlocks, SaaS kanban chrome, harvest amber, cobalt lash, dump-parser docks, DOS `#id` ledgers, salt organs, and the paper/black IMP canvas are dead.** Keep **SPECK** as the save format (graph + dump source), not a Forth REPL and not a paint/PLACE compositor identity. The studio is four tools as a **fixed DOM layout**: cassette theatre on top, elite TUI directory underneath, scratch sidebar with FIND. Persistence is SPECK source (`speck-os-v2`), not a task CRDT, not JSON-as-database.
+**Month-as-OS is dead as home. DateBlocks, SaaS kanban chrome, harvest amber, cobalt lash, dump-parser docks, DOS `#id` ledgers, salt organs, and the paper/black IMP canvas are dead.** Keep **SPECK** as the save format (graph + dump source), not a Forth REPL and not a paint/PLACE compositor identity. The studio is four tools as a **fixed DOM layout**: paste-up mechanical on top, elite TUI directory underneath, tissue scratch sidebar with FIND. Persistence is SPECK source (`speck-os-v2`), not a task CRDT, not JSON-as-database.
 
 Maker is **BAD FORM**. BLACK LANTERN is dead. Product stays **VAULT WORLDWIDE**.
 
@@ -14,11 +14,11 @@ Read this whole file. Then read `docs/LANGUAGE.md`. Then read `.cursorrules`. Th
 
 Grasp the vision. Put a spin on it. Go further from the boring. Stay utility.
 
-You are building toward **VAULT WORLDWIDE** — a personal OS on top of an OS. Dark studio. Desktop. Not a phone PWA. Not a website. Not Linear. Not a canvas organ field.
+You are building toward **VAULT WORLDWIDE** — a personal OS on top of an OS. Paste-up mechanical. Desktop. Not a phone PWA. Not a website. Not Linear. Not a canvas organ field.
 
 Jake spent hours fighting agents that translated his vision into DateBlocks, then into a DOS/IMP taskmaster, then into a dressed Manager with a sit-down codebook. SPECK exists so the graph is owned by source. The shell is React/DOM because he asked for a studio, not another paint engine.
 
-**Tonight-of-that-future-run:** stay inside the language. Split the two instruments. Do not ship a dump-parser taskmaster. Do not revive CAL/SEAL/SKULL. Do not drag the main sections. Do not put unix stems on job cards. Do not cassette the directory.
+**Tonight-of-that-future-run:** stay inside the language. Split the two instruments. Do not ship a dump-parser taskmaster. Do not revive CAL/SEAL/SKULL. Do not drag the main sections. Do not put unix stems on job cards. Do not paste-up the directory. Do not revive charcoal cassette housing.
 
 If Jake only wanted language docs, they are already in this repo. You are here to *use* them.
 
@@ -34,20 +34,20 @@ Jake / BAD FORM. Personal OS. Not a store product. Not a SaaS. Local-first, no c
 
 1. **`docs/LANGUAGE.md`** — the grand language. Tokens, grammar, vetoes, SPECK save format. **Primary.**
 2. **`.cursorrules`** — short law. Obey it. It points here.
-3. **Current shell** — `src/App.tsx` hosts `<Studio />`. Runtime graph is `src/speck`. Layout is manager / directory / scratch. Charcoal ground. The canvas `Field` and salt organs are a corpse; do not restore them.
-4. **History** — Gemini neo-brutal TUI. PRs #8–#11 (fried TUI → burn the box). PR #7 DateBlocks = warning. PR #14 month field = recovery, not home. Paper/IMP canvas = anti-reference. BLACK LANTERN as maker = dead.
-5. **Pinned world** — black cassette theatre (charcoal/slate, off-white, live orange, danger red). Square slabs. Slack leashes. Boxed nest on the PM. Elite TUI directory. No CRT wells. No NEXUS HUD. No VU KPIs.
+3. **Current shell** — `src/App.tsx` hosts `<Studio />`. Runtime graph is `src/speck`. Layout is manager / directory / scratch. Mechanical ground. The canvas `Field` and salt organs are a corpse; do not restore them.
+4. **History** — Gemini neo-brutal TUI. PRs #8–#11 (fried TUI → burn the box). PR #7 DateBlocks = warning. PR #14 month field = recovery, not home. Paper/IMP canvas = anti-reference. Charcoal cassette housing = discarded. BLACK LANTERN as maker = dead.
+5. **Pinned world** — paste-up mechanical (shop dimmer, board white, process black, non-repro blue, process red). Square slabs. Slack leashes. Boxed nest on the PM. Elite TUI directory. No CRT wells. No NEXUS HUD. No VU KPIs.
 
 ---
 
 ## Locked tokens
 
-- Ground charcoal, panel/card slate, chrome hairline gutters
-- Off-white type, muted secondary
-- Live orange — selection, FIND, leash, caret (`#FF5C1A`)
-- Danger red — URGENT, RECORD, strike, CLEAR (not `#E10600`)
+- Shop dimmer, mechanical ground, tissue panel, waxed cards
+- Process-black type, muted mixed from ink
+- Process red — selection, FIND, taut leash, caret, URGENT, RECORD (`#ED1C24`)
+- Non-repro blue — register, plaques, leash at rest (`#2F5A72`)
 
-Helvetica Neue / Helvetica / Arial on work. Oswald 700 on plaques. Square slabs. No amber identity. No cobalt. Cream cassette is not the plate. Black housing is.
+Helvetica Neue / Helvetica / Arial on work. Archivo Narrow 700 on plaques. Square slabs. No amber identity. No cobalt. No cassette orange. No charcoal housing.
 
 ---
 
@@ -55,9 +55,9 @@ Helvetica Neue / Helvetica / Arial on work. Oswald 700 on plaques. Square slabs.
 
 Desktop. One FIND field (search only). One graph. Sections do not drag. Two languages that must not mix:
 
-1. Manager on top. Cassette theatre: housing, transport, RECORD, jacks, boxed nest well. Hairline gutters PENDING · R&D · ACTIVE · DONE · DUSTED. One project (cassette window + RECORD). Square slabs. HIT a slab **enters the folio** (title + real body + boxed outline). Esc / plaque returns. Nested = boxed lines, never stems. Pull a boxed line to a gutter to make a slug. Drop a slug on a parent card to dock it back. Slack leashes. Ghost `+` creates a job. `[+]` adds a boxed line.
-2. Directory under it. Elite TUI. Stems. Orange-block select. First click selects; second click / Enter renames. `ON` / drag stages onto the deck. Space is a silent shortcut. `_` adds. CLIP is dead. Stems never on the PM. No boxes in the listing.
-3. Scratch on the right. Txt blocks snap-reorder. Pointer `_` adds a note. Hitch is pointer. Link/pic/file slots inert this pass.
+1. Manager on top. Paste-up theatre: crop marks, transport, RECORD, register targets, boxed nest well. Hairline gutters PENDING · R&D · ACTIVE · DONE · DUSTED. One project (BOARD window + RECORD). Square slabs. HIT a slab **enters the folio** (title + real body + boxed outline; working light). Esc / plaque returns. Nested = boxed lines, never stems. Pull a boxed line to a gutter to make a slug. Drop a slug on a parent card to dock it back. Slack leashes. Ghost `+` creates a job. `[+]` adds a boxed line.
+2. Directory under it. Elite TUI. Stems. Process-red-block select. First click selects; second click / Enter renames. `ON` / drag stages onto the deck. Space is a silent shortcut. `_` adds. CLIP is dead. Stems never on the PM. No boxes in the listing.
+3. Scratch on the right. Tissue. Txt blocks snap-reorder. Pointer `_` adds a note. Hitch is pointer. Link/pic/file slots inert this pass.
 4. FIND in the sidebar. Search only. No typing NOTE / SHOVEL / CLEAR / FOCUS as the way to work. `CLEAR` may remain source recovery in the machine. No DOS `>` slab.
 5. Pointer-first. FIND searches — it does not create work.
 
@@ -108,6 +108,6 @@ Do not propose a new palette. Do not revive DateBlocks. Do not build NEXUS HUD a
 
 New features must be SPECK-sayable as source.
 
-When in doubt: charcoal studio, orange on the live name, slack leashes, boxed nest on the deck, stems in the directory, one FIND, empty is `_`.
+When in doubt: mechanical board, process red on the live name, slack leashes, boxed nest on the deck, stems in the directory, one FIND, empty is `_`.
 
 Go.
