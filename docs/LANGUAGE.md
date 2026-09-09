@@ -14,7 +14,7 @@ If a thing cannot be said in this language, it is not in the work.
 Before you add a feature, a color, a font, a panel, a motion, a word:
 
 1. Can it be said in **SPECK source**? (see §7)
-2. Does it live on **charcoal / slate / off-white / highlighter** — and nowhere else?
+2. Does it live on **charcoal / slate / off-white / live orange / danger red** — and nowhere else?
 3. Is it **utility** wearing attitude, or attitude wearing a fake tool?
 4. Would Jake almost throw up? (DateBlocks, SaaS kanban chrome, boxed amber terminals, paper/IMP canvas OS)
 
@@ -24,13 +24,13 @@ Fail any one: do not ship it.
 
 ## 1. World
 
-The program lives in a **dark studio** — a desk at night, slate depth, quiet type, one highlighter. Not a paper sheet. Not a pixel-GUI organ field. Not a SaaS dashboard.
+The program lives in a **dark studio** — a desk at night, slate depth, quiet type, live orange and danger red. Not a paper sheet. Not a pixel-GUI organ field. Not a SaaS dashboard.
 
 Attitude: slightly illegal, slightly glamorous, still a tool. Sleaze and grime are **salt**. If the studio looks like a title card or a CRM, there is too much costume.
 
 This instance is a **desktop studio**. Phone lists, TimeTree, and paper diaries already exist. Do not design for a thumb. Packaging later is a boring native envelope (Tauri / WebView). The envelope is not the aesthetic.
 
-Cassette futurism, IMP plaques, and 1px black windows are **anti-reference** on this instance. Steal density and terse voice. Do not stamp Oswald plaques or power-red ovals back onto the field.
+Black cassette housing is the deck: charcoal, chrome hairlines, orange conductor, RECORD red. Cream/beige faceplate is still anti-reference. Oswald plaques label the deck. Do not stamp 3D knobs, VU KPIs, or cream OS plates onto the field.
 
 ---
 
@@ -40,10 +40,10 @@ Four layers. Do not flatten them into one costume.
 
 | Layer | Role | If you overdo it |
 | --- | --- | --- |
-| Dark studio | The plate. Charcoal field, slate cards, off-white type | CRM dashboard, KPI row, avatars, “+ New Deal” |
-| Quiet type | The cut. Helvetica, hairlines, position-as-stage | Billboard section titles, Oswald identity, CICS ledger |
-| A little sleaze | Salt. Highlighter block, WORLDWIDE ® echo | Rave flyer, Fidèle-maximal, slogan-tee graphics |
-| Echo of hacker grime | Salt. Unix nest, uppercase logs, `_` empty | Matrix rain, Kali wallpaper, hoodie-hacker stock, `1337` |
+| Dark studio | The plate. Charcoal field, square slate slabs, off-white type | CRM dashboard, KPI row, avatars, “+ New Deal” |
+| Quiet type | The cut. Helvetica on work, Oswald on plaques, hairline gutters | Billboard section titles, CICS ledger |
+| A little sleaze | Salt. Orange name-block, slack patch-cable, WORLDWIDE ® echo | Rave flyer, Fidèle-maximal, slogan-tee graphics |
+| Echo of hacker grime | Salt. Unix nest, uppercase job titles, `_` empty | Matrix rain, Kali wallpaper, hoodie-hacker stock, `1337` |
 
 Sleaze and grime are **salt**. If the field looks like a title card, there is too much salt.
 
@@ -60,20 +60,22 @@ Sleaze and grime are **salt**. If the field looks like a title card, there is to
 | Ink | Off-white work type |
 | Muted | Secondary count, stems, ghosts |
 | Hair | Quiet separators |
-| Highlighter | Directory selection block, FIND mark, urgent, live caret |
+| Highlighter | URGENT, strike, CLEAR-class danger |
+| Live orange | Directory selection, FIND mark, leash conductor, live caret |
 
-One accent. Strike and URGENT use the same highlighter. Not IMP `#E10600`. Cobalt has left. Harvest amber is forbidden. `INV` / paper invert is not the identity.
+Two signals. Strike and URGENT use danger red. Live work uses orange `#FF5C1A`. Not IMP `#E10600`. Cobalt has left. Harvest amber is forbidden as identity. `INV` / paper invert is not the identity. Cream cassette is not the OS plate.
 
 ### Type
 
-- **Helvetica Neue / Helvetica / Arial** — the only family. Manager, directory, scratch, FIND.
-- No Oswald as identity. No JetBrains. No Space Grotesk. No Inter. No VT323. No Orbitron.
+- **Helvetica Neue / Helvetica / Arial** — work type. Manager titles, directory, scratch, FIND line.
+- **Oswald 700** — plaques only (lane labels, project name, FIND label). Not body copy.
+- No JetBrains. No Space Grotesk. No Inter. No VT323. No Orbitron.
 
 ### Surface
 
-- Modest radius (~10px) on project cards and scratch blocks. Not 24–32px SaaS bowls. Not radius 0 as a religion.
-- No soft shadows. No gradients. No blur. No glass. No grain/scan overlay.
-- Selection in the directory: highlighter-red block **behind the name**. Not CHIP+oval. Not an overlay dossier.
+- Square slabs (radius 0). The only radius is a jack hole. Not 24–32px SaaS bowls. Not rounded cards inside square wells.
+- No soft shadows. No gradients. No blur. No glass. No grain/scan overlay (except quiet grain in the DUSTED gutter).
+- Selection in the directory: safety-orange block **behind the name**. Not CHIP+oval. Not an overlay dossier. PM GUI never draws nest stems.
 
 ---
 
@@ -87,9 +89,9 @@ Manager is fixed on **top**. Directory is fixed **under it**. Scratch is a **rig
 
 SPECK stores the graph (`NODE`, `NOTE`, status, indent). It is not a Forth/DOS taskmaster, not a paint engine, and not the product personality.
 
-1. **One graph.** Every node: `id`, `title`, `body?`, `status` (`backlog|active|staging|done|none`), `parent`, ordered children, `urgent?`. Projects are nodes with children (and binder-status roots). IDs live in source, not on the card.
-2. **Manager** — project **text cards** in silent stage lanes (position encodes stage; no FOCUS/GATEWAY billboards). Off-white title, muted child count, urgent as highlighter. Drag between lanes rewrites that project’s `status`; children stay. Drag within a lane reorders siblings in source. Click a card to focus the directory to that subtree. Click the title to rename. Empty lane creates (click-and-type). Slate fill, modest radius, almost no border. Not kanban chrome.
-3. **Directory** — the same graph as a naked unix tree. Stems `│ ├── └──`. Highlighter-red block behind the live name. Click name to rename. Trailing `_` adds a child. Indent/outdent. Space / shovel stages a node onto the manager (`none` → `backlog`, or advance). CLIP-copy is dead.
+1. **One graph.** Every node: `id`, `title`, `body?`, `status` (`pending|rnd|active|done|dusted|none`), `parent`, ordered children, `urgent?`, `loose?`. Projects are roots (`parent` null). IDs live in source, not on the card.
+2. **Manager** — a **section**, not a window. No outer plate, no fasteners-as-frame, no five CRT wells. Cassette **deck**: five gutters divided by chrome hairlines (PENDING · R&D · ACTIVE · DONE · DUSTED). Jobs are square **slabs** (uppercase). Empty jobs have no well. Click the slab body to spawn a sentence-case ledger line. Pull that line onto a gutter to make a **slug** satellite (`LOOSE`). Satellites grow a nest list only if they themselves have nested children. First nested promotes PENDING → ACTIVE. Physics A: slab moves, nested follow, loose stay. **Leash** is a slack patch-cable (sag at rest, tension on drag, rAF follow, ~220ms settle). Orange conductor, dark jacket. Ghost `+` in PENDING is a dashed ledger tick. Click title to rename. Oswald plaques on the deck. Not kanban chrome. Not nest stems.
+3. **Directory** — the same graph as a naked unix tree of the entire catalogue. Stems `│ ├── └──`. Orange block behind the live name. Click name to rename. Trailing `_` adds a child. Indent/outdent. Space / shovel stages a node onto the manager (`none` → `pending`, or advance). CLIP-copy is dead.
 4. **Scratch** — txt notes as blocks. Vertical drag, snap into place, others shift. Persist order on `Doc.notes`. Ghost `_ LINK` / `_ PIC` / `_ FILE` stay inert. Hitch `NODE id` on a note is parked, not product identity.
 5. **FIND / NOTE** — one command field, top of the sidebar. Bare line searches titles (session highlight). When a scratch txt block is focused, a line appends a note. `CLEAR` restores seed. No DOS `>` operator bar. No legend rail. No `MOVE` / `GLYPH` as product chrome.
 6. **No salt organs.** CAL, SEAL, SKULL are out. Organ `PLACE`-drag is out. Grain / scan / INV-as-paper are out.
@@ -102,13 +104,15 @@ A later agent may refine density **inside this studio**. It may not bring back D
 
 These are the letters of the language. Use them. Do not invent a parallel alphabet.
 
-- **Highlighter block** — red field behind the live directory name. FIND mark uses the same red. Not a rounded pill overlay covering neighbors.
-- **Quiet card** — slate fill, ~10px radius, type does the work. Title + muted count. Not a SaaS deal card.
-- **Hairline** — thin rules between manager and directory, sidebar edge. Not 3px neo-brutal drop shadows.
-- **ASCII stems** — `│ ├── └──` for the directory. Prefixes computed from `parent` / children.
+- **Orange block** — safety-orange field behind the live directory name. FIND mark uses the same orange. Not a rounded pill overlay covering neighbors.
+- **Danger red** — URGENT titles, strike, CLEAR-class.
+- **Job slab** — slate fill, radius 0, uppercase title. Nested is a type line, not a mini-job. Not a SaaS deal card. Not nest stems.
+- **Leash** — slack patch-cable (orange conductor, dark jacket). Settled sag. Live tension. Never perfectly taut. Not a tuner needle. Not a directory stem.
+- **Hairline** — chrome gutters, transport edges. Not 3px neo-brutal drop shadows.
+- **ASCII stems** — `│ ├── └──` for the directory only. Prefixes computed from `parent` / children.
 - **`_` empty** — ghost add row, ghost media slots, empty titles. Not an apologetic empty state.
 - **Strike** — highlighter mid-line on done if a row needs it. Not `text-decoration` grey.
-- **Shovel** — Space (and in-row stage) advances a node through the lanes (or from `none` onto `backlog`). Cards also drag between lanes.
+- **Shovel** — Space (and in-row stage) advances a node through the gutters (or from `none` onto `pending`). Slabs also drag between gutters.
 - **FIND** — the one command field. Not a `>` DOS slab.
 
 ---
@@ -118,7 +122,7 @@ These are the letters of the language. Use them. Do not invent a parallel alphab
 The VAULT studio is a **React/DOM shell** over a **SPECK graph**. The live program is source. Do not restyle a dashboard kit and call that the OS. Do not restore the canvas organ field and call that craft.
 
 - One FIND/NOTE field.
-- Persistence is the SPECK source string (`speck-os-v1` in localStorage).
+- Persistence is the SPECK source string (`speck-os-v2` in localStorage).
 - One graph; manager is stage cards; directory is the unix tree. Scratch is notes.
 - SPECK lex / parse / serialize / machine in `src/speck`. Shell in `src/shell`.
 
@@ -146,20 +150,22 @@ Line-oriented. Indent (2 spaces) groups a body. Words are Forth-like. Case-insen
 
 ```
 PIPE vault
-  COL backlog
+  COL pending
+  COL rnd
   COL active
-  COL staging
   COL done
+  COL dusted
 NEST
-  NODE 1 "ops" status none
-    NODE 10 "lab" status none
-      NODE 11 "scout_ridge_a" status none URGENT
-    NODE 20 "net" status none
-      NODE 102 "telemetry ui" status active
-        BODY "spec leftover"
-    NODE 104 "ingress routing" status backlog
+  NODE 1 "site" status none
+    NODE 10 "HOME PAGE" status active
+      NODE 11 "lock type ramp" status active URGENT
+      NODE 13 "still loop" status rnd LOOSE
+        BODY "8s loop, no sting"
+    NODE 30 "REPO" status pending
+  NODE 2 "print" status none
+    NODE 60 "RUN SHEET" status pending
 DUMP
-  NOTE 09.07.26 "ridge"
+  NOTE 09.09.26 "type ramp 700 / 400"
 ```
 
 **Tokens**
@@ -167,9 +173,9 @@ DUMP
 | Form | Example | Meaning |
 | --- | --- | --- |
 | word | `PIPE` `NODE` `SHOVEL` | opcode |
-| string | `"ridge"` | payload |
-| tape date | `09.07.26` | `MM.DD.YY` on DUMP notes |
-| number | `104` | id |
+| string | `"type ramp 700 / 400"` | payload |
+| tape date | `09.09.26` | `MM.DD.YY` on DUMP notes |
+| number | `10` | id |
 
 Empty storage loads the seed program. `CLEAR` restores seed.
 
@@ -180,31 +186,31 @@ Seed does **not** include `PLACE SEAL|SKULL|CAL`, `GLYPH VAULT`, `INV`, `GRAIN`,
 | Noun | Says |
 | --- | --- |
 | `PIPE` | project manager columns (a *view* of the graph) |
-| `COL` | `backlog` `active` `staging` `done` |
+| `COL` | `pending` `rnd` `active` `done` `dusted` |
 | `NEST` | unix directory of the same graph |
-| `NODE` | a graph node: `id`, title, `status`, indent = parent |
+| `NODE` | a graph node: `id`, title, `status`, indent = parent, optional `LOOSE` / `URGENT` |
 | `BODY` | optional body on the current node |
 | `DUMP` | scratchpad |
 | `NOTE` | a dump txt line |
 
 Dead as product chrome: `PLACE`, `GLYPH`, `INV`, `GRAIN`, `SCAN`, `SEAL`, `SKULL`, `CAL`, `DOCK` legend. Legacy `TASK` / `STEM` lines still parse into `NODE`s. `PLACE` / `GLYPH` / `INV` lines may still parse for old source; they are not the studio.
 
-`CLEAR` restores seed. In-directory `SHOVEL` / Space advances a node (or lifts `none` onto `backlog`). Manager lane-drop sets that project’s status. FIND highlights matching titles in-session. The FIND line does not insert `NODE`s.
+`CLEAR` restores seed. In-directory `SHOVEL` / Space advances a node (or lifts `none` onto `pending`). Manager lane-drop sets that card’s status (nested follow; `LOOSE` stays). FIND highlights matching titles in-session. The FIND line does not insert `NODE`s.
 
 ### 7.3 Events
 
 Pointer and keys belong to the studio. The host forwards into the machine.
 
 ```
-HIT NODE 102
-HIT ADD 20
-HIT SHOVEL 102
-FIND telemetry
-NOTE "ridge"
+HIT NODE 13
+HIT ADD 10
+HIT SHOVEL 13
+FIND loop
+NOTE "type ramp 700 / 400"
 CLEAR
 ```
 
-HIT a card to focus its subtree. HIT a title to rename. HIT empty lane to create. Never three forms. Never CTX chips in a header.
+HIT a card body to add a nested subtask. HIT a title to rename. HIT `+` to create a job. Never three forms. Never CTX chips in a header.
 
 ### 7.4 Command field
 
@@ -216,11 +222,11 @@ FIND is the **command field**. One line, top of the scratch sidebar. Titles are 
 - Else a bare line is search, never a project tree.
 - Empty commit is a no-op.
 
-Examples: `FIND telemetry` · `NOTE ridge` · `CLEAR`
+Examples: `FIND loop` · `NOTE type ramp 700 / 400` · `CLEAR`
 
 ### 7.5 Runtime contract
 
-1. **The program is source.** `localStorage` key `speck-os-v1`. Ignore `speck-month-v1`.
+1. **The program is source.** `localStorage` key `speck-os-v2`. Ignore `speck-os-v1` and `speck-month-v1`.
 2. **The studio is a DOM shell** over parsed source + session. Session: selected node, nest expand, nest focus, field slot, buffer, echo, find query, dump focus.
 3. **Commits mutate source.** Shovel and lane-drop rewrite a node status. Editors rewrite title/body/notes. Empty lanes and directory `_` insert nodes. `NOTE` appends txt. Scratch reorder rewrites note order. `CLEAR` restores seed. No worker. No CRDT. No JSON sidecar. FIND does not parse work trees.
 4. **No CLIP, DateBlocks cards, cobalt theme, month-as-OS home, salt organs, or organ PLACE-drag** on this instance.
@@ -247,11 +253,13 @@ Never. Not as a joke. Not as a “just for desktop.” Not as a dark-mode varian
 - Harvest amber, charcoal leather *as costume*, HTML notebook skins
 - Acid watermarks, giant boxed logos, section billboards (`PIPE // vault`, `CALENDAR` / `TO-DO` as monuments)
 - Header CTX chips, PROJECTS / ROSTER / FLEET / LOGS as a mode bar
-- Inter, VT323, Orbitron, Oswald-as-identity, “sci-fi display” fonts
+- Inter, VT323, Orbitron, Oswald-as-work-type (plaques only), “sci-fi display” fonts
 - Green-on-black notes, amber boxed terminals, phosphor takeover
 - Three input forms
 - Demo fluff (`BUY MILK`, lorem, fake dashboards, cost-burn theatre)
-- Alien Isolation cosplay, chunky 3D knobs, screws, vents, tape-deck skeuomorphism
+- Alien Isolation cosplay, chunky 3D knobs, VU meters as KPIs, taut tuner-needle filaments, PM nest stems
+- Cream cassette / beige hi-fi as the OS plate (black housing is the deck; cream stays anti-reference)
+- Rounded cards inside square wells, five CRT lane wells, fasteners-as-frame
 - Vaporwave, synthwave, neon alley, Y2K chrome media-player skins
 - Heavy modular console of adjacent hardware bays
 - Matrix rain, Anonymous masks, hoodie-hacker stock, `1337`, Kali wallpaper
@@ -264,7 +272,7 @@ Never. Not as a joke. Not as a “just for desktop.” Not as a dark-mode varian
 - Organ PLACE-drag of the main sections
 - Dump-parser dock, DOS `>` operator slab, legend rail GRAIN/SCAN/INV
 
-Quiet project cards with modest radius are **in**. DateBlocks and SaaS kanban chrome are **out**.
+Square cassette slabs and slack leashes are **in**. DateBlocks and SaaS kanban chrome are **out**.
 
 ---
 
@@ -304,9 +312,9 @@ Older canon still in force as warning: Gemini neo-brutal TUI blueprint (engineer
 2. Change **world content** only: what the studio shows, what FIND commits.
 3. Do not change the substrate into a CRM because “this product is a dashboard.” If it cannot live as manager + directory + scratch + one field, it is a different language — do not pretend it is this one.
 4. Point `.cursorrules` at this file. Keep `.cursorrules` short. Agents read the short law; humans and long agents read this.
-5. If you need a second color, you are already lost. Use highlighter. Strike is the same red.
+5. If you need a third color, you are already lost. Live orange and danger red are the two signals.
 
-**VAULT-specific content (this repo):** dark DOM studio; SPECK as save format; one graph; manager cards; unix directory; scratch blocks (txt this pass); FIND/NOTE; persistence `speck-os-v1`. No DateBlocks. No month-as-OS home. No amber binder. No cobalt. No dump-parser dock. No salt organs. No PLACE-drag of sections.
+**VAULT-specific content (this repo):** dark DOM studio; SPECK as save format; one graph; black-deck manager (hairline gutters, square slabs, slack leashes); unix directory; scratch blocks (txt this pass); FIND/NOTE; persistence `speck-os-v2`. No DateBlocks. No month-as-OS home. No amber binder. No cobalt. No dump-parser dock. No salt organs. No PLACE-drag of sections.
 
 ---
 
@@ -317,7 +325,7 @@ Write like a terminal that went to art school for one semester and dropped out.
 - Terse. Uppercase where the machine would shout.
 - No “welcome to your dashboard.”
 - No empty states that apologize. Empty is `_` or `empty/`.
-- Filenames as mythos: `flush_stale_resolvers.sh`, `cnc_toolpath_night_run`, `scout_ridge_a`.
+- Work files as nouns: `type_ramp.md`, `hero_still.tif`, `still_loop.mov`.
 - Maker mark: BLACK LANTERN. Product mark: VAULT WORLDWIDE.
 
 ---

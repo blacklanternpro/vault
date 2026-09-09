@@ -4,11 +4,11 @@
 
 `vault` is a **frontend-only** desktop-studio SPA (React 19 + Vite 8 + Tailwind CSS v4,
 TypeScript). There is **no backend, database, auth, API, or environment variables** —
-the OS persists as a SPECK source string in `localStorage` (`speck-os-v1`).
+the OS persists as a SPECK source string in `localStorage` (`speck-os-v2`).
 Running the Vite dev server is enough to exercise the product end to end.
 
 This is **not** a PWA and **not** a mobile month. It is a personal OS studio:
-one work graph, manager cards on top, unix directory underneath, scratch sidebar
+one work graph, black cassette deck on top, unix directory underneath, scratch sidebar
 with FIND, no canvas organ field.
 
 Standard commands live in `README.md` and `package.json` scripts (`dev`, `build`,
@@ -22,10 +22,11 @@ Non-obvious notes:
   bundling error).
 - Lint is **oxlint** (`npm run lint`), configured via `.oxlintrc.json` — not ESLint.
 - Aesthetic contract is locked in `.cursorrules`. Full portable language: `docs/LANGUAGE.md`. Overnight brief: `docs/OVERNIGHT_PROMPT.md`. Product: `PRODUCT.md`.
-- Smoke: charcoal/slate studio, Helvetica work, highlighter-red selection (not IMP `#E10600`, not cobalt).
-  Manager on top (quiet cards, no billboard titles). Directory under it (unix stems).
-  Scratch sidebar with FIND. Drag a card between lanes; snap-reorder notes; click a
-  title, type; trailing `_` adds a child; Space/shovel stages a node. Typed `CLEAR`
-  restores seed. No CAL / SEAL / SKULL, no organ PLACE-drag, no DOS `>` dock.
+- Smoke: charcoal/slate studio, Helvetica work, Oswald plaques, live orange leash + danger red (not IMP `#E10600`, not cobalt).
+  Black cassette deck on top (five hairline gutters, square slabs, nested ledger lines, satellite slugs, slack leashes, ghost `+`).
+  Directory under it (unix stems, orange name-block). Scratch sidebar with FIND. Drag a slab between gutters; pull a
+  nested row onto a lane and watch the cable sag/tighten; snap-reorder notes; click a title, type; click a job body
+  to nest a line; trailing `_` adds a child; Space/shovel stages a node. Typed `CLEAR` restores seed. No CAL / SEAL /
+  SKULL, no organ PLACE-drag, no DOS `>` dock, no five CRT wells, no taut filaments.
   Do not revive DateBlocks cards, beige UN identity, month-as-OS as home, paper/black
-  IMP canvas, dump-parser, SaaS kanban chrome, amber, or cobalt.
+  IMP canvas, dump-parser, SaaS kanban chrome, cream cassette OS, rounded-in-rect, or cobalt.

@@ -13,13 +13,14 @@ const FONT_PAGE = fontDisplay(18, 700)
 const FONT_PROJECT = fontDisplay(22, 700)
 const MID = PIPE_ROW_H / 2
 
-const LEFT_COLS = ['backlog', 'active']
-const RIGHT_COLS = ['staging', 'done']
+const LEFT_COLS = ['pending', 'rnd', 'active']
+const RIGHT_COLS = ['done', 'dusted']
 const COL_LABEL: Record<string, string> = {
-  backlog: 'BACKLOG',
+  pending: 'PENDING',
+  rnd: 'R&D',
   active: 'ACTIVE',
-  staging: 'STAGING',
-  done: 'COMMITTED',
+  done: 'DONE',
+  dusted: 'DUSTED',
 }
 
 function tasksIn(doc: Doc, col: string, focus: number | null): GraphNode[] {
