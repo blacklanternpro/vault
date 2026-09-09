@@ -270,6 +270,10 @@ NEST
   const bodySaved = commitFieldLine(typeField(bodyHit.session, 'new sting'), bodyHit.source)
   if (byId(parseDoc(bodySaved.source), LOOP)?.body !== 'new sting') fail('body write')
 
+  const escKeep = applyKey('Escape', false, typeField(bodyHit.session, 'keep sting'), bodyHit.source)
+  if (byId(parseDoc(escKeep.source), LOOP)?.body !== 'keep sting') fail('esc commits body')
+  if (escKeep.session.pipeOpen != null || escKeep.session.field) fail('esc after body still open')
+
   const hitchLive = hitchNote(freshSession(), seed, 0, HOME)
   const hitchNote0 = parseDoc(hitchLive.source).notes[0]
   if (hitchNote0?.node !== HOME || hitchNote0.text !== SEED_NOTE) fail(`hitch live ${JSON.stringify(hitchNote0)}`)

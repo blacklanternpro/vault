@@ -107,7 +107,10 @@ export function Manager({
     dragRef.current = null
     ghostRef.current?.remove()
     ghostRef.current = null
-    originRef.current?.classList.remove('is-away')
+    if (originRef.current) {
+      originRef.current.classList.remove('is-away')
+      originRef.current.style.pointerEvents = ''
+    }
     originRef.current = null
     liveRef.current = null
     if (dragging) setDragging(false)
@@ -214,7 +217,11 @@ export function Manager({
         ghost.style.zIndex = '80'
         ghost.style.opacity = '0.92'
         ghost.classList.add('is-ghost')
+        ghost.querySelectorAll('*').forEach((n) => {
+          ;(n as HTMLElement).style.pointerEvents = 'none'
+        })
         origin.classList.add('is-away')
+        origin.style.pointerEvents = 'none'
         originRef.current = origin
         document.body.appendChild(ghost)
         ghostRef.current = ghost

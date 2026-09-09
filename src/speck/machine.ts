@@ -789,7 +789,13 @@ function moveSelection(session: Session, source: string, dir: 1 | -1): Result {
 }
 
 export function applyKey(key: string, shift: boolean, session: Session, source: string): Result {
-  if (key === 'Escape') return { session: collapse(session), source }
+  if (key === 'Escape') {
+    if (session.field) {
+      const committed = commitField(session, source)
+      return { session: collapse(committed.session), source: committed.source }
+    }
+    return { session: collapse(session), source }
+  }
   if (key === 'Tab' && session.field) return cycleField(session, source, shift ? -1 : 1)
   if (key === 'Tab' && session.pipeOpen != null && !session.field) {
     const doc = parseDoc(source)

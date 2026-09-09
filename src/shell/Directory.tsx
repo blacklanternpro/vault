@@ -74,8 +74,12 @@ export function Directory({
     ghostRef.current?.remove()
     ghostRef.current = null
     if (!drag) return
-    if (!drag.live) return
     skipClick.current = true
+    if (!drag.live) {
+      if (selectedId === id) onRename(id)
+      else onSelect(id)
+      return
+    }
     const lane = dropLane(e.clientX, e.clientY)
     if (lane) onStage(id, lane)
   }
@@ -102,6 +106,9 @@ export function Directory({
         ghost.style.zIndex = '80'
         ghost.style.opacity = '0.92'
         ghost.classList.add('is-ghost')
+        ghost.querySelectorAll('*').forEach((n) => {
+          ;(n as HTMLElement).style.pointerEvents = 'none'
+        })
         document.body.appendChild(ghost)
         ghostRef.current = ghost
         drag.startX = e.clientX - r.left
