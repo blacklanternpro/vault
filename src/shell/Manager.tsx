@@ -107,16 +107,23 @@ export function Manager({
     dragRef.current = null
     ghostRef.current?.remove()
     ghostRef.current = null
-    if (originRef.current) {
-      originRef.current.classList.remove('is-away')
-      originRef.current.style.pointerEvents = ''
-    }
-    originRef.current = null
     liveRef.current = null
     if (dragging) setDragging(false)
     e.stopPropagation()
-    if (!drag) return
+    if (!drag) {
+      if (originRef.current) {
+        originRef.current.classList.remove('is-away')
+        originRef.current.style.pointerEvents = ''
+        originRef.current = null
+      }
+      return
+    }
     if (!drag.live) {
+      if (originRef.current) {
+        originRef.current.classList.remove('is-away')
+        originRef.current.style.pointerEvents = ''
+        originRef.current = null
+      }
       const hit = document.elementFromPoint(e.clientX, e.clientY)
       const target = hit instanceof Element ? hit : (e.target as Element)
       if (target.closest('[data-nest-add]')) return
@@ -131,8 +138,13 @@ export function Manager({
       onFocus(drag.id)
       return
     }
-    const hit = dropAt(e.clientX, e.clientY)
     const dockId = dropDock(e.clientX, e.clientY, drag.id)
+    const hit = dropAt(e.clientX, e.clientY)
+    if (originRef.current) {
+      originRef.current.classList.remove('is-away')
+      originRef.current.style.pointerEvents = ''
+      originRef.current = null
+    }
     if (dockId != null && (drag.kind === 'nested' || Boolean(byId(doc, drag.id)?.loose))) {
       onDock(drag.id, dockId)
       return
@@ -144,21 +156,21 @@ export function Manager({
   }
 
   function dropDock(clientX: number, clientY: number, dragId: number): number | null {
-    const node = document.elementFromPoint(clientX, clientY)
-    if (!(node instanceof Element)) return null
-    if (node.closest('[data-lane]') && !node.closest('[data-card-id], [data-folio-id], [data-nest-well]')) {
-      return null
+    const els = [...document.querySelectorAll('[data-folio-id], [data-card-id]')]
+    let best: { id: number; area: number } | null = null
+    for (const el of els) {
+      const id = Number(el.getAttribute('data-folio-id') || el.getAttribute('data-card-id'))
+      if (!Number.isFinite(id) || id === dragId) continue
+      const r = el.getBoundingClientRect()
+      if (clientX < r.left || clientX > r.right || clientY < r.top || clientY > r.bottom) continue
+      const area = r.width * r.height
+      if (!best || area < best.area) best = { id, area }
     }
-    const folio = node.closest('[data-folio-id]')
-    const card = node.closest('[data-card-id]')
-    const raw = folio?.getAttribute('data-folio-id') || card?.getAttribute('data-card-id')
-    const parentId = Number(raw)
-    if (!Number.isFinite(parentId) || parentId === dragId) return null
-    return parentId
+    return best?.id ?? null
   }
 
   function beginCardDrag(e: PointerEvent<HTMLElement>, id: number) {
-    if ((e.target as HTMLElement).closest('[data-nested-id], [data-body], [data-nest-add], input, textarea, button')) {
+    if ((e.target as HTMLElement).closest('[data-nested-id], [data-nest-add], input, textarea, button')) {
       return
     }
     beginDrag(e, id, 'card')
