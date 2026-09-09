@@ -16,12 +16,12 @@ web
 
 ## Positioning
 
-**[inferred]** SPECK is the **save format** (graph + dump source in `speck-os-v1`). It is not the app and not a paint/PLACE compositor identity. React/DOM is the studio shell. One work graph: the directory is the tree; the manager is the same nodes as stage cards. FIND searches; it does not create projects or tasks.
+**[inferred]** SPECK is the **save format** (graph + dump source in `speck-os-v2`). It is not the app and not a paint/PLACE compositor identity. React/DOM is the studio shell. One work graph: the directory is the tree; the manager is the same nodes as stage cards. FIND searches; it does not create projects or tasks.
 
 ## Operating Context
 
 - Frontend-only SPA (React 19 + Vite). No backend, auth, or API.
-- Persistence: SPECK source string in `localStorage` (`speck-os-v1`).
+- Persistence: SPECK source string in `localStorage` (`speck-os-v2`).
 - Desktop studio (~1440). Packaging later may be a boring native envelope; the envelope is not the product.
 - Dev: `npm run dev` on port 5173.
 

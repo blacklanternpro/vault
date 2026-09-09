@@ -4,7 +4,7 @@
 
 `vault` is a **frontend-only** desktop-studio SPA (React 19 + Vite 8 + Tailwind CSS v4,
 TypeScript). There is **no backend, database, auth, API, or environment variables** —
-the OS persists as a SPECK source string in `localStorage` (`speck-os-v1`).
+the OS persists as a SPECK source string in `localStorage` (`speck-os-v2`).
 Running the Vite dev server is enough to exercise the product end to end.
 
 This is **not** a PWA and **not** a mobile month. It is a personal OS studio:

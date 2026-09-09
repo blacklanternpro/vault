@@ -121,7 +121,7 @@ These are the letters of the language. Use them. Do not invent a parallel alphab
 The VAULT studio is a **React/DOM shell** over a **SPECK graph**. The live program is source. Do not restyle a dashboard kit and call that the OS. Do not restore the canvas organ field and call that craft.
 
 - One FIND/NOTE field.
-- Persistence is the SPECK source string (`speck-os-v1` in localStorage).
+- Persistence is the SPECK source string (`speck-os-v2` in localStorage).
 - One graph; manager is stage cards; directory is the unix tree. Scratch is notes.
 - SPECK lex / parse / serialize / machine in `src/speck`. Shell in `src/shell`.
 
@@ -155,15 +155,16 @@ PIPE vault
   COL done
   COL dusted
 NEST
-  NODE 1 "ops" status none
-    NODE 10 "LAB" status active
-      NODE 11 "scout ridge" status active URGENT
-    NODE 20 "NET" status active
-      NODE 102 "telemetry overlay" status rnd LOOSE
-        BODY "spec leftover"
-    NODE 104 "INGRESS ROUTING" status pending
+  NODE 1 "site" status none
+    NODE 10 "HOME PAGE" status active
+      NODE 11 "lock type ramp" status active URGENT
+      NODE 13 "still loop" status rnd LOOSE
+        BODY "8s loop, no sting"
+    NODE 30 "REPO" status pending
+  NODE 2 "print" status none
+    NODE 60 "RUN SHEET" status pending
 DUMP
-  NOTE 09.07.26 "ridge"
+  NOTE 09.09.26 "type ramp 700 / 400"
 ```
 
 **Tokens**
@@ -171,9 +172,9 @@ DUMP
 | Form | Example | Meaning |
 | --- | --- | --- |
 | word | `PIPE` `NODE` `SHOVEL` | opcode |
-| string | `"ridge"` | payload |
-| tape date | `09.07.26` | `MM.DD.YY` on DUMP notes |
-| number | `104` | id |
+| string | `"type ramp 700 / 400"` | payload |
+| tape date | `09.09.26` | `MM.DD.YY` on DUMP notes |
+| number | `10` | id |
 
 Empty storage loads the seed program. `CLEAR` restores seed.
 
@@ -200,11 +201,11 @@ Dead as product chrome: `PLACE`, `GLYPH`, `INV`, `GRAIN`, `SCAN`, `SEAL`, `SKULL
 Pointer and keys belong to the studio. The host forwards into the machine.
 
 ```
-HIT NODE 102
-HIT ADD 20
-HIT SHOVEL 102
-FIND telemetry
-NOTE "ridge"
+HIT NODE 13
+HIT ADD 10
+HIT SHOVEL 13
+FIND loop
+NOTE "type ramp 700 / 400"
 CLEAR
 ```
 
@@ -220,11 +221,11 @@ FIND is the **command field**. One line, top of the scratch sidebar. Titles are 
 - Else a bare line is search, never a project tree.
 - Empty commit is a no-op.
 
-Examples: `FIND telemetry` · `NOTE ridge` · `CLEAR`
+Examples: `FIND loop` · `NOTE type ramp 700 / 400` · `CLEAR`
 
 ### 7.5 Runtime contract
 
-1. **The program is source.** `localStorage` key `speck-os-v1`. Ignore `speck-month-v1`.
+1. **The program is source.** `localStorage` key `speck-os-v2`. Ignore `speck-os-v1` and `speck-month-v1`.
 2. **The studio is a DOM shell** over parsed source + session. Session: selected node, nest expand, nest focus, field slot, buffer, echo, find query, dump focus.
 3. **Commits mutate source.** Shovel and lane-drop rewrite a node status. Editors rewrite title/body/notes. Empty lanes and directory `_` insert nodes. `NOTE` appends txt. Scratch reorder rewrites note order. `CLEAR` restores seed. No worker. No CRDT. No JSON sidecar. FIND does not parse work trees.
 4. **No CLIP, DateBlocks cards, cobalt theme, month-as-OS home, salt organs, or organ PLACE-drag** on this instance.
@@ -311,7 +312,7 @@ Older canon still in force as warning: Gemini neo-brutal TUI blueprint (engineer
 4. Point `.cursorrules` at this file. Keep `.cursorrules` short. Agents read the short law; humans and long agents read this.
 5. If you need a third color, you are already lost. Live orange and danger red are the two signals.
 
-**VAULT-specific content (this repo):** dark DOM studio; SPECK as save format; one graph; racked manager; unix directory; scratch blocks (txt this pass); FIND/NOTE; persistence `speck-os-v1`. No DateBlocks. No month-as-OS home. No amber binder. No cobalt. No dump-parser dock. No salt organs. No PLACE-drag of sections.
+**VAULT-specific content (this repo):** dark DOM studio; SPECK as save format; one graph; racked manager; unix directory; scratch blocks (txt this pass); FIND/NOTE; persistence `speck-os-v2`. No DateBlocks. No month-as-OS home. No amber binder. No cobalt. No dump-parser dock. No salt organs. No PLACE-drag of sections.
 
 ---
 
@@ -322,7 +323,7 @@ Write like a terminal that went to art school for one semester and dropped out.
 - Terse. Uppercase where the machine would shout.
 - No “welcome to your dashboard.”
 - No empty states that apologize. Empty is `_` or `empty/`.
-- Filenames as mythos: `flush_stale_resolvers.sh`, `cnc_toolpath_night_run`, `scout_ridge_a`.
+- Work files as nouns: `type_ramp.md`, `hero_still.tif`, `still_loop.mov`.
 - Maker mark: BLACK LANTERN. Product mark: VAULT WORLDWIDE.
 
 ---

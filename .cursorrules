@@ -16,7 +16,7 @@ COMPOSITION (desktop studio, not a PWA, not mobile-first):
 2. One work graph. Directory is the full unix catalogue. Manager shows jobs of one project plus loose satellites. Nested (non-loose) children live in the card well. Ghost `+` in PENDING creates a job.
 3. Naked unix directory: stems `│ ├── └──`, orange name-block behind the live name. Trailing `_` adds a child. TAB indent/outdent. Space / shovel stages onto the manager. Stems never appear in the PM GUI.
 4. Scratch blocks snap-reorder vertically. Ghost `_ LINK` / `_ PIC` / `_ FILE` stay inert. NOTE when a txt block is focused; else FIND. `CLEAR` is a typed command. No DOS `>` dock slab.
-5. SPECK source is the save format (`speck-os-v1`). Statuses `pending|rnd|active|done|dusted|none`. `LOOSE` marks a pulled satellite. Physics A: card moves, nested follow, loose stay, filament stretches.
+5. SPECK source is the save format (`speck-os-v2`). Statuses `pending|rnd|active|done|dusted|none`. `LOOSE` marks a pulled satellite. Physics A: card moves, nested follow, loose stay, filament stretches.
 
 HARD VETO: DateBlocks cards, jagged day cards, SaaS kanban chrome (avatars, KPIs, progress bars, “+ New Deal”), JSON-as-database, second prompt, cobalt lash, dump-parser dock, salt organs as identity (CAL / SEAL / SKULL), organ PLACE-drag, grain/scan overlays, Oswald plaques, 3D knobs, VU meters as KPIs, brass patch-cables, PM nest stems.
 Do not revive beige cassette as the OS identity, month-as-OS as home, paper/black IMP canvas, or a Tailwind binder dashboard.

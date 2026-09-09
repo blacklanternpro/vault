@@ -1,6 +1,6 @@
 # OVERNIGHT PROMPT — paste this into a future agent
 
-**Month-as-OS is dead as home. DateBlocks, SaaS kanban chrome, harvest amber, cobalt lash, dump-parser docks, DOS `#id` ledgers, salt organs, and the paper/black IMP canvas are dead.** Keep **SPECK** as the save format (graph + dump source), not a Forth REPL and not a paint/PLACE compositor identity. The studio is four tools as a **fixed DOM layout**: quiet project cards on top, unix directory underneath, scratch sidebar with FIND. Persistence is SPECK source (`speck-os-v1`), not a task CRDT, not JSON-as-database.
+**Month-as-OS is dead as home. DateBlocks, SaaS kanban chrome, harvest amber, cobalt lash, dump-parser docks, DOS `#id` ledgers, salt organs, and the paper/black IMP canvas are dead.** Keep **SPECK** as the save format (graph + dump source), not a Forth REPL and not a paint/PLACE compositor identity. The studio is four tools as a **fixed DOM layout**: quiet project cards on top, unix directory underneath, scratch sidebar with FIND. Persistence is SPECK source (`speck-os-v2`), not a task CRDT, not JSON-as-database.
 
 This is a **later-run** brief. The language is written. Graph ops live in `src/speck`. The shell lives in `src/shell`. Do not ignore `docs/LANGUAGE.md`. It is canon. Product truth: `PRODUCT.md`.
 
@@ -77,7 +77,7 @@ Full list: `docs/LANGUAGE.md` §8.
 
 - SPECK graph in `src/speck` (lex / parse / serialize / machine)
 - One graph; manager cards + directory
-- Source as program (`speck-os-v1`)
+- Source as program (`speck-os-v2`)
 - Studio layout in `src/shell`
 
 Do not throw SPECK away. Do not rebuild a dump-parser. Do not make the month the OS. Do not restore the canvas field.

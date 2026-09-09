@@ -56,21 +56,20 @@ export const SEED_SOURCE = `PIPE vault
   COL done
   COL dusted
 NEST
-  NODE 1 "ops" status none
-    NODE 10 "LAB" status active
-      NODE 11 "scout ridge" status active URGENT
-    NODE 20 "NET" status active
-      NODE 21 "flush stale resolvers" status active
-      NODE 102 "telemetry overlay" status rnd LOOSE
-        BODY "overlay leftover"
-    NODE 104 "INGRESS ROUTING" status pending
-    NODE 101 "SUPABASE LINK" status rnd
-    NODE 99 "BASELINE" status done
-    NODE 88 "OLD SPIKE" status dusted
-  NODE 2 "archive" status none
-    NODE 201 "COLD STORAGE" status pending
+  NODE 1 "site" status none
+    NODE 10 "HOME PAGE" status active
+      NODE 11 "lock type ramp" status active URGENT
+      NODE 12 "crop hero still" status active
+      NODE 13 "still loop" status rnd LOOSE
+        BODY "8s loop, no sting"
+    NODE 20 "TYPE SPEC" status rnd
+    NODE 30 "REPO" status pending
+    NODE 40 "CONTACT" status done
+    NODE 50 "OLD GRID" status dusted
+  NODE 2 "print" status none
+    NODE 60 "RUN SHEET" status pending
 DUMP
-  NOTE 09.07.26 "ridge"`
+  NOTE 09.09.26 "type ramp 700 / 400"`
 
 function word(tok: Tok | undefined): string | null {
   if (!tok || tok.t !== 'WORD') return null
