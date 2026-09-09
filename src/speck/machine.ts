@@ -4,6 +4,7 @@ import {
   followNested,
   indentNode,
   insertNode,
+  inSubtree,
   isProject,
   moveNodeBefore,
   moveNote,
@@ -150,6 +151,38 @@ export function pullCard(
     serializeDoc(doc),
     `PULL #${id} ${status}`,
   )
+}
+
+export function dockCard(session: Session, source: string, id: number, parentId: number): Result {
+  const doc = parseDoc(source)
+  const node = byId(doc, id)
+  const parent = byId(doc, parentId)
+  if (!node || !parent || node.parent == null) return ok(session, source, '? DOCK')
+  if (node.id === parentId || inSubtree(doc, id, parentId)) return ok(session, source, '? DOCK')
+  node.parent = parentId
+  setNodeLoose(doc, id, false)
+  promotePending(doc, parentId)
+  return ok(
+    { ...session, selected: { kind: 'NODE', id }, nestFocus: parentId, lens: 'pipe' },
+    serializeDoc(doc),
+    `DOCK #${id}`,
+  )
+}
+
+export function selectNode(session: Session, source: string, id: number): Result {
+  const doc = parseDoc(source)
+  if (!byId(doc, id)) return ok(session, source, '? SELECT')
+  return {
+    session: {
+      ...session,
+      selected: { kind: 'NODE', id },
+      nestFocus: id,
+      field: null,
+      fieldBuffer: '',
+      echo: null,
+    },
+    source,
+  }
 }
 
 export function setProject(session: Session, source: string, id: number): Result {
@@ -306,6 +339,14 @@ export function addChild(source: string, parent: number | null, title = '', stat
   const doc = parseDoc(source)
   const node = insertNode(doc, { title, status, parent })
   return { source: serializeDoc(doc), id: node.id }
+}
+
+export function searchFind(session: Session, source: string, query: string): Result {
+  return applyFind(session, source, query)
+}
+
+export function addScratch(session: Session, source: string): Result {
+  return applyNote(session, source, nowOf(), '_')
 }
 
 function applyFind(session: Session, source: string, query: string): Result {
@@ -541,15 +582,26 @@ function hitNode(session: Session, source: string, id: number, lens: 'pipe' | 'n
   }
 
   if (session.pipeOpen === id && session.selected?.kind === 'NODE' && session.selected.id === id) {
-    return { session: collapse(session), source }
+    return {
+      session: {
+        ...session,
+        selected: { kind: 'NODE', id },
+        nestFocus: id,
+        field: null,
+        fieldBuffer: '',
+        echo: null,
+      },
+      source,
+    }
   }
   return {
-    session: openField(
-      { ...session, lens: 'pipe', pipeOpen: id, selected: { kind: 'NODE', id } },
-      id,
-      'title',
-      node.title,
-    ),
+    session: {
+      ...closeField(session),
+      lens: 'pipe',
+      pipeOpen: id,
+      selected: { kind: 'NODE', id },
+      nestFocus: id,
+    },
     source,
   }
 }
@@ -591,7 +643,7 @@ export function applyHit(hit: HitBox, session: Session, source: string): Result 
         slot === 'title' ? node.title : slot === 'body' ? node.body ?? '' : slot === 'status' ? node.status : ''
       return {
         session: openField(
-          { ...session, pipeOpen: session.pipeOpen ?? id, selected: { kind: 'NODE', id } },
+          { ...session, selected: { kind: 'NODE', id } },
           id,
           (slot as FieldSlot) || 'title',
           value,
@@ -716,7 +768,7 @@ export function cycleField(session: Session, source: string, dir: 1 | -1): Resul
   const value =
     slot === 'title' ? node?.title ?? '' : slot === 'body' ? node?.body ?? '' : slot === 'status' ? node?.status ?? '' : ''
   return {
-    session: openField({ ...committed.session, pipeOpen: committed.session.pipeOpen ?? id }, id, slot, value),
+    session: openField(committed.session, id, slot, value),
     source: committed.source,
   }
 }
@@ -739,6 +791,15 @@ function moveSelection(session: Session, source: string, dir: 1 | -1): Result {
 export function applyKey(key: string, shift: boolean, session: Session, source: string): Result {
   if (key === 'Escape') return { session: collapse(session), source }
   if (key === 'Tab' && session.field) return cycleField(session, source, shift ? -1 : 1)
+  if (key === 'Tab' && session.pipeOpen != null && !session.field) {
+    const doc = parseDoc(source)
+    const node = byId(doc, session.pipeOpen)
+    if (!node) return { session, source }
+    return {
+      session: openField({ ...session, selected: { kind: 'NODE', id: node.id } }, node.id, 'title', node.title),
+      source,
+    }
+  }
   if ((key === 'ArrowUp' || key === 'ArrowDown') && !session.field) {
     return moveSelection(session, source, key === 'ArrowDown' ? 1 : -1)
   }

@@ -84,6 +84,7 @@
   min-height: 0;
   min-width: 0;
   border-bottom: 1px solid var(--color-chrome);
+  background: color-mix(in srgb, var(--color-panel) 72%, var(--color-ground));
 }
 
 .rack-bar {
@@ -163,9 +164,17 @@
   color: var(--color-live);
 }
 
+.rack-plaque {
+  font-family: var(--font-plaque);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  color: var(--color-muted);
+}
+
 .rack-name {
   flex-shrink: 0;
-  margin: 10px 16px 0;
+  margin: 10px 16px 8px;
   font-family: var(--font-plaque);
   font-size: 18px;
   font-weight: 700;
@@ -181,11 +190,35 @@
   gap: 0;
   flex: 1;
   min-height: 0;
-  margin: 0;
-  padding: 8px 0 10px;
+  margin: 0 8px 8px;
+  padding: 10px 0 12px;
   overflow: auto;
-  background: transparent;
-  border: 0;
+  background: var(--color-ground);
+  border: 1px solid var(--color-chrome);
+}
+
+.manager.is-rack {
+  padding-top: 18px;
+}
+
+.deck-housing {
+  position: absolute;
+  top: 6px;
+  left: 12px;
+  right: 12px;
+  display: flex;
+  justify-content: space-between;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.deck-jack {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 1.5px solid var(--color-muted);
+  background: var(--color-ground);
+  box-shadow: inset 0 0 0 2px var(--color-ground);
 }
 
 .filaments {
@@ -479,11 +512,24 @@
   margin-top: 6px;
 }
 
+.nest-list.has-well {
+  margin-top: 8px;
+  padding: 6px;
+  border: 1px solid var(--color-hair);
+  background: color-mix(in srgb, var(--color-well) 70%, var(--color-card));
+}
+
+.nested-block {
+  margin: 0 0 4px;
+}
+
 .nested-row {
   position: relative;
-  padding: 2px 14px 2px 0;
+  padding: 5px 14px 4px 8px;
   cursor: grab;
-  border-left: 1px solid var(--color-hair);
+  border: 1px solid var(--color-hair);
+  background: var(--color-card);
+  border-radius: 0;
 }
 
 .nested-title,
@@ -518,18 +564,35 @@
 .directory {
   min-height: 0;
   overflow: auto;
-  padding: 16px 22px 28px;
+  padding: 12px 18px 24px;
   font-size: 13px;
-  line-height: 22px;
+  line-height: 20px;
   border-top: 0;
+}
+
+.dir-forest {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 12px 36px;
+}
+
+.dir-col {
+  min-width: 260px;
+  flex: 1 1 260px;
+  font-variant-ligatures: none;
 }
 
 .dir-row {
   display: grid;
-  grid-template-columns: max-content minmax(0, 1fr) 18px;
+  grid-template-columns: max-content minmax(0, 1fr) auto;
   align-items: center;
-  gap: 0 2px;
-  min-height: 22px;
+  gap: 0 4px;
+  min-height: 20px;
+}
+
+.dir-row.is-ghost {
+  cursor: grabbing;
 }
 
 .dir-stem {
@@ -558,9 +621,9 @@
   background: transparent;
   color: var(--color-ink);
   font-size: 13px;
-  line-height: 20px;
+  line-height: 18px;
   text-align: left;
-  cursor: text;
+  cursor: pointer;
   border-radius: 0;
 }
 
@@ -596,20 +659,27 @@
   border-radius: 0;
 }
 
-.dir-shovel {
+.dir-on {
   opacity: 0;
-  padding: 0;
+  padding: 0 2px;
   border: 0;
   background: transparent;
-  color: var(--color-live);
-  font-size: 13px;
+  color: var(--color-muted);
+  font-family: var(--font-plaque);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
   line-height: 18px;
   cursor: pointer;
 }
 
-.dir-row:hover .dir-shovel,
-.dir-row.is-selected .dir-shovel,
-.dir-shovel:focus-visible {
+.dir-on.is-live {
+  color: var(--color-live);
+}
+
+.dir-row:hover .dir-on,
+.dir-row.is-selected .dir-on,
+.dir-on:focus-visible {
   opacity: 1;
 }
 
@@ -755,8 +825,158 @@
   user-select: none;
 }
 
+.scratch-ghost.is-add {
+  margin: 0;
+  border: 1px dashed var(--color-hair);
+  background: transparent;
+  color: var(--color-muted);
+  text-align: left;
+  cursor: pointer;
+}
+
+.scratch-ghost.is-add:hover,
+.scratch-ghost.is-add:focus-visible {
+  border-color: var(--color-live);
+  color: var(--color-live);
+  outline: none;
+}
+
 .find-mark {
   background: var(--color-live);
   color: var(--color-live-ink);
   padding: 0 1px;
+}
+
+.manager.is-folio {
+  display: flex;
+  flex-direction: column;
+  grid-template-columns: none;
+  gap: 0;
+  padding: 0;
+  overflow: auto;
+}
+
+.folio-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-shrink: 0;
+  padding: 8px 14px 0;
+}
+
+.folio-plaque,
+.folio-close {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font-family: var(--font-plaque);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  color: var(--color-muted);
+  cursor: pointer;
+}
+
+.folio-plaque:hover,
+.folio-close:hover,
+.folio-plaque:focus-visible,
+.folio-close:focus-visible {
+  color: var(--color-live);
+  outline: none;
+}
+
+.folio-transport {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  flex-shrink: 0;
+  margin: 8px 10px 0;
+  border: 1px solid var(--color-chrome);
+}
+
+.folio-lane {
+  padding: 6px 10px;
+  border-right: 1px solid var(--color-chrome);
+  font-family: var(--font-plaque);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: var(--color-muted);
+}
+
+.folio-lane:last-child {
+  border-right: 0;
+}
+
+.folio-doc {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  margin: 10px 10px 12px;
+  padding: 18px 20px 16px;
+  background: var(--color-card);
+  border: 1px solid var(--color-hair);
+  cursor: grab;
+}
+
+.folio-doc.is-job > .jack,
+.folio-doc.is-job > .jack-anchor {
+  top: 22px;
+  right: -5px;
+}
+
+.folio-doc.is-sat > .jack,
+.folio-doc.is-sat > .jack-anchor {
+  top: 18px;
+  left: -5px;
+}
+
+.folio-doc .card-title,
+.folio-doc .card-input {
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-ink);
+}
+
+.folio-doc.is-sat .card-title,
+.folio-doc.is-sat .card-input {
+  font-size: 22px;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.folio-body,
+.folio-body-input {
+  display: block;
+  width: 100%;
+  min-height: 12em;
+  margin: 16px 0 0;
+  padding: 0;
+  border: 0;
+  resize: none;
+  background: transparent;
+  color: var(--color-ink);
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 1.5;
+  letter-spacing: 0;
+  text-transform: none;
+  caret-color: var(--color-live);
+  cursor: text;
+}
+
+.folio-body-input {
+  outline: none;
+}
+
+.folio-doc .nest-list.is-folio {
+  margin-top: 18px;
+}
+
+.studio.is-folio .directory {
+  opacity: 0.92;
 }
