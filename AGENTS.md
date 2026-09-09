@@ -8,8 +8,8 @@ the OS persists as a SPECK source string in `localStorage` (`speck-os-v2`).
 Running the Vite dev server is enough to exercise the product end to end.
 
 This is **not** a PWA and **not** a mobile month. It is a personal OS studio:
-one work graph, black cassette deck on top, unix directory underneath, scratch sidebar
-with FIND, no canvas organ field.
+one work graph, cassette theatre on top, elite TUI directory underneath, scratch sidebar
+with FIND, no canvas organ field. Maker: **BAD FORM**. Product: VAULT WORLDWIDE.
 
 Standard commands live in `README.md` and `package.json` scripts (`dev`, `build`,
 `lint`, `test`, `preview`). Package manager is **npm** (`package-lock.json`).
@@ -23,10 +23,9 @@ Non-obvious notes:
 - Lint is **oxlint** (`npm run lint`), configured via `.oxlintrc.json` — not ESLint.
 - Aesthetic contract is locked in `.cursorrules`. Full portable language: `docs/LANGUAGE.md`. Overnight brief: `docs/OVERNIGHT_PROMPT.md`. Product: `PRODUCT.md`.
 - Smoke: charcoal/slate studio, Helvetica work, Oswald plaques, live orange leash + danger red (not IMP `#E10600`, not cobalt).
-  Black cassette deck on top (five hairline gutters, square slabs, nested ledger lines, satellite slugs, slack leashes, ghost `+`).
-  Directory under it (unix stems, orange name-block). Scratch sidebar with FIND. Drag a slab between gutters; pull a
-  nested row onto a lane and watch the cable sag/tighten; snap-reorder notes; click a title, type; click a job body
-  to nest a line; trailing `_` adds a child; Space/shovel stages a node. Typed `CLEAR` restores seed. No CAL / SEAL /
-  SKULL, no organ PLACE-drag, no DOS `>` dock, no five CRT wells, no taut filaments.
+  Cassette theatre on top (housing, transport plaques, RECORD, five hairline gutters, square slabs, boxed nest lines, satellite slugs, slack leashes, ghost `+`).
+  HIT a job slab to enter the folio; Esc / `[x]` returns. Nested rows are boxed, never `├──`.
+  Pull a boxed line to a gutter, then drop the slug back onto the parent card to dock.
+  Directory under it (unix stems, orange name-block, first click selects, `ON` stages). Scratch sidebar with FIND (search only). Pointer `_` adds a note.
   Do not revive DateBlocks cards, beige UN identity, month-as-OS as home, paper/black
-  IMP canvas, dump-parser, SaaS kanban chrome, cream cassette OS, rounded-in-rect, or cobalt.
+  IMP canvas, dump-parser, SaaS kanban chrome, cream cassette OS, rounded-in-rect, unix-on-cards, boxed directory rows, NEXUS HUD, VU KPIs, CRT wells, or cobalt.

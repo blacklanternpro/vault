@@ -1,15 +1,19 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   addNested,
+  addScratch,
   applyHit,
   applyKey,
   applyNoteOrder,
   applyNoteText,
   commitFieldLine,
   commitLine,
+  dockCard,
   freshSession,
   hitchNote,
   pullCard,
+  searchFind,
+  selectNode,
   setProject,
   stageCard,
   typeField,
@@ -34,6 +38,7 @@ export function Studio() {
   const projectId = projectIdOf(doc, session.projectId)
   const projects = projectsOf(doc)
   const project = projectId != null ? doc.nodes.find((n) => n.id === projectId) : undefined
+  const inFolio = session.pipeOpen != null
 
   useEffect(() => {
     saveSource(source)
@@ -83,8 +88,9 @@ export function Studio() {
       const keys = ['Tab', ' ', '[', ']', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown']
       if (!keys.includes(e.key)) return
       if (e.key === 'Tab' || e.key === ' ' || e.key === 'ArrowUp' || e.key === 'ArrowDown') e.preventDefault()
+      const folioOpen = sessionRef.current.pipeOpen != null
       const nestSession =
-        sessionRef.current.lens === 'nest'
+        sessionRef.current.lens === 'nest' || folioOpen
           ? sessionRef.current
           : { ...sessionRef.current, lens: 'nest' as const }
       const result = applyKey(e.key, e.shiftKey, nestSession, sourceRef.current)
@@ -129,17 +135,16 @@ export function Studio() {
 
   function onFindChange(value: string) {
     const cur = sessionRef.current
-    const noting = cur.lens === 'dump' || cur.selected?.kind === 'NOTE' || cur.selected?.kind === 'DUMP'
     setLive({
       ...cur,
       buffer: value,
-      find: noting ? cur.find : value.trim() || null,
+      find: value.trim() || null,
       echo: null,
     })
   }
 
   function onFindSubmit() {
-    apply(commitLine(sessionRef.current.buffer, sessionRef.current, sourceRef.current))
+    apply(searchFind(sessionRef.current, sourceRef.current, sessionRef.current.buffer))
   }
 
   function onFindFocus() {
@@ -150,11 +155,18 @@ export function Studio() {
     })
   }
 
+  function closeFolio() {
+    apply(applyKey('Escape', false, sessionRef.current, sourceRef.current))
+  }
+
   return (
-    <div className="studio" data-testid="studio">
+    <div className={`studio${inFolio ? ' is-folio' : ''}`} data-testid="studio">
       <div className="studio-main">
         <div className="studio-rack">
           <header className="rack-bar">
+            <span className="rack-plaque" aria-hidden>
+              TAPE
+            </span>
             <label className="rack-project">
               <span className="rack-label">PROJECT</span>
               <select
@@ -170,13 +182,16 @@ export function Studio() {
                 ))}
               </select>
             </label>
+            <span className="rack-plaque" aria-hidden>
+              REC
+            </span>
             <button
               type="button"
               className="rack-add"
               data-testid="project-add"
               onClick={() => hit('ADD', 0)}
             >
-              ADD
+              RECORD
             </button>
           </header>
           <p className="rack-name" data-testid="project-name">
@@ -191,11 +206,13 @@ export function Studio() {
             onPull={(id, status, beforeId) =>
               apply(pullCard(sessionRef.current, sourceRef.current, id, status, beforeId))
             }
-            onFocus={(id) => apply(commitLine(`FOCUS ${id}`, sessionRef.current, sourceRef.current))}
+            onFocus={(id) => hit('NODE', id)}
             onRename={(id) => hit('SLOT', `${id}:title`)}
             onEditBody={(id) => hit('SLOT', `${id}:body`)}
             onAddNested={(parentId) => apply(addNested(sessionRef.current, sourceRef.current, parentId))}
             onCreateJob={() => hit('EMPTY', 'pending')}
+            onDock={(id, parentId) => apply(dockCard(sessionRef.current, sourceRef.current, id, parentId))}
+            onCloseFolio={closeFolio}
             onTitle={(value) => setLive(typeField(sessionRef.current, value))}
             onTitleCommit={commitTitle}
             onFieldBlur={onFieldBlur}
@@ -204,10 +221,11 @@ export function Studio() {
         <Directory
           doc={doc}
           session={session}
-          onSelect={(id) => hit('STEM', id)}
-          onRename={(id) => hit('STEM', id)}
+          onSelect={(id) => apply(selectNode(sessionRef.current, sourceRef.current, id))}
+          onRename={(id) => hit('SLOT', `${id}:title`)}
           onToggle={(id) => hit('TOGGLE', id)}
           onAdd={(parent) => hit('ADD', parent ?? 0)}
+          onStage={(id, status) => apply(stageCard(sessionRef.current, sourceRef.current, id, status))}
           onShovel={(id) => hit('SHOVEL', id)}
           onClearFocus={() => apply(commitLine('FOCUS _', sessionRef.current, sourceRef.current))}
           onTitle={(value) => setLive(typeField(sessionRef.current, value))}
@@ -220,6 +238,7 @@ export function Studio() {
         onFindChange={onFindChange}
         onFindSubmit={onFindSubmit}
         onFindFocus={onFindFocus}
+        onAddNote={() => apply(addScratch(sessionRef.current, sourceRef.current))}
         onNoteFocus={(index) =>
           setLive({
             ...sessionRef.current,

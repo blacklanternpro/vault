@@ -1,9 +1,9 @@
-# BLACK LANTERN — Design Language
+# BAD FORM — Design Language
 
 **Canon.** Copy this file into another repo and the language still holds.
 Short law for agents lives in `.cursorrules`. This file is the full tongue.
 
-Maker: BLACK LANTERN. First instance: **VAULT WORLDWIDE** — a local-first personal OS you run as a program on a desktop, not a website you visit, not a phone PWA.
+Maker: **BAD FORM**. BLACK LANTERN is dead. First instance: **VAULT WORLDWIDE** — a local-first personal OS you run as a program on a desktop, not a website you visit, not a phone PWA.
 
 If a thing cannot be said in this language, it is not in the work.
 
@@ -16,7 +16,8 @@ Before you add a feature, a color, a font, a panel, a motion, a word:
 1. Can it be said in **SPECK source**? (see §7)
 2. Does it live on **charcoal / slate / off-white / live orange / danger red** — and nowhere else?
 3. Is it **utility** wearing attitude, or attitude wearing a fake tool?
-4. Would Jake almost throw up? (DateBlocks, SaaS kanban chrome, boxed amber terminals, paper/IMP canvas OS)
+4. Would Jake almost throw up? (DateBlocks, SaaS kanban chrome, boxed amber terminals, paper/IMP canvas OS, unix-on-cards, a verb codebook)
+5. Do the two instruments stay split? **PM = cassette theatre. Directory = elite TUI.** Mixing them is failure.
 
 Fail any one: do not ship it.
 
@@ -30,7 +31,7 @@ Attitude: slightly illegal, slightly glamorous, still a tool. Sleaze and grime a
 
 This instance is a **desktop studio**. Phone lists, TimeTree, and paper diaries already exist. Do not design for a thumb. Packaging later is a boring native envelope (Tauri / WebView). The envelope is not the aesthetic.
 
-Black cassette housing is the deck: charcoal, chrome hairlines, orange conductor, RECORD red. Cream/beige faceplate is still anti-reference. Oswald plaques label the deck. Do not stamp 3D knobs, VU KPIs, or cream OS plates onto the field.
+Black cassette housing is the **PM theatre**: charcoal, chrome hairlines, orange conductor, RECORD red, jacks, boxed nest well, enter-folio scale. Cream/beige faceplate is still anti-reference. Oswald plaques label the deck. Do not stamp 3D knobs, VU KPIs, CRT wells, NEXUS HUD, or cream OS plates onto the field. Do not put cassette chrome on the directory.
 
 ---
 
@@ -43,7 +44,7 @@ Four layers. Do not flatten them into one costume.
 | Dark studio | The plate. Charcoal field, square slate slabs, off-white type | CRM dashboard, KPI row, avatars, “+ New Deal” |
 | Quiet type | The cut. Helvetica on work, Oswald on plaques, hairline gutters | Billboard section titles, CICS ledger |
 | A little sleaze | Salt. Orange name-block, slack patch-cable, WORLDWIDE ® echo | Rave flyer, Fidèle-maximal, slogan-tee graphics |
-| Echo of hacker grime | Salt. Unix nest, uppercase job titles, `_` empty | Matrix rain, Kali wallpaper, hoodie-hacker stock, `1337` |
+| Echo of hacker grime | Salt. Unix nest **in the directory only**, uppercase job titles, `_` empty | Matrix rain, Kali wallpaper, hoodie-hacker stock, `1337`, stems on job cards |
 
 Sleaze and grime are **salt**. If the field looks like a title card, there is too much salt.
 
@@ -67,15 +68,16 @@ Two signals. Strike and URGENT use danger red. Live work uses orange `#FF5C1A`. 
 
 ### Type
 
-- **Helvetica Neue / Helvetica / Arial** — work type. Manager titles, directory, scratch, FIND line.
-- **Oswald 700** — plaques only (lane labels, project name, FIND label). Not body copy.
+- **Helvetica Neue / Helvetica / Arial** — work type. Manager titles, boxed lines, directory, scratch, FIND line.
+- **Oswald 700** — plaques only (lane labels, project name, FIND label, transport). Not body copy.
 - No JetBrains. No Space Grotesk. No Inter. No VT323. No Orbitron.
 
 ### Surface
 
 - Square slabs (radius 0). The only radius is a jack hole. Not 24–32px SaaS bowls. Not rounded cards inside square wells.
 - No soft shadows. No gradients. No blur. No glass. No grain/scan overlay (except quiet grain in the DUSTED gutter).
-- Selection in the directory: safety-orange block **behind the name**. Not CHIP+oval. Not an overlay dossier. PM GUI never draws nest stems.
+- Selection in the directory: safety-orange block **behind the name**. Not CHIP+oval. Not an overlay dossier.
+- Nested on the PM: sleek **boxed lines** (radius 0, inset slate, hairline). Never `│ ├── └──` on cards. ASCII stems are directory-only.
 
 ---
 
@@ -83,20 +85,24 @@ Two signals. Strike and URGENT use danger red. Live work uses orange `#FF5C1A`. 
 
 One studio. Not a dashboard. Not stacked billboards. Not three apps in a trenchcoat. Not a PWA. Not mobile-first.
 
-Manager is fixed on **top**. Directory is fixed **under it**. Scratch is a **right sidebar** (~320px) with FIND at the top. Those three regions do **not** drag. Scratch **blocks** snap-reorder vertically. Never a second `<input>` as a dock slab. Never three forms.
+Manager is fixed on **top**. Directory is fixed **under it**. Scratch is a **right sidebar** (~320px) with FIND at the top. Those three regions do **not** drag. Scratch **blocks** snap-reorder vertically. Never a second `<input>` as a dock slab. Never three forms. Never a verb bar.
 
 **VAULT instance (DOM studio + SPECK save format):**
 
 SPECK stores the graph (`NODE`, `NOTE`, status, indent). It is not a Forth/DOS taskmaster, not a paint engine, and not the product personality.
 
 1. **One graph.** Every node: `id`, `title`, `body?`, `status` (`pending|rnd|active|done|dusted|none`), `parent`, ordered children, `urgent?`, `loose?`. Projects are roots (`parent` null). IDs live in source, not on the card.
-2. **Manager** — a **section**, not a window. No outer plate, no fasteners-as-frame, no five CRT wells. Cassette **deck**: five gutters divided by chrome hairlines (PENDING · R&D · ACTIVE · DONE · DUSTED). Jobs are square **slabs** (uppercase). Empty jobs have no well. Click the body line to write the thought. `[+]` nest tick adds a sentence-case ledger line. Pull that line onto a gutter to make a **slug** satellite (`LOOSE`). Satellites grow a nest list only if they themselves have nested children. First nested promotes PENDING → ACTIVE. Physics A: slab moves, nested follow, loose stay. **Leash** is a slack patch-cable (sag at rest, tension on drag, rAF follow, ~220ms settle). Orange conductor, dark jacket. Ghost `+` in PENDING is a dashed ledger tick. Click title to rename. Backspace / Delete kills the selected non-root (subtree). Oswald plaques on the deck. Not kanban chrome. Not nest stems.
-3. **Directory** — the same graph as a naked unix tree of the entire catalogue. Stems `│ ├── └──`. Orange block behind the live name. Click name to rename. Trailing `_` adds a child. Indent/outdent. Space / shovel stages a node onto the manager (`none` → `pending`, or advance). CLIP-copy is dead.
-4. **Scratch** — txt notes as blocks. Vertical drag, snap into place, others shift. Persist order on `Doc.notes`. Drop a block onto a slab to hitch (`NOTE … NODE id`). Plaque `→ TITLE`; `[x]` unhitches. Ghost `_ LINK` / `_ PIC` / `_ FILE` stay inert.
-5. **FIND / NOTE** — one command field, top of the sidebar. Bare line searches titles (session highlight). When a scratch txt block is focused, a line appends a note. `CLEAR` restores seed. FIND does not create projects or tasks. No DOS `>` operator bar. No legend rail. No `MOVE` / `GLYPH` as product chrome.
+2. **Manager** — cassette **theatre**, a section not a window. No outer plate as a picture frame, no fasteners-as-frame, no five CRT wells, no NEXUS tabs, no VU KPIs. Housing, transport plaques, RECORD, jacks, boxed nest well, enter-folio scale. Five gutters divided by chrome hairlines (PENDING · R&D · ACTIVE · DONE · DUSTED).
+   - **Depth 0 — rack.** Square job slabs (uppercase). Empty jobs have no nest well. Ghost `+` in PENDING creates a job. HIT a slab **enters the folio**. It does not open rename.
+   - **Nested on a card / folio:** sleek boxed lines. Title on the line. `[+]` adds a boxed line. Boxed lines may nest boxed lines (still boxes, still no stems). Not a type-only ledger that copies the directory. Not mini-kanban cards.
+   - **Depth 1 — folio.** The manager region becomes that document: large title, a real writing surface, boxed-line outline, hitch strip. Esc / plaque / `[x]` returns to the rack. Reuse `session.pipeOpen`. Second click on the title (while the folio is that id) renames.
+   - Pull a boxed line onto a gutter to make a **slug** satellite (`LOOSE`). Drop a satellite (or a boxed line from another job) **onto a parent job slab** to dock it back (`LOOSE` drops; it is a boxed line again). Satellites grow a nest list only if they themselves have nested children. First nested promotes PENDING → ACTIVE. Physics A: slab moves, nested follow, loose stay. **Leash** is a slack patch-cable (sag at rest, tension on drag, rAF follow, ~220ms settle). Orange conductor, dark jacket. Backspace / Delete kills the selected non-root (subtree). Oswald plaques on the deck. Not kanban chrome. Not nest stems.
+3. **Directory** — the same graph as an elite **TUI listing** of the entire catalogue (ranger / nnn). Stems `│ ├── └──`. Orange block behind the live name. First click selects. Second click / Enter renames. `ON` stages onto the current deck. Drag a stem onto a gutter to pick status. Space is a silent shortcut. Trailing `_` adds a child. Indent/outdent. Multiple roots stay stems — if glance needs width, **columns of stem text** may wrap. Still TUI. Not job-card homes. Not cassette chrome. Not boxed rows. CLIP-copy is dead.
+4. **Scratch** — txt notes as blocks. Vertical drag, snap into place, others shift. Persist order on `Doc.notes`. Pointer `_` adds a note. Drop a block onto a slab to hitch (`NOTE … NODE id`). Plaque `→ TITLE`; `[x]` unhitches. Ghost `_ LINK` / `_ PIC` / `_ FILE` stay inert.
+5. **FIND** — one search field, top of the sidebar. Bare line searches titles (session highlight). It does not create. It is not a codebook. Hitch stays pointer. `CLEAR` may remain source recovery in the machine; it is not the way to work. No DOS `>` operator bar. No legend rail. No `MOVE` / `GLYPH` as product chrome. No typed `NOTE` / `SHOVEL` / `FOCUS` as the way to sit down.
 6. **No salt organs.** CAL, SEAL, SKULL are out. Organ `PLACE`-drag is out. Grain / scan / INV-as-paper are out.
 
-A later agent may refine density **inside this studio**. It may not bring back DateBlocks cards, month-as-OS as home, beige cassette as the OS identity, paper/IMP canvas, a Tailwind binder dashboard, harvest amber, cobalt, CLIP-copy, or a second command input.
+A later agent may refine density **inside this studio**. It may not bring back DateBlocks cards, month-as-OS as home, beige cassette as the OS identity, paper/IMP canvas, a Tailwind binder dashboard, harvest amber, cobalt, CLIP-copy, a second command input, unix-on-cards, or a boxed directory.
 
 ---
 
@@ -105,15 +111,18 @@ A later agent may refine density **inside this studio**. It may not bring back D
 These are the letters of the language. Use them. Do not invent a parallel alphabet.
 
 - **Orange block** — safety-orange field behind the live directory name. FIND mark uses the same orange. Not a rounded pill overlay covering neighbors.
-- **Danger red** — URGENT titles, strike, CLEAR-class.
-- **Job slab** — slate fill, radius 0, uppercase title. Nested is a type line, not a mini-job. Not a SaaS deal card. Not nest stems.
+- **Danger red** — URGENT titles, strike, RECORD, CLEAR-class.
+- **Job slab** — slate fill, radius 0, uppercase title. Nested is a boxed line, not a mini-job. Not a SaaS deal card. Not nest stems.
+- **Boxed line** — radius 0, inset slate, hairline. Title on the line. PM only.
+- **Folio** — the job as a document. Large title, writing surface, boxed outline. Entered from the rack.
 - **Leash** — slack patch-cable (orange conductor, dark jacket). Settled sag. Live tension. Never perfectly taut. Not a tuner needle. Not a directory stem.
 - **Hairline** — chrome gutters, transport edges. Not 3px neo-brutal drop shadows.
 - **ASCII stems** — `│ ├── └──` for the directory only. Prefixes computed from `parent` / children.
 - **`_` empty** — ghost add row, ghost media slots, empty titles. Not an apologetic empty state.
 - **Strike** — highlighter mid-line on done if a row needs it. Not `text-decoration` grey.
-- **Shovel** — Space (and in-row stage) advances a node through the gutters (or from `none` onto `pending`). Slabs also drag between gutters.
-- **FIND** — the one command field. Not a `>` DOS slab.
+- **ON** — directory stage onto the current deck. Drag a stem onto a gutter to choose status. Space is a silent shortcut. Slabs also drag between gutters.
+- **Dock** — drop a satellite / boxed line onto a parent slab. Inverse of pull. Drops `LOOSE`.
+- **FIND** — the one search field. Not a `>` DOS slab. Not a codebook.
 
 ---
 
@@ -121,12 +130,12 @@ These are the letters of the language. Use them. Do not invent a parallel alphab
 
 The VAULT studio is a **React/DOM shell** over a **SPECK graph**. The live program is source. Do not restyle a dashboard kit and call that the OS. Do not restore the canvas organ field and call that craft.
 
-- One FIND/NOTE field.
+- One FIND field (search).
 - Persistence is the SPECK source string (`speck-os-v2` in localStorage).
-- One graph; manager is stage cards; directory is the unix tree. Scratch is notes.
+- One graph; manager is theatre (rack + folio); directory is the unix tree. Scratch is notes.
 - SPECK lex / parse / serialize / machine in `src/speck`. Shell in `src/shell`.
 
-What failed: DateBlocks, the beige UN seal as the OS shell, Yjs CRDT as the database, month-as-OS as the destination, HTML/Tailwind kanban chrome, overlay CHIP dossiers, CLIP-as-copy, cobalt lash, dump-parser dock, paper/black IMP canvas with PLACE-able salt organs. Dead. Do not revive them.
+What failed: DateBlocks, the beige UN seal as the OS shell, Yjs CRDT as the database, month-as-OS as the destination, HTML/Tailwind kanban chrome, overlay CHIP dossiers, CLIP-as-copy, cobalt lash, dump-parser dock, paper/black IMP canvas with PLACE-able salt organs, sit-down verb codebook, unix-on-cards. Dead. Do not revive them.
 
 ---
 
@@ -138,7 +147,7 @@ It is **not** a general-purpose language (no Python-from-scratch, no LLVM, no st
 
 On this instance SPECK is the **save format** for the work graph and dump. The studio reads and writes source. Canvas compile/paint/PLACE may still exist as library code; they are not the product path.
 
-The runtime lives in `src/speck`. It lexes, parses, serializes, and interprets FIND / NOTE / CLEAR / SHOVEL / graph edits. The live program is the source string.
+The runtime lives in `src/speck`. It lexes, parses, serializes, and interprets graph edits. The live program is the source string. The user never types SPECK to sit down.
 
 ### Feature dream rule
 
@@ -195,7 +204,7 @@ Seed does **not** include `PLACE SEAL|SKULL|CAL`, `GLYPH VAULT`, `INV`, `GRAIN`,
 
 Dead as product chrome: `PLACE`, `GLYPH`, `INV`, `GRAIN`, `SCAN`, `SEAL`, `SKULL`, `CAL`, `DOCK` legend. Legacy `TASK` / `STEM` lines still parse into `NODE`s. `PLACE` / `GLYPH` / `INV` lines may still parse for old source; they are not the studio.
 
-`CLEAR` restores seed. In-directory `SHOVEL` / Space advances a node (or lifts `none` onto `pending`). Manager lane-drop sets that card’s status (nested follow; `LOOSE` stays). FIND highlights matching titles in-session. The FIND line does not insert `NODE`s.
+`CLEAR` restores seed. In-directory `ON` / Space advances a node (or lifts `none` onto `pending`). Manager lane-drop sets that card’s status (nested follow; `LOOSE` stays). Dock back drops `LOOSE` and reparents onto the target slab. FIND highlights matching titles in-session. The FIND line does not insert `NODE`s.
 
 ### 7.3 Events
 
@@ -204,31 +213,27 @@ Pointer and keys belong to the studio. The host forwards into the machine.
 ```
 HIT NODE 13
 HIT ADD 10
-HIT SHOVEL 13
 FIND loop
-NOTE "type ramp 700 / 400"
-CLEAR
 ```
 
-HIT a body line to write. HIT `+` to nest. HIT a title to rename. HIT ghost `+` to create a job. Never three forms. Never CTX chips in a header.
+HIT a slab to enter the folio. HIT a body to write. HIT `[+]` to nest a boxed line. Second click on the folio title to rename. HIT ghost `+` to create a job. Drop a slug on a parent slab to dock. Never three forms. Never CTX chips in a header. Never a verb bar.
 
 ### 7.4 Command field
 
-FIND is the **command field**. One line, top of the scratch sidebar. Titles are typed on the card or row. Work is created in empty lanes and directory `_`, not here.
+FIND is **search**. One line, top of the scratch sidebar. Titles are typed on the card or row. Work is created in empty lanes and directory `_`, not here.
 
-- If the line **parses as a command** (`CLEAR`, `FIND`, `NOTE`): execute it.
-- `FIND query` (or a bare line, or `/query`) highlights matching titles in-session. `NOTE "…"` appends a txt line.
-- When a scratch txt block is focused, a bare line appends a txt note.
-- Else a bare line is search, never a project tree.
+- A bare line (or `/query`) highlights matching titles in-session.
+- Pointer `_` in scratch appends a txt note. Hitch is drop.
+- `CLEAR` may remain source recovery in the machine; FIND submit does not run a codebook.
 - Empty commit is a no-op.
 
-Examples: `FIND loop` · `NOTE type ramp 700 / 400` · `CLEAR`
+Examples: `loop` · `FIND loop`
 
 ### 7.5 Runtime contract
 
 1. **The program is source.** `localStorage` key `speck-os-v2`. Ignore `speck-os-v1` and `speck-month-v1`.
-2. **The studio is a DOM shell** over parsed source + session. Session: selected node, nest expand, nest focus, field slot, buffer, echo, find query, dump focus.
-3. **Commits mutate source.** Shovel and lane-drop rewrite a node status. Editors rewrite title/body/notes. Empty lanes and directory `_` insert nodes. `NOTE` appends txt. Scratch reorder rewrites note order. `CLEAR` restores seed. No worker. No CRDT. No JSON sidecar. FIND does not parse work trees.
+2. **The studio is a DOM shell** over parsed source + session. Session: selected node, nest expand, nest focus, pipeOpen (folio), field slot, buffer, echo, find query, dump focus.
+3. **Commits mutate source.** Stage and lane-drop rewrite a node status. Dock drops `LOOSE`. Editors rewrite title/body/notes. Empty lanes and directory `_` insert nodes. Pointer scratch appends txt. Scratch reorder rewrites note order. `CLEAR` restores seed. No worker. No CRDT. No JSON sidecar. FIND does not parse work trees.
 4. **No CLIP, DateBlocks cards, cobalt theme, month-as-OS home, salt organs, or organ PLACE-drag** on this instance.
 
 Packaging (when asked): boring envelope (Tauri / WebView). Desktop. The envelope is not the aesthetic.
@@ -241,6 +246,7 @@ Packaging (when asked): boring envelope (Tauri / WebView). Desktop. The envelope
 - Not a reason to costume the four tools as a CICS taskmaster or a canvas OS.
 - Not a reason to add a settings app.
 - Not a second palette, a HUD, DateBlocks, or a Tailwind binder dashboard.
+- Not a codebook the user types to sit down.
 
 ---
 
@@ -257,7 +263,7 @@ Never. Not as a joke. Not as a “just for desktop.” Not as a dark-mode varian
 - Green-on-black notes, amber boxed terminals, phosphor takeover
 - Three input forms
 - Demo fluff (`BUY MILK`, lorem, fake dashboards, cost-burn theatre)
-- Alien Isolation cosplay, chunky 3D knobs, VU meters as KPIs, taut tuner-needle filaments, PM nest stems
+- Alien Isolation cosplay, chunky 3D knobs, VU meters as KPIs, taut tuner-needle filaments, PM nest stems, unix-on-cards
 - Cream cassette / beige hi-fi as the OS plate (black housing is the deck; cream stays anti-reference)
 - Rounded cards inside square wells, five CRT lane wells, fasteners-as-frame
 - Vaporwave, synthwave, neon alley, Y2K chrome media-player skins
@@ -271,8 +277,10 @@ Never. Not as a joke. Not as a “just for desktop.” Not as a dark-mode varian
 - Salt organs CAL / SEAL / SKULL
 - Organ PLACE-drag of the main sections
 - Dump-parser dock, DOS `>` operator slab, legend rail GRAIN/SCAN/INV
+- Boxed “cards” in the directory; cassette chrome in the nest
+- Sit-down verb codebook (typed NOTE / SHOVEL / CLEAR / FOCUS as the way to work)
 
-Square cassette slabs and slack leashes are **in**. DateBlocks and SaaS kanban chrome are **out**.
+Square cassette slabs, boxed nest lines, slack leashes, and an elite TUI directory are **in**. DateBlocks and SaaS kanban chrome are **out**.
 
 ---
 
@@ -280,14 +288,19 @@ Square cassette slabs and slack leashes are **in**. DateBlocks and SaaS kanban c
 
 Mood is canon. Palette of the ref is usually not.
 
-**Rule:** steal slate depth, quiet card type, and the naked directory’s highlighter-block selection. Do not clone KPI dashboards.
+**Rule:** steal slate depth, quiet card type, and the naked directory’s highlighter-block selection. Do not clone KPI dashboards. Steal mechanics, not costumes.
 
 ### TAKE
 
 - **Dark studio slate** — depth via value steps, not shadows. Quiet cards. Type does the work.
-- **Naked unix directory** — stems, highlighter behind the live name, nothing else.
-- **Linear / Things / OmniFocus (stolen, not cloned)** — project + issue + sub-issue; click empty to add; outline is the document. Leave cloud, Apple UI, karma, board chrome, dump-parser-as-OS.
-- **ranger / nnn** — arrows, enter expand. Leave two-pane file-manager costume.
+- **Naked unix directory** — stems, highlighter behind the live name, nothing else. ranger / nnn density. Leave two-pane file-manager costume.
+- **Scrivener** — binder is TUI; the document is the work. Directory = binder. Deck folio = the page.
+- **iA Writer** — entering a job is writing. Chrome is the deck around it.
+- **Things 3** — first click selects; click empty to add. Not opcodes.
+- **Muse / HyperCard** — go *into* the card.
+- **Ableton Session / cassette deck** — opening a clip / seating a tape is theatre. Housing, jacks, transport, boxed channels — **on the PM only**.
+- **Teenage Engineering / Reason rack** — boxed lines as modules in a bay. Steal the boxed-channel look, not 3D knobs or VU-as-KPI.
+- **Linear / OmniFocus (stolen, not cloned)** — project + issue + sub-issue. Leave cloud, Apple UI, karma, board chrome, dump-parser-as-OS.
 
 ### LEAVE
 
@@ -301,6 +314,7 @@ Mood is canon. Palette of the ref is usually not.
 - Any `NEXUS_OS v5.0 tactical orchestrator` chrome
 - Tailwind / v0 “editorial binder” templates
 - Dump-parser dock, `#id` checkbox ledger
+- Unix stems on PM cards; boxed job homes in the directory
 
 Older canon still in force as warning: Gemini neo-brutal TUI blueprint (engineering DNA, not the boxed-shadow look), fried TUI / burn-the-box trail (PRs #8–#11). DateBlocks from PR #7 are a warning, not a direction. Month-as-OS (PR #14) was a recovery, not the destination. Paper IMP canvas was a pass, not the destination.
 
@@ -314,7 +328,7 @@ Older canon still in force as warning: Gemini neo-brutal TUI blueprint (engineer
 4. Point `.cursorrules` at this file. Keep `.cursorrules` short. Agents read the short law; humans and long agents read this.
 5. If you need a third color, you are already lost. Live orange and danger red are the two signals.
 
-**VAULT-specific content (this repo):** dark DOM studio; SPECK as save format; one graph; black-deck manager (hairline gutters, square slabs, slack leashes); unix directory; scratch blocks (txt this pass); FIND/NOTE; persistence `speck-os-v2`. No DateBlocks. No month-as-OS home. No amber binder. No cobalt. No dump-parser dock. No salt organs. No PLACE-drag of sections.
+**VAULT-specific content (this repo):** dark DOM studio; SPECK as save format; one graph; cassette-theatre manager (hairline gutters, square slabs, boxed nest, folio, slack leashes); elite TUI directory; scratch blocks (txt this pass); FIND search; persistence `speck-os-v2`. Maker BAD FORM. No DateBlocks. No month-as-OS home. No amber binder. No cobalt. No dump-parser dock. No salt organs. No PLACE-drag of sections.
 
 ---
 
@@ -326,7 +340,7 @@ Write like a terminal that went to art school for one semester and dropped out.
 - No “welcome to your dashboard.”
 - No empty states that apologize. Empty is `_` or `empty/`.
 - Work files as nouns: `type_ramp.md`, `hero_still.tif`, `still_loop.mov`.
-- Maker mark: BLACK LANTERN. Product mark: VAULT WORLDWIDE.
+- Maker mark: BAD FORM. Product mark: VAULT WORLDWIDE.
 
 ---
 

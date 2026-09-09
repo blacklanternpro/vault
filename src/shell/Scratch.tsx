@@ -11,6 +11,7 @@ type Props = {
   onFindChange: (value: string) => void
   onFindSubmit: () => void
   onFindFocus: () => void
+  onAddNote: () => void
   onNoteFocus: (index: number) => void
   onNoteEdit: (index: number, text: string) => void
   onReorder: (from: number, to: number) => void
@@ -32,6 +33,7 @@ export function Scratch({
   onFindChange,
   onFindSubmit,
   onFindFocus,
+  onAddNote,
   onNoteFocus,
   onNoteEdit,
   onReorder,
@@ -40,7 +42,6 @@ export function Scratch({
 }: Props) {
   const dragRef = useRef<Drag | null>(null)
   const listRef = useRef<HTMLDivElement>(null)
-  const noting = session.lens === 'dump' || session.selected?.kind === 'NOTE' || session.selected?.kind === 'DUMP'
   const noteIndex = session.selected?.kind === 'NOTE' ? session.selected.index : -1
 
   function snapTo(clientY: number, from: number): number {
@@ -93,9 +94,13 @@ export function Scratch({
     skip.style.pointerEvents = ''
     if (!(node instanceof Element)) return null
     if (node.closest('[data-unhitch]')) return 'unhitch'
-    const job = node.closest('[data-card-id], [data-nested-id]')
+    const job = node.closest('[data-card-id], [data-nested-id], [data-folio-id]')
     if (job) {
-      const id = Number(job.getAttribute('data-card-id') || job.getAttribute('data-nested-id'))
+      const id = Number(
+        job.getAttribute('data-card-id') ||
+          job.getAttribute('data-nested-id') ||
+          job.getAttribute('data-folio-id'),
+      )
       if (Number.isFinite(id)) return id
     }
     if (node.closest('.scratch-ghost') || (node.closest('.scratch-list') && !node.closest('[data-note-index]'))) {
@@ -142,7 +147,7 @@ export function Scratch({
     <aside className="sidebar" data-testid="scratch">
       <form className="studio-find" onSubmit={submit}>
         <label className="find-label" htmlFor="studio-find">
-          {noting ? 'NOTE' : 'FIND'}
+          FIND
         </label>
         <input
           id="studio-find"
@@ -151,7 +156,7 @@ export function Scratch({
           placeholder="_"
           autoComplete="off"
           spellCheck={false}
-          aria-label={noting ? 'Note' : 'Find'}
+          aria-label="Find"
           onChange={(e) => onFindChange(e.target.value)}
           onFocus={onFindFocus}
         />
@@ -197,6 +202,9 @@ export function Scratch({
             />
           </article>
         ))}
+        <button type="button" className="scratch-ghost is-add" data-testid="scratch-add" onClick={onAddNote}>
+          _
+        </button>
         {GHOSTS.map((label) => (
           <div key={label} className="scratch-ghost" aria-hidden>
             {label}

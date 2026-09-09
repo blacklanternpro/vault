@@ -6,6 +6,7 @@ import {
   managerCards,
   nestedOf,
   projectIdOf,
+  isProject,
   type Doc,
   type GraphNode,
 } from '../speck/doc'
@@ -26,6 +27,8 @@ type Props = {
   onEditBody: (id: number) => void
   onAddNested: (parentId: number) => void
   onCreateJob: () => void
+  onDock: (id: number, parentId: number) => void
+  onCloseFolio: () => void
   onTitle: (value: string) => void
   onTitleCommit: () => void
   onFieldBlur: (id: number, slot: 'title' | 'body' | 'subtask' | 'status') => void
@@ -51,6 +54,8 @@ export function Manager({
   onEditBody,
   onAddNested,
   onCreateJob,
+  onDock,
+  onCloseFolio,
   onTitle,
   onTitleCommit,
   onFieldBlur,
@@ -102,13 +107,23 @@ export function Manager({
     dragRef.current = null
     ghostRef.current?.remove()
     ghostRef.current = null
-    originRef.current?.classList.remove('is-away')
-    originRef.current = null
     liveRef.current = null
     if (dragging) setDragging(false)
     e.stopPropagation()
-    if (!drag) return
+    if (!drag) {
+      if (originRef.current) {
+        originRef.current.classList.remove('is-away')
+        originRef.current.style.pointerEvents = ''
+        originRef.current = null
+      }
+      return
+    }
     if (!drag.live) {
+      if (originRef.current) {
+        originRef.current.classList.remove('is-away')
+        originRef.current.style.pointerEvents = ''
+        originRef.current = null
+      }
       const hit = document.elementFromPoint(e.clientX, e.clientY)
       const target = hit instanceof Element ? hit : (e.target as Element)
       if (target.closest('[data-nest-add]')) return
@@ -116,22 +131,46 @@ export function Manager({
         onEditBody(drag.id)
         return
       }
-      if (target.closest('[data-title]')) {
+      if (target.closest('[data-title]') && session.pipeOpen === drag.id) {
         onRename(drag.id)
         return
       }
       onFocus(drag.id)
       return
     }
+    const dockId = dropDock(e.clientX, e.clientY, drag.id)
     const hit = dropAt(e.clientX, e.clientY)
+    if (originRef.current) {
+      originRef.current.classList.remove('is-away')
+      originRef.current.style.pointerEvents = ''
+      originRef.current = null
+    }
+    if (dockId != null && (drag.kind === 'nested' || Boolean(byId(doc, drag.id)?.loose))) {
+      onDock(drag.id, dockId)
+      return
+    }
     if (!hit) return
     const before = hit.beforeId === drag.id ? undefined : hit.beforeId
     if (drag.kind === 'nested') onPull(drag.id, hit.lane, before)
     else onStage(drag.id, hit.lane, before)
   }
 
+  function dropDock(clientX: number, clientY: number, dragId: number): number | null {
+    const els = [...document.querySelectorAll('[data-folio-id], [data-card-id]')]
+    let best: { id: number; area: number } | null = null
+    for (const el of els) {
+      const id = Number(el.getAttribute('data-folio-id') || el.getAttribute('data-card-id'))
+      if (!Number.isFinite(id) || id === dragId) continue
+      const r = el.getBoundingClientRect()
+      if (clientX < r.left || clientX > r.right || clientY < r.top || clientY > r.bottom) continue
+      const area = r.width * r.height
+      if (!best || area < best.area) best = { id, area }
+    }
+    return best?.id ?? null
+  }
+
   function beginCardDrag(e: PointerEvent<HTMLElement>, id: number) {
-    if ((e.target as HTMLElement).closest('[data-nested-id], [data-body], [data-nest-add], input, textarea, button')) {
+    if ((e.target as HTMLElement).closest('[data-nested-id], [data-nest-add], input, textarea, button')) {
       return
     }
     beginDrag(e, id, 'card')
@@ -190,7 +229,11 @@ export function Manager({
         ghost.style.zIndex = '80'
         ghost.style.opacity = '0.92'
         ghost.classList.add('is-ghost')
+        ghost.querySelectorAll('*').forEach((n) => {
+          ;(n as HTMLElement).style.pointerEvents = 'none'
+        })
         origin.classList.add('is-away')
+        origin.style.pointerEvents = 'none'
         originRef.current = origin
         document.body.appendChild(ghost)
         ghostRef.current = ghost
@@ -335,7 +378,7 @@ export function Manager({
         onPointerDown={(e) => e.stopPropagation()}
         onClick={() => onAddNested(id)}
       >
-        +
+        [+]
       </button>
     )
   }
@@ -356,7 +399,8 @@ export function Manager({
         <div
           className={`nested-row${node.urgent ? ' is-urgent' : ''}`}
           data-nested-id={node.id}
-          style={{ paddingLeft: 6 + depth * 10 }}
+          data-testid={`nested-${node.id}`}
+          style={{ marginLeft: depth * 10 }}
           onPointerDown={(e) => {
             e.stopPropagation()
             if ((e.target as HTMLElement).closest('[data-body], [data-nest-add], input, button')) return
@@ -379,8 +423,96 @@ export function Manager({
     ))
   }
 
+  const folio = session.pipeOpen != null ? byId(doc, session.pipeOpen) : undefined
+  const inFolio = Boolean(folio && !isProject(doc, folio))
+
+  if (inFolio && folio) {
+    const sat = Boolean(folio.loose)
+    const found = matchesFind(session, folio.title)
+    const editingBody = session.field?.id === folio.id && session.field.slot === 'body'
+    return (
+      <section
+        className="manager is-folio"
+        ref={rackRef}
+        data-testid="folio"
+        aria-label="Job"
+      >
+        <header className="folio-bar">
+          <button type="button" className="folio-plaque" onClick={onCloseFolio}>
+            {laneOf(folio.status).toUpperCase()}
+          </button>
+          <button type="button" className="folio-close" data-testid="folio-close" aria-label="Close" onClick={onCloseFolio}>
+            [x]
+          </button>
+        </header>
+        <div className="folio-transport" aria-label="Lanes">
+          {COL_ORDER.map((col) => (
+            <div key={col} className="folio-lane" data-lane={col} data-testid={`folio-lane-${col}`}>
+              <span>{LANE_PLAQUE[col]}</span>
+            </div>
+          ))}
+        </div>
+        <article
+          className={`folio-doc${sat ? ' is-sat' : ' is-job'}${found ? ' is-found' : ''}${folio.urgent ? ' is-urgent' : ''}`}
+          data-folio-id={folio.id}
+          data-card-id={folio.id}
+          onPointerDown={(e) => beginCardDrag(e, folio.id)}
+          onPointerMove={onCardMove}
+          onPointerUp={finishDrag}
+          onPointerCancel={finishDrag}
+        >
+          {showsJack(folio) ? (
+            <span className={jackClass(folio.id)} data-jack={folio.id} aria-hidden="true" />
+          ) : (
+            <span data-jack={folio.id} className="jack-anchor" aria-hidden="true" />
+          )}
+          {titleField(folio, sat ? 'sat' : 'job')}
+          {editingBody ? (
+            <textarea
+              className="folio-body-input"
+              data-body
+              data-testid={`body-${folio.id}`}
+              value={session.fieldBuffer}
+              autoFocus
+              aria-label="Body"
+              placeholder="_"
+              rows={8}
+              onChange={(e) => onTitle(e.target.value)}
+              onBlur={() => onFieldBlur(folio.id, 'body')}
+              onPointerDown={(e) => e.stopPropagation()}
+            />
+          ) : (
+            <p
+              className="folio-body"
+              data-body
+              data-testid={`body-${folio.id}`}
+              onPointerDown={(e) => e.stopPropagation()}
+              onClick={() => onEditBody(folio.id)}
+            >
+              {folio.body || '_'}
+            </p>
+          )}
+          {statusField(folio)}
+          {hitchType(folio.id)}
+          <div
+            className={`nest-list is-folio${nestedOf(doc, folio.id).length ? ' has-well' : ''}`}
+            data-nest-well={folio.id}
+          >
+            {nestedTree(folio.id, 0)}
+            {nestTick(folio.id)}
+          </div>
+        </article>
+      </section>
+    )
+  }
+
   return (
-    <section className="manager" ref={rackRef} data-testid="manager" aria-label="Jobs">
+    <section className="manager is-rack" ref={rackRef} data-testid="manager" aria-label="Jobs">
+      <div className="deck-housing" aria-hidden="true">
+        <span className="deck-jack" />
+        <span className="deck-jack" />
+        <span className="deck-jack" />
+      </div>
       <Filament doc={doc} projectId={projectId} hostRef={rackRef} liveRef={liveRef} dragging={dragging} />
       {COL_ORDER.map((col) => {
         const items = cardsIn(col)
@@ -420,7 +552,10 @@ export function Manager({
                   {bodyField(node, sat ? 'sat' : 'job', live)}
                   {statusField(node)}
                   {hitchType(node.id)}
-                  <div className="nest-list">
+                  <div
+                    className={`nest-list${nestedOf(doc, node.id).length ? ' has-well' : ''}`}
+                    data-nest-well={node.id}
+                  >
                     {nestedTree(node.id, 0)}
                     {nestTick(node.id)}
                   </div>
