@@ -370,6 +370,60 @@
   text-transform: none;
 }
 
+.card-body,
+.nested-body,
+.card-body-input,
+.nested-body-input {
+  margin: 4px 0 0;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.4;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--color-muted);
+  cursor: text;
+}
+
+.card-body-input,
+.nested-body-input {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  outline: none;
+  caret-color: var(--color-live);
+  color: var(--color-ink);
+}
+
+.card-hitch {
+  margin: 4px 0 0;
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  text-transform: none;
+  color: var(--color-muted);
+}
+
+.nest-tick {
+  display: block;
+  margin: 4px 0 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-muted);
+  font: inherit;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+}
+
+.nest-tick:hover,
+.nest-tick:focus-visible {
+  color: var(--color-live);
+  outline: none;
+}
+
 .jack {
   position: absolute;
   width: 9px;
@@ -649,6 +703,33 @@
   font-size: 11px;
   letter-spacing: 0.06em;
   color: var(--color-muted);
+}
+
+.scratch-hitch {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 0 0 6px;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--color-muted);
+}
+
+.scratch-unhitch {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-muted);
+  font: inherit;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+}
+
+.scratch-unhitch:hover,
+.scratch-unhitch:focus-visible {
+  color: var(--color-mark);
+  outline: none;
 }
 
 .scratch-text {

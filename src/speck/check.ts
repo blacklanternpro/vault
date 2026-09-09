@@ -8,8 +8,10 @@ import {
   commitLine,
   cycleField,
   freshSession,
+  hitchNote,
   pullCard,
   stageCard,
+  typeField,
 } from './machine'
 import { COL_ORDER } from './tokens'
 
@@ -249,6 +251,56 @@ NEST
   if (!serializeDoc(hitchDoc).includes(`NOTE 09.09.26 NODE ${LOOP}`)) fail('hitch source NODE')
 
   if (COL_ORDER.length !== 5) fail('lane count')
+
+  const bodyHit = applyHit(
+    { kind: 'SLOT', x: 0, y: 0, w: 10, h: 10, z: 10, payload: `${LOOP}:body` },
+    freshSession(),
+    seed,
+  )
+  if (bodyHit.session.field?.slot !== 'body' || bodyHit.session.field.id !== LOOP) fail('body slot')
+  const bodySaved = commitFieldLine(typeField(bodyHit.session, 'new sting'), bodyHit.source)
+  if (byId(parseDoc(bodySaved.source), LOOP)?.body !== 'new sting') fail('body write')
+
+  const hitchLive = hitchNote(freshSession(), seed, 0, HOME)
+  const hitchNote0 = parseDoc(hitchLive.source).notes[0]
+  if (hitchNote0?.node !== HOME || hitchNote0.text !== SEED_NOTE) fail(`hitch live ${JSON.stringify(hitchNote0)}`)
+  if (!serializeDoc(parseDoc(hitchLive.source)).includes(`NOTE 09.09.26 NODE ${HOME}`)) fail('hitch live serialize')
+  const unhitched = hitchNote(freshSession(), hitchLive.source, 0, null)
+  if (parseDoc(unhitched.source).notes[0]?.node != null) fail('unhitch')
+
+  const killed = applyKey(
+    'Backspace',
+    false,
+    { ...freshSession(), selected: { kind: 'NODE', id: RAMP } },
+    hitchLive.source,
+  )
+  if (byId(parseDoc(killed.source), RAMP)) fail('kill nested')
+  if (byId(parseDoc(killed.source), HOME)) {
+    /* parent stays */
+  } else fail('kill left parent')
+  const delRepo = applyKey(
+    'Delete',
+    false,
+    { ...freshSession(), selected: { kind: 'NODE', id: REPO } },
+    seed,
+  )
+  if (byId(parseDoc(delRepo.source), REPO)) fail('kill job')
+  const keepRoot = applyKey(
+    'Backspace',
+    false,
+    { ...freshSession(), selected: { kind: 'NODE', id: SITE } },
+    seed,
+  )
+  if (!byId(parseDoc(keepRoot.source), SITE) || !byId(parseDoc(keepRoot.source), HOME)) fail('kill skipped project')
+
+  const hitchThenKill = hitchNote(freshSession(), seed, 0, REPO)
+  const afterKillHitch = applyKey(
+    'Backspace',
+    false,
+    { ...freshSession(), selected: { kind: 'NODE', id: REPO } },
+    hitchThenKill.source,
+  )
+  if (parseDoc(afterKillHitch.source).notes[0]?.node != null) fail('kill cleared hitch')
 
   return fails
 }

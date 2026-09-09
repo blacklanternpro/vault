@@ -17,6 +17,7 @@ import {
   setNodeBody,
   setNodeLoose,
   setNodeStatus,
+  setNoteHitch,
   setNoteText,
   setNodeTitle,
   type Doc,
@@ -200,6 +201,24 @@ export function applyNoteText(session: Session, source: string, index: number, t
   const doc = parseDoc(source)
   setNoteText(doc, index, text)
   return ok(session, serializeDoc(doc))
+}
+
+export function hitchNote(
+  session: Session,
+  source: string,
+  index: number,
+  nodeId: number | null,
+): Result {
+  const doc = parseDoc(source)
+  const note = doc.notes[index]
+  if (!note) return ok(session, source, '? HITCH')
+  if (nodeId != null && !byId(doc, nodeId)) return ok(session, source, '? HITCH')
+  setNoteHitch(doc, index, nodeId)
+  return ok(
+    { ...session, selected: { kind: 'NOTE', index }, lens: 'dump' },
+    serializeDoc(doc),
+    nodeId == null ? 'UNHITCH' : `HITCH #${nodeId}`,
+  )
 }
 
 function applyStrike(session: Session, source: string): Result {
@@ -752,6 +771,30 @@ export function applyKey(key: string, shift: boolean, session: Session, source: 
     const doc = parseDoc(source)
     removeNode(doc, session.draftId)
     return ok(collapse(session), serializeDoc(doc))
+  }
+  if ((key === 'Backspace' || key === 'Delete') && !session.field && session.selected?.kind === 'NODE') {
+    const id = session.selected.id
+    const doc = parseDoc(source)
+    const node = byId(doc, id)
+    if (!node || node.parent == null) return { session, source }
+    const parent = node.parent
+    removeNode(doc, id)
+    const nestFocus =
+      session.nestFocus == null ? null : byId(doc, session.nestFocus) ? session.nestFocus : parent
+    const pipeOpen =
+      session.pipeOpen == null ? null : byId(doc, session.pipeOpen) ? session.pipeOpen : parent
+    return ok(
+      {
+        ...session,
+        selected: { kind: 'NODE', id: parent },
+        nestFocus,
+        pipeOpen,
+        field: null,
+        draftId: session.draftId === id ? null : session.draftId,
+      },
+      serializeDoc(doc),
+      `KILL #${id}`,
+    )
   }
   return { session, source }
 }

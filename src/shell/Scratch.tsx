@@ -1,5 +1,5 @@
 import { useRef, type FormEvent, type KeyboardEvent, type PointerEvent } from 'react'
-import type { Doc } from '../speck/doc'
+import { byId, type Doc } from '../speck/doc'
 import type { Session } from '../speck/ir'
 
 const THRESH = 6
@@ -14,6 +14,8 @@ type Props = {
   onNoteFocus: (index: number) => void
   onNoteEdit: (index: number, text: string) => void
   onReorder: (from: number, to: number) => void
+  onHitch: (index: number, nodeId: number) => void
+  onUnhitch: (index: number) => void
 }
 
 type Drag = {
@@ -33,6 +35,8 @@ export function Scratch({
   onNoteFocus,
   onNoteEdit,
   onReorder,
+  onHitch,
+  onUnhitch,
 }: Props) {
   const dragRef = useRef<Drag | null>(null)
   const listRef = useRef<HTMLDivElement>(null)
@@ -83,10 +87,28 @@ export function Scratch({
     })
   }
 
+  function hitchAt(clientX: number, clientY: number, skip: HTMLElement): number | 'unhitch' | null {
+    skip.style.pointerEvents = 'none'
+    const node = document.elementFromPoint(clientX, clientY)
+    skip.style.pointerEvents = ''
+    if (!(node instanceof Element)) return null
+    if (node.closest('[data-unhitch]')) return 'unhitch'
+    const job = node.closest('[data-card-id], [data-nested-id]')
+    if (job) {
+      const id = Number(job.getAttribute('data-card-id') || job.getAttribute('data-nested-id'))
+      if (Number.isFinite(id)) return id
+    }
+    if (node.closest('.scratch-ghost') || (node.closest('.scratch-list') && !node.closest('[data-note-index]'))) {
+      return 'unhitch'
+    }
+    return null
+  }
+
   function onUp(e: PointerEvent<HTMLElement>, index: number) {
     const drag = dragRef.current
     dragRef.current = null
     const list = listRef.current
+    const block = e.currentTarget
     list?.querySelectorAll('[data-note-index]').forEach((el) => {
       const node = el as HTMLElement
       node.style.transform = ''
@@ -96,6 +118,15 @@ export function Scratch({
     if (!drag) return
     if (!drag.live) {
       onNoteFocus(index)
+      return
+    }
+    const hitch = hitchAt(e.clientX, e.clientY, block)
+    if (hitch === 'unhitch') {
+      onUnhitch(index)
+      return
+    }
+    if (typeof hitch === 'number') {
+      onHitch(index, hitch)
       return
     }
     const to = snapTo(e.clientY, drag.from)
@@ -138,6 +169,21 @@ export function Scratch({
             onPointerCancel={(e) => onUp(e, index)}
           >
             {note.date ? <p className="scratch-date">{note.date}</p> : null}
+            {note.node != null ? (
+              <p className="scratch-hitch" data-testid={`hitch-plaque-${index}`}>
+                <span>→ {byId(doc, note.node)?.title.trim() || '_'}</span>
+                <button
+                  type="button"
+                  className="scratch-unhitch"
+                  data-unhitch
+                  aria-label="Unhitch"
+                  onPointerDown={(e) => e.stopPropagation()}
+                  onClick={() => onUnhitch(index)}
+                >
+                  [x]
+                </button>
+              </p>
+            ) : null}
             <textarea
               className="scratch-text"
               value={note.text}
