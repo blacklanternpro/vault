@@ -1,8 +1,17 @@
-import { useRef, type KeyboardEvent, type PointerEvent, type ReactNode } from 'react'
-import { laneOf, managerCards, nestedOf, projectIdOf, childrenOf, type Doc, type GraphNode } from '../speck/doc'
+import { useRef, useState, type KeyboardEvent, type PointerEvent, type ReactNode } from 'react'
+import {
+  byId,
+  childrenOf,
+  laneOf,
+  managerCards,
+  nestedOf,
+  projectIdOf,
+  type Doc,
+  type GraphNode,
+} from '../speck/doc'
 import { matchesFind, type Session } from '../speck/ir'
 import { COL_ORDER, LANE_PLAQUE, isBinderStatus, type ColName, type NodeStatus } from '../speck/tokens'
-import { Filament } from './Filament'
+import { Filament, type LiveLeash } from './Filament'
 import { Mark } from './Mark'
 
 const THRESH = 7
@@ -44,7 +53,10 @@ export function Manager({
 }: Props) {
   const dragRef = useRef<Drag | null>(null)
   const ghostRef = useRef<HTMLDivElement | null>(null)
+  const originRef = useRef<HTMLElement | null>(null)
   const rackRef = useRef<HTMLElement | null>(null)
+  const liveRef = useRef<LiveLeash | null>(null)
+  const [dragging, setDragging] = useState(false)
 
   const projectId = projectIdOf(doc, session.projectId)
   const cards = managerCards(doc, projectId)
@@ -69,11 +81,27 @@ export function Manager({
     return { lane, beforeId: null }
   }
 
+  function pinFromGhost(kind: Drag['kind'], id: number, ghost: HTMLElement) {
+    const r = ghost.getBoundingClientRect()
+    const sat = kind === 'nested' || Boolean(byId(doc, id)?.loose)
+    liveRef.current = {
+      id,
+      parentId: byId(doc, id)?.parent ?? null,
+      kind,
+      x: sat ? r.left + 2 : r.right - 2,
+      y: r.top + (sat ? 12 : 14),
+    }
+  }
+
   function finishDrag(e: PointerEvent<HTMLElement>) {
     const drag = dragRef.current
     dragRef.current = null
     ghostRef.current?.remove()
     ghostRef.current = null
+    originRef.current?.classList.remove('is-away')
+    originRef.current = null
+    liveRef.current = null
+    if (dragging) setDragging(false)
     e.stopPropagation()
     if (!drag) return
     if (!drag.live) {
@@ -91,12 +119,30 @@ export function Manager({
   }
 
   function beginCardDrag(e: PointerEvent<HTMLElement>, id: number) {
-    if ((e.target as HTMLElement).closest('[data-well],[data-nested-id]')) return
+    if ((e.target as HTMLElement).closest('[data-nested-id],input')) return
     beginDrag(e, id, 'card')
   }
 
+  function livePair(): Set<number> {
+    const ids = new Set<number>()
+    const drag = dragRef.current
+    if (!dragging || !drag) return ids
+    ids.add(drag.id)
+    const parent = byId(doc, drag.id)?.parent
+    if (parent != null) ids.add(parent)
+    return ids
+  }
+
   function showsJack(node: GraphNode) {
-    return Boolean(node.loose) || childrenOf(doc, node.id).some((c) => c.loose)
+    if (node.loose) return true
+    if (childrenOf(doc, node.id).some((c) => c.loose)) return true
+    const drag = dragRef.current
+    if (dragging && drag?.kind === 'nested' && byId(doc, drag.id)?.parent === node.id) return true
+    return false
+  }
+
+  function jackClass(id: number) {
+    return livePair().has(id) ? 'jack is-live' : 'jack'
   }
 
   function beginDrag(e: PointerEvent<HTMLElement>, id: number, kind: Drag['kind']) {
@@ -130,15 +176,19 @@ export function Manager({
         ghost.style.zIndex = '80'
         ghost.style.opacity = '0.92'
         ghost.classList.add('is-ghost')
+        origin.classList.add('is-away')
+        originRef.current = origin
         document.body.appendChild(ghost)
         ghostRef.current = ghost
         drag.startX = e.clientX - r.left
         drag.startY = e.clientY - r.top
+        setDragging(true)
       }
     }
     if (ghostRef.current) {
       ghostRef.current.style.left = `${e.clientX - drag.startX}px`
       ghostRef.current.style.top = `${e.clientY - drag.startY}px`
+      pinFromGhost(drag.kind, drag.id, ghostRef.current)
     }
   }
 
@@ -184,7 +234,7 @@ export function Manager({
         <div
           className={`nested-row${node.urgent ? ' is-urgent' : ''}`}
           data-nested-id={node.id}
-          style={{ paddingLeft: 4 + depth * 10 }}
+          style={{ paddingLeft: 6 + depth * 10 }}
           onPointerDown={(e) => {
             e.stopPropagation()
             beginDrag(e, node.id, 'nested')
@@ -194,7 +244,7 @@ export function Manager({
           onPointerCancel={finishDrag}
         >
           {titleField(node, 'nested')}
-          {showsJack(node) ? <span className="jack" data-jack={node.id} aria-hidden="true" /> : (
+          {showsJack(node) ? <span className={jackClass(node.id)} data-jack={node.id} aria-hidden="true" /> : (
             <span data-jack={node.id} className="jack-anchor" aria-hidden="true" />
           )}
         </div>
@@ -205,11 +255,7 @@ export function Manager({
 
   return (
     <section className="manager" ref={rackRef} data-testid="manager" aria-label="Jobs">
-      <span className="fastener fastener-tl" aria-hidden="true" />
-      <span className="fastener fastener-tr" aria-hidden="true" />
-      <span className="fastener fastener-bl" aria-hidden="true" />
-      <span className="fastener fastener-br" aria-hidden="true" />
-      <Filament doc={doc} projectId={projectId} hostRef={rackRef} />
+      <Filament doc={doc} projectId={projectId} hostRef={rackRef} liveRef={liveRef} dragging={dragging} />
       {COL_ORDER.map((col) => {
         const items = cardsIn(col)
         return (
@@ -230,6 +276,7 @@ export function Manager({
                 (session.selected?.kind === 'NODE' && session.selected.id === node.id)
               const found = matchesFind(session, node.title)
               const sat = Boolean(node.loose)
+              const showNest = nested.length > 0
               return (
                 <article
                   key={node.id}
@@ -240,26 +287,17 @@ export function Manager({
                   onPointerUp={finishDrag}
                   onPointerCancel={finishDrag}
                 >
-                  {showsJack(node) ? <span className="jack" data-jack={node.id} aria-hidden="true" /> : (
+                  {showsJack(node) ? (
+                    <span className={jackClass(node.id)} data-jack={node.id} aria-hidden="true" />
+                  ) : (
                     <span data-jack={node.id} className="jack-anchor" aria-hidden="true" />
                   )}
                   {titleField(node, sat ? 'sat' : 'job')}
-                  <div
-                    className="job-well"
-                    data-well
-                    onPointerDown={(e) => {
-                      if ((e.target as HTMLElement).closest('[data-nested-id],input')) return
-                      e.stopPropagation()
-                    }}
-                    onClick={(e) => {
-                      if ((e.target as HTMLElement).closest('[data-nested-id],input')) return
-                      e.stopPropagation()
-                      onAddNested(node.id)
-                    }}
-                  >
-                    {nestedTree(node.id, 0)}
-                    {nested.length === 0 ? <span className="well-ghost">_</span> : null}
-                  </div>
+                  {showNest ? (
+                    <div className="nest-list">
+                      {nestedTree(node.id, 0)}
+                    </div>
+                  ) : null}
                 </article>
               )
             })}
@@ -275,7 +313,7 @@ export function Manager({
                 +
               </button>
             ) : null}
-            <div className="lane-empty">_</div>
+            {items.length === 0 && col !== 'pending' ? <div className="lane-empty">_</div> : null}
           </div>
         )
       })}

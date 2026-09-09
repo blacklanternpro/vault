@@ -6,7 +6,7 @@ export const CARD = '#22262f'
 export const CARD_2 = '#2a2f3a'
 export const INK = '#eeeae4'
 export const MUTED = '#a8adb8'
-export const HAIR = '#2c313c'
+export const HAIR = '#3a414e'
 export const LIVE = '#FF5C1A'
 export const LIVE_INK = '#14080a'
 export const MARK = '#ff3355'
@@ -23,14 +23,14 @@ export const INK_RULE = 'rgba(0,0,0,0.22)'
 export const INK_RULE_DIM = 'rgba(0,0,0,0.1)'
 
 export const FONT_HELV = '"Helvetica Neue", Helvetica, Arial, sans-serif'
-export const FONT_OSWALD = FONT_HELV
+export const FONT_OSWALD = 'Oswald, "Helvetica Neue", Helvetica, Arial, sans-serif'
 
 export function fontHelv(px: number, weight = 400): string {
   return `${weight} ${px}px ${FONT_HELV}`
 }
 
 export function fontDisplay(px: number, weight = 700): string {
-  return `${weight} ${px}px ${FONT_HELV}`
+  return `${weight} ${px}px ${FONT_OSWALD}`
 }
 
 export function ground(_inv?: boolean): string {
