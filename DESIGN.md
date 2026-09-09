@@ -11,6 +11,7 @@ colors:
   muted: "#a8adb8"
   hair: "#3a414e"
   chrome: "rgba(238, 234, 228, 0.2)"
+  jacket: "#1c1410"
   live: "#FF5C1A"
   live-ink: "#14080a"
   mark: "#ff3355"
@@ -22,6 +23,12 @@ typography:
     fontWeight: 700
     lineHeight: "1.2"
     letterSpacing: "0.14em"
+  project:
+    fontFamily: "Oswald, Helvetica Neue, Helvetica, Arial, sans-serif"
+    fontSize: "18px"
+    fontWeight: 700
+    lineHeight: "1.2"
+    letterSpacing: "0.12em"
   card:
     fontFamily: "Helvetica Neue, Helvetica, Arial, sans-serif"
     fontSize: "13px"
