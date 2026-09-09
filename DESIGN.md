@@ -116,6 +116,7 @@ VAULT is a dark desktop studio, not a dashboard and not a canvas organ field. Ch
 | Muted | `#a8adb8` | Counts, stems, plaques |
 | Hair | `#3a414e` | Quiet rules, card edges |
 | Chrome | `rgba(238,234,228,0.2)` | Gutter and transport hairlines |
+| Jacket | `#1c1410` | Leash cable jacket |
 | Live | `#FF5C1A` | Directory select, FIND mark, leash conductor, caret, live slab |
 | Live ink | `#14080a` | Type on orange |
 | Mark | `#ff3355` | URGENT, RECORD, strike, CLEAR-class danger |
