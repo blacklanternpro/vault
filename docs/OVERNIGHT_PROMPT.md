@@ -1,10 +1,8 @@
 # OVERNIGHT PROMPT — paste this into a future agent
 
-**Month-as-OS is dead as home. DateBlocks, SaaS kanban chrome, harvest amber, cobalt lash, dump-parser docks, DOS `#id` ledgers, salt organs, and the paper/black IMP canvas are dead.** Keep **SPECK** as the save format (graph + dump source), not a Forth REPL and not a paint/PLACE compositor identity. The studio is four tools as a **fixed DOM layout**: quiet project cards on top, unix directory underneath, scratch sidebar with FIND. Persistence is SPECK source (`speck-os-v2`), not a task CRDT, not JSON-as-database.
+**Month-as-OS is dead as home. DateBlocks, SaaS kanban chrome, harvest amber, cobalt lash, dump-parser docks, DOS `#id` ledgers, salt organs, and the paper/black IMP canvas are dead.** Keep **SPECK** as the save format (graph + dump source), not a Forth REPL and not a paint/PLACE compositor identity. The studio is four tools as a **fixed DOM layout**: black cassette deck on top, unix directory underneath, scratch sidebar with FIND. Persistence is SPECK source (`speck-os-v2`), not a task CRDT, not JSON-as-database.
 
 This is a **later-run** brief. The language is written. Graph ops live in `src/speck`. The shell lives in `src/shell`. Do not ignore `docs/LANGUAGE.md`. It is canon. Product truth: `PRODUCT.md`.
-
-Read this whole file. Then read `docs/LANGUAGE.md`. Then read `.cursorrules`. Then look at the current shell. Then go.
 
 Read this whole file. Then read `docs/LANGUAGE.md`. Then read `.cursorrules`. Then look at the current shell. Then go.
 
@@ -36,18 +34,18 @@ Jake / BLACK LANTERN. Personal OS. Not a store product. Not a SaaS. Local-first,
 2. **`.cursorrules`** — short law. Obey it. It points here.
 3. **Current shell** — `src/App.tsx` hosts `<Studio />`. Runtime graph is `src/speck`. Layout is manager / directory / scratch. Charcoal ground. Highlighter red. The canvas `Field` and salt organs are a corpse; do not restore them.
 4. **History** — Gemini neo-brutal TUI. PRs #8–#11 (fried TUI → burn the box). PR #7 DateBlocks = warning. PR #14 month field = recovery, not home. Paper/IMP canvas = anti-reference.
-5. **Pinned world** — dark studio (charcoal/slate, off-white, highlighter). Quiet cards. Naked directory. No section titles.
+5. **Pinned world** — black cassette deck (charcoal/slate, off-white, live orange, danger red). Square slabs. Slack leashes. Naked directory. No CRT wells.
 
 ---
 
 ## Locked tokens
 
-- Ground charcoal, panel/card slate steps, inset wells
+- Ground charcoal, panel/card slate steps, chrome hairline gutters
 - Off-white type, muted secondary
-- Live orange — selection, FIND, filament, caret (`#FF5C1A`)
-- Danger red — URGENT, strike, CLEAR (not `#E10600`)
+- Live orange — selection, FIND, leash, caret (`#FF5C1A`)
+- Danger red — URGENT, RECORD, strike, CLEAR (not `#E10600`)
 
-Helvetica Neue / Helvetica / Arial only. Modest radius on cards. No amber identity. No cobalt. No Oswald identity. Cream cassette is not the plate.
+Helvetica Neue / Helvetica / Arial on work. Oswald 700 on plaques. Square slabs. No amber identity. No cobalt. Cream cassette is not the plate. Black housing is.
 
 ---
 
@@ -55,13 +53,13 @@ Helvetica Neue / Helvetica / Arial only. Modest radius on cards. No amber identi
 
 Desktop. One FIND/NOTE field. One graph. Sections do not drag.
 
-1. Manager on top. Racked wells PENDING · R&D · ACTIVE · DONE · DUSTED. One project (dropdown + ADD). Job cards nest; pull makes satellites; filaments stretch. Ghost `+` creates a job.
+1. Manager on top. Cassette deck: hairline gutters PENDING · R&D · ACTIVE · DONE · DUSTED. One project (cassette window + RECORD ADD). Square slabs; nested as ledger lines; pull makes slugs; slack leashes. Ghost `+` creates a job.
 2. Directory under it. Unix stems. Orange selection. `_` adds. SHOVEL onto the manager. CLIP is dead. Stems never on the PM.
 3. Scratch on the right. Txt blocks snap-reorder. Link/pic/file slots inert this pass.
 4. FIND in the sidebar. NOTE when a txt block is focused. `CLEAR` typed. No DOS `>` slab.
 5. Click-and-type. FIND searches — it does not create work.
 
-You may refine density. You may not add 3D knobs, VU KPIs, brass cables, a second input, month-as-OS as home, cobalt, PLACE-drag, or PROJECTS/ROSTER/FLEET/LOGS tabs.
+You may refine density. You may not add 3D knobs, VU KPIs, taut filaments, CRT wells, a second input, month-as-OS as home, cobalt, PLACE-drag, or PROJECTS/ROSTER/FLEET/LOGS tabs.
 
 ---
 
@@ -106,6 +104,6 @@ Do not propose a new palette. Do not revive DateBlocks. Do not build NEXUS HUD a
 
 New features must be SPECK-sayable as source.
 
-When in doubt: charcoal studio, orange on the live name, taut filaments, one FIND, empty is `_`.
+When in doubt: charcoal studio, orange on the live name, slack leashes, one FIND, empty is `_`.
 
 Go.

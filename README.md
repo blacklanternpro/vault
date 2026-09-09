@@ -8,10 +8,10 @@ Product truth: [`PRODUCT.md`](PRODUCT.md).
 
 ## Composition
 
-Charcoal studio. Live orange. Danger red. Not a PWA. Not a month. Not a canvas organ field.
+Charcoal studio. Black cassette deck. Live orange leash. Danger red. Not a PWA. Not a month. Not a canvas organ field.
 
-1. **One graph** — directory is the unix catalogue; manager is jobs of one project plus loose satellites
-2. Click a title to type. Click a job body to nest. Trailing `_` adds a child. Ghost `+` creates a job.
+1. **One graph** — directory is the unix catalogue; manager is jobs of one project plus loose satellite slugs
+2. Click a title to type. Click a job body to nest a ledger line. Pull the line to make a slug. Trailing `_` adds a child. Ghost `+` creates a job.
 3. **FIND** searches (`FIND loop`); it does not create work. NOTE when a scratch block is focused. `CLEAR` restores seed.
 4. Space / shovel stages a node onto the manager. Scratch blocks snap-reorder vertically.
 
