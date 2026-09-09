@@ -1,22 +1,22 @@
 MASTER AESTHETIC & SYSTEM RULES FOR VAULT WORLDWIDE:
-Full language: docs/LANGUAGE.md — portable BLACK LANTERN canon (tokens, vetoes, SPECK save format, take/leave). Obey that file.
+Full language: docs/LANGUAGE.md — portable BAD FORM canon (tokens, vetoes, SPECK save format, take/leave). Obey that file.
 Overnight agent brief: docs/OVERNIGHT_PROMPT.md.
 Product truth: PRODUCT.md. Visual system after build: DESIGN.md.
 
 This is a dark studio: four tools as a fixed layout, not a dashboard, not a canvas OS, not stacked billboards.
-The Manager is a black cassette **deck** (section, not a boxed window): five hairline gutters, Oswald plaques, square slabs. Nested work is ledger lines, not cards. Pulled subtasks are slugs on slack patch-cables. No DateBlocks, no SaaS kanban chrome, no PM nest stems.
+The Manager is a black cassette **theatre** (section, not a boxed window): housing, transport plaques, RECORD, jacks, five hairline gutters, Oswald plaques, square slabs. HIT a slab enters the **folio** (the job as a document). Nested work is sleek **boxed lines**, not unix stems, not mini-kanban. Pulled subtasks are slugs on slack patch-cables; drop a slug on a parent card to dock it back. Directory is an elite TUI listing. No DateBlocks, no SaaS kanban chrome, no PM nest stems, no NEXUS HUD, no VU KPIs, no CRT wells.
 
 PALETTE: Ground charcoal · panel/card slate · off-white type · muted secondary · live orange (select, leash, caret) · danger red (URGENT, RECORD, CLEAR).
 Live orange is not harvest amber identity. Danger red is not IMP `#E10600`. Cobalt has left. Paper/INV invert is not the identity. Cream cassette is not the OS plate. Black housing is.
 
-TYPE: Helvetica Neue / Helvetica / Arial on work. Oswald 700 on plaques (lane labels, project name, FIND). Job titles uppercase. Nested rows sentence case. No JetBrains. No Space Grotesk.
+TYPE: Helvetica Neue / Helvetica / Arial on work. Oswald 700 on plaques (lane labels, project name, FIND). Job titles uppercase. Boxed lines sentence case. No JetBrains. No Space Grotesk.
 
 COMPOSITION (desktop studio, not a PWA, not mobile-first):
-1. Dark field. Deck fixed on top (cassette transport: project window + RECORD ADD, then five gutters), directory fixed under it, scratch sidebar on the right (~320px). FIND is the one command field (top of the sidebar). Sections do not drag.
-2. One work graph. Directory is the full unix catalogue. Manager shows jobs of one project plus loose satellites. Nested (non-loose) children are type lines under the slab. Ghost `+` in PENDING creates a job.
-3. Naked unix directory: stems `│ ├── └──`, orange name-block behind the live name. Trailing `_` adds a child. TAB indent/outdent. Space / shovel stages onto the manager. Stems never appear in the PM GUI.
-4. Scratch blocks snap-reorder vertically. Ghost `_ LINK` / `_ PIC` / `_ FILE` stay inert. NOTE when a txt block is focused; else FIND. `CLEAR` is a typed command. No DOS `>` dock slab.
-5. SPECK source is the save format (`speck-os-v2`). Statuses `pending|rnd|active|done|dusted|none`. `LOOSE` marks a pulled satellite. Physics A: card moves, nested follow, loose stay, leash sags and tightens.
+1. Dark field. Deck fixed on top (cassette transport: project window + RECORD, then five gutters or an entered folio), directory fixed under it, scratch sidebar on the right (~320px). FIND is search only (top of the sidebar). Sections do not drag.
+2. One work graph. Directory is the full unix catalogue (stems only). Manager shows jobs of one project plus loose satellites, or one entered folio. Nested (non-loose) children are boxed lines under the slab / in the folio. Ghost `+` in PENDING creates a job. `[+]` adds a boxed line.
+3. Elite TUI directory: stems `│ ├── └──`, orange name-block behind the live name. First click selects; second click / Enter renames. `ON` / drag stages onto the manager. Trailing `_` adds a child. TAB indent/outdent. Space is a silent stage shortcut. Stems never appear in the PM GUI. No boxed rows in the nest.
+4. Scratch blocks snap-reorder vertically. Ghost `_ LINK` / `_ PIC` / `_ FILE` stay inert. Pointer `_` adds a note. Hitch is pointer. FIND does not create. No DOS `>` dock slab. No verb bar.
+5. SPECK source is the save format (`speck-os-v2`). Statuses `pending|rnd|active|done|dusted|none`. `LOOSE` marks a pulled satellite. Physics A: card moves, nested follow, loose stay, leash sags and tightens. Dock back drops `LOOSE`.
 
-HARD VETO: DateBlocks cards, jagged day cards, SaaS kanban chrome (avatars, KPIs, progress bars, “+ New Deal”), JSON-as-database, second prompt, cobalt lash, dump-parser dock, salt organs as identity (CAL / SEAL / SKULL), organ PLACE-drag, grain/scan as whole-OS overlay, 3D knobs, VU meters as KPIs, PM nest stems, rounded cards inside square wells, taut tuner-needle filaments.
-Do not revive beige cassette as the OS identity, month-as-OS as home, paper/black IMP canvas, or a Tailwind binder dashboard.
+HARD VETO: DateBlocks cards, jagged day cards, SaaS kanban chrome (avatars, KPIs, progress bars, “+ New Deal”), JSON-as-database, second prompt, cobalt lash, dump-parser dock, salt organs as identity (CAL / SEAL / SKULL), organ PLACE-drag, grain/scan as whole-OS overlay, 3D knobs, VU meters as KPIs, PM nest stems, unix-on-cards, boxed directory rows, rounded cards inside square wells, taut tuner-needle filaments, NEXUS HUD, five CRT wells.
+Do not revive beige cassette as the OS identity, month-as-OS as home, paper/black IMP canvas, a Tailwind binder dashboard, BLACK LANTERN as maker, or a sit-down verb codebook.
