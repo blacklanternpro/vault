@@ -109,7 +109,8 @@ export function Manager({
     e.stopPropagation()
     if (!drag) return
     if (!drag.live) {
-      const target = e.target as HTMLElement
+      const hit = document.elementFromPoint(e.clientX, e.clientY)
+      const target = hit instanceof Element ? hit : (e.target as Element)
       if (target.closest('[data-nest-add]')) return
       if (target.closest('[data-body]')) {
         onEditBody(drag.id)
