@@ -106,6 +106,11 @@
 
 .field {
   display: grid;
+  /*
+   * The column is bounded, or the board's own scrollable width becomes the
+   * grid's width and everything beside it stretches to match.
+   */
+  grid-template-columns: minmax(0, 1fr);
   grid-template-rows: auto minmax(0, 1fr);
   height: 100vh;
 }
@@ -959,7 +964,7 @@
  * rather than sit on a grid, so a short folder does not hold a row open.
  */
 .forest {
-  columns: 340px;
+  columns: 400px;
   column-gap: 28px;
   padding: 0 10px 14px;
 }
@@ -1287,51 +1292,76 @@
 /* ------------------------------------------------------------- responsive */
 
 /*
- * The comp's lane is 196px wide. Past the point where five of those plus the
- * drawer leave slack, the lanes take the slack rather than leaving dead ground.
+ * The comp's lane is 196px and at the comp's width the last one runs under the
+ * drawer, which is what the comp shows. Five of those plus the drawer clear
+ * each other at 1354, so from there the rail is held open at every width — the
+ * board never reflows when a job opens, and the dump below stands in the same
+ * rail — and the lanes take the remaining slack rather than leaving dead ground.
  */
-@media (min-width: 1500px) {
+@media (min-width: 1360px) {
   .board {
     grid-auto-columns: minmax(var(--lane-width), 1fr);
     padding-right: calc(var(--drawer-width) + 16px);
   }
 }
 
+/*
+ * Narrow: the field stops being one screen and becomes one column. The board
+ * keeps its own sideways scroll, because five lanes are the point, and the
+ * drawer and the catalogue fall in under it as the next panels down — which is
+ * also the only width where the whole field is reachable by scrolling alone.
+ */
 @media (max-width: 900px) {
   .field {
     height: auto;
-    min-height: 100vh;
   }
 
   .topbar {
     flex-wrap: wrap;
     height: auto;
-    padding: 12px 14px;
-    gap: 12px;
+    padding: 11px 14px 12px;
+    gap: 10px 12px;
+  }
+
+  /* The name and the primary action hold the first line between them. */
+  .topbar-brand {
+    order: 1;
+  }
+
+  .new-job {
+    order: 2;
+    margin-left: auto;
   }
 
   .find {
     order: 3;
-    flex-basis: 100%;
-    max-width: none;
+    flex: 1 1 100%;
     margin-left: 0;
   }
 
+  /*
+   * The filters run off the edge on one line rather than stacking into a third
+   * and fourth row. On a narrow screen the board is what the screen is for, and
+   * a filter is something you reach for.
+   */
   .topbar-filters {
-    order: 2;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin-left: auto;
+    order: 4;
+    flex: 1 1 100%;
+    flex-wrap: nowrap;
+    gap: 8px;
+    margin-left: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
   }
 
-  .new-job {
-    margin-left: 10px;
+  .topbar-filters::-webkit-scrollbar {
+    display: none;
   }
 
   .board {
-    grid-auto-columns: min(82vw, 320px);
+    grid-auto-columns: min(80vw, 320px);
     height: auto;
-    padding: 14px 14px 24px;
+    padding: 14px 14px 20px;
   }
 
   .lane {
@@ -1339,7 +1369,6 @@
     max-height: 74vh;
   }
 
-  /* Narrow: the drawer stops floating and becomes the next panel down. */
   .drawer {
     position: static;
     width: auto;
@@ -1350,6 +1379,7 @@
 
   .catalogue {
     grid-template-columns: minmax(0, 1fr);
+    gap: 14px;
     padding: 0 14px 24px;
   }
 }

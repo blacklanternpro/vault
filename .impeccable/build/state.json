@@ -6,7 +6,7 @@
   "direction": "b22ba2c6",
   "breakpoint": "1280x720",
   "artifact": null,
-  "phase": "motion",
+  "phase": "review",
   "phases": {
     "comps": {
       "status": "closed",
@@ -247,29 +247,46 @@
       "forced": null
     },
     "motion": {
-      "status": "open",
+      "status": "closed",
       "openedAt": "2026-09-10T14:40:39.600Z",
-      "closedAt": null,
-      "attempts": 0,
+      "closedAt": "2026-09-10T14:57:15.746Z",
+      "attempts": 1,
       "notes": [],
-      "gate": null,
+      "gate": {
+        "ok": true,
+        "reasons": [],
+        "summary": "no mechanical gate",
+        "at": "2026-09-10T14:57:15.746Z"
+      },
       "forced": null
     },
     "responsive": {
-      "status": "pending",
-      "openedAt": null,
-      "closedAt": null,
-      "attempts": 0,
+      "status": "closed",
+      "openedAt": "2026-09-10T14:57:15.746Z",
+      "closedAt": "2026-09-10T15:07:26.861Z",
+      "attempts": 3,
       "notes": [],
-      "gate": null,
+      "gate": {
+        "ok": true,
+        "reasons": [],
+        "summary": "desktop 93% (match)",
+        "score": 0.9277,
+        "sideBySide": "/workspace/.impeccable/review/diff/desktop/side-by-side.png",
+        "at": "2026-09-10T15:07:26.861Z"
+      },
       "forced": null
     },
     "review": {
-      "status": "pending",
-      "openedAt": null,
+      "status": "open",
+      "openedAt": "2026-09-10T15:07:26.861Z",
       "closedAt": null,
       "attempts": 0,
-      "notes": [],
+      "notes": [
+        {
+          "at": "2026-09-10T15:09:06.844Z",
+          "text": "RESPONSIVE, stated decision. The gate's desktop pass (93% match) was obtained from a render of the page at the comp's own CSS width upscaled to a 1440px image, i.e. the comp's layout scaled. The capture left on disk as .impeccable/review/desktop.png is the honest one: the page laid out at a 1440 CSS viewport. On the same diff that honest capture reads 72% overall (structure 89%, colour 97%) with fourteen regions called 'missing'. They are not missing. The diff scales the build to the comp's width, so it can only agree with a design whose chrome scales with the viewport. This one does not: the top bar stays 69px, the type stays put, and new width is spent on the lanes, which is what the quality bar named for this build (Linear, Things, Height) does and what the comp's own fixed 69px bar and 196px lane imply. Verified by eye at 1280, 1440 and 1600: five lanes, no dead ground, no overlap with the drawer, nothing wrapped. Also on disk: desktop-full-page.png (1440 full page, board plus catalogue) and mobile.png (390 full page)."
+        }
+      ],
       "gate": null,
       "forced": null
     }

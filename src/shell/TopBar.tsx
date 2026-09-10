@@ -138,13 +138,18 @@ export function TopBar({
             <option value="urgent">Priority: Urgent</option>
           </select>
         </label>
-
-        <button type="button" className="new-job" data-testid="project-add" onClick={onNewJob}>
-          <Plus className="new-job-glyph" />
-          New
-          <Chevron className="new-job-chevron" />
-        </button>
       </div>
+
+      {/*
+        Outside the filters, because it is not one: it keeps the bar's right
+        edge on its own, and on a narrow screen it stays on the first row while
+        the filters drop to the last.
+      */}
+      <button type="button" className="new-job" data-testid="project-add" onClick={onNewJob}>
+        <Plus className="new-job-glyph" />
+        New
+        <Chevron className="new-job-chevron" />
+      </button>
     </header>
   )
 }
