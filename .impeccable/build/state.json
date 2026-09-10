@@ -279,7 +279,7 @@
     "review": {
       "status": "closed",
       "openedAt": "2026-09-10T15:07:26.861Z",
-      "closedAt": "2026-09-10T15:23:14.888Z",
+      "closedAt": "2026-09-10T16:43:20.010Z",
       "attempts": 0,
       "notes": [
         {
@@ -293,7 +293,7 @@
   },
   "finish": {
     "disposition": "fix",
-    "at": "2026-09-10T15:23:14.888Z",
+    "at": "2026-09-10T16:43:20.010Z",
     "phaseAtFinish": "review"
   },
   "plates": {}

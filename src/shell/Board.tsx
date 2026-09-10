@@ -1,6 +1,6 @@
 import { useMemo, useRef, type KeyboardEvent, type RefObject } from 'react'
 import { boardCards, boardSatellites, folderOf, laneOf, type Doc, type GraphNode } from '../speck/doc'
-import { matchesFind, type Session } from '../speck/ir'
+import { type Session } from '../speck/ir'
 import { COL_ORDER, LANE_PLAQUE, type ColName } from '../speck/tokens'
 import { Filament, type LiveLeash } from './Filament'
 import { Chevron, Plus, Ring } from './Glyph'
@@ -137,12 +137,11 @@ export function Board({
               {items.map((node) => {
                 const open = session.pipeOpen === node.id
                 const live = session.selected?.kind === 'NODE' && session.selected.id === node.id
-                const found = matchesFind(session, node.title)
                 const folder = folderOf(doc, node.id)
                 return (
                   <article
                     key={node.id}
-                    className={`slab${open ? ' is-open' : ''}${live ? ' is-live' : ''}${found ? ' is-found' : ''}${node.urgent ? ' is-urgent' : ''}${node.loose ? ' is-loose' : ''}`}
+                    className={`slab${open ? ' is-open' : ''}${live ? ' is-live' : ''}${node.urgent ? ' is-urgent' : ''}${node.loose ? ' is-loose' : ''}`}
                     data-card-id={node.id}
                     onPointerDown={(e) => drag.beginDrag(e, node.id, 'card', '[data-card-id]')}
                     onPointerMove={drag.onMove}
