@@ -708,14 +708,16 @@
 /* ----------------------------------------------------------------- drawer */
 
 /*
- * The rail is pinned to the screen, not to the field, so it runs the full way
- * to the bottom edge as the comp has it. The fold cue is spent under the board,
- * where the catalogue is what the sliver belongs to; the drawer's own panel down
- * there is the dump, and a rail cut short of the edge would only look cut.
+ * The rail ends where the field does, and the sliver below it is the dump's own
+ * top edge — same 286px column, same white, one hairline between them, so the
+ * right rail reads as running the whole page rather than stopping. Hanging the
+ * rail past the field to reach the screen edge instead cost more than it bought:
+ * it is 24px of the dump's header, clipped at every scroll position, because the
+ * catalogue starts exactly where the field ends and the drawer paints over it.
  */
 .drawer {
   position: absolute;
-  inset: 0 0 calc(-1 * var(--fold-cue)) auto;
+  inset: 0 0 0 auto;
   z-index: 10;
   display: flex;
   flex-direction: column;
