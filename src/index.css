@@ -470,16 +470,12 @@
   color: var(--color-urgent);
 }
 
-.slab-input,
-.slab-folder-input {
+.slab-input {
   width: 100%;
   border: 0;
   background: none;
   outline: none;
   padding: 0;
-}
-
-.slab-input {
   font-family: var(--font-plaque);
   font-size: 15.5px;
   font-weight: 700;
@@ -488,42 +484,49 @@
   text-transform: uppercase;
 }
 
-.slab-folder-input {
-  margin-top: 9px;
-  font-size: 12.5px;
-  color: var(--color-ink-2);
-}
-
+/*
+ * The lane's last line is empty and writes: the same ledger row the tree and
+ * the tape use. It stays out of the way while the lane holds cards, since the
+ * comp shows no such row, and holds its place when the lane is empty, which is
+ * the only time it is the lane's whole content.
+ */
 .lane-add {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 9px;
   flex: none;
   opacity: 0;
-  transition: opacity 120ms ease, border-color 120ms ease, color 120ms ease;
+  pointer-events: none;
+  transition: opacity 120ms ease, color 120ms ease;
   width: 100%;
-  padding: 11px 14px;
+  padding: 11px 4px;
   background: none;
-  border: 1px dashed var(--color-line-2);
-  border-radius: var(--radius-slab);
-  color: var(--color-ink-2);
-  font-size: 15px;
+  border: 0;
+  color: var(--color-ink-3);
+  font-size: 13.5px;
   text-align: left;
 }
 
 .lane:hover .lane-add,
-.lane-add:focus-visible {
+.lane-add:focus-visible,
+.lane-stack:has(.lane-void) .lane-add {
   opacity: 1;
+  pointer-events: auto;
+}
+
+/* In an empty lane the row is the first line, not a note stranded at the foot. */
+.lane-stack:has(.lane-void) .lane-add {
+  order: -1;
 }
 
 .lane-add:hover {
-  border-color: var(--color-accent-line);
   color: var(--color-accent);
 }
 
 .lane-add-glyph {
-  width: 14px;
-  height: 14px;
+  flex: none;
+  width: 15px;
+  height: 15px;
 }
 
 .lane-void {
@@ -864,6 +867,7 @@
 }
 
 .subtask-add {
+  pointer-events: none;
   display: flex;
   align-items: center;
   gap: 12px;
@@ -881,6 +885,7 @@
 .drawer:hover .subtask-add,
 .subtask-add:focus-visible {
   opacity: 1;
+  pointer-events: auto;
 }
 
 .subtask-add:hover {
@@ -896,62 +901,64 @@
 
 /* -------------------------------------------------------------- catalogue */
 
+/*
+ * The field carries on below the board: same ground, same white panels on the
+ * same hairline, same plaque heads. The directory is the tree, the dump is the
+ * tape, and the dump takes the drawer's width so the right rail stays put.
+ */
 .catalogue {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 282px;
+  grid-template-columns: minmax(0, 1fr) var(--drawer-width);
+  gap: var(--lane-gap);
   align-items: start;
-  border-top: 1px solid var(--color-line);
-  background-color: var(--color-surface);
+  padding: 0 16px 39px;
 }
 
-.directory {
-  min-width: 0;
-  padding: 26px 24px 34px;
-}
-
+.directory,
 .dump {
   min-width: 0;
-  padding: 26px 20px 34px;
-  border-left: 1px solid var(--color-line);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-slab);
 }
 
 .section-head {
   display: flex;
   align-items: baseline;
   gap: 10px;
-  margin: 0 0 16px;
+  margin: 0;
+  padding: 15px 19px 21px;
 }
 
 .section-name {
   margin: 0;
-  font-size: 14px;
-  font-weight: 600;
-  letter-spacing: 0.09em;
+  font-family: var(--font-plaque);
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 22px;
+  letter-spacing: 0.055em;
   text-transform: uppercase;
-  color: var(--color-ink-2);
 }
 
 .section-note {
-  font-size: 14px;
-  color: var(--color-ink-3);
+  font-size: 15px;
+  color: var(--color-ink-2);
+  font-variant-numeric: tabular-nums;
 }
 
-.section-act {
-  margin-left: auto;
-  padding: 0;
-  background: none;
-  border: 0;
-  font-size: 14px;
-  color: var(--color-accent);
-}
-
+/*
+ * Wide columns, not narrow ones: a subtask sits four stems deep, and a narrow
+ * column is where its name starts losing its tail to an ellipsis. Folders flow
+ * rather than sit on a grid, so a short folder does not hold a row open.
+ */
 .forest {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(238px, 1fr));
-  gap: 4px 28px;
+  columns: 340px;
+  column-gap: 28px;
+  padding: 0 10px 14px;
 }
 
 .forest-col {
+  break-inside: avoid;
   min-width: 0;
 }
 
@@ -960,11 +967,12 @@
   align-items: center;
   gap: 0;
   width: 100%;
-  padding: 3px 6px;
+  padding: 1px 9px;
   background: none;
   border: 0;
   border-radius: 5px;
-  font-size: 14px;
+  font-size: 13.5px;
+  line-height: 18px;
   text-align: left;
 }
 
@@ -988,10 +996,21 @@
   color: var(--color-accent);
 }
 
+.stem-add-glyph {
+  /* Sits in the disclosure column, so the label lands on the job names above. */
+  flex: none;
+  width: 14px;
+  height: 14px;
+  margin-right: 3px;
+}
+
 .stem-rule {
   flex: none;
-  color: var(--color-ink-3);
+  color: #b7bac0;
   font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+  font-size: 12.5px;
+  /* The row pitch is set to the box-drawing glyph so the verticals actually join. */
+  line-height: 18px;
   white-space: pre;
 }
 
@@ -1007,19 +1026,31 @@
   font-weight: 600;
 }
 
+/* A job in the tree is the same plaque as a job on the board, one size down. */
 .stem.is-job .stem-name {
-  text-transform: uppercase;
+  font-family: var(--font-plaque);
+  font-size: 14.5px;
+  font-weight: 700;
+  line-height: 18px;
   letter-spacing: 0.01em;
+  text-transform: uppercase;
 }
 
 .stem-status {
   flex: none;
-  margin-left: 10px;
+  margin-left: 12px;
+  padding: 0;
+  background: none;
+  border: 0;
   font-size: 12px;
   font-weight: 600;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
-  color: var(--color-ink-3);
+  color: var(--color-ink-2);
+}
+
+.stem-status:hover {
+  color: var(--color-accent);
 }
 
 .stem-input {
@@ -1028,31 +1059,45 @@
   border: 0;
   background: none;
   outline: none;
-  font-size: 14px;
+  font-size: 13.5px;
 }
 
+/*
+ * The disclosure mark is a triangle, not another dash: a dash in this column
+ * reads as one more length of stem and the tree stops being legible.
+ */
 .stem-fold {
   flex: none;
-  width: 15px;
+  width: 14px;
   padding: 0;
   background: none;
   border: 0;
   color: var(--color-ink-3);
-  font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+  font-size: 10px;
+  line-height: 18px;
+  text-align: center;
+}
+
+.stem-fold:hover {
+  color: var(--color-ink);
 }
 
 .notes {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  padding: 0 10px 6px;
 }
 
 .note {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
-  gap: 10px;
-  padding: 7px 8px;
-  border-radius: 6px;
+  gap: 12px;
+  padding: 9px;
+  border-radius: 5px;
+}
+
+.note + .note {
+  box-shadow: 0 -1px 0 var(--color-line);
 }
 
 .note:hover {
@@ -1064,17 +1109,21 @@
 }
 
 .note-date {
-  font-size: 13px;
-  color: var(--color-ink-3);
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 20px;
+  color: var(--color-ink-2);
   font-variant-numeric: tabular-nums;
 }
 
 .note-text {
   min-width: 0;
+  padding: 0;
   border: 0;
   background: none;
   outline: none;
-  font-size: 14px;
+  font-size: 13.5px;
+  line-height: 20px;
   resize: none;
   overflow: hidden;
 }
@@ -1084,48 +1133,48 @@
   padding: 0;
   background: none;
   border: 0;
-  font-size: 13px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
   color: var(--color-accent);
   text-align: left;
 }
 
+/* The tape's last line is empty and writes: the same ledger row the tree uses. */
 .dump-add {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 9px;
   width: 100%;
-  margin-top: 10px;
-  padding: 8px;
+  padding: 9px;
   background: none;
-  border: 1px dashed var(--color-line-2);
-  border-radius: 6px;
-  color: var(--color-ink-2);
-  font-size: 14px;
+  border: 0;
+  border-radius: 5px;
+  box-shadow: 0 -1px 0 var(--color-line);
+  color: var(--color-ink-3);
+  font-size: 13.5px;
   text-align: left;
 }
 
 .dump-add:hover {
-  border-color: var(--color-accent-line);
+  background-color: var(--color-ground);
   color: var(--color-accent);
+}
+
+.dump-add-glyph {
+  flex: none;
+  width: 15px;
+  height: 15px;
 }
 
 /* ----------------------------------------------------------------- states */
 
-.mark {
-  background-color: #fdf0b8;
+/* A find hit is washed in the one accent; the board has no second colour. */
+.find-mark {
+  background-color: var(--color-accent-wash);
+  box-shadow: inset 0 -1px 0 var(--color-accent-line);
+  color: inherit;
   border-radius: 2px;
-}
-
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
-  border: 0;
 }
 
 /* ------------------------------------------------------------- responsive */
@@ -1183,20 +1232,18 @@
     max-height: 74vh;
   }
 
+  /* Narrow: the drawer stops floating and becomes the next panel down. */
   .drawer {
     position: static;
     width: auto;
-    border-left: 0;
-    border-top: 1px solid var(--color-line);
+    margin: 0 14px 14px;
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius-slab);
   }
 
   .catalogue {
     grid-template-columns: minmax(0, 1fr);
-  }
-
-  .dump {
-    border-left: 0;
-    border-top: 1px solid var(--color-line);
+    padding: 0 14px 24px;
   }
 }
 

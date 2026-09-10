@@ -3,9 +3,26 @@ import { childrenOf, isBoardVisible, laneOf, type Doc } from '../speck/doc'
 import { matchesFind, type Session } from '../speck/ir'
 import { LANE_PLAQUE, isBinderStatus, type ColName, type NodeStatus } from '../speck/tokens'
 import { nestRows, type NestRow } from '../speck/tree'
+import { Plus } from './Glyph'
 import { Mark } from './Mark'
 
 const THRESH = 6
+
+/*
+ * `nestRows` draws the whole graph as one tree, so every job carries a stem for
+ * the folder's own position under the root. The catalogue breaks each folder out
+ * into its own column, where that outermost stem descends from nothing — so the
+ * column drops it and the folder becomes its own root.
+ *
+ * The branch's own trailing space goes too: the disclosure column that follows
+ * already holds the gap, and paying for both leaves the arm reaching at nothing.
+ */
+function stemOf(row: NestRow): string {
+  return row.depth === 0 ? '' : row.prefix.slice(4).trimEnd()
+}
+
+/** The indent a folder's own jobs sit at, for the rows that only offer to create. */
+const JOB_STEM = '   '
 
 type DirectoryProps = {
   doc: Doc
@@ -136,11 +153,17 @@ export function Directory({
     const closed = session.nestClosed.includes(id)
     const project = row.node.parent == null
     const lane = laneOf(row.node.status)
+    /*
+     * A folder's own jobs are the ones the board sets in a plaque, so those are
+     * the rows the tree plaques too. Anything deeper is a line of a job, and it
+     * keeps the sentence case the drawer writes it in.
+     */
+    const kind = project ? 'is-project' : row.depth === 1 ? 'is-job' : 'is-leaf'
 
     return (
       <div
         key={id}
-        className={`stem${selected ? ' is-live' : ''}${found ? ' is-found' : ''}${project ? ' is-project' : ' is-job'}`}
+        className={`stem ${kind}${selected ? ' is-live' : ''}${found ? ' is-found' : ''}`}
         data-node-id={id}
         data-testid={`dir-row-${id}`}
         onPointerDown={(e) => beginRow(e, id)}
@@ -149,7 +172,7 @@ export function Directory({
         onPointerCancel={(e) => finishDrag(e, id)}
       >
         <span className="stem-rule" aria-hidden="true">
-          {row.prefix}
+          {stemOf(row)}
         </span>
         {kids.length ? (
           <button
@@ -162,7 +185,7 @@ export function Directory({
               onToggle(id)
             }}
           >
-            {closed ? '+' : '-'}
+            {closed ? '\u25b8' : '\u25be'}
           </button>
         ) : (
           <span className="stem-fold" aria-hidden="true" />
@@ -225,9 +248,6 @@ export function Directory({
         <span className="section-note">
           {cols.length === 1 ? '1 folder' : `${cols.length} folders`}
         </span>
-        <button type="button" className="section-act" onClick={() => onAdd(null)}>
-          New folder
-        </button>
       </div>
 
       <div className="forest">
@@ -239,22 +259,45 @@ export function Directory({
           return (
             <div key={root?.id ?? 'col'} className="forest-col">
               {col.map(renderRow)}
+              {/*
+               * The folder's last line is empty and writes. It sits at its jobs'
+               * indent but draws no branch of its own, so the tree above it stays
+               * strictly true and this row reads as the next line, not a node.
+               */}
               <button
                 type="button"
                 className="stem stem-ghost"
+                data-testid={`dir-add-job-${root?.id ?? 0}`}
                 onClick={(e) => {
                   e.stopPropagation()
                   onAdd(addParent ?? null)
                 }}
               >
                 <span className="stem-rule" aria-hidden="true">
-                  {'└── '}
+                  {JOB_STEM}
                 </span>
+                <Plus className="stem-add-glyph" />
                 <span className="stem-name">New job</span>
               </button>
             </div>
           )
         })}
+
+        {/* The tree's own last line, at the root, where a folder is what gets written. */}
+        <div className="forest-col">
+          <button
+            type="button"
+            className="stem stem-ghost"
+            data-testid="dir-add-folder"
+            onClick={(e) => {
+              e.stopPropagation()
+              onAdd(null)
+            }}
+          >
+            <Plus className="stem-add-glyph" />
+            <span className="stem-name">New folder</span>
+          </button>
+        </div>
       </div>
     </section>
   )

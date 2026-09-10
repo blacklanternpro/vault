@@ -174,7 +174,7 @@ export function Scratch({
       </div>
 
       <button type="button" className="dump-add" data-testid="scratch-add" onClick={onAddNote}>
-        <Plus className="lane-add-glyph" />
+        <Plus className="dump-add-glyph" />
         New note
       </button>
     </section>
