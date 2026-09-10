@@ -2,6 +2,7 @@ import { useRef, type PointerEvent, type RefObject } from 'react'
 import { byId, type Doc } from '../speck/doc'
 import { isBinderStatus, type ColName, type NodeStatus } from '../speck/tokens'
 import type { LiveLeash } from './Filament'
+import type { Settling } from './useBoardFlip'
 
 /** Pointer travel a press has to cover before it stops being a tap. */
 const THRESH = 7
@@ -21,6 +22,8 @@ type JobDragOptions = {
   doc: Doc
   /** Where the airborne end of the leash is, read by the filament every frame. */
   liveRef: RefObject<LiveLeash | null>
+  /** Which card a drop is already landing, so the board does not land it twice. */
+  settling: RefObject<Settling>
   setDragging: (on: boolean) => void
   onStage: (id: number, status: NodeStatus, beforeId: number | null | undefined) => void
   onPull: (id: number, status: NodeStatus, beforeId: number | null | undefined) => void
@@ -45,6 +48,7 @@ export type JobDrag = {
 export function useJobDrag({
   doc,
   liveRef,
+  settling,
   setDragging,
   onStage,
   onPull,
@@ -213,6 +217,7 @@ export function useJobDrag({
     releaseOrigin()
 
     if (dockId != null && (drag.kind === 'nested' || Boolean(byId(doc, drag.id)?.loose))) {
+      settling.current = { id: drag.id, at: performance.now() }
       onDock(drag.id, dockId)
       if (ghost) settle(ghost, drag.id, home)
       return
@@ -222,6 +227,7 @@ export function useJobDrag({
       return
     }
     const before = hit.beforeId === drag.id ? undefined : hit.beforeId
+    settling.current = { id: drag.id, at: performance.now() }
     if (drag.kind === 'nested') onPull(drag.id, hit.lane, before)
     else onStage(drag.id, hit.lane, before)
     if (ghost) settle(ghost, drag.id, home)

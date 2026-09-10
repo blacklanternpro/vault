@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { LiveLeash } from './Filament'
+import type { Settling } from './useBoardFlip'
 import { useJobDrag } from './useJobDrag'
 import {
   addNested,
@@ -40,6 +41,7 @@ export function Studio() {
   const sessionRef = useRef(session)
   const sourceRef = useRef(source)
   const liveRef = useRef<LiveLeash | null>(null)
+  const settlingRef = useRef<Settling>(null)
   sessionRef.current = session
   sourceRef.current = source
 
@@ -151,6 +153,7 @@ export function Studio() {
   const drag = useJobDrag({
     doc,
     liveRef,
+    settling: settlingRef,
     setDragging,
     onStage: (id, status, beforeId) => apply(stageCard(sessionRef.current, sourceRef.current, id, status, beforeId)),
     onPull: (id, status, beforeId) => apply(pullCard(sessionRef.current, sourceRef.current, id, status, beforeId)),
@@ -194,8 +197,10 @@ export function Studio() {
             urgentOnly={urgentOnly}
             drag={drag}
             liveRef={liveRef}
+            settling={settlingRef}
             dragging={dragging}
             onCreateJob={(status) => hit('EMPTY', status)}
+            onShovel={(id) => hit('SHOVEL', id)}
             onTitle={(value) => setLive(typeField(sessionRef.current, value))}
             onTitleCommit={commitTitle}
             onFieldBlur={onFieldBlur}

@@ -3,8 +3,9 @@ import { boardCards, boardSatellites, folderOf, laneOf, type Doc, type GraphNode
 import { matchesFind, type Session } from '../speck/ir'
 import { COL_ORDER, LANE_PLAQUE, type ColName } from '../speck/tokens'
 import { Filament, type LiveLeash } from './Filament'
-import { Plus, Ring } from './Glyph'
+import { Chevron, Plus, Ring } from './Glyph'
 import { Mark } from './Mark'
+import { useBoardFlip, type Settling } from './useBoardFlip'
 import type { JobDrag } from './useJobDrag'
 
 type BoardProps = {
@@ -18,11 +19,20 @@ type BoardProps = {
   drag: JobDrag
   /** Shared with the drawer, so a subtask pulled from it pays out a cable too. */
   liveRef: RefObject<LiveLeash | null>
+  /** Set by the drag, read by the move animation: whose landing is already flying. */
+  settling: RefObject<Settling>
   dragging: boolean
   onCreateJob: (status: ColName) => void
+  /** Puts the job in the next lane along, which is the board's own verb. */
+  onShovel: (id: number) => void
   onTitle: (value: string) => void
   onTitleCommit: () => void
   onFieldBlur: (id: number, slot: 'title' | 'body' | 'subtask' | 'status') => void
+}
+
+/** The lane a shovel moves a card into, or null at the end of the rack. */
+function nextOf(col: ColName): ColName | null {
+  return COL_ORDER[COL_ORDER.indexOf(col) + 1] ?? null
 }
 
 export function Board({
@@ -33,8 +43,10 @@ export function Board({
   urgentOnly,
   drag,
   liveRef,
+  settling,
   dragging,
   onCreateJob,
+  onShovel,
   onTitle,
   onTitleCommit,
   onFieldBlur,
@@ -44,6 +56,10 @@ export function Board({
   const cards = boardCards(doc, filterId)
   const satellites = useMemo(() => boardSatellites(doc, filterId), [doc, filterId])
   const query = session.find
+
+  /* Every one of these puts cards somewhere else, so all of them re-measure. */
+  const layout = useMemo(() => ({ doc, filterId, laneFilter, urgentOnly }), [doc, filterId, laneFilter, urgentOnly])
+  useBoardFlip(boardRef, layout, settling)
 
   function cardsIn(col: ColName) {
     if (laneFilter && laneFilter !== col) return []
@@ -103,6 +119,7 @@ export function Board({
       />
       {COL_ORDER.map((col) => {
         const items = cardsIn(col)
+        const shoveTo = nextOf(col)
         return (
           <section
             key={col}
@@ -141,6 +158,26 @@ export function Board({
                       <p className="slab-folder">{folder.title.trim() || '_'}</p>
                     ) : null}
                     {node.urgent ? <span className="slab-flag">URGENT</span> : null}
+                    {/*
+                      The lane a card sits in is its status, so the card's one
+                      quick action is to put itself in the next lane along. The
+                      last lane has nowhere to go, so it offers nothing.
+                    */}
+                    {shoveTo ? (
+                      <button
+                        type="button"
+                        className="slab-shovel"
+                        data-testid={`slab-shovel-${node.id}`}
+                        aria-label={`Move ${node.title.trim() || 'job'} to ${LANE_PLAQUE[shoveTo]}`}
+                        onPointerDown={(e) => e.stopPropagation()}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          onShovel(node.id)
+                        }}
+                      >
+                        <Chevron className="slab-shovel-glyph" />
+                      </button>
+                    ) : null}
                   </article>
                 )
               })}

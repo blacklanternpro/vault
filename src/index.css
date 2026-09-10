@@ -457,6 +457,44 @@
   opacity: 0.32;
 }
 
+/*
+ * The card's one quick action, held out of sight until the pointer is on the
+ * card — so the resting board is exactly the comp's, and the thing you reach
+ * for is there the moment you reach. It takes the card's own background so it
+ * masks the plate it sits on rather than patching white over a washed one.
+ */
+.slab-shovel {
+  position: absolute;
+  right: 5px;
+  bottom: 5px;
+  display: grid;
+  place-items: center;
+  width: 23px;
+  height: 23px;
+  padding: 0;
+  background-color: inherit;
+  border: 0;
+  border-radius: 6px;
+  color: var(--color-ink-3);
+  opacity: 0;
+  transition: opacity 110ms ease, color 110ms ease, background-color 110ms ease;
+}
+
+.slab:hover .slab-shovel,
+.slab-shovel:focus-visible {
+  opacity: 1;
+}
+
+.slab-shovel:hover {
+  background-color: var(--color-accent-wash);
+  color: var(--color-accent);
+}
+
+.slab-shovel-glyph {
+  width: 15px;
+  height: 15px;
+}
+
 .slab-head {
   display: flex;
   align-items: center;
