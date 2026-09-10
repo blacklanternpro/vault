@@ -1,0 +1,2158 @@
+{
+  "tool": "comp-spec",
+  "version": 1,
+  "createdAt": "2026-09-10T12:46:36.485Z",
+  "comp": ".impeccable/mocks/canon-board.webp",
+  "warnings": [
+    "region wordmark-mark: \"codeDrawn\": true set in the regions file (the painted-material refusal is overridden: code draws this region)"
+  ],
+  "uncoveredInkCells": [],
+  "compSize": {
+    "width": 1280,
+    "height": 720
+  },
+  "aspect": 1.7778,
+  "orientation": "landscape",
+  "palette": [
+    {
+      "hex": "#f7f7f7",
+      "coverage": 0.9651
+    },
+    {
+      "hex": "#b2b2b2",
+      "coverage": 0.0111
+    },
+    {
+      "hex": "#707070",
+      "coverage": 0.0101
+    },
+    {
+      "hex": "#151515",
+      "coverage": 0.01
+    },
+    {
+      "hex": "#0b68f8",
+      "coverage": 0.0037
+    }
+  ],
+  "bands": [
+    {
+      "y": 0.0556,
+      "strength": 0.4565
+    },
+    {
+      "y": 0.1528,
+      "strength": 0.2891
+    },
+    {
+      "y": 0.1944,
+      "strength": 0.2312
+    },
+    {
+      "y": 0.2222,
+      "strength": 0.2755
+    },
+    {
+      "y": 0.2639,
+      "strength": 0.4686
+    },
+    {
+      "y": 0.3889,
+      "strength": 0.3891
+    },
+    {
+      "y": 0.4167,
+      "strength": 0.2473
+    },
+    {
+      "y": 0.5417,
+      "strength": 0.2206
+    },
+    {
+      "y": 0.5694,
+      "strength": 0.2168
+    }
+  ],
+  "regions": [
+    {
+      "id": "wordmark-mark",
+      "kind": "chrome",
+      "note": "the V monogram at icon scale, a two-path SVG glyph in the ink colour",
+      "grid": null,
+      "codeDrawn": true,
+      "box": {
+        "x": 0.0117,
+        "y": 0.025,
+        "w": 0.0313,
+        "h": 0.0472
+      },
+      "px": {
+        "x": 15,
+        "y": 18,
+        "w": 40,
+        "h": 34
+      },
+      "aspect": 1.1765,
+      "palette": [
+        {
+          "hex": "#f7f7f7",
+          "coverage": 0.631
+        },
+        {
+          "hex": "#0a0a0a",
+          "coverage": 0.2679
+        },
+        {
+          "hex": "#b3b3b3",
+          "coverage": 0.0595
+        },
+        {
+          "hex": "#8b8b8b",
+          "coverage": 0.0298
+        },
+        {
+          "hex": "#404040",
+          "coverage": 0.0119
+        }
+      ],
+      "detail": {
+        "energy": 11.2475
+      },
+      "medium": "semantic",
+      "plate": null,
+      "text": null
+    },
+    {
+      "id": "wordmark-text",
+      "kind": "text",
+      "note": "VAULT WORLDWIDE set small in dark bold caps beside the monogram",
+      "grid": null,
+      "box": {
+        "x": 0.0469,
+        "y": 0.0347,
+        "w": 0.1391,
+        "h": 0.0278
+      },
+      "px": {
+        "x": 60,
+        "y": 25,
+        "w": 178,
+        "h": 20
+      },
+      "aspect": 8.9,
+      "palette": [
+        {
+          "hex": "#f6f6f6",
+          "coverage": 0.6326
+        },
+        {
+          "hex": "#121212",
+          "coverage": 0.236
+        },
+        {
+          "hex": "#676767",
+          "coverage": 0.0584
+        },
+        {
+          "hex": "#404040",
+          "coverage": 0.0462
+        },
+        {
+          "hex": "#c4c4c4",
+          "coverage": 0.0268
+        }
+      ],
+      "detail": {
+        "energy": 94.1132
+      },
+      "medium": "semantic",
+      "plate": null,
+      "text": null,
+      "type": {
+        "comp": {
+          "lines": 1,
+          "glyphs": 14,
+          "capHeightPx": 13.6,
+          "inkIsDark": true,
+          "allCaps": true,
+          "advance": 0.737,
+          "advTall": 0.737,
+          "advX": null,
+          "gap": 0.1474,
+          "xRatio": null,
+          "stemW": 0.2331,
+          "contrast": 1.1927,
+          "serif": 0.3746,
+          "densTall": 0.629,
+          "densX": null,
+          "weight": 0.629
+        },
+        "widthClass": "normal",
+        "weightClass": "bold",
+        "chosen": {
+          "family": "Public Sans",
+          "weight": 700,
+          "fontSizePx": 18,
+          "source": "index",
+          "fp": {
+            "lines": 1,
+            "glyphs": 14,
+            "capHeightPx": 14,
+            "inkIsDark": true,
+            "allCaps": true,
+            "advance": 0.748,
+            "advTall": 0.748,
+            "advX": null,
+            "gap": 0.1425,
+            "xRatio": null,
+            "stemW": 0.2262,
+            "contrast": 1.1976,
+            "serif": 0.5853,
+            "densTall": 0.6127,
+            "densX": null,
+            "weight": 0.6127
+          },
+          "stamp": "f65561a21b57"
+        }
+      }
+    },
+    {
+      "id": "find-field",
+      "kind": "control",
+      "note": "rounded search input with a magnifier icon, grey placeholder Search tasks..., and a command-K chip at its right",
+      "grid": null,
+      "box": {
+        "x": 0.2297,
+        "y": 0.0194,
+        "w": 0.2953,
+        "h": 0.0556
+      },
+      "px": {
+        "x": 294,
+        "y": 14,
+        "w": 378,
+        "h": 40
+      },
+      "aspect": 9.45,
+      "palette": [
+        {
+          "hex": "#f8f8f8",
+          "coverage": 0.9683
+        },
+        {
+          "hex": "#606060",
+          "coverage": 0.0119
+        },
+        {
+          "hex": "#cacaca",
+          "coverage": 0.0108
+        },
+        {
+          "hex": "#979796",
+          "coverage": 0.0091
+        }
+      ],
+      "detail": {
+        "energy": 12.6565
+      },
+      "medium": "semantic",
+      "plate": null,
+      "text": null
+    },
+    {
+      "id": "filter-chips",
+      "kind": "control",
+      "note": "three rounded outlined dropdown chips with chevrons: All Projects, Assignee: Me, Priority: Any",
+      "grid": null,
+      "box": {
+        "x": 0.5453,
+        "y": 0.0222,
+        "w": 0.3359,
+        "h": 0.05
+      },
+      "px": {
+        "x": 698,
+        "y": 16,
+        "w": 430,
+        "h": 36
+      },
+      "aspect": 11.9444,
+      "palette": [
+        {
+          "hex": "#f7f7f7",
+          "coverage": 0.9207
+        },
+        {
+          "hex": "#6e6e6e",
+          "coverage": 0.0249
+        },
+        {
+          "hex": "#b4b4b4",
+          "coverage": 0.022
+        },
+        {
+          "hex": "#0e0e0e",
+          "coverage": 0.0174
+        },
+        {
+          "hex": "#383838",
+          "coverage": 0.015
+        }
+      ],
+      "detail": {
+        "energy": 37.7556
+      },
+      "medium": "semantic",
+      "plate": null,
+      "text": null
+    },
+    {
+      "id": "new-button",
+      "kind": "control",
+      "note": "solid blue rounded button, plus icon, the word New, and a chevron",
+      "grid": null,
+      "box": {
+        "x": 0.8906,
+        "y": 0.0222,
+        "w": 0.0953,
+        "h": 0.05
+      },
+      "px": {
+        "x": 1140,
+        "y": 16,
+        "w": 122,
+        "h": 36
+      },
+      "aspect": 3.3889,
+      "palette": [
+        {
+          "hex": "#0c68f7",
+          "coverage": 0.7522
+        },
+        {
+          "hex": "#126fe6",
+          "coverage": 0.1457
+        },
+        {
+          "hex": "#5789c6",
+          "coverage": 0.0348
+        },
+        {
+          "hex": "#bdf1f8",
+          "coverage": 0.0348
+        },
+        {
+          "hex": "#f7f8f8",
+          "coverage": 0.0326
+        }
+      ],
+      "detail": {
+        "energy": 10.7944
+      },
+      "medium": "semantic",
+      "plate": null,
+      "text": null
+    },
+    {
+      "id": "topbar-rule",
+      "kind": "chrome",
+      "note": "1px hairline across the full width closing the top bar",
+      "grid": null,
+      "box": {
+        "x": 0,
+        "y": 0.0917,
+        "w": 1,
+        "h": 0.0056
+      },
+      "px": {
+        "x": 0,
+        "y": 66,
+        "w": 1280,
+        "h": 4
+      },
+      "aspect": 320,
+      "palette": [
+        {
+          "hex": "#f8f8f8",
+          "coverage": 1
+        }
+      ],
+      "detail": {
+        "energy": 8.0326
+      },
+      "medium": "semantic",
+      "plate": null,
+      "text": null
+    },
+    {
+      "id": "lane-pending",
+      "kind": "chrome",
+      "note": "light grey rounded lane panel with a hairline border, the PENDING column ground",
+      "grid": null,
+      "box": {
+        "x": 0.0109,
+        "y": 0.1181,
+        "w": 0.1563,
+        "h": 0.8292
+      },
+      "px": {
+        "x": 14,
+        "y": 85,
+        "w": 200,
+        "h": 597
+      },
+      "aspect": 0.335,
+      "palette": [
+        {
+          "hex": "#f7f7f7",
+          "coverage": 0.9759
+        },
+        {
+          "hex": "#121212",
+          "coverage": 0.0079
+        },
+        {
+          "hex": "#b9b9b9",
+          "coverage": 0.0065
+        },
+        {
+          "hex": "#888888",
+          "coverage": 0.005
+        },
+        {
+          "hex": "#515151",
+          "coverage": 0.0047
+        }
+      ],
+      "detail": {
+        "energy": 7.6801
+      },
+      "medium": "semantic",
+      "plate": null,
+      "text": null
+    },
+    {
+      "id": "lane-rnd",
+      "kind": "chrome",
+      "note": "light grey rounded lane panel with a hairline border, the R&D column ground",
+      "grid": null,
+      "box": {
+        "x": 0.175,
+        "y": 0.1181,
+        "w": 0.1531,
+        "h": 0.8292
+      },
+      "px": {
+        "x": 224,
+        "y": 85,
+        "w": 196,
+        "h": 597
+      },
+      "aspect": 0.3283,
+      "palette": [
+        {
+          "hex": "#f7f7f7",
+          "coverage": 0.9667
+        },
+        {
+          "hex": "#7f7f7f",
+          "coverage": 0.0104
+        },
+        {
+          "hex": "#bbbcbc",
+          "coverage": 0.0091
+        },
+        {
+          "hex": "#131313",
+          "coverage": 0.0078
+        },
+        {
+          "hex": "#484848",
+          "coverage": 0.0059
+        }
+      ],
+      "detail": {
+        "energy": 9.9029
+      },
+      "medium": "semantic",
+      "plate": null,
+      "text": null
+    },
+    {
+      "id": "lane-active",
+      "kind": "chrome",
+      "note": "light grey rounded lane panel with a hairline border, the ACTIVE column ground",
+      "grid": null,
+      "box": {
+        "x": 0.3359,
+        "y": 0.1181,
+        "w": 0.1523,
+        "h": 0.8292
+      },
+      "px": {
+        "x": 430,
+        "y": 85,
+        "w": 195,
+        "h": 597
+      },
+      "aspect": 0.3266,
+      "palette": [
+        {
+          "hex": "#f7f7f7",
+          "coverage": 0.9834
+        },
+        {
+          "hex": "#b9b9b9",
+          "coverage": 0.0046
+        },
+        {
+          "hex": "#898989",
+          "coverage": 0.0041
+        },
+        {
+          "hex": "#a8b8d4",
+          "coverage": 0.004
+        },
+        {
+          "hex": "#0c0c0c",
+          "coverage": 0.0038
+        }
+      ],
+      "detail": {
+        "energy": 7.7478
+      },
+      "medium": "semantic",
+      "plate": null,
+      "text": null
+    },
+    {
+      "id": "lane-done",
+      "kind": "chrome",
+      "note": "light grey rounded lane panel with a hairline border, the DONE column ground",
+      "grid": null,
+      "box": {
+        "x": 0.4961,
+        "y": 0.1181,
+        "w": 0.1602,
+        "h": 0.8292
+      },
+      "px": {
+        "x": 635,
+        "y": 85,
+        "w": 205,
+        "h": 597
+      },
+      "aspect": 0.3434,
+      "palette": [
+        {
+          "hex": "#f7f7f7",
+          "coverage": 0.9537
+        },
+        {
+          "hex": "#727272",
+          "coverage": 0.014
+        },
+        {
+          "hex": "#cfcfd0",
+          "coverage": 0.0133
+        },
+        {
+          "hex": "#aaaaaa",
+          "coverage": 0.0097
+        },
+        {
+          "hex": "#121212",
+          "coverage": 0.0093
+        }
+      ],
+      "detail": {
+        "energy": 13.2475
+      },
+      "medium": "semantic",
+      "plate": null,
+      "text": null
+    },
+    {
+      "id": "lane-dusted",
+      "kind": "chrome",
+      "note": "light grey rounded lane panel with a hairline border, the DUSTED column ground, clipped by the drawer",
+      "grid": null,
+      "box": {
+        "x": 0.6563,
+        "y": 0.1181,
+        "w": 0.1234,
+        "h": 0.8292
+      },
+      "px": {
+        "x": 840,
+        "y": 85,
+        "w": 158,
+        "h": 597
+      },
+      "aspect": 0.2647,
+      "palette": [
+        {
+          "hex": "#f7f7f7",
+          "coverage": 0.9855
+        },
+        {
+          "hex": "#151515",
+          "coverage": 0.0047
+        },
+        {
+          "hex": "#989898",
+          "coverage": 0.0036
+        },
+        {
+          "hex": "#c4c4c4",
+          "coverage": 0.0036
+        },
+        {
+          "hex": "#707070",
+          "coverage": 0.0026
+        }
+      ],
+      "detail": {
+        "energy": 4.8339
+      },
+      "medium": "semantic",
+      "plate": null,
+      "text": null
+    },
+    {
+      "id": "head-pending",
+      "kind": "text",
+      "note": "column heading PENDING in dark medium weight with the count 2 at the right edge",
+      "grid": null,
+      "box": {
+        "x": 0.0266,
+        "y": 0.1389,
+        "w": 0.1266,
+        "h": 0.0417
+      },
+      "px": {
+        "x": 34,
+        "y": 100,
+        "w": 162,
+        "h": 30
+      },
+      "aspect": 5.4,
+      "palette": [
+        {
+          "hex": "#f7f7f7",
+          "coverage": 0.8813
+        },
+        {
+          "hex": "#3e3e3e",
+          "coverage": 0.0464
+        },
+        {
+          "hex": "#0f0f0f",
+          "coverage": 0.0278
+        },
+        {
+          "hex": "#959595",
+          "coverage": 0.026
+        },
+        {
+          "hex": "#c2c3c3",
+          "coverage": 0.0186
+        }
+      ],
+      "detail": {
+        "energy": 26.6656
+      },
+      "medium": "semantic",
+      "plate": null,
+      "text": null,
+      "type": {
+        "comp": {
+          "lines": 1,
+          "glyphs": 8,
+          "capHeightPx": 12.5,
+          "inkIsDark": true,
+          "allCaps": false,
+          "advance": 0.6943,
+          "advTall": 0.6943,
+          "advX": null,
+          "gap": 0.1602,
+          "xRatio": 0.821,
+          "stemW": 0.1938,
+          "contrast": 1.0681,
+          "serif": 0.6388,
+          "densTall": 0.6161,
+          "densX": null,
+          "weight": 0.6161
+        },
+        "widthClass": "normal",
+        "weightClass": "bold"
+      }
+    },
+    {
+      "id": "head-rnd",
+      "kind": "text",
+      "note": "column heading R&D in dark medium weight with the count 3 at the right edge",
+      "grid": null,
+      "box": {
+        "x": 0.1906,
+        "y": 0.1389,
+        "w": 0.1234,
+        "h": 0.0417
+      },
+      "px": {
+        "x": 244,
+        "y": 100,
+        "w": 158,
+        "h": 30
+      },
+      "aspect": 5.2667,
+      "palette": [
+        {
+          "hex": "#f8f8f8",
+          "coverage": 0.9471
+        },
+        {
+          "hex": "#171717",
+          "coverage": 0.0265
+        },
+        {
+          "hex": "#737373",
+          "coverage": 0.0132
+        },
+        {
+          "hex": "#c4c4c4",
+          "coverage": 0.0076
+        },
+        {
+          "hex": "#383838",
+          "coverage": 0.0057
+        }
+      ],
+      "detail": {
+        "energy": 13.3336
+      },
+      "medium": "semantic",
+      "plate": null,
+      "text": null,
+      "type": {
+        "comp": {
+          "lines": 1,
+          "glyphs": 4,
+          "capHeightPx": 12.5,
+          "inkIsDark": true,
+          "allCaps": false,
+          "advance": 0.6663,
+          "advTall": 0.6663,
+          "advX": null,
+          "gap": 0.1199,
+          "xRatio": 0.5122,
+          "stemW": 0.1893,
+          "contrast": 1.0347,
+          "serif": null,
+          "densTall": 0.5822,
+          "densX": null,
+          "weight": 0.5822
+        },
+        "widthClass": "normal",
+        "weightClass": "bold"
+      }
+    },
+    {
+      "id": "head-active",
+      "kind": "text",
+      "note": "column heading ACTIVE in dark medium weight with the count 2 at the right edge",
+      "grid": null,
+      "box": {
+        "x": 0.3516,
+        "y": 0.1389,
+        "w": 0.1219,
+        "h": 0.0417
+      },
+      "px": {
+        "x": 450,
+        "y": 100,
+        "w": 156,
+        "h": 30
+      },
+      "aspect": 5.2,
+      "palette": [
+        {
+          "hex": "#f8f8f8",
+          "coverage": 0.9014
+        },
+        {
+          "hex": "#c9caca",
+          "coverage": 0.0309
+        },
+        {
+          "hex": "#0a0a0a",
+          "coverage": 0.0251
+        },
+        {
+          "hex": "#92918f",
+          "coverage": 0.0251
+        },
+        {
+          "hex": "#343334",
+          "coverage": 0.0174
+        }
+      ],
+      "detail": {
+        "energy": 20.2447
+      },
+      "medium": "semantic",
+      "plate": null,
+      "text": null,
+      "type": {
+        "comp": {
+          "lines": 1,
+          "glyphs": 7,
+          "capHeightPx": 12.5,
+          "inkIsDark": true,
+          "allCaps": false,
+          "advance": 0.6663,
+          "advTall": 0.6663,
+          "advX": null,
+          "gap": 0.1333,
+          "xRatio": 0.8196,
+          "stemW": 0.1862,
+          "contrast": 1.0304,
+          "serif": 0.9554,
+          "densTall": 0.482,
+          "densX": null,
+          "weight": 0.482
+        },
+        "widthClass": "normal",
+        "weightClass": "medium"
+      }
+    },
+    {
+      "id": "head-done",
+      "kind": "text",
+      "note": "column heading DONE in dark medium weight with the count 4 at the right edge",
+      "grid": null,
+      "box": {
+        "x": 0.5117,
+        "y": 0.1389,
+        "w": 0.1367,
+        "h": 0.0417
+      },
+      "px": {
+        "x": 655,
+        "y": 100,
+        "w": 175,
+        "h": 30
+      },
+      "aspect": 5.8333,
+      "palette": [
+        {
+          "hex": "#f8f8f8",
+          "coverage": 0.932
+        },
+        {
+          "hex": "#161616",
+          "coverage": 0.0357
+        },
+        {
+          "hex": "#c8c8c8",
+          "coverage": 0.017
+        },
+        {
+          "hex": "#737373",
+          "coverage": 0.0119
+        },
+        {
+          "hex": "#383838",
+          "coverage": 0.0034
+        }
+      ],
+      "detail": {
+        "energy": 16.5282
+      },
+      "medium": "semantic",
+      "plate": null,
+      "text": null,
+      "type": {
+        "comp": {
+          "lines": 1,
+          "glyphs": 5,
+          "capHeightPx": 12.5,
+          "inkIsDark": true,
+          "allCaps": true,
+          "advance": 0.7201,
+          "advTall": 0.7201,
+          "advX": null,
+          "gap": 0.1334,
+          "xRatio": null,
+          "stemW": 0.1908,
+          "contrast": 1.0608,
+          "serif": 0.5076,
+          "densTall": 0.5937,
+          "densX": null,
+          "weight": 0.5937
+        },
+        "widthClass": "normal",
+        "weightClass": "bold"
+      }
+    },
+    {
+      "id": "head-dusted",
+      "kind": "text",
+      "note": "column heading DUSTED in dark medium weight with the count 1 at the right edge",
+      "grid": null,
+      "box": {
+        "x": 0.6719,
+        "y": 0.1389,
+        "w": 0.1,
+        "h": 0.0417
+      },
+      "px": {
+        "x": 860,
+        "y": 100,
+        "w": 128,
+        "h": 30
+      },
+      "aspect": 4.2667,
+      "palette": [
+        {
+          "hex": "#f7f7f7",
+          "coverage": 0.8907
+        },
+        {
+          "hex": "#141414",
+          "coverage": 0.0558
+        },
+        {
+          "hex": "#818181",
+          "coverage": 0.0256
+        },
+        {
+          "hex": "#b8b8b8",
+          "coverage": 0.0186
+        },
+        {
+          "hex": "#3c3c3c",
+          "coverage": 0.0093
+        }
+      ],
+      "detail": {
+        "energy": 21.4865
+      },
+      "medium": "semantic",
+      "plate": null,
+      "text": null,
+      "type": {
+        "comp": {
+          "lines": 1,
+          "glyphs": 6,
+          "capHeightPx": 12.5,
+          "inkIsDark": true,
+          "allCaps": true,
+          "advance": 0.6666,
+          "advTall": 0.6666,
+          "advX": null,
+          "gap": 0.1333,
+          "xRatio": null,
+          "stemW": 0.1859,
+          "contrast": 1.01,
+          "serif": 2.2513,
+          "densTall": 0.5794,
+          "densX": null,
+          "weight": 0.5794
+        },
+        "widthClass": "normal",
+        "weightClass": "bold"
+      }
+    },
+    {
+      "id": "card-site-redesign-pending",
+      "kind": "control",
+      "note": "white rounded job card with a hairline: SITE REDESIGN in caps over the grey line homepage",
+      "grid": null,
+      "box": {
+        "x": 0.0234,
+        "y": 0.2014,
+        "w": 0.1328,
+        "h": 0.1292
+      },
+      "px": {
+        "x": 30,
+        "y": 145,
+        "w": 170,
+        "h": 93
+      },
+      "aspect": 1.828,
+      "palette": [
+        {
+          "hex": "#f8f8f8",
+          "coverage": 0.9338
+        },
+        {
+          "hex": "#b1b1b1",
+          "coverage": 0.0328
+        },
+        {
+          "hex": "#6e6e6e",
+          "coverage": 0.0147
+        },
+        {
+          "hex": "#393939",
+          "coverage": 0.0125
+        },
+        {
+          "hex": "#0c0c0c",
+          "coverage": 0.0062
+        }
+      ],
+      "detail": {
+        "energy": 15.38
+      },
+      "medium": "semantic",
+      "plate": null,
+      "text": null
+    },
+    {
+      "id": "card-update-branding",
+      "kind": "control",
+      "note": "white rounded job card with a hairline: UPDATE BRANDING in caps over the grey line brand guidelines",
+      "grid": null,
+      "box": {
+        "x": 0.0234,
+        "y": 0.3542,
+        "w": 0.1328,
+        "h": 0.1292
+      },
+      "px": {
+        "x": 30,
+        "y": 255,
+        "w": 170,
+        "h": 93
+      },
+      "aspect": 1.828,
+      "palette": [
+        {
+          "hex": "#f7f7f7",
+          "coverage": 0.9259
+        },
+        {
+          "hex": "#babab9",
+          "coverage": 0.0262
+        },
+        {
+          "hex": "#898988",
+          "coverage": 0.0228
+        },
+        {
+          "hex": "#606060",
+          "coverage": 0.0137
+        },
+        {
+          "hex": "#0f0f0f",
+          "coverage": 0.0114
+        }
+      ],
+      "detail": {
+        "energy": 20.3528
+      },
+      "medium": "semantic",
+      "plate": null,
+      "text": null
+    },
+    {
+      "id": "card-market-research",
+      "kind": "control",
+      "note": "white rounded job card with a hairline: MARKET RESEARCH in caps over the grey line competitive analysis",
+      "grid": null,
+      "box": {
+        "x": 0.1859,
+        "y": 0.2014,
+        "w": 0.1328,
+        "h": 0.1292
+      },
+      "px": {
+        "x": 238,
+        "y": 145,
+        "w": 170,
+        "h": 93
+      },
+      "aspect": 1.828,
+      "palette": [
+        {
+          "hex": "#f8f8f8",
+          "coverage": 0.9041
+        },
+        {
+          "hex": "#c7c7c7",
+          "coverage": 0.027
+        },
+        {
+          "hex": "#9b9b9b",
+          "coverage": 0.0247
+        },
+        {
+          "hex": "#484848",
+          "coverage": 0.023
+        },
+        {
+          "hex": "#121212",
+          "coverage": 0.0212
+        }
+      ],
+      "detail": {
+        "energy": 21.4642
+      },
+      "medium": "semantic",
+      "plate": null,
+      "text": null
+    },
+    {
+      "id": "card-tech-spike",
+      "kind": "control",
+      "note": "white rounded job card with a hairline: TECH SPIKE in caps over the grey line next-gen stack",
+      "grid": null,
+      "box": {
+        "x": 0.1859,
+        "y": 0.3542,
+        "w": 0.1328,
+        "h": 0.1292
+      },
+      "px": {
+        "x": 238,
+        "y": 255,
+        "w": 170,
+        "h": 93
+      },
+      "aspect": 1.828,
+      "palette": [
+        {
+          "hex": "#f8f8f8",
+          "coverage": 0.9535
+        },
+        {
+          "hex": "#b8b8b7",
+          "coverage": 0.0159
+        },
+        {
+          "hex": "#111111",
+          "coverage": 0.0142
+        },
+        {
+          "hex": "#8b8b8b",
+          "coverage": 0.0113
+        },
+        {
+          "hex": "#636361",
+          "coverage": 0.0051
+        }
+      ],
+      "detail": {
+        "energy": 13.8815
+      },
+      "medium": "semantic",
+      "plate": null,
+      "text": null
+    },
+    {
+      "id": "card-design-exploration",
+      "kind": "control",
+      "note": "white rounded job card with a hairline: DESIGN EXPLORATION in caps over the grey line mood boards",
+      "grid": null,
+      "box": {
+        "x": 0.1859,
+        "y": 0.5069,
+        "w": 0.1328,
+        "h": 0.1292
+      },
+      "px": {
+        "x": 238,
+        "y": 365,
+        "w": 170,
+        "h": 93
+      },
+      "aspect": 1.828,
+      "palette": [
+        {
+          "hex": "#f7f7f7",
+          "coverage": 0.9253
+        },
+        {
+          "hex": "#717171",
+          "coverage": 0.0294
+        },
+        {
+          "hex": "#afafaf",
+          "coverage": 0.0238
+        },
+        {
+          "hex": "#080808",
+          "coverage": 0.0119
+        },
+        {
+          "hex": "#353535",
+          "coverage": 0.0096
+        }
+      ],
+      "detail": {
+        "energy": 20.6804
+      },
+      "medium": "semantic",
+      "plate": null,
+      "text": null
+    },
+    {
+      "id": "card-site-redesign-active",
+      "kind": "control",
+      "note": "the selected job card: white, a 2px blue border and pale blue fill, SITE REDESIGN in caps over the grey line homepage",
+      "grid": null,
+      "box": {
+        "x": 0.3453,
+        "y": 0.2014,
+        "w": 0.1344,
+        "h": 0.1319
+      },
+      "px": {
+        "x": 442,
+        "y": 145,
+        "w": 172,
+        "h": 95
+      },
+      "aspect": 1.8105,
+      "palette": [
+        {
+          "hex": "#f4f7f8",
+          "coverage": 0.9362
+        },
+        {
+          "hex": "#b6bbbe",
+          "coverage": 0.0229
+        },
+        {
+          "hex": "#7b7f81",
+          "coverage": 0.0147
+        },
+        {
+          "hex": "#839fd7",
+          "coverage": 0.0136
+        },
+        {
+          "hex": "#4a4b50",
+          "coverage": 0.0125
+        }
+      ],
+      "detail": {
+        "energy": 18.1288
+      },
+      "medium": "semantic",
+      "plate": null,
+      "text": null
+    },
+    {
+      "id": "card-aesthetic-pass",
+      "kind": "control",
+      "note": "white rounded job card with a hairline: AESTHETIC PASS in caps over the grey line visual polish",
+      "grid": null,
+      "box": {
+        "x": 0.3453,
+        "y": 0.3542,
+        "w": 0.1344,
+        "h": 0.1292
+      },
+      "px": {
+        "x": 442,
+        "y": 255,
+        "w": 172,
+        "h": 93
+      },
+      "aspect": 1.8495,
+      "palette": [
+        {
+          "hex": "#f8f8f8",
+          "coverage": 0.9287
+        },
+        {
+          "hex": "#c7c7c7",
+          "coverage": 0.0262
+        },
+        {
+          "hex": "#919191",
+          "coverage": 0.0239
+        },
+        {
+          "hex": "#0d0e0d",
+          "coverage": 0.0122
+        },
+        {
+          "hex": "#595959",
+          "coverage": 0.0089
+        }
+      ],
+      "detail": {
+        "energy": 16.7851
+      },
+      "medium": "semantic",
+      "plate": null,
+      "text": null
+    },
+    {
+      "id": "card-create-repo",
+      "kind": "control",
+      "note": "white rounded job card with a hairline and a round tick glyph: CREATE REPO in caps over the grey line vault-worldwide",
+      "grid": null,
+      "box": {
+        "x": 0.5063,
+        "y": 0.2014,
+        "w": 0.1344,
+        "h": 0.1292
+      },
+      "px": {
+        "x": 648,
+        "y": 145,
+        "w": 172,
+        "h": 93
+      },
+      "aspect": 1.8495,
+      "palette": [
+        {
+          "hex": "#f8f8f8",
+          "coverage": 0.9302
+        },
+        {
+          "hex": "#969696",
+          "coverage": 0.0246
+        },
+        {
+          "hex": "#616161",
+          "coverage": 0.024
+        },
+        {
+          "hex": "#c5c5c6",
+          "coverage": 0.0151
+        },
+        {
+          "hex": "#0c0c0c",
+          "coverage": 0.0061
+        }
+      ],
+      "detail": {
+        "energy": 17.2205
+      },
+      "medium": "semantic",
+      "plate": null,
+      "text": null
+    },
+    {
+      "id": "card-project-setup",
+      "kind": "control",
+      "note": "white rounded job card with a hairline and a round tick glyph: PROJECT SETUP in caps over the grey line boilerplate & config",
+      "grid": null,
+      "box": {
+        "x": 0.5063,
+        "y": 0.3542,
+        "w": 0.1344,
+        "h": 0.1292
+      },
+      "px": {
+        "x": 648,
+        "y": 255,
+        "w": 172,
+        "h": 93
+      },
+      "aspect": 1.8495,
+      "palette": [
+        {
+          "hex": "#f8f8f8",
+          "coverage": 0.9095
+        },
+        {
+          "hex": "#c9c9c8",
+          "coverage": 0.0374
+        },
+        {
+          "hex": "#949494",
+          "coverage": 0.0318
+        },
+        {
+          "hex": "#5b5b5b",
+          "coverage": 0.0112
+        },
+        {
+          "hex": "#101010",
+          "coverage": 0.0101
+        }
+      ],
+      "detail": {
+        "energy": 20.0837
+      },
+      "medium": "semantic",
+      "plate": null,
+      "text": null
+    },
+    {
+      "id": "card-design-system-init",
+      "kind": "control",
+      "note": "white rounded job card with a hairline and a round tick glyph: DESIGN SYSTEM INIT in caps over the grey line tokens & components",
+      "grid": null,
+      "box": {
+        "x": 0.5063,
+        "y": 0.5069,
+        "w": 0.1344,
+        "h": 0.1292
+      },
+      "px": {
+        "x": 648,
+        "y": 365,
+        "w": 172,
+        "h": 93
+      },
+      "aspect": 1.8495,
+      "palette": [
+        {
+          "hex": "#f7f7f7",
+          "coverage": 0.9216
+        },
+        {
+          "hex": "#808080",
+          "coverage": 0.0362
+        },
+        {
+          "hex": "#bababa",
+          "coverage": 0.0222
+        },
+        {
+          "hex": "#151515",
+          "coverage": 0.0106
+        },
+        {
+          "hex": "#494949",
+          "coverage": 0.0095
+        }
+      ],
+      "detail": {
+        "energy": 22.0728
+      },
+      "medium": "semantic",
+      "plate": null,
+      "text": null
+    },
+    {
+      "id": "card-content-audit",
+      "kind": "control",
+      "note": "white rounded job card with a hairline and a round tick glyph: CONTENT AUDIT in caps over the grey line page inventory",
+      "grid": null,
+      "box": {
+        "x": 0.5063,
+        "y": 0.6597,
+        "w": 0.1344,
+        "h": 0.1292
+      },
+      "px": {
+        "x": 648,
+        "y": 475,
+        "w": 172,
+        "h": 93
+      },
+      "aspect": 1.8495,
+      "palette": [
+        {
+          "hex": "#f7f7f7",
+          "coverage": 0.9366
+        },
+        {
+          "hex": "#878787",
+          "coverage": 0.0223
+        },
+        {
+          "hex": "#0f0f0f",
+          "coverage": 0.0145
+        },
+        {
+          "hex": "#5d5d5d",
+          "coverage": 0.0134
+        },
+        {
+          "hex": "#b9b9b9",
+          "coverage": 0.0134
+        }
+      ],
+      "detail": {
+        "energy": 18.0092
+      },
+      "medium": "semantic",
+      "plate": null,
+      "text": null
+    },
+    {
+      "id": "card-old-landing-page",
+      "kind": "control",
+      "note": "white rounded job card with a hairline: OLD LANDING PAGE in caps over the grey line deprecated",
+      "grid": null,
+      "box": {
+        "x": 0.6656,
+        "y": 0.2014,
+        "w": 0.1117,
+        "h": 0.1292
+      },
+      "px": {
+        "x": 852,
+        "y": 145,
+        "w": 143,
+        "h": 93
+      },
+      "aspect": 1.5376,
+      "palette": [
+        {
+          "hex": "#f8f8f8",
+          "coverage": 0.914
+        },
+        {
+          "hex": "#cbcbcb",
+          "coverage": 0.0287
+        },
+        {
+          "hex": "#9a999a",
+          "coverage": 0.0218
+        },
+        {
+          "hex": "#373737",
+          "coverage": 0.0184
+        },
+        {
+          "hex": "#6d6d6e",
+          "coverage": 0.0171
+        }
+      ],
+      "detail": {
+        "energy": 18.2613
+      },
+      "medium": "semantic",
+      "plate": null,
+      "text": null
+    },
+    {
+      "id": "drawer-panel",
+      "kind": "chrome",
+      "note": "the white full-height detail drawer panel and its inner padding, holding the entered job",
+      "grid": null,
+      "box": {
+        "x": 0.7797,
+        "y": 0.0917,
+        "w": 0.2203,
+        "h": 0.9083
+      },
+      "px": {
+        "x": 998,
+        "y": 66,
+        "w": 282,
+        "h": 654
+      },
+      "aspect": 0.4312,
+      "palette": [
+        {
+          "hex": "#f8f8f8",
+          "coverage": 0.9369
+        },
+        {
+          "hex": "#b1b1b1",
+          "coverage": 0.0208
+        },
+        {
+          "hex": "#707070",
+          "coverage": 0.0195
+        },
+        {
+          "hex": "#242424",
+          "coverage": 0.0191
+        },
+        {
+          "hex": "#484848",
+          "coverage": 0.0037
+        }
+      ],
+      "detail": {
+        "energy": 23.9992
+      },
+      "medium": "semantic",
+      "plate": null,
+      "text": null
+    },
+    {
+      "id": "drawer-rule",
+      "kind": "chrome",
+      "note": "vertical hairline separating the board from the detail drawer",
+      "grid": null,
+      "box": {
+        "x": 0.7797,
+        "y": 0.0972,
+        "w": 0.0031,
+        "h": 0.9028
+      },
+      "px": {
+        "x": 998,
+        "y": 70,
+        "w": 4,
+        "h": 650
+      },
+      "aspect": 0.0062,
+      "palette": [
+        {
+          "hex": "#f8f8f8",
+          "coverage": 1
+        }
+      ],
+      "detail": {
+        "energy": 0.0021
+      },
+      "medium": "semantic",
+      "plate": null,
+      "text": null
+    },
+    {
+      "id": "drawer-status",
+      "kind": "text",
+      "note": "a small blue filled dot beside the word ACTIVE in blue caps",
+      "grid": null,
+      "box": {
+        "x": 0.7922,
+        "y": 0.1236,
+        "w": 0.0625,
+        "h": 0.0292
+      },
+      "px": {
+        "x": 1014,
+        "y": 89,
+        "w": 80,
+        "h": 21
+      },
+      "aspect": 3.8095,
+      "palette": [
+        {
+          "hex": "#f4f8f8",
+          "coverage": 0.7874
+        },
+        {
+          "hex": "#99bfed",
+          "coverage": 0.0747
+        },
+        {
+          "hex": "#3c6cb5",
+          "coverage": 0.0632
+        },
+        {
+          "hex": "#7f93a8",
+          "coverage": 0.0402
+        },
+        {
+          "hex": "#186beb",
+          "coverage": 0.0345
+        }
+      ],
+      "detail": {
+        "energy": 19.7488
+      },
+      "medium": "semantic",
+      "plate": null,
+      "text": null,
+      "type": {
+        "comp": {
+          "lines": 1,
+          "glyphs": 7,
+          "capHeightPx": 11.4,
+          "inkIsDark": true,
+          "allCaps": true,
+          "advance": 0.5979,
+          "advTall": 0.5979,
+          "advX": null,
+          "gap": 0.2333,
+          "xRatio": null,
+          "stemW": 0.1877,
+          "contrast": 1.055,
+          "serif": null,
+          "densTall": 0.571,
+          "densX": null,
+          "weight": 0.571
+        },
+        "widthClass": "condensed",
+        "weightClass": "bold"
+      }
+    },
+    {
+      "id": "drawer-close",
+      "kind": "control",
+      "note": "a thin grey close cross at the drawer's top right",
+      "grid": null,
+      "box": {
+        "x": 0.9688,
+        "y": 0.125,
+        "w": 0.0203,
+        "h": 0.0292
+      },
+      "px": {
+        "x": 1240,
+        "y": 90,
+        "w": 26,
+        "h": 21
+      },
+      "aspect": 1.2381,
+      "palette": [
+        {
+          "hex": "#f7f7f7",
+          "coverage": 0.8889
+        },
+        {
+          "hex": "#707070",
+          "coverage": 0.0952
+        },
+        {
+          "hex": "#a8a8a8",
+          "coverage": 0.0159
+        }
+      ],
+      "detail": {
+        "energy": 5.3151
+      },
+      "medium": "semantic",
+      "plate": null,
+      "text": null
+    },
+    {
+      "id": "drawer-title",
+      "kind": "text",
+      "note": "the entered job title SITE REDESIGN, the largest type on the surface, dark semibold caps",
+      "grid": null,
+      "box": {
+        "x": 0.7922,
+        "y": 0.1833,
+        "w": 0.1625,
+        "h": 0.05
+      },
+      "px": {
+        "x": 1014,
+        "y": 132,
+        "w": 208,
+        "h": 36
+      },
+      "aspect": 5.7778,
+      "palette": [
+        {
+          "hex": "#f7f7f7",
+          "coverage": 0.6452
+        },
+        {
+          "hex": "#212224",
+          "coverage": 0.1935
+        },
+        {
+          "hex": "#7e7e7e",
+          "coverage": 0.0753
+        },
+        {
+          "hex": "#b7b8b9",
+          "coverage": 0.0466
+        },
+        {
+          "hex": "#525258",
+          "coverage": 0.0394
+        }
+      ],
+      "detail": {
+        "energy": 65.4589
+      },
+      "medium": "semantic",
+      "plate": null,
+      "text": null,
+      "type": {
+        "comp": {
+          "lines": 1,
+          "glyphs": 13,
+          "capHeightPx": 21.8,
+          "inkIsDark": true,
+          "allCaps": true,
+          "advance": 0.618,
+          "advTall": 0.618,
+          "advX": null,
+          "gap": 0.1602,
+          "xRatio": null,
+          "stemW": 0.1912,
+          "contrast": 1.1134,
+          "serif": 0.9703,
+          "densTall": 0.6315,
+          "densX": null,
+          "weight": 0.6315
+        },
+        "widthClass": "normal",
+        "weightClass": "bold",
+        "chosen": {
+          "family": "Sofia Sans Semi Condensed",
+          "weight": 700,
+          "fontSizePx": 32,
+          "source": "index",
+          "fp": {
+            "lines": 1,
+            "glyphs": 13,
+            "capHeightPx": 20.8,
+            "inkIsDark": true,
+            "allCaps": true,
+            "advance": 0.6017,
+            "advTall": 0.6017,
+            "advX": null,
+            "gap": 0.1926,
+            "xRatio": null,
+            "stemW": 0.191,
+            "contrast": 1.1663,
+            "serif": 1.655,
+            "densTall": 0.6035,
+            "densX": null,
+            "weight": 0.6035
+          },
+          "stamp": "fc573e9f0281"
+        }
+      }
+    },
+    {
+      "id": "drawer-parent",
+      "kind": "text",
+      "note": "a small outlined folder icon beside the parent name homepage in grey",
+      "grid": null,
+      "box": {
+        "x": 0.7922,
+        "y": 0.25,
+        "w": 0.0828,
+        "h": 0.0306
+      },
+      "px": {
+        "x": 1014,
+        "y": 180,
+        "w": 106,
+        "h": 22
+      },
+      "aspect": 4.8182,
+      "palette": [
+        {
+          "hex": "#f7f7f7",
+          "coverage": 0.8542
+        },
+        {
+          "hex": "#b4b4b4",
+          "coverage": 0.0938
+        },
+        {
+          "hex": "#717171",
+          "coverage": 0.0417
+        },
+        {
+          "hex": "#4d4d4d",
+          "coverage": 0.0104
+        }
+      ],
+      "detail": {
+        "energy": 26.6248
+      },
+      "medium": "semantic",
+      "plate": null,
+      "text": null,
+      "type": {
+        "comp": {
+          "lines": 1,
+          "glyphs": 10,
+          "capHeightPx": 16,
+          "inkIsDark": true,
+          "allCaps": false,
+          "advance": 0.454,
+          "advTall": 0.4384,
+          "advX": 0.4697,
+          "gap": 0.0626,
+          "xRatio": 0.5565,
+          "stemW": 0.1292,
+          "contrast": 1.0394,
+          "serif": 0.9814,
+          "densTall": 0.4125,
+          "densX": 0.6463,
+          "weight": 0.4125
+        },
+        "widthClass": "condensed",
+        "weightClass": "regular"
+      }
+    },
+    {
+      "id": "drawer-parent-rule",
+      "kind": "chrome",
+      "note": "hairline under the drawer header, above the description",
+      "grid": null,
+      "box": {
+        "x": 0.7922,
+        "y": 0.2986,
+        "w": 0.1922,
+        "h": 0.0028
+      },
+      "px": {
+        "x": 1014,
+        "y": 215,
+        "w": 246,
+        "h": 2
+      },
+      "aspect": 123,
+      "palette": [
+        {
+          "hex": "#f8f8f8",
+          "coverage": 1
+        }
+      ],
+      "detail": {
+        "energy": 0.007
+      },
+      "medium": "semantic",
+      "plate": null,
+      "text": null
+    },
+    {
+      "id": "drawer-description-label",
+      "kind": "text",
+      "note": "small grey letter-spaced caps label DESCRIPTION",
+      "grid": null,
+      "box": {
+        "x": 0.7922,
+        "y": 0.3375,
+        "w": 0.0672,
+        "h": 0.0222
+      },
+      "px": {
+        "x": 1014,
+        "y": 243,
+        "w": 86,
+        "h": 16
+      },
+      "aspect": 5.375,
+      "palette": [
+        {
+          "hex": "#f7f7f7",
+          "coverage": 0.6724
+        },
+        {
+          "hex": "#8d8d8d",
+          "coverage": 0.1954
+        },
+        {
+          "hex": "#c7c7c7",
+          "coverage": 0.0805
+        },
+        {
+          "hex": "#636363",
+          "coverage": 0.0517
+        }
+      ],
+      "detail": {
+        "energy": 37.8421
+      },
+      "medium": "semantic",
+      "plate": null,
+      "text": null,
+      "type": {
+        "comp": {
+          "lines": 1,
+          "glyphs": 12,
+          "capHeightPx": 10.8,
+          "inkIsDark": true,
+          "allCaps": true,
+          "advance": 0.5891,
+          "advTall": 0.5891,
+          "advX": null,
+          "gap": 0.186,
+          "xRatio": null,
+          "stemW": 0.1766,
+          "contrast": 0.9831,
+          "serif": 0.269,
+          "densTall": 0.5721,
+          "densX": null,
+          "weight": 0.5721
+        },
+        "widthClass": "condensed",
+        "weightClass": "bold"
+      }
+    },
+    {
+      "id": "drawer-description-body",
+      "kind": "text",
+      "note": "two short dark paragraphs of body copy about redesigning the homepage for clarity and conversion",
+      "grid": null,
+      "box": {
+        "x": 0.7922,
+        "y": 0.3681,
+        "w": 0.1906,
+        "h": 0.1889
+      },
+      "px": {
+        "x": 1014,
+        "y": 265,
+        "w": 244,
+        "h": 136
+      },
+      "aspect": 1.7941,
+      "palette": [
+        {
+          "hex": "#f8f8f8",
+          "coverage": 0.886
+        },
+        {
+          "hex": "#c3c3c3",
+          "coverage": 0.039
+        },
+        {
+          "hex": "#282828",
+          "coverage": 0.0291
+        },
+        {
+          "hex": "#585858",
+          "coverage": 0.0267
+        },
+        {
+          "hex": "#888888",
+          "coverage": 0.0192
+        }
+      ],
+      "detail": {
+        "energy": 38.4401
+      },
+      "medium": "semantic",
+      "plate": null,
+      "text": null,
+      "type": {
+        "comp": {
+          "lines": 4,
+          "glyphs": 94,
+          "capHeightPx": 11.8,
+          "inkIsDark": true,
+          "allCaps": false,
+          "advance": 0.5575,
+          "advTall": 0.4027,
+          "advX": 0.5575,
+          "gap": 0.0837,
+          "xRatio": 0.697,
+          "stemW": 0.164,
+          "contrast": 1.0027,
+          "serif": 0.3012,
+          "densTall": 0.5225,
+          "densX": 0.5961,
+          "weight": 0.5225
+        },
+        "widthClass": "condensed",
+        "weightClass": "medium"
+      }
+    },
+    {
+      "id": "drawer-subtasks-label",
+      "kind": "text",
+      "note": "small grey letter-spaced caps label SUBTASKS",
+      "grid": null,
+      "box": {
+        "x": 0.7922,
+        "y": 0.6222,
+        "w": 0.0555,
+        "h": 0.0222
+      },
+      "px": {
+        "x": 1014,
+        "y": 448,
+        "w": 71,
+        "h": 16
+      },
+      "aspect": 4.4375,
+      "palette": [
+        {
+          "hex": "#f7f7f7",
+          "coverage": 0.6736
+        },
+        {
+          "hex": "#6e6e6e",
+          "coverage": 0.1806
+        },
+        {
+          "hex": "#c7c7c7",
+          "coverage": 0.0903
+        },
+        {
+          "hex": "#9d9d9d",
+          "coverage": 0.0417
+        },
+        {
+          "hex": "#484848",
+          "coverage": 0.0139
+        }
+      ],
+      "detail": {
+        "energy": 31.7539
+      },
+      "medium": "semantic",
+      "plate": null,
+      "text": null,
+      "type": {
+        "comp": {
+          "lines": 1,
+          "glyphs": 8,
+          "capHeightPx": 10.6,
+          "inkIsDark": true,
+          "allCaps": true,
+          "advance": 0.6634,
+          "advTall": 0.6634,
+          "advX": null,
+          "gap": 0.158,
+          "xRatio": null,
+          "stemW": 0.1921,
+          "contrast": 1.0291,
+          "serif": 1.0261,
+          "densTall": 0.5224,
+          "densX": null,
+          "weight": 0.5224
+        },
+        "widthClass": "normal",
+        "weightClass": "medium"
+      }
+    },
+    {
+      "id": "drawer-subtasks-list",
+      "kind": "control",
+      "note": "five checkbox rows, the first two checked with blue filled boxes and the last three unchecked with grey outlines, each followed by a subtask sentence in dark text",
+      "grid": null,
+      "box": {
+        "x": 0.7922,
+        "y": 0.6722,
+        "w": 0.1906,
+        "h": 0.2417
+      },
+      "px": {
+        "x": 1014,
+        "y": 484,
+        "w": 244,
+        "h": 174
+      },
+      "aspect": 1.4023,
+      "palette": [
+        {
+          "hex": "#f7f7f7",
+          "coverage": 0.9057
+        },
+        {
+          "hex": "#262626",
+          "coverage": 0.0271
+        },
+        {
+          "hex": "#bcbcbc",
+          "coverage": 0.026
+        },
+        {
+          "hex": "#898989",
+          "coverage": 0.0224
+        },
+        {
+          "hex": "#595959",
+          "coverage": 0.0187
+        }
+      ],
+      "detail": {
+        "energy": 29.8437
+      },
+      "medium": "semantic",
+      "plate": null,
+      "text": null
+    }
+  ]
+}

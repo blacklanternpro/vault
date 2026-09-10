@@ -2,42 +2,58 @@
   "tool": "build-phase",
   "version": 2,
   "startedAt": "2026-09-10T11:55:15.512Z",
-  "comp": null,
+  "comp": ".impeccable/mocks/canon-board.webp",
   "direction": "b22ba2c6",
-  "breakpoint": null,
+  "breakpoint": "1280x720",
   "artifact": null,
-  "phase": "comps",
+  "phase": "hero",
   "phases": {
     "comps": {
-      "status": "open",
+      "status": "closed",
       "openedAt": "2026-09-10T11:55:15.512Z",
-      "closedAt": null,
-      "attempts": 0,
+      "closedAt": "2026-09-10T12:17:04.894Z",
+      "attempts": 1,
       "notes": [],
-      "gate": null,
+      "gate": {
+        "ok": true,
+        "reasons": [],
+        "summary": "3 comps, 1 approved",
+        "approved": ".impeccable/mocks/canon-board.webp",
+        "at": "2026-09-10T12:17:04.894Z"
+      },
       "forced": null
     },
     "spec": {
-      "status": "pending",
-      "openedAt": null,
-      "closedAt": null,
-      "attempts": 0,
+      "status": "closed",
+      "openedAt": "2026-09-10T12:17:04.927Z",
+      "closedAt": "2026-09-10T12:48:25.017Z",
+      "attempts": 4,
       "notes": [],
-      "gate": null,
+      "gate": {
+        "ok": true,
+        "reasons": [],
+        "summary": "39 regions, 0 plates, 12 text regions measured",
+        "at": "2026-09-10T12:48:25.017Z"
+      },
       "forced": null
     },
     "plates": {
-      "status": "pending",
-      "openedAt": null,
-      "closedAt": null,
-      "attempts": 0,
+      "status": "closed",
+      "openedAt": "2026-09-10T12:48:25.017Z",
+      "closedAt": "2026-09-10T12:48:37.401Z",
+      "attempts": 1,
       "notes": [],
-      "gate": null,
+      "gate": {
+        "ok": true,
+        "reasons": [],
+        "summary": "no plates owed",
+        "at": "2026-09-10T12:48:37.401Z"
+      },
       "forced": null
     },
     "hero": {
-      "status": "pending",
-      "openedAt": null,
+      "status": "open",
+      "openedAt": "2026-09-10T12:48:37.401Z",
       "closedAt": null,
       "attempts": 0,
       "notes": [],
@@ -81,5 +97,6 @@
       "forced": null
     }
   },
-  "finish": null
+  "finish": null,
+  "plates": {}
 }
