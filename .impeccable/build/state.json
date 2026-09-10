@@ -6,7 +6,7 @@
   "direction": "b22ba2c6",
   "breakpoint": "1280x720",
   "artifact": null,
-  "phase": "sections",
+  "phase": "motion",
   "phases": {
     "comps": {
       "status": "closed",
@@ -233,17 +233,22 @@
       ]
     },
     "sections": {
-      "status": "open",
+      "status": "closed",
       "openedAt": "2026-09-10T14:16:51.205Z",
-      "closedAt": null,
-      "attempts": 0,
+      "closedAt": "2026-09-10T14:40:39.600Z",
+      "attempts": 1,
       "notes": [],
-      "gate": null,
+      "gate": {
+        "ok": true,
+        "reasons": [],
+        "summary": "no mechanical gate",
+        "at": "2026-09-10T14:40:39.600Z"
+      },
       "forced": null
     },
     "motion": {
-      "status": "pending",
-      "openedAt": null,
+      "status": "open",
+      "openedAt": "2026-09-10T14:40:39.600Z",
       "closedAt": null,
       "attempts": 0,
       "notes": [],

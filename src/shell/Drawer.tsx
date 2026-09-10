@@ -3,11 +3,14 @@ import { folderOf, laneOf, nestedOf, type Doc, type GraphNode } from '../speck/d
 import type { Session } from '../speck/ir'
 import { LANE_PLAQUE, type NodeStatus } from '../speck/tokens'
 import { Check, Cross, Folder, Plus } from './Glyph'
+import type { JobDrag } from './useJobDrag'
 
 type DrawerProps = {
   doc: Doc
   session: Session
   node: GraphNode
+  /** The same gesture the board uses, so a subtask can be pulled onto a lane. */
+  drag: JobDrag
   onClose: () => void
   onShovel: (id: number) => void
   onRename: (id: number) => void
@@ -25,6 +28,7 @@ export function Drawer({
   doc,
   session,
   node,
+  drag,
   onClose,
   onShovel,
   onRename,
@@ -135,7 +139,15 @@ export function Drawer({
           const done = child.status === 'done'
           const editing = session.field?.id === child.id && session.field.slot === 'title'
           return (
-            <li key={child.id} className={`subtask${done ? ' is-done' : ''}`}>
+            <li
+              key={child.id}
+              className={`subtask${done ? ' is-done' : ''}`}
+              data-nested-id={child.id}
+              onPointerDown={(e) => drag.beginDrag(e, child.id, 'nested', '[data-nested-id]')}
+              onPointerMove={drag.onMove}
+              onPointerUp={drag.finishDrag}
+              onPointerCancel={drag.finishDrag}
+            >
               <button
                 type="button"
                 className="subtask-tick"
@@ -158,9 +170,7 @@ export function Drawer({
                   onKeyDown={onFieldKey}
                 />
               ) : (
-                <span className="subtask-name" onClick={() => onRename(child.id)}>
-                  {child.title.trim() || '_'}
-                </span>
+                <span className="subtask-name">{child.title.trim() || '_'}</span>
               )}
             </li>
           )
