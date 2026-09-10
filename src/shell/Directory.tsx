@@ -1,13 +1,13 @@
 import { useRef, type KeyboardEvent, type MouseEvent, type PointerEvent } from 'react'
-import { childrenOf, isBoardVisible, type Doc } from '../speck/doc'
+import { childrenOf, isBoardVisible, laneOf, type Doc } from '../speck/doc'
 import { matchesFind, type Session } from '../speck/ir'
-import { isBinderStatus, type ColName, type NodeStatus } from '../speck/tokens'
+import { LANE_PLAQUE, isBinderStatus, type ColName, type NodeStatus } from '../speck/tokens'
 import { nestRows, type NestRow } from '../speck/tree'
 import { Mark } from './Mark'
 
 const THRESH = 6
 
-type Props = {
+type DirectoryProps = {
   doc: Doc
   session: Session
   onSelect: (id: number) => void
@@ -23,8 +23,6 @@ type Props = {
 
 type Drag = {
   id: number
-  x: number
-  y: number
   startX: number
   startY: number
   live: boolean
@@ -51,17 +49,17 @@ export function Directory({
   onClearFocus,
   onTitle,
   onTitleCommit,
-}: Props) {
+}: DirectoryProps) {
   const dragRef = useRef<Drag | null>(null)
-  const ghostRef = useRef<HTMLDivElement | null>(null)
+  const ghostRef = useRef<HTMLElement | null>(null)
   const skipClick = useRef(false)
   const rows = nestRows(doc, session)
   const cols = columnsOf(rows)
   const selectedId = session.selected?.kind === 'NODE' ? session.selected.id : null
 
   function dropLane(clientX: number, clientY: number): ColName | null {
-    const node = document.elementFromPoint(clientX, clientY)
-    const laneEl = node instanceof Element ? node.closest('[data-lane]') : null
+    const el = document.elementFromPoint(clientX, clientY)
+    const laneEl = el instanceof Element ? el.closest('[data-lane]') : null
     if (!laneEl) return null
     const lane = laneEl.getAttribute('data-lane')
     if (!lane || !isBinderStatus(lane)) return null
@@ -91,24 +89,18 @@ export function Directory({
     const dy = e.clientY - drag.startY
     if (!drag.live && dx * dx + dy * dy < THRESH * THRESH) return
     drag.live = true
-    drag.x = e.clientX
-    drag.y = e.clientY
     if (!ghostRef.current) {
       const origin = e.currentTarget.closest('[data-node-id]')
       if (origin instanceof HTMLElement) {
-        const ghost = origin.cloneNode(true) as HTMLDivElement
         const r = origin.getBoundingClientRect()
+        const ghost = origin.cloneNode(true) as HTMLElement
         ghost.style.position = 'fixed'
         ghost.style.left = `${r.left}px`
         ghost.style.top = `${r.top}px`
         ghost.style.width = `${r.width}px`
         ghost.style.pointerEvents = 'none'
         ghost.style.zIndex = '80'
-        ghost.style.opacity = '0.92'
         ghost.classList.add('is-ghost')
-        ghost.querySelectorAll('*').forEach((n) => {
-          ;(n as HTMLElement).style.pointerEvents = 'none'
-        })
         document.body.appendChild(ghost)
         ghostRef.current = ghost
         drag.startX = e.clientX - r.left
@@ -123,9 +115,9 @@ export function Directory({
 
   function beginRow(e: PointerEvent<HTMLElement>, id: number) {
     if (e.button !== 0) return
-    if ((e.target as HTMLElement).closest('.dir-stem, .dir-on, input')) return
+    if ((e.target as HTMLElement).closest('.stem-fold, input')) return
     e.currentTarget.setPointerCapture(e.pointerId)
-    dragRef.current = { id, x: e.clientX, y: e.clientY, startX: e.clientX, startY: e.clientY, live: false }
+    dragRef.current = { id, startX: e.clientX, startY: e.clientY, live: false }
   }
 
   function onPane(e: MouseEvent<HTMLElement>) {
@@ -142,12 +134,13 @@ export function Directory({
       !isBoardVisible(doc, session.projectId, id)
     const found = matchesFind(session, row.node.title)
     const closed = session.nestClosed.includes(id)
-    const staged = isBoardVisible(doc, session.projectId, id)
-    const stem = `${row.prefix}${closed && kids.length ? '+ ' : ''}`
+    const project = row.node.parent == null
+    const lane = laneOf(row.node.status)
+
     return (
       <div
         key={id}
-        className={`dir-row${selected ? ' is-selected' : ''}${found ? ' is-found' : ''}${row.node.urgent ? ' is-urgent' : ''}`}
+        className={`stem${selected ? ' is-live' : ''}${found ? ' is-found' : ''}${project ? ' is-project' : ' is-job'}`}
         data-node-id={id}
         data-testid={`dir-row-${id}`}
         onPointerDown={(e) => beginRow(e, id)}
@@ -155,22 +148,28 @@ export function Directory({
         onPointerUp={(e) => finishDrag(e, id)}
         onPointerCancel={(e) => finishDrag(e, id)}
       >
-        <button
-          type="button"
-          className={`dir-stem${kids.length ? ' is-fold' : ''}`}
-          aria-hidden={!kids.length && !stem}
-          aria-label={kids.length ? (closed ? 'Expand' : 'Collapse') : undefined}
-          tabIndex={kids.length ? 0 : -1}
-          onClick={(e) => {
-            e.stopPropagation()
-            if (kids.length) onToggle(id)
-          }}
-        >
-          {stem}
-        </button>
+        <span className="stem-rule" aria-hidden="true">
+          {row.prefix}
+        </span>
+        {kids.length ? (
+          <button
+            type="button"
+            className="stem-fold"
+            aria-label={closed ? `Expand ${row.node.title}` : `Collapse ${row.node.title}`}
+            aria-expanded={!closed}
+            onClick={(e) => {
+              e.stopPropagation()
+              onToggle(id)
+            }}
+          >
+            {closed ? '+' : '-'}
+          </button>
+        ) : (
+          <span className="stem-fold" aria-hidden="true" />
+        )}
         {editing ? (
           <input
-            className="dir-input"
+            className="stem-input"
             value={session.fieldBuffer}
             autoFocus
             aria-label="Task title"
@@ -186,9 +185,8 @@ export function Directory({
             onClick={(e) => e.stopPropagation()}
           />
         ) : (
-          <button
-            type="button"
-            className={`dir-name${selected ? ' is-on' : ''}`}
+          <span
+            className="stem-name"
             onClick={(e) => {
               e.stopPropagation()
               if (skipClick.current) {
@@ -198,73 +196,66 @@ export function Directory({
               if (selected) onRename(id)
               else onSelect(id)
             }}
-            onKeyDown={(e: KeyboardEvent<HTMLButtonElement>) => {
-              if (e.key === 'Enter' && selected) {
-                e.preventDefault()
-                onRename(id)
-              }
+          >
+            <Mark text={row.node.title.trim() || '_'} query={session.find} />
+          </span>
+        )}
+        {project ? null : (
+          <button
+            type="button"
+            className="stem-status"
+            data-testid={`dir-on-${id}`}
+            aria-label={`Advance ${row.node.title} from ${LANE_PLAQUE[lane]}`}
+            onClick={(e) => {
+              e.stopPropagation()
+              onShovel(id)
             }}
           >
-            <Mark text={row.node.title} query={session.find} />
+            {LANE_PLAQUE[lane]}
           </button>
         )}
-        <button
-          type="button"
-          className={`dir-on${staged ? ' is-live' : ''}`}
-          data-testid={`dir-on-${id}`}
-          aria-label="Stage"
-          onClick={(e) => {
-            e.stopPropagation()
-            onShovel(id)
-          }}
-        >
-          ON
-        </button>
       </div>
     )
   }
 
   return (
-    <section className="directory" data-testid="directory" aria-label="Tasks" onClick={onPane}>
-      <div className="dir-forest">
+    <section className="directory" data-testid="directory" aria-label="Catalogue" onClick={onPane}>
+      <div className="section-head">
+        <h2 className="section-name">Catalogue</h2>
+        <span className="section-note">
+          {cols.length === 1 ? '1 folder' : `${cols.length} folders`}
+        </span>
+        <button type="button" className="section-act" onClick={() => onAdd(null)}>
+          New folder
+        </button>
+      </div>
+
+      <div className="forest">
         {cols.map((col) => {
           const root = col[0]?.node
           const ids = new Set(col.map((r) => r.node.id))
           const addParent =
-            selectedId != null && ids.has(selectedId)
-              ? selectedId
-              : root
-                ? root.id
-                : session.nestFocus
+            selectedId != null && ids.has(selectedId) ? selectedId : root ? root.id : session.nestFocus
           return (
-            <div key={root?.id ?? 'col'} className="dir-col">
+            <div key={root?.id ?? 'col'} className="forest-col">
               {col.map(renderRow)}
               <button
                 type="button"
-                className="dir-ghost"
+                className="stem stem-ghost"
                 onClick={(e) => {
                   e.stopPropagation()
                   onAdd(addParent ?? null)
                 }}
               >
-                {col.length && root?.parent == null ? '└── _' : '_'}
+                <span className="stem-rule" aria-hidden="true">
+                  {'└── '}
+                </span>
+                <span className="stem-name">New job</span>
               </button>
             </div>
           )
         })}
       </div>
-      {cols.length === 0 ? (
-        <button
-          type="button"
-          className="dir-ghost"
-          onClick={(e) => {
-            e.stopPropagation()
-            onAdd(null)
-          }}
-        >
-          _
-        </button>
-      ) : null}
     </section>
   )
 }

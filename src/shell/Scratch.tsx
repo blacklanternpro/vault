@@ -1,16 +1,13 @@
-import { useRef, type FormEvent, type KeyboardEvent, type PointerEvent } from 'react'
+import { useRef, type KeyboardEvent, type PointerEvent } from 'react'
 import { byId, type Doc } from '../speck/doc'
 import type { Session } from '../speck/ir'
+import { Plus } from './Glyph'
 
 const THRESH = 6
-const GHOSTS = ['_ LINK', '_ PIC', '_ FILE'] as const
 
-type Props = {
+type ScratchProps = {
   doc: Doc
   session: Session
-  onFindChange: (value: string) => void
-  onFindSubmit: () => void
-  onFindFocus: () => void
   onAddNote: () => void
   onNoteFocus: (index: number) => void
   onNoteEdit: (index: number, text: string) => void
@@ -21,7 +18,6 @@ type Props = {
 
 type Drag = {
   from: number
-  y: number
   startY: number
   live: boolean
   height: number
@@ -30,16 +26,13 @@ type Drag = {
 export function Scratch({
   doc,
   session,
-  onFindChange,
-  onFindSubmit,
-  onFindFocus,
   onAddNote,
   onNoteFocus,
   onNoteEdit,
   onReorder,
   onHitch,
   onUnhitch,
-}: Props) {
+}: ScratchProps) {
   const dragRef = useRef<Drag | null>(null)
   const listRef = useRef<HTMLDivElement>(null)
   const noteIndex = session.selected?.kind === 'NOTE' ? session.selected.index : -1
@@ -58,10 +51,10 @@ export function Scratch({
 
   function onDown(e: PointerEvent<HTMLElement>, index: number) {
     if (e.button !== 0) return
-    if ((e.target as HTMLElement).closest('textarea')) return
+    if ((e.target as HTMLElement).closest('textarea, button')) return
     e.currentTarget.setPointerCapture(e.pointerId)
     const r = e.currentTarget.getBoundingClientRect()
-    dragRef.current = { from: index, y: e.clientY, startY: e.clientY, live: false, height: r.height }
+    dragRef.current = { from: index, startY: e.clientY, live: false, height: r.height }
   }
 
   function onMove(e: PointerEvent<HTMLElement>) {
@@ -69,7 +62,6 @@ export function Scratch({
     if (!drag) return
     if (!drag.live && Math.abs(e.clientY - drag.startY) < THRESH) return
     drag.live = true
-    drag.y = e.clientY
     const list = listRef.current
     if (!list) return
     const to = snapTo(e.clientY, drag.from)
@@ -82,39 +74,33 @@ export function Scratch({
         return
       }
       let shift = 0
-      if (drag.from < to && i > drag.from && i <= to) shift = -drag.height - 8
-      if (drag.from > to && i >= to && i < drag.from) shift = drag.height + 8
+      if (drag.from < to && i > drag.from && i <= to) shift = -drag.height - 2
+      if (drag.from > to && i >= to && i < drag.from) shift = drag.height + 2
       node.style.transform = shift ? `translateY(${shift}px)` : ''
     })
   }
 
+  /** A note dropped on a job leashes to it; dropped on empty tape it comes loose. */
   function hitchAt(clientX: number, clientY: number, skip: HTMLElement): number | 'unhitch' | null {
     skip.style.pointerEvents = 'none'
     const node = document.elementFromPoint(clientX, clientY)
     skip.style.pointerEvents = ''
     if (!(node instanceof Element)) return null
     if (node.closest('[data-unhitch]')) return 'unhitch'
-    const job = node.closest('[data-card-id], [data-nested-id], [data-folio-id]')
+    const job = node.closest('[data-card-id], [data-node-id]')
     if (job) {
-      const id = Number(
-        job.getAttribute('data-card-id') ||
-          job.getAttribute('data-nested-id') ||
-          job.getAttribute('data-folio-id'),
-      )
+      const id = Number(job.getAttribute('data-card-id') || job.getAttribute('data-node-id'))
       if (Number.isFinite(id)) return id
     }
-    if (node.closest('.scratch-ghost') || (node.closest('.scratch-list') && !node.closest('[data-note-index]'))) {
-      return 'unhitch'
-    }
+    if (node.closest('.notes') && !node.closest('[data-note-index]')) return 'unhitch'
     return null
   }
 
   function onUp(e: PointerEvent<HTMLElement>, index: number) {
     const drag = dragRef.current
     dragRef.current = null
-    const list = listRef.current
     const block = e.currentTarget
-    list?.querySelectorAll('[data-note-index]').forEach((el) => {
+    listRef.current?.querySelectorAll('[data-note-index]').forEach((el) => {
       const node = el as HTMLElement
       node.style.transform = ''
       node.style.zIndex = ''
@@ -138,79 +124,59 @@ export function Scratch({
     if (to !== drag.from) onReorder(drag.from, to)
   }
 
-  function submit(e: FormEvent) {
-    e.preventDefault()
-    onFindSubmit()
-  }
-
   return (
-    <aside className="sidebar" data-testid="scratch">
-      <form className="studio-find" onSubmit={submit}>
-        <label className="find-label" htmlFor="studio-find">
-          FIND
-        </label>
-        <input
-          id="studio-find"
-          className="find-input"
-          value={session.buffer}
-          placeholder="_"
-          autoComplete="off"
-          spellCheck={false}
-          aria-label="Find"
-          onChange={(e) => onFindChange(e.target.value)}
-          onFocus={onFindFocus}
-        />
-        {session.echo ? <p className="find-echo">{session.echo}</p> : null}
-      </form>
-      <div className="scratch-list" ref={listRef}>
+    <section className="dump" data-testid="scratch" aria-label="Dump">
+      <div className="section-head">
+        <h2 className="section-name">Dump</h2>
+        <span className="section-note">
+          {doc.notes.length === 1 ? '1 note' : `${doc.notes.length} notes`}
+        </span>
+      </div>
+
+      <div className="notes" ref={listRef}>
         {doc.notes.map((note, index) => (
           <article
-            key={`${note.date}-${index}-${note.text.slice(0, 12)}`}
-            className={`scratch-block${noteIndex === index ? ' is-on' : ''}`}
+            key={`${note.date}-${index}`}
+            className={`note${noteIndex === index ? ' is-live' : ''}`}
             data-note-index={index}
             onPointerDown={(e) => onDown(e, index)}
             onPointerMove={onMove}
             onPointerUp={(e) => onUp(e, index)}
             onPointerCancel={(e) => onUp(e, index)}
           >
-            {note.date ? <p className="scratch-date">{note.date}</p> : null}
-            {note.node != null ? (
-              <p className="scratch-hitch" data-testid={`hitch-plaque-${index}`}>
-                <span>→ {byId(doc, note.node)?.title.trim() || '_'}</span>
-                <button
-                  type="button"
-                  className="scratch-unhitch"
-                  data-unhitch
-                  aria-label="Unhitch"
-                  onPointerDown={(e) => e.stopPropagation()}
-                  onClick={() => onUnhitch(index)}
-                >
-                  [x]
-                </button>
-              </p>
-            ) : null}
+            <p className="note-date">{note.date || '—'}</p>
             <textarea
-              className="scratch-text"
+              className="note-text"
               value={note.text}
-              rows={Math.max(2, Math.min(8, note.text.split('\n').length + 1))}
-              aria-label="Scratch note"
+              rows={Math.max(1, Math.min(8, note.text.split('\n').length))}
+              aria-label="Note"
               onChange={(e) => onNoteEdit(index, e.target.value)}
               onFocus={() => onNoteFocus(index)}
               onKeyDown={(e: KeyboardEvent<HTMLTextAreaElement>) => {
                 if (e.key === 'Escape') (e.target as HTMLTextAreaElement).blur()
               }}
             />
+            {note.node != null ? (
+              <button
+                type="button"
+                className="note-leash"
+                data-unhitch
+                data-testid={`hitch-plaque-${index}`}
+                aria-label="Unleash note"
+                onPointerDown={(e) => e.stopPropagation()}
+                onClick={() => onUnhitch(index)}
+              >
+                leashed to {byId(doc, note.node)?.title.trim() || '_'}
+              </button>
+            ) : null}
           </article>
         ))}
-        <button type="button" className="scratch-ghost is-add" data-testid="scratch-add" onClick={onAddNote}>
-          _
-        </button>
-        {GHOSTS.map((label) => (
-          <div key={label} className="scratch-ghost" aria-hidden>
-            {label}
-          </div>
-        ))}
       </div>
-    </aside>
+
+      <button type="button" className="dump-add" data-testid="scratch-add" onClick={onAddNote}>
+        <Plus className="lane-add-glyph" />
+        New note
+      </button>
+    </section>
   )
 }

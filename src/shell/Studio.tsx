@@ -14,31 +14,41 @@ import {
   pullCard,
   searchFind,
   selectNode,
-  setProject,
   stageCard,
   typeField,
   type Result,
 } from '../speck/machine'
-import { parseDoc, projectIdOf, projectsOf } from '../speck/doc'
+import { byId, parseDoc, projectsOf } from '../speck/doc'
 import type { Session } from '../speck/ir'
 import { loadSource, saveSource } from '../speck/source'
+import type { ColName, NodeStatus } from '../speck/tokens'
+import { Board } from './Board'
 import { Directory } from './Directory'
-import { Manager } from './Manager'
+import { Drawer } from './Drawer'
 import { Scratch } from './Scratch'
+import { TopBar } from './TopBar'
 
 export function Studio() {
   const [session, setSession] = useState<Session>(() => freshSession())
   const [source, setSource] = useState(loadSource)
+  const [filterId, setFilterId] = useState<number | null>(null)
+  const [laneFilter, setLaneFilter] = useState<ColName | null>(null)
+  const [urgentOnly, setUrgentOnly] = useState(false)
   const sessionRef = useRef(session)
   const sourceRef = useRef(source)
   sessionRef.current = session
   sourceRef.current = source
 
   const doc = useMemo(() => parseDoc(source), [source])
-  const projectId = projectIdOf(doc, session.projectId)
   const projects = projectsOf(doc)
-  const project = projectId != null ? doc.nodes.find((n) => n.id === projectId) : undefined
-  const inFolio = session.pipeOpen != null
+  const open = session.pipeOpen != null ? byId(doc, session.pipeOpen) : undefined
+  const openJob = open && open.parent != null ? open : undefined
+
+  const hits = useMemo(() => {
+    const q = session.find?.trim().toLowerCase()
+    if (!q) return null
+    return doc.nodes.filter((n) => n.title.toLowerCase().includes(q)).length
+  }, [doc, session.find])
 
   useEffect(() => {
     saveSource(source)
@@ -62,7 +72,12 @@ export function Studio() {
       const tag = t?.tagName
       const typing = tag === 'INPUT' || tag === 'TEXTAREA'
       const inFind = Boolean(t?.closest('.studio-find'))
-      const inScratch = Boolean(t?.closest('.scratch-text'))
+      const inScratch = Boolean(t?.closest('.note-text'))
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault()
+        document.querySelector<HTMLInputElement>('.find-input')?.focus()
+        return
+      }
       if (e.key === 'Escape') {
         if (typing) {
           if (sessionRef.current.field) apply(applyKey('Escape', false, sessionRef.current, sourceRef.current))
@@ -93,35 +108,23 @@ export function Studio() {
         sessionRef.current.lens === 'nest' || folioOpen
           ? sessionRef.current
           : { ...sessionRef.current, lens: 'nest' as const }
-      const result = applyKey(e.key, e.shiftKey, nestSession, sourceRef.current)
-      apply(result)
+      apply(applyKey(e.key, e.shiftKey, nestSession, sourceRef.current))
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [])
 
   function hit(
-    kind: 'NODE' | 'STEM' | 'ADD' | 'TOGGLE' | 'SHOVEL' | 'EMPTY' | 'SLOT' | 'FIELD',
+    kind: 'NODE' | 'STEM' | 'ADD' | 'TOGGLE' | 'SHOVEL' | 'EMPTY' | 'SLOT' | 'FIELD' | 'STATUS',
     payload: string | number,
   ) {
-    apply(
-      applyHit(
-        { kind, x: 0, y: 0, w: 10, h: 10, z: 10, payload },
-        sessionRef.current,
-        sourceRef.current,
-      ),
-    )
+    apply(applyHit({ kind, x: 0, y: 0, w: 10, h: 10, z: 10, payload }, sessionRef.current, sourceRef.current))
   }
 
   function commitTitle() {
     const r = commitFieldLine(sessionRef.current, sourceRef.current)
     apply({
-      session: {
-        ...r.session,
-        field: null,
-        fieldBuffer: '',
-        draftId: null,
-      },
+      session: { ...r.session, field: null, fieldBuffer: '', draftId: null },
       source: r.source,
     })
   }
@@ -133,91 +136,72 @@ export function Studio() {
     commitTitle()
   }
 
-  function onFindChange(value: string) {
-    const cur = sessionRef.current
-    setLive({
-      ...cur,
-      buffer: value,
-      find: value.trim() || null,
-      echo: null,
-    })
-  }
-
-  function onFindSubmit() {
-    apply(searchFind(sessionRef.current, sourceRef.current, sessionRef.current.buffer))
-  }
-
-  function onFindFocus() {
-    setLive({
-      ...sessionRef.current,
-      lens: 'pipe',
-      echo: null,
-    })
-  }
-
-  function closeFolio() {
-    apply(applyKey('Escape', false, sessionRef.current, sourceRef.current))
+  function onQueryChange(value: string) {
+    setLive({ ...sessionRef.current, buffer: value, find: value.trim() || null, echo: null })
   }
 
   return (
-    <div className={`studio${inFolio ? ' is-folio' : ''}`} data-testid="studio">
-      <div className="studio-main">
-        <div className="studio-rack">
-          <header className="rack-bar">
-            <span className="rack-plaque" aria-hidden>
-              TAPE
-            </span>
-            <label className="rack-project">
-              <span className="rack-label">PROJECT</span>
-              <select
-                aria-label="Project"
-                data-testid="project-select"
-                value={projectId ?? ''}
-                onChange={(e) => apply(setProject(sessionRef.current, sourceRef.current, Number(e.target.value)))}
-              >
-                {projects.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.title.trim() || '_'}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <span className="rack-plaque" aria-hidden>
-              REC
-            </span>
-            <button
-              type="button"
-              className="rack-add"
-              data-testid="project-add"
-              onClick={() => hit('ADD', 0)}
-            >
-              RECORD
-            </button>
-          </header>
-          <p className="rack-name" data-testid="project-name">
-            {project?.title.trim() || '_'}
-          </p>
-          <Manager
+    <div className="studio" data-testid="studio">
+      <div className="field">
+        <TopBar
+          query={session.buffer || session.find || ''}
+          hits={hits}
+          projects={projects}
+          filterId={filterId}
+          laneFilter={laneFilter}
+          urgentOnly={urgentOnly}
+          onQueryChange={onQueryChange}
+          onQuerySubmit={() => apply(searchFind(sessionRef.current, sourceRef.current, sessionRef.current.buffer))}
+          onQueryFocus={() => setLive({ ...sessionRef.current, lens: 'pipe', echo: null })}
+          onFilterChange={setFilterId}
+          onLaneFilterChange={setLaneFilter}
+          onUrgentOnlyChange={setUrgentOnly}
+          onNewJob={() => hit('EMPTY', 'pending')}
+        />
+
+        <div className={`stage${openJob ? ' has-drawer' : ''}`}>
+          <Board
             doc={doc}
             session={session}
+            filterId={filterId}
+            laneFilter={laneFilter}
+            urgentOnly={urgentOnly}
             onStage={(id, status, beforeId) =>
               apply(stageCard(sessionRef.current, sourceRef.current, id, status, beforeId))
             }
             onPull={(id, status, beforeId) =>
               apply(pullCard(sessionRef.current, sourceRef.current, id, status, beforeId))
             }
-            onFocus={(id) => hit('NODE', id)}
+            onOpen={(id) => hit('NODE', id)}
             onRename={(id) => hit('SLOT', `${id}:title`)}
-            onEditBody={(id) => hit('SLOT', `${id}:body`)}
-            onAddNested={(parentId) => apply(addNested(sessionRef.current, sourceRef.current, parentId))}
-            onCreateJob={() => hit('EMPTY', 'pending')}
             onDock={(id, parentId) => apply(dockCard(sessionRef.current, sourceRef.current, id, parentId))}
-            onCloseFolio={closeFolio}
+            onCreateJob={(status) => hit('EMPTY', status)}
             onTitle={(value) => setLive(typeField(sessionRef.current, value))}
             onTitleCommit={commitTitle}
             onFieldBlur={onFieldBlur}
           />
+
+          {openJob ? (
+            <Drawer
+              doc={doc}
+              session={session}
+              node={openJob}
+              onClose={() => apply(applyKey('Escape', false, sessionRef.current, sourceRef.current))}
+              onShovel={(id) => hit('SHOVEL', id)}
+              onRename={(id) => hit('SLOT', `${id}:title`)}
+              onEditBody={(id) => hit('SLOT', `${id}:body`)}
+              onAddNested={(parentId) => apply(addNested(sessionRef.current, sourceRef.current, parentId))}
+              onSetStatus={(id, status: NodeStatus) => hit('STATUS', `${id}:${status}`)}
+              onOpenFolder={setFilterId}
+              onTitle={(value) => setLive(typeField(sessionRef.current, value))}
+              onTitleCommit={commitTitle}
+              onFieldBlur={onFieldBlur}
+            />
+          ) : null}
         </div>
+      </div>
+
+      <div className="catalogue">
         <Directory
           doc={doc}
           session={session}
@@ -231,27 +215,19 @@ export function Studio() {
           onTitle={(value) => setLive(typeField(sessionRef.current, value))}
           onTitleCommit={commitTitle}
         />
+        <Scratch
+          doc={doc}
+          session={session}
+          onAddNote={() => apply(addScratch(sessionRef.current, sourceRef.current))}
+          onNoteFocus={(index) =>
+            setLive({ ...sessionRef.current, selected: { kind: 'NOTE', index }, lens: 'dump', echo: null })
+          }
+          onNoteEdit={(index, text) => apply(applyNoteText(sessionRef.current, sourceRef.current, index, text))}
+          onReorder={(from, to) => apply(applyNoteOrder(sessionRef.current, sourceRef.current, from, to))}
+          onHitch={(index, nodeId) => apply(hitchNote(sessionRef.current, sourceRef.current, index, nodeId))}
+          onUnhitch={(index) => apply(hitchNote(sessionRef.current, sourceRef.current, index, null))}
+        />
       </div>
-      <Scratch
-        doc={doc}
-        session={session}
-        onFindChange={onFindChange}
-        onFindSubmit={onFindSubmit}
-        onFindFocus={onFindFocus}
-        onAddNote={() => apply(addScratch(sessionRef.current, sourceRef.current))}
-        onNoteFocus={(index) =>
-          setLive({
-            ...sessionRef.current,
-            selected: { kind: 'NOTE', index },
-            lens: 'dump',
-            echo: null,
-          })
-        }
-        onNoteEdit={(index, text) => apply(applyNoteText(sessionRef.current, sourceRef.current, index, text))}
-        onReorder={(from, to) => apply(applyNoteOrder(sessionRef.current, sourceRef.current, from, to))}
-        onHitch={(index, nodeId) => apply(hitchNote(sessionRef.current, sourceRef.current, index, nodeId))}
-        onUnhitch={(index) => apply(hitchNote(sessionRef.current, sourceRef.current, index, null))}
-      />
     </div>
   )
 }
