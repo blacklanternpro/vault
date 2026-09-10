@@ -4,11 +4,16 @@ type GlyphProps = {
   className?: string
 }
 
+/**
+ * Two wedges, not a letterform: the heavy left stroke runs to a point past
+ * centre, the lighter right stroke drops into its flank, and the gap between
+ * their flat tops is the mark's only counter.
+ */
 export function BrandMark({ className }: GlyphProps) {
   return (
-    <svg className={className} viewBox="0 0 26 26" fill="none" aria-hidden="true">
-      <path d="M2.6 3.1h6.9l5.1 13.4L19.7 3.1h3.7L15.6 22.9h-3.3L2.6 3.1Z" fill="currentColor" />
-      <path d="M11.2 3.1h5.2l-2.6 6.8-2.6-6.8Z" fill="currentColor" opacity="0.45" />
+    <svg className={className} viewBox="0 0 36 34" fill="none" aria-hidden="true">
+      <path d="M1 1h13.4l10.8 32H21L1 1Z" fill="currentColor" />
+      <path d="M20 1h15L23 27 20 1Z" fill="currentColor" />
     </svg>
   )
 }

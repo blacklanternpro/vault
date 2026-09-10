@@ -5,14 +5,13 @@ import {
   byId,
   folderOf,
   laneOf,
-  nestedOf,
   type Doc,
   type GraphNode,
 } from '../speck/doc'
 import { matchesFind, type Session } from '../speck/ir'
 import { COL_ORDER, LANE_PLAQUE, isBinderStatus, type ColName, type NodeStatus } from '../speck/tokens'
 import { Filament, type LiveLeash } from './Filament'
-import { Check, Plus, Ring } from './Glyph'
+import { Plus, Ring } from './Glyph'
 import { Mark } from './Mark'
 
 const THRESH = 7
@@ -259,11 +258,10 @@ export function Board({
       />
       {COL_ORDER.map((col) => {
         const items = cardsIn(col)
-        const quiet = col === 'done' || col === 'dusted'
         return (
           <section
             key={col}
-            className={`lane${quiet ? ' is-quiet' : ''}`}
+            className="lane"
             data-lane={col}
             data-testid={`lane-${col}`}
             role="listitem"
@@ -279,8 +277,6 @@ export function Board({
                 const live = session.selected?.kind === 'NODE' && session.selected.id === node.id
                 const found = matchesFind(session, node.title)
                 const folder = folderOf(doc, node.id)
-                const nested = nestedOf(doc, node.id)
-                const ticked = nested.filter((n) => n.status === 'done').length
                 return (
                   <article
                     key={node.id}
@@ -300,14 +296,6 @@ export function Board({
                       <p className="slab-folder">{folder.title.trim() || '_'}</p>
                     ) : null}
                     {node.urgent ? <span className="slab-flag">URGENT</span> : null}
-                    {nested.length ? (
-                      <ul className="slab-nest">
-                        <li className="slab-nest-row">
-                          <Check className="slab-tick" />
-                          {ticked} of {nested.length} done
-                        </li>
-                      </ul>
-                    ) : null}
                   </article>
                 )
               })}

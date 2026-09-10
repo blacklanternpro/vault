@@ -39,6 +39,9 @@ export function TopBar({
     onQuerySubmit()
   }
 
+  const folder = filterId == null ? null : projects.find((p) => p.id === filterId)
+  const folderLabel = folder ? folder.title.trim() || '_' : 'All Projects'
+
   return (
     <header className="topbar">
       <div className="topbar-brand">
@@ -73,9 +76,16 @@ export function TopBar({
       </form>
 
       <div className="topbar-filters">
+        {/*
+          The select carries the interaction and stays the focusable control; the
+          span carries the width. Left to itself a select sizes to its longest
+          option, which would let one long folder name stretch the whole bar.
+        */}
         <label className="chip">
-          <span className="sr-only">Folder</span>
+          <span className="chip-label">{folderLabel}</span>
+          <Caret className="chip-caret" />
           <select
+            className="chip-select"
             aria-label="Folder"
             data-testid="project-select"
             value={filterId ?? 'all'}
@@ -88,12 +98,15 @@ export function TopBar({
               </option>
             ))}
           </select>
-          <Caret className="chip-caret" />
         </label>
 
         <label className="chip">
-          <span className="sr-only">Status</span>
+          <span className="chip-label">
+            {laneFilter ? `Status: ${LANE_PLAQUE[laneFilter]}` : 'Status: Any'}
+          </span>
+          <Caret className="chip-caret" />
           <select
+            className="chip-select"
             aria-label="Status"
             data-testid="status-select"
             value={laneFilter ?? 'any'}
@@ -109,12 +122,13 @@ export function TopBar({
               </option>
             ))}
           </select>
-          <Caret className="chip-caret" />
         </label>
 
         <label className="chip">
-          <span className="sr-only">Priority</span>
+          <span className="chip-label">{urgentOnly ? 'Priority: Urgent' : 'Priority: Any'}</span>
+          <Caret className="chip-caret" />
           <select
+            className="chip-select"
             aria-label="Priority"
             data-testid="priority-select"
             value={urgentOnly ? 'urgent' : 'any'}
@@ -123,7 +137,6 @@ export function TopBar({
             <option value="any">Priority: Any</option>
             <option value="urgent">Priority: Urgent</option>
           </select>
-          <Caret className="chip-caret" />
         </label>
 
         <button type="button" className="new-job" data-testid="project-add" onClick={onNewJob}>
