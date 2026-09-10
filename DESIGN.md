@@ -176,7 +176,7 @@ Density is high and quiet. Cards are 196px wide and carry a name and a folder li
 A cool, almost colourless field with one saturated blue in it, sized so that the blue is always the thing you were looking for.
 
 ### Primary
-- **Signal Blue** (`{colors.accent}`): The one accent. It fills the single primary button (`+ New`), fills a completed subtask's tick, colours the search hit count and the note's hitch line, and draws the focus ring's border. Nothing else in the interface is saturated by default.
+- **Signal Blue** (`{colors.accent}`): The one accent. It fills the single primary button (`+ New`), fills a completed subtask's tick, colours the search hit count and the note's hitch line, rules under the word a search matched, and draws the focus ring's border. Nothing else in the interface is saturated by default.
 - **Signal Blue Deep** (`{colors.accent-deep}`): The pressed-down step of the same blue, used only as the primary button's hover fill.
 - **Signal Wash** (`{colors.accent-wash}`): The blue at reading strength. This is the system's selection surface: the open job card, the live tree row, the live note, the highlight behind a search hit, and the 3px focus halo around a field.
 - **Signal Hairline** (`{colors.accent-line}`): The blue as a line rather than a fill. Borders the merely-selected (not open) card, dashes an empty lane while a drag is live, and rings the jack of a pulled satellite.
@@ -310,7 +310,7 @@ Icons are hand-drawn inline SVG on 12–21px boxes at a consistent 1.3–1.8px s
 The top bar is the whole of it: wordmark and drawn brand mark at the left, search, filter chips, primary button. It is white on one hairline, 69px on desktop, and wraps to three rows below 900px with the chips scrolling sideways. There is no sidebar, no tab strip and no second command input.
 
 ### Job Card
-The board's unit. 196px wide, 94px minimum, an uppercase plaque name over a 12.5px folder line. A card in the DONE lane drops a drawn ring into the gutter left of its plaque and runs both lines down one text column beside it. Selected but not open: accent hairline. Open: accent wash and an accent border. A search hit: the same wash spread under the whole card, so a hit is findable across five lanes at once, while the open card keeps its border to stay distinguishable. Urgent: red plaque and a `URGENT` micro flag at the top right. Loose: dashed border with an accent-ringed jack. The card's one quick action — a chevron that moves it to the next lane along — is hidden until the pointer is on the card, takes the card's own background so it masks rather than patches, and is absent in the last lane, which has nowhere to send it.
+The board's unit. 196px wide, 94px minimum, an uppercase plaque name over a 12.5px folder line. A card in the DONE lane drops a drawn ring into the gutter left of its plaque and runs both lines down one text column beside it. Selected but not open: accent hairline. Open: accent wash and an accent border. A search hit gets nothing at card level — the hit is declared on the word that matched, so the plate stays the open card's alone. Urgent: red plaque and a `URGENT` micro flag at the top right. Loose: dashed border with an accent-ringed jack. The card's one quick action — a chevron that moves it to the next lane along — is hidden until the pointer is on the card, takes the card's own background so it masks rather than patches, and is absent in the last lane, which has nowhere to send it.
 
 ### Detail Drawer
 A 286px rail, panel white on one left hairline, running to the bottom of the field — where the notes tape picks the same column up, in the same white behind one hairline, so the right rail reads as continuous down the whole page. Reading order is status plaque with its dot, close button, display title, folder button with a drawn folder mark, hairline rule, then `DESCRIPTION` and `SUBTASKS` as plaques with their content. This is the only place the five status inks appear. A subtask is a 20px tick (4px radius, 1.5px `line-2` border, filling accent with a white check when done) and a 12.5px name; a finished subtask keeps its full-strength text, because the filled tick is the whole signal and greying the sentence too would read as "cancelled" rather than "finished".
@@ -343,6 +343,7 @@ One authored moment: the pull. A line of a job leaves the drawer, casts its airb
 - **Do** keep the 3:1 mark tint on strokes and stems and use the 5.4:1 grey for any word — **The Marks-Only Tint Rule**.
 - **Do** spend the accent on selection, search hits and the one primary action, as a wash, a hairline, a fill or a deep press — **The One Accent Rule**.
 - **Do** keep the five status inks inside the drawer and let the lane say a card's state on the board — **The Lane Says The Status Rule**.
+- **Do** let the plate mean where you are and a mark mean what you searched for, so a filter result never dresses like a selection — **The Plate Is Selection Rule**.
 - **Do** end every list with an empty row that writes, revealed on panel hover — **The Ledger Row Rule**.
 - **Do** draw new icons as inline SVG strokes at the set's weight on `currentColor` — **The Drawn Mark Rule**.
 - **Do** type on the thing itself with a borderless input that inherits its exact type, so committing text never changes a row's shape.
@@ -353,6 +354,7 @@ One authored moment: the pull. A line of a job leaves the drawer, casts its airb
 - **Don't** add a second hue. Not a green pill, not an amber warning, not a purple tag on the board.
 - **Don't** put a resting shadow on anything; the one shadow in the system means the thing is airborne.
 - **Don't** tint a job card by its status or add a status swatch to the board.
+- **Don't** declare one state twice, or two states in the same channel; if two things separate on a hairline's colour alone, one of them is in the wrong channel.
 - **Don't** set a word in the 3:1 mark tint, and don't set a stem or a stroke in the text grey.
 - **Don't** letterspace body sans to imitate a plaque; use the plaque face at its own size.
 - **Don't** use an icon font, an emoji, or a Unicode arrow as a mark.
