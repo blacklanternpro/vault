@@ -24,6 +24,8 @@
   --color-line: #e5e6e8;
   --color-line-2: #d7d9dd;
   --color-accent: #0b6ef3;
+  /* The same blue pressed down, which is the only step the accent has. */
+  --color-accent-deep: #0a5cdd;
   --color-accent-ink: #ffffff;
   --color-accent-wash: #f1f6fe;
   --color-accent-line: #a9c9fb;
@@ -312,7 +314,7 @@
 }
 
 .new-job:hover {
-  background-color: #0a5cdd;
+  background-color: var(--color-accent-deep);
 }
 
 .new-job-glyph {
