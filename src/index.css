@@ -13,8 +13,14 @@
   --color-ground: #f2f3f6;
   --color-surface: #ffffff;
   --color-ink: #151515;
+  /* Secondary text. 5.4:1 on the surface, 4.9:1 on the ground: readable ink. */
   --color-ink-2: #666a70;
-  --color-ink-3: #8f9298;
+  /*
+   * The tint, and never text: glyph strokes, tree stems, disclosure marks. It
+   * is held at 3:1 on both the surface and the ground, which is the floor for a
+   * mark that carries meaning, and below what a word is allowed to be set in.
+   */
+  --color-ink-3: #83878e;
   --color-line: #e5e6e8;
   --color-line-2: #d7d9dd;
   --color-accent: #0b6ef3;
@@ -22,6 +28,19 @@
   --color-accent-wash: #f1f6fe;
   --color-accent-line: #a9c9fb;
   --color-urgent: #d92c20;
+
+  /*
+   * Status has a colour only where a job is entered. The board stays in one
+   * accent, as the comp has it, so the lane a card sits in is what says its
+   * state; the drawer's plaque is where the state gets named, and names it in
+   * ink. Dusted is the one warm ink in the field, which is the whole point of
+   * it: the shelved thing is the only thing here that has gathered any.
+   */
+  --color-pending: #666a70;
+  --color-rnd: #7a4ddb;
+  --color-active: #0b6ef3;
+  --color-done: #157f4a;
+  --color-dusted: #7b6a5d;
 
   --font-sans: 'Public Sans Variable', 'Public Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
   /* The plaque face: job names and lane names, the only caps the board shouts. */
@@ -35,6 +54,9 @@
   --lane-width: 196px;
   --lane-gap: 10px;
   --drawer-width: 286px;
+
+  /* How much of the catalogue below the board is held above the fold. */
+  --fold-cue: 24px;
 }
 
 @layer base {
@@ -112,7 +134,13 @@
    */
   grid-template-columns: minmax(0, 1fr);
   grid-template-rows: auto minmax(0, 1fr);
-  height: 100vh;
+  /*
+   * A screen less a sliver, not a screen. The board wants the whole viewport and
+   * the comp gives it one, but a field cut exactly at the fold is a field that
+   * looks like it ends there — so the catalogue's own top edge is held on screen
+   * at every desktop height, and the sliver is what says the field carries on.
+   */
+  height: calc(100vh - var(--fold-cue));
 }
 
 /* ----------------------------------------------------------------- topbar */
@@ -186,13 +214,13 @@
 }
 
 .find-input::placeholder {
-  color: var(--color-ink-3);
+  color: var(--color-ink-2);
 }
 
 .find-keys {
   flex: none;
   font-size: 12px;
-  color: var(--color-ink-3);
+  color: var(--color-ink-2);
   letter-spacing: 0.04em;
 }
 
@@ -323,7 +351,13 @@
   align-items: start;
   height: 100%;
   min-height: 0;
-  padding: 21px 16px 39px;
+  /*
+   * The comp leaves 39px of bare ground under the lanes, and the fold cue is
+   * spent out of that rather than out of the lanes: the sliver of the catalogue
+   * takes the place of dead field, so the lane still ends exactly where the comp
+   * ends it and the page still says there is more of it.
+   */
+  padding: 21px 16px calc(39px - var(--fold-cue));
   overflow-x: auto;
   overflow-y: hidden;
 }
@@ -402,12 +436,20 @@
   border-color: var(--color-accent-line);
 }
 
-.slab.is-found {
-  box-shadow: inset 3px 0 0 var(--color-accent);
+/*
+ * The hit itself is already washed inside the title, so all the plate owes is
+ * findability across five lanes at once: the same wash, spread under the whole
+ * card. The open card keeps its border, which is what still separates them.
+ */
+.slab.is-found:not(.is-open) {
+  background-color: var(--color-accent-wash);
 }
 
+/*
+ * Airborne, and elevation says so on its own — the shadow is the whole signal.
+ * A card in the air is still the same card, so it keeps its own hairline.
+ */
 .slab.is-ghost {
-  border-color: var(--color-accent);
   box-shadow: 0 8px 20px rgb(21 21 21 / 0.13);
 }
 
@@ -509,7 +551,7 @@
   padding: 11px 4px;
   background: none;
   border: 0;
-  color: var(--color-ink-3);
+  color: var(--color-ink-2);
   font-size: 13.5px;
   text-align: left;
 }
@@ -625,9 +667,15 @@
 
 /* ----------------------------------------------------------------- drawer */
 
+/*
+ * The rail is pinned to the screen, not to the field, so it runs the full way
+ * to the bottom edge as the comp has it. The fold cue is spent under the board,
+ * where the catalogue is what the sliver belongs to; the drawer's own panel down
+ * there is the dump, and a rail cut short of the edge would only look cut.
+ */
 .drawer {
   position: absolute;
-  inset: 0 0 0 auto;
+  inset: 0 0 calc(-1 * var(--fold-cue)) auto;
   z-index: 10;
   display: flex;
   flex-direction: column;
@@ -658,7 +706,7 @@
   line-height: 20px;
   letter-spacing: 0;
   text-transform: uppercase;
-  color: var(--color-accent);
+  color: var(--color-active);
 }
 
 /* The plaque's caps ride above the line's optical centre; the dot goes with them. */
@@ -671,19 +719,19 @@
 }
 
 .drawer-status.is-pending {
-  color: var(--color-ink-2);
+  color: var(--color-pending);
 }
 
 .drawer-status.is-rnd {
-  color: #7a4ddb;
+  color: var(--color-rnd);
 }
 
 .drawer-status.is-done {
-  color: #157f4a;
+  color: var(--color-done);
 }
 
 .drawer-status.is-dusted {
-  color: var(--color-ink-3);
+  color: var(--color-dusted);
 }
 
 .drawer-close {
@@ -766,12 +814,20 @@
   border: 0;
 }
 
+/*
+ * The comp sets these in the condensed face, not the body one: same 86px of ink
+ * for DESCRIPTION, but taller caps inside it. So they are plaques like the lane
+ * heads and the job names, two sizes down — which is also the reading that made
+ * the drawer's own labels the page's worst-scoring text while they were set in
+ * the body sans, spaced out to reach the same width at three quarters the cap.
+ */
 .drawer-label {
-  margin: 20px 0 0;
-  font-size: 12px;
+  margin: 21px 0 0;
+  font-family: var(--font-plaque);
+  font-size: 15px;
   font-weight: 600;
   line-height: 18px;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.015em;
   text-transform: uppercase;
   color: var(--color-ink-2);
 }
@@ -796,7 +852,7 @@
 }
 
 .drawer-body-empty {
-  color: var(--color-ink-3);
+  color: var(--color-ink-2);
 }
 
 .drawer-body-input {
@@ -1001,7 +1057,7 @@
 }
 
 .stem-ghost {
-  color: var(--color-ink-3);
+  color: var(--color-ink-2);
 }
 
 .stem-ghost:hover {
@@ -1016,9 +1072,14 @@
   margin-right: 3px;
 }
 
+/*
+ * The stems are the tree's structure, not a decoration under it, so they are
+ * set in the tint that every other mark on the page is held to rather than a
+ * grey faint enough to guess at.
+ */
 .stem-rule {
   flex: none;
-  color: #b7bac0;
+  color: var(--color-ink-3);
   font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
   font-size: 12.5px;
   /* The row pitch is set to the box-drawing glyph so the verticals actually join. */
@@ -1075,19 +1136,26 @@
 }
 
 /*
- * The disclosure mark is a triangle, not another dash: a dash in this column
- * reads as one more length of stem and the tree stops being legible.
+ * The disclosure is a drawn mark from the same set as the rest of the chrome,
+ * not another dash: a dash in this column reads as one more length of stem and
+ * the tree stops being legible. It turns from the chip's caret to the button's
+ * chevron, which is the field's one way of saying open and shut.
  */
 .stem-fold {
+  display: grid;
+  place-items: center;
   flex: none;
   width: 14px;
+  height: 18px;
   padding: 0;
   background: none;
   border: 0;
   color: var(--color-ink-3);
-  font-size: 10px;
-  line-height: 18px;
-  text-align: center;
+}
+
+.stem-fold svg {
+  width: 11px;
+  height: 11px;
 }
 
 .stem-fold:hover {
@@ -1163,7 +1231,7 @@
   border: 0;
   border-radius: 5px;
   box-shadow: 0 -1px 0 var(--color-line);
-  color: var(--color-ink-3);
+  color: var(--color-ink-2);
   font-size: 13.5px;
   text-align: left;
 }
@@ -1215,13 +1283,13 @@
 
 /*
  * A subtask in the air is on its way to being a card, so it borrows the card's
- * plate to travel on. Its own row has no surface of its own to lift.
+ * plate to travel on — hairline and all. Its own row has no surface to lift.
  */
 .subtask.is-ghost {
   box-sizing: content-box;
   padding: 11px 13px;
   background-color: var(--color-surface);
-  border: 1px solid var(--color-accent);
+  border: 1px solid #e8e8e8;
   border-radius: var(--radius-slab);
   box-shadow: 0 8px 20px rgb(21 21 21 / 0.13);
 }
@@ -1358,15 +1426,19 @@
     display: none;
   }
 
+  /*
+   * The lanes take the tallest one's height rather than each their own. Only one
+   * is on screen at a time here, so a short lane left at its natural height puts
+   * a screen of bare ground under its last card while the tall lane that set the
+   * board's height sits off the right edge — the slack belongs inside the panel,
+   * which is where the comp and every wider width already put it.
+   */
   .board {
     grid-auto-columns: min(80vw, 320px);
+    align-items: stretch;
     height: auto;
-    padding: 14px 14px 20px;
-  }
-
-  .lane {
-    height: auto;
-    max-height: 74vh;
+    /* One seam for the whole column: board to drawer to catalogue to tape. */
+    padding: 14px;
   }
 
   .drawer {

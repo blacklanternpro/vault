@@ -3,7 +3,7 @@ import { childrenOf, isBoardVisible, laneOf, type Doc } from '../speck/doc'
 import { matchesFind, type Session } from '../speck/ir'
 import { LANE_PLAQUE, isBinderStatus, type ColName, type NodeStatus } from '../speck/tokens'
 import { nestRows, type NestRow } from '../speck/tree'
-import { Plus } from './Glyph'
+import { Caret, Chevron, Plus } from './Glyph'
 import { Mark } from './Mark'
 
 const THRESH = 6
@@ -185,7 +185,7 @@ export function Directory({
               onToggle(id)
             }}
           >
-            {closed ? '\u25b8' : '\u25be'}
+            {closed ? <Chevron /> : <Caret />}
           </button>
         ) : (
           <span className="stem-fold" aria-hidden="true" />
