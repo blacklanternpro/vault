@@ -44,6 +44,7 @@ SPECK is the **save format** (graph + dump source in `localStorage` key `speck-o
 ## Brand Commitments
 
 - Maker: **BAD FORM**. Product: VAULT WORLDWIDE. BLACK LANTERN is dead.
+- Visual world: the **category standard, played straight**, at the craft level of **Linear, Things, and Height**. Chosen deliberately over costumed worlds; conventions are embraced without irony or smuggled quirk. This overrides the older "SaaS kanban chrome" veto as a look — it does not license assignees, teams, or a second input.
 - Voice: terse machine. Empty is `_`. No dashboard welcome.
 - Two languages must not share chrome: PM (jobs / folio / boxed nest) vs directory (stems). Sections do not drag.
 - **[inferred]** No customer logo lockup, no testimonials, no pricing. Identity is the maker mark and the studio, not a SaaS wordmark.
