@@ -50,12 +50,10 @@ typography:
     fontSize: "13.5px"
     fontWeight: 400
     lineHeight: "20px"
-    letterSpacing: "normal"
   meta:
     fontFamily: "Public Sans Variable, Public Sans, Helvetica Neue, Helvetica, Arial, sans-serif"
     fontSize: "12.5px"
     fontWeight: 400
-    letterSpacing: "normal"
   micro:
     fontFamily: "Public Sans Variable, Public Sans, Helvetica Neue, Helvetica, Arial, sans-serif"
     fontSize: "12px"
@@ -78,8 +76,6 @@ spacing:
   subtask-gap: "18px"
   fold-cue: "24px"
   panel-head: "15px 19px 21px"
-  card-pad: "23px 14px 18px"
-  drawer-pad: "19px 18px 24px"
 components:
   button-primary:
     backgroundColor: "{colors.accent}"
@@ -116,7 +112,7 @@ components:
     textColor: "{colors.ink}"
     typography: "{typography.title}"
     rounded: "{rounded.slab}"
-    padding: "{spacing.card-pad}"
+    padding: "23px 14px 18px"
   card-job-open:
     backgroundColor: "{colors.accent-wash}"
     textColor: "{colors.ink}"
@@ -125,7 +121,7 @@ components:
   drawer:
     backgroundColor: "{colors.surface}"
     textColor: "{colors.ink}"
-    padding: "{spacing.drawer-pad}"
+    padding: "19px 18px 24px"
     width: "286px"
   tree-row:
     backgroundColor: "{colors.surface}"
@@ -303,7 +299,7 @@ Icons are hand-drawn inline SVG on 12–21px boxes at a consistent 1.3–1.8px s
 - **Background:** Panel white, on the cool ground.
 - **Shadow Strategy:** None at rest. See Elevation & Depth.
 - **Border:** 1px hairline; `line-2` on hover.
-- **Internal Padding:** Panels head at `{spacing.panel-head}` and inset their content by 10px; a job card pads `{spacing.card-pad}`; the drawer pads `{spacing.drawer-pad}`.
+- **Internal Padding:** Panels head at `{spacing.panel-head}` and inset their content by `{spacing.panel-inset}`; a job card and the drawer each carry their own asymmetric padding, given on their component entries.
 
 ### Inputs / Fields
 - **Style:** The search field is a 40px control — panel white, 1px hairline, 8px radius, a drawn magnifier in the mark tint, a 13.5px input, and a trailing `⌘ K` hint that swaps for a blue hit count once a query is live.
