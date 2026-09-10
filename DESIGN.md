@@ -345,6 +345,7 @@ One authored moment: the pull. A line of a job leaves the drawer, casts its airb
 - **Do** keep the five status inks inside the drawer and let the lane say a card's state on the board — **The Lane Says The Status Rule**.
 - **Do** let the plate mean where you are and a mark mean what you searched for, so a filter result never dresses like a selection — **The Plate Is Selection Rule**.
 - **Do** end every list with an empty row that writes, revealed on panel hover — **The Ledger Row Rule**.
+- **Do** make anything held out of sight unhittable while it is out of sight, and check it against a tap as well as a pointer, because a tap brings its own hover — **The Hidden Is Unreachable Rule**.
 - **Do** draw new icons as inline SVG strokes at the set's weight on `currentColor` — **The Drawn Mark Rule**.
 - **Do** type on the thing itself with a borderless input that inherits its exact type, so committing text never changes a row's shape.
 - **Do** hold a sliver of the next panel on screen at the desktop fold — **The Fold Cue Rule**.
