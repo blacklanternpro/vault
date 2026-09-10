@@ -1,0 +1,41 @@
+{
+  "title": "Approve the composition",
+  "question": "Canon is locked: the Linear-class standard played straight, at Linear / Things / Height craft. Same visual system in all three — white chrome, one blue accent, Inter-class UI sans, hairlines. Only the composition differs: where the entered job lives, and how the catalogue reads. Product truth holds in all three: no assignees, no team, FIND only searches, boxed nest on the job vs plain stems in the listing. Approve one, or say what to combine or revise.",
+  "options": [
+    {
+      "id": "board",
+      "label": "Board + detail drawer",
+      "kicker": "OPTION ONE",
+      "lineage": "Linear board view with a right-hand issue drawer",
+      "thesis": "Five status columns of job cards. Selecting a job opens a drawer beside them; the board never leaves the screen.",
+      "palette": ["#ffffff", "#111827", "#2563eb", "#f3f4f6"],
+      "materials": ["status columns", "task cards", "right detail drawer", "filter chips"],
+      "viewport": "Top bar with FIND and New. PENDING · R&D · ACTIVE · DONE · DUSTED as columns. SITE REDESIGN selected in ACTIVE. Drawer holds the title, description, and subtasks.",
+      "risk": "The drawer is a cramped writing surface, and the catalogue has nowhere to live as stems.",
+      "comp": ".impeccable/mocks/canon-board.webp"
+    },
+    {
+      "id": "folio",
+      "label": "Sidebar tree + full-page job",
+      "lineage": "Linear issue page with a persistent left sidebar",
+      "thesis": "The entered job takes the whole page as a document. The catalogue is the sidebar tree, and status is a filter list under it.",
+      "palette": ["#ffffff", "#111827", "#2563eb", "#f7f8f9"],
+      "materials": ["nav sidebar", "disclosure tree", "document page", "nested checkboxes"],
+      "viewport": "FIND at the top of the sidebar, catalogue tree below it, status counts under that. SITE REDESIGN fills the main column with real body copy and an indented subtask outline. NOTES panel at the right.",
+      "risk": "The rack is gone from view, so staging the next job costs a trip to the sidebar.",
+      "comp": ".impeccable/mocks/canon-folio.webp"
+    },
+    {
+      "id": "list",
+      "label": "Grouped list + document pane",
+      "lineage": "Linear list view beside a persistent document pane",
+      "thesis": "Jobs are dense hairline rows grouped by status, not cards. The selected job is always open in the pane at the right.",
+      "palette": ["#ffffff", "#111827", "#2563eb", "#f7f8f9"],
+      "materials": ["grouped hairline rows", "selected row bar", "persistent document pane", "board/list switch"],
+      "viewport": "FIND centred in the top bar, BOARD/LIST switch at the right. Status groups as small grey headings over single-line rows. SITE REDESIGN row selected, its document held open beside the list.",
+      "risk": "Rows carry less at a glance than cards, and the pane is narrower than a real writing surface.",
+      "comp": ".impeccable/mocks/canon-list.webp"
+    }
+  ],
+  "steer": true
+}

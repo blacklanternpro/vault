@@ -1,13 +1,30 @@
 import { useRef, type KeyboardEvent, type MouseEvent, type PointerEvent } from 'react'
-import { childrenOf, isBoardVisible, type Doc } from '../speck/doc'
+import { childrenOf, isBoardVisible, laneOf, type Doc } from '../speck/doc'
 import { matchesFind, type Session } from '../speck/ir'
-import { isBinderStatus, type ColName, type NodeStatus } from '../speck/tokens'
+import { LANE_PLAQUE, isBinderStatus, type ColName, type NodeStatus } from '../speck/tokens'
 import { nestRows, type NestRow } from '../speck/tree'
+import { Caret, Chevron, Plus } from './Glyph'
 import { Mark } from './Mark'
 
 const THRESH = 6
 
-type Props = {
+/*
+ * `nestRows` draws the whole graph as one tree, so every job carries a stem for
+ * the folder's own position under the root. The catalogue breaks each folder out
+ * into its own column, where that outermost stem descends from nothing — so the
+ * column drops it and the folder becomes its own root.
+ *
+ * The branch's own trailing space goes too: the disclosure column that follows
+ * already holds the gap, and paying for both leaves the arm reaching at nothing.
+ */
+function stemOf(row: NestRow): string {
+  return row.depth === 0 ? '' : row.prefix.slice(4).trimEnd()
+}
+
+/** The indent a folder's own jobs sit at, for the rows that only offer to create. */
+const JOB_STEM = '   '
+
+type DirectoryProps = {
   doc: Doc
   session: Session
   onSelect: (id: number) => void
@@ -23,8 +40,6 @@ type Props = {
 
 type Drag = {
   id: number
-  x: number
-  y: number
   startX: number
   startY: number
   live: boolean
@@ -51,17 +66,17 @@ export function Directory({
   onClearFocus,
   onTitle,
   onTitleCommit,
-}: Props) {
+}: DirectoryProps) {
   const dragRef = useRef<Drag | null>(null)
-  const ghostRef = useRef<HTMLDivElement | null>(null)
+  const ghostRef = useRef<HTMLElement | null>(null)
   const skipClick = useRef(false)
   const rows = nestRows(doc, session)
   const cols = columnsOf(rows)
   const selectedId = session.selected?.kind === 'NODE' ? session.selected.id : null
 
   function dropLane(clientX: number, clientY: number): ColName | null {
-    const node = document.elementFromPoint(clientX, clientY)
-    const laneEl = node instanceof Element ? node.closest('[data-lane]') : null
+    const el = document.elementFromPoint(clientX, clientY)
+    const laneEl = el instanceof Element ? el.closest('[data-lane]') : null
     if (!laneEl) return null
     const lane = laneEl.getAttribute('data-lane')
     if (!lane || !isBinderStatus(lane)) return null
@@ -91,24 +106,18 @@ export function Directory({
     const dy = e.clientY - drag.startY
     if (!drag.live && dx * dx + dy * dy < THRESH * THRESH) return
     drag.live = true
-    drag.x = e.clientX
-    drag.y = e.clientY
     if (!ghostRef.current) {
       const origin = e.currentTarget.closest('[data-node-id]')
       if (origin instanceof HTMLElement) {
-        const ghost = origin.cloneNode(true) as HTMLDivElement
         const r = origin.getBoundingClientRect()
+        const ghost = origin.cloneNode(true) as HTMLElement
         ghost.style.position = 'fixed'
         ghost.style.left = `${r.left}px`
         ghost.style.top = `${r.top}px`
         ghost.style.width = `${r.width}px`
         ghost.style.pointerEvents = 'none'
         ghost.style.zIndex = '80'
-        ghost.style.opacity = '0.92'
         ghost.classList.add('is-ghost')
-        ghost.querySelectorAll('*').forEach((n) => {
-          ;(n as HTMLElement).style.pointerEvents = 'none'
-        })
         document.body.appendChild(ghost)
         ghostRef.current = ghost
         drag.startX = e.clientX - r.left
@@ -123,9 +132,9 @@ export function Directory({
 
   function beginRow(e: PointerEvent<HTMLElement>, id: number) {
     if (e.button !== 0) return
-    if ((e.target as HTMLElement).closest('.dir-stem, .dir-on, input')) return
+    if ((e.target as HTMLElement).closest('.stem-fold, input')) return
     e.currentTarget.setPointerCapture(e.pointerId)
-    dragRef.current = { id, x: e.clientX, y: e.clientY, startX: e.clientX, startY: e.clientY, live: false }
+    dragRef.current = { id, startX: e.clientX, startY: e.clientY, live: false }
   }
 
   function onPane(e: MouseEvent<HTMLElement>) {
@@ -142,12 +151,19 @@ export function Directory({
       !isBoardVisible(doc, session.projectId, id)
     const found = matchesFind(session, row.node.title)
     const closed = session.nestClosed.includes(id)
-    const staged = isBoardVisible(doc, session.projectId, id)
-    const stem = `${row.prefix}${closed && kids.length ? '+ ' : ''}`
+    const project = row.node.parent == null
+    const lane = laneOf(row.node.status)
+    /*
+     * A folder's own jobs are the ones the board sets in a plaque, so those are
+     * the rows the tree plaques too. Anything deeper is a line of a job, and it
+     * keeps the sentence case the drawer writes it in.
+     */
+    const kind = project ? 'is-project' : row.depth === 1 ? 'is-job' : 'is-leaf'
+
     return (
       <div
         key={id}
-        className={`dir-row${selected ? ' is-selected' : ''}${found ? ' is-found' : ''}${row.node.urgent ? ' is-urgent' : ''}`}
+        className={`stem ${kind}${selected ? ' is-live' : ''}${found ? ' is-found' : ''}`}
         data-node-id={id}
         data-testid={`dir-row-${id}`}
         onPointerDown={(e) => beginRow(e, id)}
@@ -155,22 +171,28 @@ export function Directory({
         onPointerUp={(e) => finishDrag(e, id)}
         onPointerCancel={(e) => finishDrag(e, id)}
       >
-        <button
-          type="button"
-          className={`dir-stem${kids.length ? ' is-fold' : ''}`}
-          aria-hidden={!kids.length && !stem}
-          aria-label={kids.length ? (closed ? 'Expand' : 'Collapse') : undefined}
-          tabIndex={kids.length ? 0 : -1}
-          onClick={(e) => {
-            e.stopPropagation()
-            if (kids.length) onToggle(id)
-          }}
-        >
-          {stem}
-        </button>
+        <span className="stem-rule" aria-hidden="true">
+          {stemOf(row)}
+        </span>
+        {kids.length ? (
+          <button
+            type="button"
+            className="stem-fold"
+            aria-label={closed ? `Expand ${row.node.title}` : `Collapse ${row.node.title}`}
+            aria-expanded={!closed}
+            onClick={(e) => {
+              e.stopPropagation()
+              onToggle(id)
+            }}
+          >
+            {closed ? <Chevron /> : <Caret />}
+          </button>
+        ) : (
+          <span className="stem-fold" aria-hidden="true" />
+        )}
         {editing ? (
           <input
-            className="dir-input"
+            className="stem-input"
             value={session.fieldBuffer}
             autoFocus
             aria-label="Task title"
@@ -186,9 +208,8 @@ export function Directory({
             onClick={(e) => e.stopPropagation()}
           />
         ) : (
-          <button
-            type="button"
-            className={`dir-name${selected ? ' is-on' : ''}`}
+          <span
+            className="stem-name"
             onClick={(e) => {
               e.stopPropagation()
               if (skipClick.current) {
@@ -198,73 +219,86 @@ export function Directory({
               if (selected) onRename(id)
               else onSelect(id)
             }}
-            onKeyDown={(e: KeyboardEvent<HTMLButtonElement>) => {
-              if (e.key === 'Enter' && selected) {
-                e.preventDefault()
-                onRename(id)
-              }
+          >
+            <Mark text={row.node.title.trim() || '_'} query={session.find} />
+          </span>
+        )}
+        {project ? null : (
+          <button
+            type="button"
+            className="stem-status"
+            data-testid={`dir-on-${id}`}
+            aria-label={`Advance ${row.node.title} from ${LANE_PLAQUE[lane]}`}
+            onClick={(e) => {
+              e.stopPropagation()
+              onShovel(id)
             }}
           >
-            <Mark text={row.node.title} query={session.find} />
+            {LANE_PLAQUE[lane]}
           </button>
         )}
-        <button
-          type="button"
-          className={`dir-on${staged ? ' is-live' : ''}`}
-          data-testid={`dir-on-${id}`}
-          aria-label="Stage"
-          onClick={(e) => {
-            e.stopPropagation()
-            onShovel(id)
-          }}
-        >
-          ON
-        </button>
       </div>
     )
   }
 
   return (
-    <section className="directory" data-testid="directory" aria-label="Tasks" onClick={onPane}>
-      <div className="dir-forest">
+    <section className="directory" data-testid="directory" aria-label="Catalogue" onClick={onPane}>
+      <div className="section-head">
+        <h2 className="section-name">Catalogue</h2>
+        <span className="section-note">
+          {cols.length === 1 ? '1 folder' : `${cols.length} folders`}
+        </span>
+      </div>
+
+      <div className="forest">
         {cols.map((col) => {
           const root = col[0]?.node
           const ids = new Set(col.map((r) => r.node.id))
           const addParent =
-            selectedId != null && ids.has(selectedId)
-              ? selectedId
-              : root
-                ? root.id
-                : session.nestFocus
+            selectedId != null && ids.has(selectedId) ? selectedId : root ? root.id : session.nestFocus
           return (
-            <div key={root?.id ?? 'col'} className="dir-col">
+            <div key={root?.id ?? 'col'} className="forest-col">
               {col.map(renderRow)}
+              {/*
+               * The folder's last line is empty and writes. It sits at its jobs'
+               * indent but draws no branch of its own, so the tree above it stays
+               * strictly true and this row reads as the next line, not a node.
+               */}
               <button
                 type="button"
-                className="dir-ghost"
+                className="stem stem-ghost"
+                data-testid={`dir-add-job-${root?.id ?? 0}`}
                 onClick={(e) => {
                   e.stopPropagation()
                   onAdd(addParent ?? null)
                 }}
               >
-                {col.length && root?.parent == null ? '└── _' : '_'}
+                <span className="stem-rule" aria-hidden="true">
+                  {JOB_STEM}
+                </span>
+                <Plus className="stem-add-glyph" />
+                <span className="stem-name">New job</span>
               </button>
             </div>
           )
         })}
+
+        {/* The tree's own last line, at the root, where a folder is what gets written. */}
+        <div className="forest-col">
+          <button
+            type="button"
+            className="stem stem-ghost"
+            data-testid="dir-add-folder"
+            onClick={(e) => {
+              e.stopPropagation()
+              onAdd(null)
+            }}
+          >
+            <Plus className="stem-add-glyph" />
+            <span className="stem-name">New folder</span>
+          </button>
+        </div>
       </div>
-      {cols.length === 0 ? (
-        <button
-          type="button"
-          className="dir-ghost"
-          onClick={(e) => {
-            e.stopPropagation()
-            onAdd(null)
-          }}
-        >
-          _
-        </button>
-      ) : null}
     </section>
   )
 }

@@ -1,0 +1,434 @@
+{
+  "regions": [
+    {
+      "id": "wordmark-mark",
+      "kind": "chrome",
+      "box": {
+        "x": 0.0117,
+        "y": 0.025,
+        "w": 0.0313,
+        "h": 0.0472
+      },
+      "codeDrawn": true,
+      "note": "the V monogram at icon scale, a two-path SVG glyph in the ink colour"
+    },
+    {
+      "id": "wordmark-text",
+      "kind": "text",
+      "box": {
+        "x": 0.0469,
+        "y": 0.0347,
+        "w": 0.1391,
+        "h": 0.0278
+      },
+      "note": "VAULT WORLDWIDE set small in dark bold caps beside the monogram"
+    },
+    {
+      "id": "find-field",
+      "kind": "control",
+      "box": {
+        "x": 0.2297,
+        "y": 0.0194,
+        "w": 0.2953,
+        "h": 0.0556
+      },
+      "note": "rounded search input with a magnifier icon, grey placeholder Search tasks..., and a command-K chip at its right"
+    },
+    {
+      "id": "filter-chips",
+      "kind": "control",
+      "box": {
+        "x": 0.5453,
+        "y": 0.0222,
+        "w": 0.3359,
+        "h": 0.05
+      },
+      "note": "three rounded outlined dropdown chips with chevrons: All Projects, Assignee: Me, Priority: Any"
+    },
+    {
+      "id": "new-button",
+      "kind": "control",
+      "box": {
+        "x": 0.8906,
+        "y": 0.0222,
+        "w": 0.0953,
+        "h": 0.05
+      },
+      "note": "solid blue rounded button, plus icon, the word New, and a chevron"
+    },
+    {
+      "id": "topbar-rule",
+      "kind": "chrome",
+      "box": {
+        "x": 0.0,
+        "y": 0.0917,
+        "w": 1.0,
+        "h": 0.0056
+      },
+      "note": "1px hairline across the full width closing the top bar"
+    },
+    {
+      "id": "lane-pending",
+      "kind": "chrome",
+      "box": {
+        "x": 0.0109,
+        "y": 0.1181,
+        "w": 0.1563,
+        "h": 0.8292
+      },
+      "note": "light grey rounded lane panel with a hairline border, the PENDING column ground"
+    },
+    {
+      "id": "lane-rnd",
+      "kind": "chrome",
+      "box": {
+        "x": 0.175,
+        "y": 0.1181,
+        "w": 0.1531,
+        "h": 0.8292
+      },
+      "note": "light grey rounded lane panel with a hairline border, the R&D column ground"
+    },
+    {
+      "id": "lane-active",
+      "kind": "chrome",
+      "box": {
+        "x": 0.3359,
+        "y": 0.1181,
+        "w": 0.1523,
+        "h": 0.8292
+      },
+      "note": "light grey rounded lane panel with a hairline border, the ACTIVE column ground"
+    },
+    {
+      "id": "lane-done",
+      "kind": "chrome",
+      "box": {
+        "x": 0.4961,
+        "y": 0.1181,
+        "w": 0.1602,
+        "h": 0.8292
+      },
+      "note": "light grey rounded lane panel with a hairline border, the DONE column ground"
+    },
+    {
+      "id": "lane-dusted",
+      "kind": "chrome",
+      "box": {
+        "x": 0.6563,
+        "y": 0.1181,
+        "w": 0.1234,
+        "h": 0.8292
+      },
+      "note": "light grey rounded lane panel with a hairline border, the DUSTED column ground, clipped by the drawer"
+    },
+    {
+      "id": "head-pending",
+      "kind": "text",
+      "box": {
+        "x": 0.0266,
+        "y": 0.1389,
+        "w": 0.1266,
+        "h": 0.0417
+      },
+      "note": "column heading PENDING in dark medium weight with the count 2 at the right edge"
+    },
+    {
+      "id": "head-rnd",
+      "kind": "text",
+      "box": {
+        "x": 0.1906,
+        "y": 0.1389,
+        "w": 0.1234,
+        "h": 0.0417
+      },
+      "note": "column heading R&D in dark medium weight with the count 3 at the right edge"
+    },
+    {
+      "id": "head-active",
+      "kind": "text",
+      "box": {
+        "x": 0.3516,
+        "y": 0.1389,
+        "w": 0.1219,
+        "h": 0.0417
+      },
+      "note": "column heading ACTIVE in dark medium weight with the count 2 at the right edge"
+    },
+    {
+      "id": "head-done",
+      "kind": "text",
+      "box": {
+        "x": 0.5117,
+        "y": 0.1389,
+        "w": 0.1367,
+        "h": 0.0417
+      },
+      "note": "column heading DONE in dark medium weight with the count 4 at the right edge"
+    },
+    {
+      "id": "head-dusted",
+      "kind": "text",
+      "box": {
+        "x": 0.6719,
+        "y": 0.1389,
+        "w": 0.1,
+        "h": 0.0417
+      },
+      "note": "column heading DUSTED in dark medium weight with the count 1 at the right edge"
+    },
+    {
+      "id": "card-site-redesign-pending",
+      "kind": "control",
+      "box": {
+        "x": 0.0234,
+        "y": 0.2014,
+        "w": 0.1328,
+        "h": 0.1292
+      },
+      "note": "white rounded job card with a hairline: SITE REDESIGN in caps over the grey line homepage"
+    },
+    {
+      "id": "card-update-branding",
+      "kind": "control",
+      "box": {
+        "x": 0.0234,
+        "y": 0.3542,
+        "w": 0.1328,
+        "h": 0.1292
+      },
+      "note": "white rounded job card with a hairline: UPDATE BRANDING in caps over the grey line brand guidelines"
+    },
+    {
+      "id": "card-market-research",
+      "kind": "control",
+      "box": {
+        "x": 0.1859,
+        "y": 0.2014,
+        "w": 0.1328,
+        "h": 0.1292
+      },
+      "note": "white rounded job card with a hairline: MARKET RESEARCH in caps over the grey line competitive analysis"
+    },
+    {
+      "id": "card-tech-spike",
+      "kind": "control",
+      "box": {
+        "x": 0.1859,
+        "y": 0.3542,
+        "w": 0.1328,
+        "h": 0.1292
+      },
+      "note": "white rounded job card with a hairline: TECH SPIKE in caps over the grey line next-gen stack"
+    },
+    {
+      "id": "card-design-exploration",
+      "kind": "control",
+      "box": {
+        "x": 0.1859,
+        "y": 0.5069,
+        "w": 0.1328,
+        "h": 0.1292
+      },
+      "note": "white rounded job card with a hairline: DESIGN EXPLORATION in caps over the grey line mood boards"
+    },
+    {
+      "id": "card-site-redesign-active",
+      "kind": "control",
+      "box": {
+        "x": 0.3453,
+        "y": 0.2014,
+        "w": 0.1344,
+        "h": 0.1319
+      },
+      "note": "the selected job card: white, a 2px blue border and pale blue fill, SITE REDESIGN in caps over the grey line homepage"
+    },
+    {
+      "id": "card-aesthetic-pass",
+      "kind": "control",
+      "box": {
+        "x": 0.3453,
+        "y": 0.3542,
+        "w": 0.1344,
+        "h": 0.1292
+      },
+      "note": "white rounded job card with a hairline: AESTHETIC PASS in caps over the grey line visual polish"
+    },
+    {
+      "id": "card-create-repo",
+      "kind": "control",
+      "box": {
+        "x": 0.5063,
+        "y": 0.2014,
+        "w": 0.1344,
+        "h": 0.1292
+      },
+      "note": "white rounded job card with a hairline and a round tick glyph: CREATE REPO in caps over the grey line vault-worldwide"
+    },
+    {
+      "id": "card-project-setup",
+      "kind": "control",
+      "box": {
+        "x": 0.5063,
+        "y": 0.3542,
+        "w": 0.1344,
+        "h": 0.1292
+      },
+      "note": "white rounded job card with a hairline and a round tick glyph: PROJECT SETUP in caps over the grey line boilerplate & config"
+    },
+    {
+      "id": "card-design-system-init",
+      "kind": "control",
+      "box": {
+        "x": 0.5063,
+        "y": 0.5069,
+        "w": 0.1344,
+        "h": 0.1292
+      },
+      "note": "white rounded job card with a hairline and a round tick glyph: DESIGN SYSTEM INIT in caps over the grey line tokens & components"
+    },
+    {
+      "id": "card-content-audit",
+      "kind": "control",
+      "box": {
+        "x": 0.5063,
+        "y": 0.6597,
+        "w": 0.1344,
+        "h": 0.1292
+      },
+      "note": "white rounded job card with a hairline and a round tick glyph: CONTENT AUDIT in caps over the grey line page inventory"
+    },
+    {
+      "id": "card-old-landing-page",
+      "kind": "control",
+      "box": {
+        "x": 0.6656,
+        "y": 0.2014,
+        "w": 0.1117,
+        "h": 0.1292
+      },
+      "note": "white rounded job card with a hairline: OLD LANDING PAGE in caps over the grey line deprecated"
+    },
+    {
+      "id": "drawer-panel",
+      "kind": "chrome",
+      "box": {
+        "x": 0.7797,
+        "y": 0.0917,
+        "w": 0.2203,
+        "h": 0.9083
+      },
+      "note": "the white full-height detail drawer panel and its inner padding, holding the entered job"
+    },
+    {
+      "id": "drawer-rule",
+      "kind": "chrome",
+      "box": {
+        "x": 0.7797,
+        "y": 0.0972,
+        "w": 0.0031,
+        "h": 0.9028
+      },
+      "note": "vertical hairline separating the board from the detail drawer"
+    },
+    {
+      "id": "drawer-status",
+      "kind": "text",
+      "box": {
+        "x": 0.7922,
+        "y": 0.1236,
+        "w": 0.0625,
+        "h": 0.0292
+      },
+      "note": "a small blue filled dot beside the word ACTIVE in blue caps"
+    },
+    {
+      "id": "drawer-close",
+      "kind": "control",
+      "box": {
+        "x": 0.9688,
+        "y": 0.125,
+        "w": 0.0203,
+        "h": 0.0292
+      },
+      "note": "a thin grey close cross at the drawer's top right"
+    },
+    {
+      "id": "drawer-title",
+      "kind": "text",
+      "box": {
+        "x": 0.7922,
+        "y": 0.1833,
+        "w": 0.1625,
+        "h": 0.05
+      },
+      "note": "the entered job title SITE REDESIGN, the largest type on the surface, dark semibold caps"
+    },
+    {
+      "id": "drawer-parent",
+      "kind": "text",
+      "box": {
+        "x": 0.7922,
+        "y": 0.25,
+        "w": 0.0828,
+        "h": 0.0306
+      },
+      "note": "a small outlined folder icon beside the parent name homepage in grey"
+    },
+    {
+      "id": "drawer-parent-rule",
+      "kind": "chrome",
+      "box": {
+        "x": 0.7922,
+        "y": 0.2986,
+        "w": 0.1922,
+        "h": 0.0028
+      },
+      "note": "hairline under the drawer header, above the description"
+    },
+    {
+      "id": "drawer-description-label",
+      "kind": "text",
+      "box": {
+        "x": 0.7922,
+        "y": 0.3375,
+        "w": 0.0672,
+        "h": 0.0222
+      },
+      "note": "small grey letter-spaced caps label DESCRIPTION"
+    },
+    {
+      "id": "drawer-description-body",
+      "kind": "text",
+      "box": {
+        "x": 0.7922,
+        "y": 0.3681,
+        "w": 0.1906,
+        "h": 0.1889
+      },
+      "note": "two short dark paragraphs of body copy about redesigning the homepage for clarity and conversion"
+    },
+    {
+      "id": "drawer-subtasks-label",
+      "kind": "text",
+      "box": {
+        "x": 0.7922,
+        "y": 0.6222,
+        "w": 0.0555,
+        "h": 0.0222
+      },
+      "note": "small grey letter-spaced caps label SUBTASKS"
+    },
+    {
+      "id": "drawer-subtasks-list",
+      "kind": "control",
+      "box": {
+        "x": 0.7922,
+        "y": 0.6722,
+        "w": 0.1906,
+        "h": 0.2417
+      },
+      "note": "five checkbox rows, the first two checked with blue filled boxes and the last three unchecked with grey outlines, each followed by a subtask sentence in dark text"
+    }
+  ]
+}

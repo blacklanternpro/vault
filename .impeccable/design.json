@@ -1,0 +1,582 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-10T16:00:00Z",
+  "title": "Design System: VAULT WORLDWIDE",
+  "extensions": {
+    "colorMeta": {
+      "ground": {
+        "role": "neutral",
+        "displayName": "Cool Ground",
+        "canonical": "oklch(96.4% 0.004 271.4)",
+        "tonalRamp": [
+          "oklch(15% 0.004 271.4)",
+          "oklch(26% 0.004 271.4)",
+          "oklch(37% 0.004 271.4)",
+          "oklch(48% 0.004 271.4)",
+          "oklch(59% 0.004 271.4)",
+          "oklch(70% 0.004 271.4)",
+          "oklch(83% 0.004 271.4)",
+          "oklch(95% 0.004 271.4)"
+        ]
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Panel White",
+        "canonical": "oklch(100% 0 0)",
+        "tonalRamp": [
+          "oklch(15% 0 0)",
+          "oklch(26% 0 0)",
+          "oklch(37% 0 0)",
+          "oklch(48% 0 0)",
+          "oklch(59% 0 0)",
+          "oklch(70% 0 0)",
+          "oklch(83% 0 0)",
+          "oklch(95% 0 0)"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Near-Black Ink",
+        "canonical": "oklch(19.6% 0 0)",
+        "tonalRamp": [
+          "oklch(15% 0 0)",
+          "oklch(26% 0 0)",
+          "oklch(37% 0 0)",
+          "oklch(48% 0 0)",
+          "oklch(59% 0 0)",
+          "oklch(70% 0 0)",
+          "oklch(83% 0 0)",
+          "oklch(95% 0 0)"
+        ]
+      },
+      "ink-2": {
+        "role": "neutral",
+        "displayName": "Readable Grey",
+        "canonical": "oklch(52.3% 0.011 258.4)",
+        "tonalRamp": [
+          "oklch(15% 0.011 258.4)",
+          "oklch(26% 0.011 258.4)",
+          "oklch(37% 0.011 258.4)",
+          "oklch(48% 0.011 258.4)",
+          "oklch(59% 0.011 258.4)",
+          "oklch(70% 0.011 258.4)",
+          "oklch(83% 0.011 258.4)",
+          "oklch(95% 0.011 258.4)"
+        ]
+      },
+      "ink-3": {
+        "role": "neutral",
+        "displayName": "Mark Tint",
+        "canonical": "oklch(62.2% 0.012 261.8)",
+        "tonalRamp": [
+          "oklch(15% 0.012 261.8)",
+          "oklch(26% 0.012 261.8)",
+          "oklch(37% 0.012 261.8)",
+          "oklch(48% 0.012 261.8)",
+          "oklch(59% 0.012 261.8)",
+          "oklch(70% 0.012 261.8)",
+          "oklch(83% 0.012 261.8)",
+          "oklch(95% 0.012 261.8)"
+        ]
+      },
+      "line": {
+        "role": "neutral",
+        "displayName": "Hairline",
+        "canonical": "oklch(92.5% 0.003 264.5)",
+        "tonalRamp": [
+          "oklch(15% 0.003 264.5)",
+          "oklch(26% 0.003 264.5)",
+          "oklch(37% 0.003 264.5)",
+          "oklch(48% 0.003 264.5)",
+          "oklch(59% 0.003 264.5)",
+          "oklch(70% 0.003 264.5)",
+          "oklch(83% 0.003 264.5)",
+          "oklch(95% 0.003 264.5)"
+        ]
+      },
+      "line-2": {
+        "role": "neutral",
+        "displayName": "Hairline Strong",
+        "canonical": "oklch(88.5% 0.006 264.5)",
+        "tonalRamp": [
+          "oklch(15% 0.006 264.5)",
+          "oklch(26% 0.006 264.5)",
+          "oklch(37% 0.006 264.5)",
+          "oklch(48% 0.006 264.5)",
+          "oklch(59% 0.006 264.5)",
+          "oklch(70% 0.006 264.5)",
+          "oklch(83% 0.006 264.5)",
+          "oklch(95% 0.006 264.5)"
+        ]
+      },
+      "accent": {
+        "role": "primary",
+        "displayName": "Signal Blue",
+        "canonical": "oklch(57.0% 0.216 259.1)",
+        "tonalRamp": [
+          "oklch(15% 0.216 259.1)",
+          "oklch(26% 0.216 259.1)",
+          "oklch(37% 0.216 259.1)",
+          "oklch(48% 0.216 259.1)",
+          "oklch(59% 0.216 259.1)",
+          "oklch(70% 0.216 259.1)",
+          "oklch(83% 0.216 259.1)",
+          "oklch(95% 0.216 259.1)"
+        ]
+      },
+      "accent-deep": {
+        "role": "primary",
+        "displayName": "Signal Blue Deep",
+        "canonical": "oklch(51.6% 0.210 260.6)",
+        "tonalRamp": [
+          "oklch(15% 0.210 260.6)",
+          "oklch(26% 0.210 260.6)",
+          "oklch(37% 0.210 260.6)",
+          "oklch(48% 0.210 260.6)",
+          "oklch(59% 0.210 260.6)",
+          "oklch(70% 0.210 260.6)",
+          "oklch(83% 0.210 260.6)",
+          "oklch(95% 0.210 260.6)"
+        ]
+      },
+      "accent-ink": {
+        "role": "primary",
+        "displayName": "Signal Ink",
+        "canonical": "oklch(100% 0 0)",
+        "tonalRamp": [
+          "oklch(15% 0 0)",
+          "oklch(26% 0 0)",
+          "oklch(37% 0 0)",
+          "oklch(48% 0 0)",
+          "oklch(59% 0 0)",
+          "oklch(70% 0 0)",
+          "oklch(83% 0 0)",
+          "oklch(95% 0 0)"
+        ]
+      },
+      "accent-wash": {
+        "role": "primary",
+        "displayName": "Signal Wash",
+        "canonical": "oklch(97.2% 0.012 259.8)",
+        "tonalRamp": [
+          "oklch(15% 0.012 259.8)",
+          "oklch(26% 0.012 259.8)",
+          "oklch(37% 0.012 259.8)",
+          "oklch(48% 0.012 259.8)",
+          "oklch(59% 0.012 259.8)",
+          "oklch(70% 0.012 259.8)",
+          "oklch(83% 0.012 259.8)",
+          "oklch(95% 0.012 259.8)"
+        ]
+      },
+      "accent-line": {
+        "role": "primary",
+        "displayName": "Signal Hairline",
+        "canonical": "oklch(83.0% 0.079 259.2)",
+        "tonalRamp": [
+          "oklch(15% 0.079 259.2)",
+          "oklch(26% 0.079 259.2)",
+          "oklch(37% 0.079 259.2)",
+          "oklch(48% 0.079 259.2)",
+          "oklch(59% 0.079 259.2)",
+          "oklch(70% 0.079 259.2)",
+          "oklch(83% 0.079 259.2)",
+          "oklch(95% 0.079 259.2)"
+        ]
+      },
+      "urgent": {
+        "role": "secondary",
+        "displayName": "Flag Red",
+        "canonical": "oklch(57.5% 0.209 29.3)",
+        "tonalRamp": [
+          "oklch(15% 0.209 29.3)",
+          "oklch(26% 0.209 29.3)",
+          "oklch(37% 0.209 29.3)",
+          "oklch(48% 0.209 29.3)",
+          "oklch(59% 0.209 29.3)",
+          "oklch(70% 0.209 29.3)",
+          "oklch(83% 0.209 29.3)",
+          "oklch(95% 0.209 29.3)"
+        ]
+      },
+      "pending": {
+        "role": "tertiary",
+        "displayName": "Held Grey",
+        "canonical": "oklch(52.3% 0.011 258.4)",
+        "tonalRamp": [
+          "oklch(15% 0.011 258.4)",
+          "oklch(26% 0.011 258.4)",
+          "oklch(37% 0.011 258.4)",
+          "oklch(48% 0.011 258.4)",
+          "oklch(59% 0.011 258.4)",
+          "oklch(70% 0.011 258.4)",
+          "oklch(83% 0.011 258.4)",
+          "oklch(95% 0.011 258.4)"
+        ]
+      },
+      "rnd": {
+        "role": "tertiary",
+        "displayName": "Enquiry Violet",
+        "canonical": "oklch(54.8% 0.206 292.9)",
+        "tonalRamp": [
+          "oklch(15% 0.206 292.9)",
+          "oklch(26% 0.206 292.9)",
+          "oklch(37% 0.206 292.9)",
+          "oklch(48% 0.206 292.9)",
+          "oklch(59% 0.206 292.9)",
+          "oklch(70% 0.206 292.9)",
+          "oklch(83% 0.206 292.9)",
+          "oklch(95% 0.206 292.9)"
+        ]
+      },
+      "active": {
+        "role": "tertiary",
+        "displayName": "Working Blue",
+        "canonical": "oklch(57.0% 0.216 259.1)",
+        "tonalRamp": [
+          "oklch(15% 0.216 259.1)",
+          "oklch(26% 0.216 259.1)",
+          "oklch(37% 0.216 259.1)",
+          "oklch(48% 0.216 259.1)",
+          "oklch(59% 0.216 259.1)",
+          "oklch(70% 0.216 259.1)",
+          "oklch(83% 0.216 259.1)",
+          "oklch(95% 0.216 259.1)"
+        ]
+      },
+      "done": {
+        "role": "tertiary",
+        "displayName": "Closed Green",
+        "canonical": "oklch(52.7% 0.123 155.0)",
+        "tonalRamp": [
+          "oklch(15% 0.123 155.0)",
+          "oklch(26% 0.123 155.0)",
+          "oklch(37% 0.123 155.0)",
+          "oklch(48% 0.123 155.0)",
+          "oklch(59% 0.123 155.0)",
+          "oklch(70% 0.123 155.0)",
+          "oklch(83% 0.123 155.0)",
+          "oklch(95% 0.123 155.0)"
+        ]
+      },
+      "dusted": {
+        "role": "tertiary",
+        "displayName": "Shelf Brown",
+        "canonical": "oklch(53.7% 0.029 59.5)",
+        "tonalRamp": [
+          "oklch(15% 0.029 59.5)",
+          "oklch(26% 0.029 59.5)",
+          "oklch(37% 0.029 59.5)",
+          "oklch(48% 0.029 59.5)",
+          "oklch(59% 0.029 59.5)",
+          "oklch(70% 0.029 59.5)",
+          "oklch(83% 0.029 59.5)",
+          "oklch(95% 0.029 59.5)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Drawer Display",
+        "purpose": "The entered job's name at the head of the detail drawer. Plaque face, uppercase. One per screen."
+      },
+      "headline": {
+        "displayName": "Panel Plaque",
+        "purpose": "Panel names: the five lane heads, CATALOGUE, DUMP, and the drawer's status word (same size, tracking closed to 0)."
+      },
+      "title": {
+        "displayName": "Job Plaque",
+        "purpose": "A job's name on its card; the same plaque one size down (14.5px) names a job inside the tree."
+      },
+      "label": {
+        "displayName": "Section Plaque",
+        "purpose": "The drawer's DESCRIPTION and SUBTASKS labels. Plaque face two sizes below the lane heads, never letterspaced body sans."
+      },
+      "body": {
+        "displayName": "Work Row",
+        "purpose": "Everything read or typed: tree names, note text, the search input, ledger rows. Drawer paragraphs take the same size on a 25px line."
+      },
+      "meta": {
+        "displayName": "Quiet Line",
+        "purpose": "The line beside a name: a card's folder, a note's date, a subtask's name, and the directory's box-drawing stems."
+      },
+      "micro": {
+        "displayName": "Count & Verb",
+        "purpose": "Counts, the search hit count, a tree row's status verb, the note's hitch line. URGENT is the one heavier cut (700 / 0.08em)."
+      }
+    },
+    "shadows": [
+      {
+        "name": "airborne",
+        "value": "0 8px 20px rgb(21 21 21 / 0.13)",
+        "purpose": "The only elevation in the system: a card or subtask off the page under the pointer. Never at rest."
+      },
+      {
+        "name": "focus-halo",
+        "value": "0 0 0 3px var(--color-accent-wash)",
+        "purpose": "The wash ring on a focused search field or chip, paired with an accent border. A ring, not elevation."
+      },
+      {
+        "name": "row-seam",
+        "value": "0 -1px 0 var(--color-line)",
+        "purpose": "A hairline drawn as a shadow so it adds nothing to a row's box: between notes, above the tape's ledger row."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease-arrive",
+        "value": "cubic-bezier(0.2, 0.7, 0.3, 1)",
+        "purpose": "Everything that arrives or lifts: the drawer, its staggered lines, the airborne lift, a card's move between lanes."
+      },
+      {
+        "name": "duration-state",
+        "value": "110ms–140ms",
+        "purpose": "Border, fill, opacity and leash-colour changes. Fast enough to feel like a response, not a transition."
+      },
+      {
+        "name": "duration-lift",
+        "value": "130ms",
+        "purpose": "The airborne scale from 0.99 to 1.025 that says a card has left the page."
+      },
+      {
+        "name": "duration-drawer",
+        "value": "170ms",
+        "purpose": "The drawer sliding 10px in from its own rail with opacity."
+      },
+      {
+        "name": "duration-line",
+        "value": "200ms",
+        "purpose": "The drawer's lines rising 4px, staggered 30/55/80ms so the eye lands on the title first."
+      },
+      {
+        "name": "settle-window",
+        "value": "500ms",
+        "purpose": "How long a drop's own landing owns the card it landed, so the move animation leaves that one card alone."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "@media (prefers-reduced-motion: reduce) { * { transition-duration: 0ms !important; animation-duration: 0ms !important; } }",
+        "purpose": "Every duration in the system is answered here. New motion must arrive instantly for a reader who asked for that."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "narrow",
+        "value": "max-width: 900px"
+      },
+      {
+        "name": "rail-held",
+        "value": "min-width: 1360px"
+      }
+    ],
+    "geometry": [
+      {
+        "name": "lane-width",
+        "value": "196px",
+        "purpose": "A board lane, measured off the approved comp's border scan. Five of them plus the drawer clear each other at 1354px."
+      },
+      {
+        "name": "lane-gap",
+        "value": "10px",
+        "purpose": "The board's gutter, reused as the catalogue's column gap so both grids read as one field."
+      },
+      {
+        "name": "drawer-width",
+        "value": "286px",
+        "purpose": "The right rail. The notes tape below the fold takes the same width, but not the same edge: the drawer bleeds to the screen while the tape keeps the page gutter, so the tape sits 16px inboard."
+      },
+      {
+        "name": "fold-cue",
+        "value": "24px",
+        "purpose": "The sliver of the catalogue held on screen at every desktop height, spent out of the bare ground under the lanes."
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The one saturated action on the page: create a job. Sentence case, drawn plus, chevron thrown to the far edge.",
+      "html": "<button class=\"ds-btn-primary\"><svg class=\"ds-btn-primary-plus\" viewBox=\"0 0 15 15\" fill=\"none\" aria-hidden=\"true\"><path d=\"M7.5 2.6v9.8M2.6 7.5h9.8\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\"/></svg>New<svg class=\"ds-btn-primary-chevron\" viewBox=\"0 0 15 15\" fill=\"none\" aria-hidden=\"true\"><path d=\"m6 4 3.5 3.5L6 11\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg></button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; gap: 10px; height: 38px; padding: 0 7px 0 15px; background-color: var(--color-accent, #0b6ef3); border: 1px solid var(--color-accent, #0b6ef3); border-radius: var(--radius-control, 8px); color: var(--color-accent-ink, #fff); font-family: var(--font-sans, 'Public Sans Variable', Helvetica, Arial, sans-serif); font-size: 14px; font-weight: 600; white-space: nowrap; cursor: pointer; } .ds-btn-primary-plus { width: 16px; height: 16px; } .ds-btn-primary-chevron { width: 17px; height: 17px; margin-left: 10px; opacity: 0.75; } .ds-btn-primary:hover { background-color: var(--color-accent-deep, #0a5cdd); border-color: var(--color-accent-deep, #0a5cdd); } .ds-btn-primary:focus-visible { outline: 2px solid var(--color-accent, #0b6ef3); outline-offset: 1px; }"
+    },
+    {
+      "name": "Filter Chip",
+      "kind": "chip",
+      "refersTo": "chip",
+      "description": "A top-bar filter. The label carries the current value and sets the width; a transparent native select is stretched over it.",
+      "html": "<label class=\"ds-chip\"><span class=\"ds-chip-label\">Status: Any</span><svg class=\"ds-chip-caret\" viewBox=\"0 0 14 14\" fill=\"none\" aria-hidden=\"true\"><path d=\"m3.5 5.5 3.5 3.5 3.5-3.5\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg><select class=\"ds-chip-select\" aria-label=\"Status\"><option>Status: Any</option><option>PENDING</option><option>R&amp;D</option><option>ACTIVE</option><option>DONE</option><option>DUSTED</option></select></label>",
+      "css": ".ds-chip { position: relative; display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 0 12px 0 13px; background-color: var(--color-surface, #fff); border: 1px solid var(--color-line, #e5e6e8); border-radius: var(--radius-control, 8px); color: var(--color-ink, #151515); font-family: var(--font-sans, 'Public Sans Variable', Helvetica, Arial, sans-serif); font-size: 14.5px; white-space: nowrap; cursor: pointer; } .ds-chip-label { pointer-events: none; } .ds-chip-caret { flex: none; width: 16px; height: 16px; color: var(--color-ink-2, #666a70); pointer-events: none; } .ds-chip-select { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; border-radius: inherit; background: none; opacity: 0; appearance: none; cursor: pointer; } .ds-chip:hover { border-color: var(--color-line-2, #d7d9dd); } .ds-chip:focus-within { border-color: var(--color-accent, #0b6ef3); box-shadow: 0 0 0 3px var(--color-accent-wash, #f1f6fe); }"
+    },
+    {
+      "name": "Search Field",
+      "kind": "input",
+      "refersTo": "input-find",
+      "description": "FIND. It searches and never creates. Drawn magnifier, keyboard hint that swaps for a blue hit count once a query is live.",
+      "html": "<form class=\"ds-find\" role=\"search\"><svg class=\"ds-find-glass\" viewBox=\"0 0 16 16\" fill=\"none\" aria-hidden=\"true\"><circle cx=\"7\" cy=\"7\" r=\"4.6\" stroke=\"currentColor\" stroke-width=\"1.5\"/><path d=\"m10.5 10.5 3.1 3.1\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\"/></svg><input class=\"ds-find-input\" type=\"search\" placeholder=\"Search tasks...\" aria-label=\"Search tasks\"><span class=\"ds-find-keys\">&#8984; K</span></form>",
+      "css": ".ds-find { display: flex; align-items: center; gap: 13px; width: 377px; max-width: 100%; height: 40px; padding: 0 14px; background-color: var(--color-surface, #fff); border: 1px solid var(--color-line, #e5e6e8); border-radius: var(--radius-control, 8px); font-family: var(--font-sans, 'Public Sans Variable', Helvetica, Arial, sans-serif); transition: border-color 120ms ease, box-shadow 120ms ease; } .ds-find-glass { flex: none; width: 16px; height: 16px; color: var(--color-ink-3, #83878e); } .ds-find-input { flex: 1 1 auto; min-width: 0; border: 0; background: none; outline: none; font: inherit; font-size: 13.5px; color: var(--color-ink, #151515); } .ds-find-input::placeholder { color: var(--color-ink-2, #666a70); } .ds-find-keys { flex: none; font-size: 12px; letter-spacing: 0.04em; color: var(--color-ink-2, #666a70); } .ds-find:focus-within { border-color: var(--color-accent, #0b6ef3); box-shadow: 0 0 0 3px var(--color-accent-wash, #f1f6fe); }"
+    },
+    {
+      "name": "Job Card",
+      "kind": "card",
+      "refersTo": "card-job",
+      "description": "The board's unit: an uppercase plaque name over a quiet folder line. Its one quick action fades in on hover, and is unhittable until it does.",
+      "html": "<article class=\"ds-card\"><div class=\"ds-card-head\"><h3 class=\"ds-card-title\">Site Redesign</h3></div><p class=\"ds-card-folder\">homepage</p><button class=\"ds-card-shovel\" aria-label=\"Move to DONE\"><svg viewBox=\"0 0 15 15\" fill=\"none\" aria-hidden=\"true\"><path d=\"m6 4 3.5 3.5L6 11\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg></button></article>",
+      "css": ".ds-card { position: relative; display: block; width: 196px; min-height: 94px; padding: 23px 14px 18px; background-color: var(--color-surface, #fff); border: 1px solid #e8e8e8; border-radius: var(--radius-slab, 8px); text-align: left; cursor: pointer; transition: border-color 120ms ease, background-color 120ms ease; } .ds-card-head { display: flex; align-items: center; gap: 8px; } .ds-card-title { margin: 0; font-family: var(--font-plaque, 'Sofia Sans Semi Condensed Variable', Helvetica, Arial, sans-serif); font-size: 15.5px; font-weight: 700; line-height: 20px; text-transform: uppercase; color: var(--color-ink, #151515); overflow-wrap: anywhere; } .ds-card-folder { margin: 11px 0 0; font-family: var(--font-sans, 'Public Sans Variable', Helvetica, Arial, sans-serif); font-size: 12.5px; line-height: 16px; color: #4a4a4a; } .ds-card-shovel { position: absolute; right: 5px; bottom: 5px; display: grid; place-items: center; width: 23px; height: 23px; padding: 0; background-color: inherit; border: 0; border-radius: 6px; color: var(--color-ink-3, #83878e); opacity: 0; pointer-events: none; cursor: pointer; transition: opacity 110ms ease, color 110ms ease, background-color 110ms ease; } .ds-card-shovel svg { width: 15px; height: 15px; } .ds-card:hover { border-color: var(--color-line-2, #d7d9dd); } .ds-card:hover .ds-card-shovel { opacity: 1; pointer-events: auto; } .ds-card-shovel:hover { background-color: var(--color-accent-wash, #f1f6fe); color: var(--color-accent, #0b6ef3); } .ds-card-shovel:focus-visible { opacity: 1; outline: 2px solid var(--color-accent, #0b6ef3); outline-offset: 1px; }"
+    },
+    {
+      "name": "Lane Panel",
+      "kind": "custom",
+      "refersTo": "lane",
+      "description": "One of five status columns. The plaque head, a tabular count, the card stack, and the empty row that writes.",
+      "html": "<section class=\"ds-lane\"><header class=\"ds-lane-head\"><h2 class=\"ds-lane-name\">ACTIVE</h2><span class=\"ds-lane-count\">2</span></header><div class=\"ds-lane-stack\"><div class=\"ds-lane-slab ds-lane-slab-open\">SITE REDESIGN</div><div class=\"ds-lane-slab\">AESTHETIC PASS</div><button class=\"ds-lane-add\"><svg viewBox=\"0 0 15 15\" fill=\"none\" aria-hidden=\"true\"><path d=\"M7.5 2.6v9.8M2.6 7.5h9.8\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\"/></svg>New job</button></div></section>",
+      "css": ".ds-lane { display: flex; flex-direction: column; width: 196px; background-color: var(--color-surface, #fff); border: 1px solid var(--color-line, #e5e6e8); border-radius: var(--radius-slab, 8px); } .ds-lane-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; padding: 15px 19px 21px; } .ds-lane-name { margin: 0; font-family: var(--font-plaque, 'Sofia Sans Semi Condensed Variable', Helvetica, Arial, sans-serif); font-size: 17px; font-weight: 700; line-height: 22px; letter-spacing: 0.055em; text-transform: uppercase; color: var(--color-ink, #151515); } .ds-lane-count { font-family: var(--font-sans, 'Public Sans Variable', Helvetica, Arial, sans-serif); font-size: 15px; color: var(--color-ink-2, #666a70); font-variant-numeric: tabular-nums; } .ds-lane-stack { display: flex; flex-direction: column; gap: 15px; padding: 0 10px 10px; } .ds-lane-slab { padding: 23px 14px 18px; background-color: var(--color-surface, #fff); border: 1px solid #e8e8e8; border-radius: var(--radius-slab, 8px); font-family: var(--font-plaque, 'Sofia Sans Semi Condensed Variable', Helvetica, Arial, sans-serif); font-size: 15.5px; font-weight: 700; line-height: 20px; text-transform: uppercase; color: var(--color-ink, #151515); } .ds-lane-slab-open { background-color: var(--color-accent-wash, #f1f6fe); border-color: var(--color-accent, #0b6ef3); } .ds-lane-add { display: flex; align-items: center; gap: 9px; width: 100%; padding: 11px 4px; background: none; border: 0; color: var(--color-ink-2, #666a70); font-family: var(--font-sans, 'Public Sans Variable', Helvetica, Arial, sans-serif); font-size: 13.5px; text-align: left; opacity: 0; cursor: pointer; transition: opacity 120ms ease, color 120ms ease; } .ds-lane-add svg { flex: none; width: 15px; height: 15px; } .ds-lane:hover .ds-lane-add { opacity: 1; } .ds-lane-add:hover { color: var(--color-accent, #0b6ef3); } .ds-lane-add:focus-visible { opacity: 1; outline: 2px solid var(--color-accent, #0b6ef3); outline-offset: 1px; }"
+    },
+    {
+      "name": "Detail Drawer Header",
+      "kind": "custom",
+      "refersTo": "drawer",
+      "description": "The rail's opening: the only place a status colour appears, then the display title, the folder, and a section plaque.",
+      "html": "<aside class=\"ds-drawer\"><div class=\"ds-drawer-top\"><button class=\"ds-drawer-status\"><span class=\"ds-drawer-dot\"></span>ACTIVE</button><button class=\"ds-drawer-close\" aria-label=\"Close\"><svg viewBox=\"0 0 15 15\" fill=\"none\" aria-hidden=\"true\"><path d=\"m3.4 3.4 8.2 8.2m0-8.2-8.2 8.2\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\"/></svg></button></div><h1 class=\"ds-drawer-title\">Site Redesign</h1><button class=\"ds-drawer-folder\"><svg viewBox=\"0 0 17 17\" fill=\"none\" aria-hidden=\"true\"><path d=\"M2.2 4.6c0-.7.6-1.3 1.3-1.3h2.8l1.5 1.7h5.7c.7 0 1.3.6 1.3 1.3v6.4c0 .7-.6 1.3-1.3 1.3H3.5c-.7 0-1.3-.6-1.3-1.3V4.6Z\" stroke=\"currentColor\" stroke-width=\"1.3\" stroke-linejoin=\"round\"/></svg>homepage</button><hr class=\"ds-drawer-rule\"><h2 class=\"ds-drawer-label\">Description</h2><p class=\"ds-drawer-body\">Redesign the homepage to better communicate our value prop and improve conversion.</p></aside>",
+      "css": ".ds-drawer { display: flex; flex-direction: column; width: 286px; padding: 19px 18px 24px; background-color: var(--color-surface, #fff); border-left: 1px solid var(--color-line, #e5e6e8); font-family: var(--font-sans, 'Public Sans Variable', Helvetica, Arial, sans-serif); } .ds-drawer-top { display: flex; align-items: center; gap: 8px; } .ds-drawer-status { display: inline-flex; align-items: center; gap: 10px; padding: 0; background: none; border: 0; font-family: var(--font-plaque, 'Sofia Sans Semi Condensed Variable', Helvetica, Arial, sans-serif); font-size: 17px; font-weight: 700; line-height: 20px; text-transform: uppercase; color: var(--color-active, #0b6ef3); cursor: pointer; } .ds-drawer-dot { width: 11px; height: 11px; margin-bottom: 4px; border-radius: 50%; background-color: currentColor; } .ds-drawer-close { display: grid; place-items: center; width: 26px; height: 26px; margin-left: auto; background: none; border: 0; border-radius: 6px; color: var(--color-ink-2, #666a70); cursor: pointer; } .ds-drawer-close svg { width: 19px; height: 19px; } .ds-drawer-close:hover { background-color: var(--color-ground, #f2f3f6); color: var(--color-ink, #151515); } .ds-drawer-title { margin: 21px 0 0; font-family: var(--font-plaque, 'Sofia Sans Semi Condensed Variable', Helvetica, Arial, sans-serif); font-size: 32px; font-weight: 700; line-height: 32px; letter-spacing: 0.016em; text-transform: uppercase; color: var(--color-ink, #151515); } .ds-drawer-folder { display: flex; align-items: center; gap: 10px; margin: 13px 0 0; padding: 0; background: none; border: 0; font: inherit; font-size: 15.5px; line-height: 21px; color: #454545; cursor: pointer; } .ds-drawer-folder svg { flex: none; width: 21px; height: 21px; color: #6f6f6f; } .ds-drawer-folder:hover { color: var(--color-accent, #0b6ef3); } .ds-drawer-rule { height: 1px; margin: 19px 0 0; background-color: var(--color-line, #e5e6e8); border: 0; } .ds-drawer-label { margin: 21px 0 0; font-family: var(--font-plaque, 'Sofia Sans Semi Condensed Variable', Helvetica, Arial, sans-serif); font-size: 15px; font-weight: 600; line-height: 18px; letter-spacing: 0.015em; text-transform: uppercase; color: var(--color-ink-2, #666a70); } .ds-drawer-body { margin: 12px 0 0; font-size: 13.5px; line-height: 25px; color: #2b2b2b; }"
+    },
+    {
+      "name": "Tree Row",
+      "kind": "nav",
+      "refersTo": "tree-row",
+      "description": "The catalogue's language: box-drawing stems, a drawn disclosure chevron, a name, and a micro status verb. No boxes.",
+      "html": "<div class=\"ds-stem-group\"><button class=\"ds-stem\"><span class=\"ds-stem-fold\"><svg viewBox=\"0 0 14 14\" fill=\"none\" aria-hidden=\"true\"><path d=\"m3.5 5.5 3.5 3.5 3.5-3.5\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg></span><span class=\"ds-stem-name ds-stem-name-folder\">homepage</span></button><button class=\"ds-stem ds-stem-live\"><span class=\"ds-stem-rule\">\u2502  \u251c\u2500\u2500 </span><span class=\"ds-stem-name ds-stem-name-job\">Site Redesign</span><span class=\"ds-stem-status\">Active</span></button><button class=\"ds-stem\"><span class=\"ds-stem-rule\">\u2502  \u2514\u2500\u2500 </span><span class=\"ds-stem-name\">Create wireframes</span><span class=\"ds-stem-status\">Pending</span></button></div>",
+      "css": ".ds-stem-group { display: flex; flex-direction: column; font-family: var(--font-sans, 'Public Sans Variable', Helvetica, Arial, sans-serif); } .ds-stem { display: flex; align-items: center; width: 100%; padding: 1px 9px; background: none; border: 0; border-radius: 5px; font: inherit; font-size: 13.5px; line-height: 18px; color: var(--color-ink, #151515); text-align: left; cursor: pointer; } .ds-stem-fold { display: grid; place-items: center; flex: none; width: 14px; height: 18px; color: var(--color-ink-3, #83878e); } .ds-stem-fold svg { width: 11px; height: 11px; } .ds-stem-rule { flex: none; color: var(--color-ink-3, #83878e); font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace; font-size: 12.5px; line-height: 18px; white-space: pre; } .ds-stem-name { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .ds-stem-name-folder { font-weight: 600; } .ds-stem-name-job { font-family: var(--font-plaque, 'Sofia Sans Semi Condensed Variable', Helvetica, Arial, sans-serif); font-size: 14.5px; font-weight: 700; line-height: 18px; letter-spacing: 0.01em; text-transform: uppercase; } .ds-stem-status { flex: none; margin-left: 12px; font-size: 12px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--color-ink-2, #666a70); } .ds-stem:hover { background-color: var(--color-ground, #f2f3f6); } .ds-stem-live { background-color: var(--color-accent-wash, #f1f6fe); } .ds-stem:focus-visible { outline: 2px solid var(--color-accent, #0b6ef3); outline-offset: 1px; }"
+    },
+    {
+      "name": "Subtask Row",
+      "kind": "custom",
+      "refersTo": "subtask-tick",
+      "description": "The drawer's list. A done row keeps full-strength text: the filled tick is the whole signal.",
+      "html": "<ul class=\"ds-subtasks\"><li class=\"ds-subtask ds-subtask-done\"><button class=\"ds-subtask-tick\" aria-pressed=\"true\" aria-label=\"Reopen\"><svg viewBox=\"0 0 12 12\" fill=\"none\" aria-hidden=\"true\"><path d=\"m2.2 6.2 2.4 2.4 5.2-5.2\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg></button><span class=\"ds-subtask-name\">Review current homepage analytics</span></li><li class=\"ds-subtask\"><button class=\"ds-subtask-tick\" aria-pressed=\"false\" aria-label=\"Complete\"><svg viewBox=\"0 0 12 12\" fill=\"none\" aria-hidden=\"true\"><path d=\"m2.2 6.2 2.4 2.4 5.2-5.2\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg></button><span class=\"ds-subtask-name\">Create wireframes</span></li></ul>",
+      "css": ".ds-subtasks { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 18px; font-family: var(--font-sans, 'Public Sans Variable', Helvetica, Arial, sans-serif); } .ds-subtask { display: flex; align-items: center; gap: 11px; } .ds-subtask-tick { display: grid; place-items: center; flex: none; width: 20px; height: 20px; padding: 0; background-color: var(--color-surface, #fff); border: 1.5px solid var(--color-line-2, #d7d9dd); border-radius: var(--radius-tick, 4px); color: transparent; cursor: pointer; } .ds-subtask-tick svg { width: 12px; height: 12px; } .ds-subtask-name { flex: 1 1 auto; min-width: 0; font-size: 12.5px; line-height: 20px; color: var(--color-ink, #151515); } .ds-subtask-done .ds-subtask-tick { background-color: var(--color-accent, #0b6ef3); border-color: var(--color-accent, #0b6ef3); color: var(--color-accent-ink, #fff); } .ds-subtask-tick:hover { border-color: var(--color-accent, #0b6ef3); } .ds-subtask-tick:focus-visible { outline: 2px solid var(--color-accent, #0b6ef3); outline-offset: 1px; }"
+    },
+    {
+      "name": "Note Row",
+      "kind": "custom",
+      "refersTo": "note-row",
+      "description": "The tape below the fold: a tabular date column, a borderless writing surface, rows separated by a drawn seam.",
+      "html": "<div class=\"ds-notes\"><div class=\"ds-note\"><p class=\"ds-note-date\">09.09.26</p><div class=\"ds-note-text\">ask about the analytics</div><button class=\"ds-note-leash\">&#8594; SITE REDESIGN</button></div><button class=\"ds-note-add\"><svg viewBox=\"0 0 15 15\" fill=\"none\" aria-hidden=\"true\"><path d=\"M7.5 2.6v9.8M2.6 7.5h9.8\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\"/></svg>New note</button></div>",
+      "css": ".ds-notes { display: flex; flex-direction: column; font-family: var(--font-sans, 'Public Sans Variable', Helvetica, Arial, sans-serif); } .ds-note { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 12px; padding: 9px; border-radius: 5px; } .ds-note-date { margin: 0; font-size: 12.5px; line-height: 20px; color: var(--color-ink-2, #666a70); font-variant-numeric: tabular-nums; } .ds-note-text { min-width: 0; font-size: 13.5px; line-height: 20px; color: var(--color-ink, #151515); } .ds-note-leash { grid-column: 2; padding: 0; background: none; border: 0; font: inherit; font-size: 12px; font-weight: 600; letter-spacing: 0.04em; color: var(--color-accent, #0b6ef3); text-align: left; cursor: pointer; } .ds-note:hover { background-color: var(--color-ground, #f2f3f6); } .ds-note-add { display: flex; align-items: center; gap: 9px; width: 100%; padding: 9px; background: none; border: 0; border-radius: 5px; box-shadow: 0 -1px 0 var(--color-line, #e5e6e8); font: inherit; font-size: 13.5px; color: var(--color-ink-2, #666a70); text-align: left; cursor: pointer; } .ds-note-add svg { flex: none; width: 15px; height: 15px; } .ds-note-add:hover { background-color: var(--color-ground, #f2f3f6); color: var(--color-accent, #0b6ef3); } .ds-note-add:focus-visible { outline: 2px solid var(--color-accent, #0b6ef3); outline-offset: 1px; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Straight Board",
+    "overview": "This is the category standard played without a costume, at the craft level of Linear, Things and Height, and the ambition is to be indistinguishable from them on a glance and better than them on a second look. Everything the eye reads as \"app\" here is white panel on a cool near-white ground, separated by a single hairline. There is one blue and no second hue. The personality is not in a surface treatment; it is in the density of the board, the exactness of the plaques, and the fact that nothing on the page is decorative.\n\nThe field is one work graph shown twice. The upper screen is five lanes of job cards — PENDING, R&D, ACTIVE, DONE, DUSTED — and selecting a card opens a detail rail over the right of the board rather than in a column of its own, so the lanes never reshuffle and the board never leaves the screen. Below the board the same graph is a plain indented tree, and beside the tree a tape of dated notes. The two readings deliberately do not share chrome: a job is a card with a caps plaque on it, a catalogue entry is a stem and a line of text. Where the board is spatial, the tree is typographic.\n\nDensity is high and quiet. Cards are 196px wide and carry a name and a folder line, nothing else, until the pointer arrives and the card's one quick action fades in at its corner. Colour is spent almost nowhere: the accent marks what is selected, what a search found, and what you can press, and the five status colours are held back for the one place a job is actually named as a state. Confirmed rejections: the dark charcoal cassette-theatre studio this world replaced, its orange accent, its condensed-display plaques on black, and any depth built from shadows rather than lines.",
+    "keyCharacteristics": [
+      "White panels on a cool near-white ground (`surface` on `ground`), never a tinted app chrome.",
+      "One blue accent, spent on selection, search hits and the single primary button.",
+      "Depth by hairline (1px `line`) and surface change; the only shadow in the system means \"in the air\".",
+      "Two faces: a semi-condensed plaque face for caps names, a neutral UI sans for everything read or written.",
+      "A marks-only tint (`ink-3`) that is allowed to draw but never allowed to spell.",
+      "Every list ends in an empty row that writes."
+    ],
+    "rules": [
+      {
+        "name": "The Marks-Only Tint Rule",
+        "body": "`ink-3` is measured at 3:1 — the floor for a mark that carries meaning and below what a word is allowed to be set in. It draws stems, strokes and disclosure marks; it never sets a word. Secondary *text* is `ink-2` at 5.4:1. Audit test: find every use of the 3:1 tint; if one of them is a word, it is the wrong token.",
+        "section": "colors"
+      },
+      {
+        "name": "The One Accent Rule",
+        "body": "There is exactly one hue in the interface. Emphasis is a value of that hue — wash, hairline, solid, deep — not a second colour. Red is a flag and the five lane inks are a plaque; neither is licence for a palette.",
+        "section": "colors"
+      },
+      {
+        "name": "The Lane Says The Status Rule",
+        "body": "Status colours exist, and they are spent only where a job is entered: the drawer's plaque and dot. The board itself stays monochrome, so what says a card's state is the lane it is sitting in. This is restraint, not absence — do not conclude that status has no colour, and do not tint a card by its status.",
+        "section": "colors"
+      },
+      {
+        "name": "The Two Faces Rule",
+        "body": "The plaque face is for names set in caps and nothing else: lane heads, panel heads, job names on cards and in the tree, the drawer title, the drawer's section labels. Everything a person reads or types — descriptions, notes, tree names, inputs, prompts, counts — is the UI sans. A caps name in the body sans, or a sentence in the plaque face, is a defect in either direction.",
+        "section": "typography"
+      },
+      {
+        "name": "The Caps-Are-Names Rule",
+        "body": "Uppercase marks a name or a label, never a sentence and never a button. `+ New` is sentence case; `PENDING` is not.",
+        "section": "typography"
+      },
+      {
+        "name": "The Tabular Counts Rule",
+        "body": "Every number that sits beside a name — lane counts, folder counts, note dates — is set `font-variant-numeric: tabular-nums`, so a count changing does not move the name next to it.",
+        "section": "typography"
+      },
+      {
+        "name": "The Fold Cue Rule",
+        "body": "24px of the catalogue is held on screen at every desktop height, and it is spent out of the bare ground under the lanes rather than out of the lanes themselves. A field cut exactly at the fold is a field that looks like it ends there.",
+        "section": "layout"
+      },
+      {
+        "name": "The Board Never Reflows Rule",
+        "body": "Opening, closing or renaming a job must not move a lane. The drawer floats over the stage and is paid for in padding, never in grid columns.",
+        "section": "layout"
+      },
+      {
+        "name": "The Hairline Rule",
+        "body": "Depth is a line, not a shadow. If a surface needs to read as above another, it changes fill and takes one 1px `line` border. Reach for `line-2` only for hover.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Shadow-Means-Airborne Rule",
+        "body": "The only shadow that reads as elevation is the airborne one, and it appears only while something is under the pointer and off the page. A resting surface with a shadow on it is a bug, not a variant.",
+        "section": "elevation"
+      },
+      {
+        "name": "The One Radius Rule",
+        "body": "8px for anything you can see the edge of, 4–6px for anything inside it, circles only for dots and jacks. Do not introduce a fourth panel radius.",
+        "section": "shapes"
+      },
+      {
+        "name": "The Drawn Mark Rule",
+        "body": "Every icon is a stroke drawn in inline SVG at the set's own weight. No icon font, no emoji, and no Unicode arrow standing in for a mark — the tree's `▸`/`▾` were replaced by drawn chevrons precisely because a text arrow in a column of drawn chrome reads as a different system. The box-drawing stems in the directory are the one deliberate exception: they are typeset structure in a monospaced column, with the row pitch tied to the glyph's own 18px line so the verticals actually join, and they are structure rather than iconography.",
+        "section": "shapes"
+      },
+      {
+        "name": "The Ledger Row Rule",
+        "body": "Every list ends in an empty row that writes — `New job` in a lane, `Add subtask` in the drawer, `New note` on the tape, a trailing stem in the tree. The row is a 13.5px prompt in `ink-2` behind a drawn plus, invisible and non-interactive until the pointer is on its panel, and it goes accent on hover. In an empty lane it moves to the first position, because there it is the lane's whole content rather than a note stranded at the foot.",
+        "section": "components"
+      },
+      {
+        "name": "The Two Languages Rule",
+        "body": "The board's language (cards, caps plaques, boxes, lanes) and the catalogue's language (stems, plain rows, monospaced structure) must not share chrome. Stems never appear on a card; a card never appears in the tree. This is the product's own division made visible, and it is not negotiable for a new surface.",
+        "section": "components"
+      },
+      {
+        "name": "The One Authored Moment Rule",
+        "body": "Motion serves the pull and nothing else. Every duration is answered by a `prefers-reduced-motion` block that holds all transitions and animations to `0ms`, so the same code arrives instantly for a reader who asked for that.",
+        "section": "components"
+      }
+    ],
+    "dos": [
+      "Do build every new surface as a white panel on the cool ground with one 1px `line` border and 8px corners.",
+      "Do set caps names in the plaque face and everything read or typed in the UI sans — The Two Faces Rule.",
+      "Do keep the 3:1 mark tint on strokes and stems and use the 5.4:1 grey for any word — The Marks-Only Tint Rule.",
+      "Do spend the accent on selection, search hits and the one primary action, as a wash, a hairline, a fill or a deep press — The One Accent Rule.",
+      "Do keep the five status inks inside the drawer and let the lane say a card's state on the board — The Lane Says The Status Rule.",
+      "Do end every list with an empty row that writes, revealed on panel hover — The Ledger Row Rule.",
+      "Do draw new icons as inline SVG strokes at the set's weight on `currentColor` — The Drawn Mark Rule.",
+      "Do type on the thing itself with a borderless input that inherits its exact type, so committing text never changes a row's shape.",
+      "Do hold a sliver of the next panel on screen at the desktop fold — The Fold Cue Rule.",
+      "Do answer every new animation with the reduced-motion block that already holds durations to zero."
+    ],
+    "donts": [
+      "Don't add a second hue. Not a green pill, not an amber warning, not a purple tag on the board.",
+      "Don't put a resting shadow on anything; the one shadow in the system means the thing is airborne.",
+      "Don't tint a job card by its status or add a status swatch to the board.",
+      "Don't set a word in the 3:1 mark tint, and don't set a stem or a stroke in the text grey.",
+      "Don't letterspace body sans to imitate a plaque; use the plaque face at its own size.",
+      "Don't use an icon font, an emoji, or a Unicode arrow as a mark.",
+      "Don't give the tree boxes, cards or plaqued folders, and don't give a card a stem — The Two Languages Rule.",
+      "Don't let opening a job move a lane — The Board Never Reflows Rule.",
+      "Don't add a second command input, an assignee avatar, a team switcher or an estimate field; the product has none of those and the chrome must not imply them.",
+      "Don't revive the previous world: charcoal ground, orange accent, jack-hole costume, VU/CRT plates, or a month view as the home surface."
+    ]
+  }
+}

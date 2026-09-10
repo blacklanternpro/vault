@@ -56,20 +56,39 @@ export const SEED_SOURCE = `PIPE vault
   COL done
   COL dusted
 NEST
-  NODE 1 "site" status none
-    NODE 10 "HOME PAGE" status active
-      NODE 11 "lock type ramp" status active URGENT
-      NODE 12 "crop hero still" status active
-      NODE 13 "still loop" status rnd LOOSE
-        BODY "8s loop, no sting"
-    NODE 20 "TYPE SPEC" status rnd
-    NODE 30 "REPO" status pending
-    NODE 40 "CONTACT" status done
-    NODE 50 "OLD GRID" status dusted
-  NODE 2 "print" status none
-    NODE 60 "RUN SHEET" status pending
+  NODE 1 "homepage" status none
+    NODE 10 "SITE REDESIGN" status active
+      BODY "Redesign the homepage to better communicate our value prop and improve conversion."
+      BODY "Focus on clarity, modern aesthetics, and strong CTAs."
+      NODE 11 "Review current homepage analytics" status done
+      NODE 12 "Define new information hierarchy" status done
+      NODE 13 "Create wireframes" status pending
+      NODE 14 "Design high-fidelity mockups" status pending
+      NODE 15 "Add motion prototypes" status pending
+    NODE 20 "NAV RESTRUCTURE" status pending
+      BODY "Flatten the top nav to five entries and move the rest into the footer."
+  NODE 2 "brand guidelines" status none
+    NODE 30 "UPDATE BRANDING" status pending
+  NODE 3 "competitive analysis" status none
+    NODE 40 "MARKET RESEARCH" status rnd
+  NODE 4 "next-gen stack" status none
+    NODE 50 "TECH SPIKE" status rnd
+  NODE 5 "mood boards" status none
+    NODE 60 "DESIGN EXPLORATION" status rnd
+  NODE 6 "visual polish" status none
+    NODE 70 "AESTHETIC PASS" status active
+  NODE 7 "vault-worldwide" status none
+    NODE 80 "CREATE REPO" status done
+  NODE 8 "boilerplate & config" status none
+    NODE 90 "PROJECT SETUP" status done
+  NODE 9 "tokens & components" status none
+    NODE 100 "DESIGN SYSTEM INIT" status done
+  NODE 16 "page inventory" status none
+    NODE 110 "CONTENT AUDIT" status done
+  NODE 17 "deprecated" status none
+    NODE 120 "OLD LANDING PAGE" status dusted
 DUMP
-  NOTE 09.09.26 "type ramp 700 / 400"`
+  NOTE 09.09.26 "ask about the analytics export"`
 
 function word(tok: Tok | undefined): string | null {
   if (!tok || tok.t !== 'WORD') return null
@@ -175,6 +194,37 @@ export function managerCards(doc: Doc, projectId: number | null = null): GraphNo
   const extra = sats.filter((n) => !ids.has(n.id))
   const wanted = new Set([...jobs, ...extra].map((n) => n.id))
   return doc.nodes.filter((n) => wanted.has(n.id))
+}
+
+/**
+ * Every job the board shows. A null project means all of them, which is what
+ * the top bar's default filter asks for; a project id narrows to that folder.
+ */
+export function boardCards(doc: Doc, projectId: number | null): GraphNode[] {
+  if (projectId != null) return managerCards(doc, projectId)
+  const wanted = new Set<number>()
+  for (const project of projectsOf(doc)) {
+    for (const card of managerCards(doc, project.id)) wanted.add(card.id)
+  }
+  return doc.nodes.filter((n) => wanted.has(n.id))
+}
+
+/** Every LOOSE node the board shows, so its leash back to the parent can be drawn. */
+export function boardSatellites(doc: Doc, projectId: number | null): GraphNode[] {
+  if (projectId != null) return satellitesOf(doc, projectId)
+  return projectsOf(doc).flatMap((project) => satellitesOf(doc, project.id))
+}
+
+/** The root folder a node hangs under, which the board prints beneath its title. */
+export function folderOf(doc: Doc, id: number): GraphNode | null {
+  let node = byId(doc, id)
+  if (!node) return null
+  while (node.parent != null) {
+    const parent = byId(doc, node.parent)
+    if (!parent) break
+    node = parent
+  }
+  return node.id === id ? null : node
 }
 
 export function isBoardVisible(doc: Doc, projectId: number | null, id: number): boolean {
@@ -422,7 +472,8 @@ export function parseDoc(src: string): Doc {
       const top = stack[stack.length - 1]
       if (text && top) {
         const node = byId(doc, top.id)
-        if (node) node.body = text
+        // One BODY line per paragraph: quoted strings cannot hold a newline.
+        if (node) node.body = node.body ? `${node.body}\n${text}` : text
       }
     } else if (head === 'TASK') {
       const task = parseLegacyTask(line.toks)
@@ -463,7 +514,11 @@ function writeTree(doc: Doc, parent: number | null, indent: number, lines: strin
     lines.push(
       `${pad}NODE ${n.id} ${quote(n.title)} status ${n.status}${n.urgent ? ' URGENT' : ''}${n.loose ? ' LOOSE' : ''}`,
     )
-    if (n.body) lines.push(`${pad}  BODY ${quote(n.body)}`)
+    if (n.body) {
+      for (const para of n.body.split('\n')) {
+        if (para.trim()) lines.push(`${pad}  BODY ${quote(para)}`)
+      }
+    }
     writeTree(doc, n.id, indent + 1, lines)
   }
 }

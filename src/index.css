@@ -1,34 +1,69 @@
 @import 'tailwindcss';
+@import '@fontsource-variable/public-sans/wght.css';
+@import '@fontsource-variable/sofia-sans-semi-condensed/wght.css';
+
+/*
+ * VAULT WORLDWIDE — the board.
+ * Every number here is measured off .impeccable/mocks/canon-board.webp: colours
+ * sampled from comp pixels, type sizes derived from ink-row profiles, boxes from
+ * border scans. Both faces are the ones font-match ranked (.impeccable/build/spec.json).
+ */
 
 @theme {
-  --color-ground: #111318;
-  --color-panel: #181b22;
-  --color-card: #22262f;
-  --color-card-2: #2a2f3a;
-  --color-well: #0a0b0e;
-  --color-ink: #eeeae4;
-  --color-muted: #a8adb8;
-  --color-hair: #3a414e;
-  --color-chrome: rgba(238, 234, 228, 0.2);
-  --color-jacket: #1c1410;
-  --color-live: #ff5c1a;
-  --color-live-ink: #14080a;
-  --color-mark: #ff3355;
-  --color-mark-ink: #14080a;
+  --color-ground: #f2f3f6;
+  --color-surface: #ffffff;
+  --color-ink: #151515;
+  /* Secondary text. 5.4:1 on the surface, 4.9:1 on the ground: readable ink. */
+  --color-ink-2: #666a70;
+  /*
+   * The tint, and never text: glyph strokes, tree stems, disclosure marks. It
+   * is held at 3:1 on both the surface and the ground, which is the floor for a
+   * mark that carries meaning, and below what a word is allowed to be set in.
+   */
+  --color-ink-3: #83878e;
+  --color-line: #e5e6e8;
+  --color-line-2: #d7d9dd;
+  --color-accent: #0b6ef3;
+  /* The same blue pressed down, which is the only step the accent has. */
+  --color-accent-deep: #0a5cdd;
+  --color-accent-ink: #ffffff;
+  --color-accent-wash: #f1f6fe;
+  --color-accent-line: #a9c9fb;
+  --color-urgent: #d92c20;
 
-  --font-sans: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-  --font-plaque: 'Oswald', 'Helvetica Neue', Helvetica, Arial, sans-serif;
-  --radius-card: 0px;
+  /*
+   * Status has a colour only where a job is entered. The board stays in one
+   * accent, as the comp has it, so the lane a card sits in is what says its
+   * state; the drawer's plaque is where the state gets named, and names it in
+   * ink. Dusted is the one warm ink in the field, which is the whole point of
+   * it: the shelved thing is the only thing here that has gathered any.
+   */
+  --color-pending: #666a70;
+  --color-rnd: #7a4ddb;
+  --color-active: #0b6ef3;
+  --color-done: #157f4a;
+  --color-dusted: #7b6a5d;
+
+  --font-sans: 'Public Sans Variable', 'Public Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  /* The plaque face: job names and lane names, the only caps the board shouts. */
+  --font-plaque: 'Sofia Sans Semi Condensed Variable', 'Sofia Sans Semi Condensed', 'Public Sans Variable', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+
+  --radius-slab: 8px;
+  --radius-control: 8px;
+  --radius-tick: 4px;
+
+  /* Board metrics, straight off the comp's border scan. */
+  --lane-width: 196px;
+  --lane-gap: 10px;
+  --drawer-width: 286px;
+
+  /* How much of the catalogue below the board is held above the fold. */
+  --fold-cue: 24px;
 }
 
 @layer base {
-  * {
-    border-color: var(--color-hair);
-  }
-
   html {
     background-color: var(--color-ground);
-    overflow: hidden;
   }
 
   body {
@@ -36,948 +71,1450 @@
     background-color: var(--color-ground);
     color: var(--color-ink);
     font-family: var(--font-sans);
+    font-size: 15px;
+    line-height: 1.45;
     -webkit-font-smoothing: antialiased;
-    text-rendering: optimizeLegibility;
+    -moz-osx-font-smoothing: grayscale;
   }
 
   ::selection {
-    background-color: var(--color-live);
-    color: var(--color-live-ink);
+    background-color: var(--color-accent-wash);
+    color: var(--color-ink);
   }
 
   :focus-visible {
-    outline: 1px solid var(--color-live);
-    outline-offset: 2px;
+    outline: 2px solid var(--color-accent);
+    outline-offset: 1px;
+    border-radius: 3px;
   }
 
   button,
   input,
-  textarea {
-    font-family: inherit;
+  textarea,
+  select {
+    font: inherit;
+    color: inherit;
+  }
+
+  button {
+    cursor: pointer;
   }
 
   * {
     scrollbar-width: thin;
-    scrollbar-color: var(--color-hair) transparent;
+    scrollbar-color: var(--color-line-2) transparent;
+  }
+
+  *::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    background-color: var(--color-line-2);
+    border: 3px solid var(--color-ground);
+    border-radius: 6px;
+  }
+
+  *::-webkit-scrollbar-track {
+    background-color: transparent;
   }
 }
 
+/* ------------------------------------------------------------------ shell */
+
 .studio {
+  min-height: 100vh;
+  background-color: var(--color-ground);
+}
+
+.field {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 320px;
-  height: 100dvh;
-  background: var(--color-ground);
-  color: var(--color-ink);
-  font-family: var(--font-sans);
+  /*
+   * The column is bounded, or the board's own scrollable width becomes the
+   * grid's width and everything beside it stretches to match.
+   */
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr);
+  /*
+   * A screen less a sliver, not a screen. The board wants the whole viewport and
+   * the comp gives it one, but a field cut exactly at the fold is a field that
+   * looks like it ends there — so the catalogue's own top edge is held on screen
+   * at every desktop height, and the sliver is what says the field carries on.
+   */
+  height: calc(100vh - var(--fold-cue));
 }
 
-.studio-main {
-  display: grid;
-  grid-template-rows: minmax(280px, 52%) minmax(0, 1fr);
-  min-width: 0;
-  min-height: 0;
-}
+/* ----------------------------------------------------------------- topbar */
 
-.studio-rack {
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-  min-width: 0;
-  border-bottom: 1px solid var(--color-chrome);
-  background: color-mix(in srgb, var(--color-panel) 72%, var(--color-ground));
-}
-
-.rack-bar {
+.topbar {
   display: flex;
   align-items: center;
-  gap: 10px;
-  flex-shrink: 0;
-  margin: 0;
-  padding: 8px 14px;
-  background: var(--color-well);
-  border-bottom: 1px solid var(--color-chrome);
+  height: 69px;
+  padding: 0 20px 0 16px;
+  background-color: var(--color-surface);
+  border-bottom: 1px solid var(--color-line);
 }
 
-.rack-project {
+.topbar-brand {
   display: flex;
   align-items: center;
-  gap: 10px;
-  min-width: 0;
-  flex: 1;
+  gap: 11px;
+  flex: none;
 }
 
-.rack-label {
-  font-family: var(--font-plaque);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.16em;
-  color: var(--color-muted);
-}
-
-.rack-project select {
-  appearance: none;
-  min-width: 0;
-  flex: 1;
-  max-width: 260px;
-  margin: 0;
-  padding: 5px 10px 4px;
-  border: 1px solid var(--color-chrome);
-  background: var(--color-ground);
+.brand-mark {
+  display: block;
+  width: 36px;
+  height: 33px;
   color: var(--color-ink);
-  font-family: var(--font-plaque);
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  outline: none;
-  cursor: pointer;
-  box-shadow: inset 0 1px 0 rgba(238, 234, 228, 0.08);
 }
 
-.rack-add {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
+.brand-name {
   margin: 0;
-  padding: 4px 10px;
-  border: 1px solid var(--color-chrome);
-  background: transparent;
-  color: var(--color-ink);
-  font-family: var(--font-plaque);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.16em;
-  cursor: pointer;
-}
-
-.rack-add::before {
-  content: '';
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--color-mark);
-  box-shadow: 0 0 6px color-mix(in srgb, var(--color-mark) 70%, transparent);
-}
-
-.rack-add:hover {
-  border-color: var(--color-live);
-  color: var(--color-live);
-}
-
-.rack-plaque {
-  font-family: var(--font-plaque);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.18em;
-  color: var(--color-muted);
-}
-
-.rack-name {
-  flex-shrink: 0;
-  margin: 10px 16px 8px;
-  font-family: var(--font-plaque);
+  padding-top: 4px;
   font-size: 18px;
   font-weight: 700;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.01em;
   text-transform: uppercase;
-  color: var(--color-ink);
+  white-space: nowrap;
 }
 
-.manager {
+.find {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  flex: 0 0 377px;
+  height: 40px;
+  margin-left: 55px;
+  padding: 0 14px;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-control);
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+
+.find:focus-within {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px var(--color-accent-wash);
+}
+
+.find-glass {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  color: var(--color-ink-3);
+}
+
+.find-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  border: 0;
+  background: none;
+  font-size: 13.5px;
+  outline: none;
+}
+
+.find-input::placeholder {
+  color: var(--color-ink-2);
+}
+
+.find-keys {
+  flex: none;
+  font-size: 12px;
+  color: var(--color-ink-2);
+  letter-spacing: 0.04em;
+}
+
+.find-count {
+  flex: none;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-accent);
+  letter-spacing: 0.04em;
+}
+
+/*
+ * The chips pack against the search field and the primary action pins to the
+ * right rail, so the slack between them absorbs whatever the labels cost.
+ */
+.topbar-filters {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1 1 auto;
+  min-width: 0;
+  margin-left: 28px;
+}
+
+.chip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 36px;
+  padding: 0 12px 0 13px;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-control);
+  font-size: 14.5px;
+  color: var(--color-ink);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.chip:focus-within {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px var(--color-accent-wash);
+}
+
+.chip-label {
+  pointer-events: none;
+}
+
+.chip-select {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  border-radius: inherit;
+  background: none;
+  opacity: 0;
+  appearance: none;
+  cursor: pointer;
+}
+
+.chip:hover {
+  border-color: var(--color-line-2);
+}
+
+.chip-caret {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  color: var(--color-ink-2);
+  pointer-events: none;
+}
+
+.new-job {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  height: 38px;
+  margin-left: auto;
+  padding: 0 7px 0 15px;
+  background-color: var(--color-accent);
+  border: 1px solid var(--color-accent);
+  border-radius: var(--radius-control);
+  color: var(--color-accent-ink);
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.new-job:hover {
+  background-color: var(--color-accent-deep);
+}
+
+.new-job-glyph {
+  width: 16px;
+  height: 16px;
+}
+
+/* The chevron is thrown to the far edge in the comp, away from `+ New`. */
+.new-job-chevron {
+  width: 17px;
+  height: 17px;
+  margin-left: 10px;
+  opacity: 0.75;
+}
+
+/* ------------------------------------------------------------------ stage */
+
+/*
+ * The drawer floats over the right of the stage rather than taking a column, so
+ * opening a job never reshuffles the lanes underneath. In the comp the DUSTED
+ * lane runs on under the panel, which is what fixes this behaviour.
+ */
+.stage {
+  position: relative;
+  min-height: 0;
+}
+
+/* ------------------------------------------------------------------ board */
+
+.board {
   position: relative;
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 0;
-  flex: 1;
+  grid-auto-flow: column;
+  grid-auto-columns: var(--lane-width);
+  gap: var(--lane-gap);
+  align-items: start;
+  height: 100%;
   min-height: 0;
-  margin: 0 8px 8px;
-  padding: 10px 0 12px;
-  overflow: auto;
-  background: var(--color-ground);
-  border: 1px solid var(--color-chrome);
+  /*
+   * The comp leaves 39px of bare ground under the lanes, and the fold cue is
+   * spent out of that rather than out of the lanes: the sliver of the catalogue
+   * takes the place of dead field, so the lane still ends exactly where the comp
+   * ends it and the page still says there is more of it.
+   */
+  padding: 21px 16px calc(39px - var(--fold-cue));
+  overflow-x: auto;
+  overflow-y: hidden;
 }
 
-.manager.is-rack {
-  padding-top: 18px;
-}
-
-.deck-housing {
-  position: absolute;
-  top: 6px;
-  left: 12px;
-  right: 12px;
+.lane {
   display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-slab);
+}
+
+.lane-head {
+  display: flex;
+  align-items: baseline;
   justify-content: space-between;
+  gap: 8px;
+  flex: none;
+  padding: 15px 19px 21px;
+}
+
+.lane-name {
+  font-family: var(--font-plaque);
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 22px;
+  letter-spacing: 0.055em;
+  text-transform: uppercase;
+}
+
+.lane-count {
+  font-size: 15px;
+  font-weight: 400;
+  color: var(--color-ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.lane-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 0 10px 10px;
+  overflow-y: auto;
+}
+
+/* ------------------------------------------------------------------ slabs */
+
+.slab {
+  position: relative;
+  /* Ties the filament's layer and wins on document order, so cables pass behind. */
+  z-index: 1;
+  flex: none;
+  min-height: 94px;
+  padding: 23px 14px 18px;
+  background-color: var(--color-surface);
+  border: 1px solid #e8e8e8;
+  border-radius: var(--radius-slab);
+  text-align: left;
+  transition: border-color 120ms ease, background-color 120ms ease;
+}
+
+.slab:hover {
+  border-color: var(--color-line-2);
+}
+
+.slab.is-open {
+  background-color: var(--color-accent-wash);
+  border-color: var(--color-accent);
+}
+
+.slab.is-live:not(.is-open) {
+  border-color: var(--color-accent-line);
+}
+
+/*
+ * A found card gets nothing here on purpose. The hit is already declared on the
+ * word that matched, and a plate is what the open card is, so spending the wash
+ * on both left one card in twelve separated from the rest by a hairline's colour
+ * alone. The catalogue already draws the line in the right place — the stem's
+ * plate is selection and its found state is a mark on the name — and the board
+ * now draws it the same way: the plate is where you are, the mark is what you
+ * searched for.
+ */
+
+/*
+ * Airborne, and elevation says so on its own — the shadow is the whole signal.
+ * A card in the air is still the same card, so it keeps its own hairline.
+ */
+.slab.is-ghost {
+  box-shadow: 0 8px 20px rgb(21 21 21 / 0.13);
+}
+
+.slab.is-away {
+  opacity: 0.32;
+}
+
+/*
+ * The card's one quick action, held out of sight until the pointer is on the
+ * card — so the resting board is exactly the comp's, and the thing you reach
+ * for is there the moment you reach. It takes the card's own background so it
+ * masks the plate it sits on rather than patching white over a washed one.
+ *
+ * Hidden means unhittable, the way the lane's and the drawer's own hidden rows
+ * already work. That is only half of it: a tap synthesises hover before it
+ * synthesises the click, so the reveal and the hit arrive in one gesture and
+ * the corner is live again. The other half is in Board.tsx, which declines a
+ * press that did not come from a mouse and lets it reach the card instead.
+ */
+.slab-shovel {
+  position: absolute;
+  right: 5px;
+  bottom: 5px;
+  display: grid;
+  place-items: center;
+  width: 23px;
+  height: 23px;
+  padding: 0;
+  background-color: inherit;
+  border: 0;
+  border-radius: 6px;
+  color: var(--color-ink-3);
+  opacity: 0;
   pointer-events: none;
-  z-index: 2;
+  transition: opacity 110ms ease, color 110ms ease, background-color 110ms ease;
 }
 
-.deck-jack {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  border: 1.5px solid var(--color-muted);
-  background: var(--color-ground);
-  box-shadow: inset 0 0 0 2px var(--color-ground);
+.slab:hover .slab-shovel,
+.slab-shovel:focus-visible {
+  opacity: 1;
+  pointer-events: auto;
 }
 
+.slab-shovel:hover {
+  background-color: var(--color-accent-wash);
+  color: var(--color-accent);
+}
+
+.slab-shovel-glyph {
+  width: 15px;
+  height: 15px;
+}
+
+.slab-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/*
+ * A done card drops its ring into a gutter and runs the plaque and the folder
+ * down one text column beside it, the way the comp's DONE lane does. Both rows
+ * spend the card's side padding, so the longest name still holds one line.
+ */
+.slab-head:has(.slab-tick) {
+  gap: 7px;
+  margin-left: -5px;
+  margin-right: -14px;
+}
+
+.slab:has(.slab-tick) .slab-folder {
+  margin-right: -14px;
+  padding-left: 28px;
+}
+
+.slab-tick {
+  flex: none;
+  width: 21px;
+  height: 21px;
+  color: #5b5b5b;
+}
+
+.slab-title {
+  margin: 0;
+  font-family: var(--font-plaque);
+  font-size: 15.5px;
+  font-weight: 700;
+  line-height: 20px;
+  letter-spacing: 0;
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+}
+
+.slab-folder {
+  margin: 11px 0 0;
+  font-size: 12.5px;
+  line-height: 16px;
+  color: #4a4a4a;
+  overflow-wrap: anywhere;
+}
+
+.slab.is-urgent .slab-title {
+  color: var(--color-urgent);
+}
+
+.slab-flag {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--color-urgent);
+}
+
+.slab-input {
+  width: 100%;
+  border: 0;
+  background: none;
+  outline: none;
+  padding: 0;
+  font-family: var(--font-plaque);
+  font-size: 15.5px;
+  font-weight: 700;
+  line-height: 20px;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+/*
+ * The lane's last line is empty and writes: the same ledger row the tree and
+ * the tape use. It stays out of the way while the lane holds cards, since the
+ * comp shows no such row, and holds its place when the lane is empty, which is
+ * the only time it is the lane's whole content.
+ */
+.lane-add {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  flex: none;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 120ms ease, color 120ms ease;
+  width: 100%;
+  padding: 11px 4px;
+  background: none;
+  border: 0;
+  color: var(--color-ink-2);
+  font-size: 13.5px;
+  text-align: left;
+}
+
+.lane:hover .lane-add,
+.lane-add:focus-visible,
+.lane-stack:has(.lane-void) .lane-add {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* In an empty lane the row is the first line, not a note stranded at the foot. */
+.lane-stack:has(.lane-void) .lane-add {
+  order: -1;
+}
+
+.lane-add:hover {
+  color: var(--color-accent);
+}
+
+.lane-add-glyph {
+  flex: none;
+  width: 15px;
+  height: 15px;
+}
+
+.lane-void {
+  flex: 1 1 auto;
+  min-height: 44px;
+  border-radius: var(--radius-slab);
+}
+
+.board.is-dragging .lane-void {
+  border: 1px dashed var(--color-accent-line);
+}
+
+/* ----------------------------------------------------------------- leashes
+ * A job pulled LOOSE keeps a visible cable back to the card it came from, so
+ * the graph stays legible after the board has scattered it across lanes.
+ */
+
+/*
+ * The cable runs over the lane panels, which are unpositioned and so paint
+ * below it, and under the cards, which tie its z-index and win on order. It has
+ * to be both: threaded behind a card it passes, and never hidden by a lane.
+ */
 .filaments {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
-  pointer-events: none;
-  z-index: 3;
   overflow: visible;
+  pointer-events: none;
+  z-index: 1;
 }
 
 .leash-jacket {
   fill: none;
-  stroke: color-mix(in srgb, var(--color-ground) 40%, var(--color-jacket));
-  stroke-width: 4.5;
+  stroke: var(--color-surface);
+  stroke-width: 4;
   stroke-linecap: round;
 }
 
 .leash-core {
   fill: none;
-  stroke: var(--color-live);
-  stroke-width: 1.4;
+  stroke: var(--color-line-2);
+  stroke-width: 1.5;
   stroke-linecap: round;
-  filter: drop-shadow(0 0 3px color-mix(in srgb, var(--color-live) 55%, transparent));
 }
 
 .leash-core.is-taut {
-  stroke-width: 1.15;
+  stroke: var(--color-accent);
 }
 
-.lane {
-  position: relative;
-  min-height: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 6px 12px 12px;
-  background: transparent;
-  border: 0;
-  border-right: 1px solid var(--color-chrome);
-  box-shadow: none;
-}
-
-.lane:last-child {
-  border-right: 0;
-}
-
-.lane.is-dusted {
-  opacity: 0.78;
-}
-
-.lane.is-dusted::before {
-  content: '';
+.jack,
+.jack-anchor {
   position: absolute;
-  inset: 0;
-  pointer-events: none;
-  opacity: 0.16;
-  background-image: repeating-linear-gradient(
-    0deg,
-    transparent,
-    transparent 2px,
-    color-mix(in srgb, var(--color-ink) 8%, transparent) 3px
-  );
-}
-
-.lane-plaque {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 6px;
-  font-family: var(--font-plaque);
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  color: var(--color-muted);
-}
-
-.lane.is-dusted .lane-plaque {
-  letter-spacing: 0.18em;
-}
-
-.lane-count {
-  font-family: var(--font-sans);
-  font-weight: 400;
-  letter-spacing: 0;
-  font-size: 11px;
-}
-
-.lane-empty {
-  color: var(--color-hair);
-  font-size: 13px;
-  padding: 8px 2px;
-  user-select: none;
-}
-
-.ghost-plus {
-  margin: 4px 0 0;
-  padding: 0;
-  border: 0;
-  border-bottom: 1px dashed var(--color-hair);
-  background: transparent;
-  color: var(--color-muted);
-  font-size: 14px;
-  line-height: 22px;
-  text-align: left;
-  cursor: pointer;
-}
-
-.ghost-plus:hover {
-  border-bottom-color: var(--color-live);
-  color: var(--color-live);
-}
-
-.card {
-  position: relative;
-  background: var(--color-card);
-  border-radius: 0;
-  padding: 10px 12px 9px;
-  cursor: grab;
-  user-select: none;
-  border: 1px solid var(--color-hair);
-  transition: background-color 140ms ease, border-color 140ms ease;
-}
-
-.card:hover {
-  background: var(--color-card-2);
-}
-
-.card.is-sat {
-  padding: 6px 9px 5px;
-}
-
-.card.is-live {
-  border-color: color-mix(in srgb, var(--color-live) 70%, transparent);
-}
-
-.card.is-found .card-title {
-  color: var(--color-live);
-}
-
-.card.is-urgent .card-title,
-.nested-row.is-urgent .nested-title {
-  color: var(--color-mark);
-}
-
-.card.is-quiet .card-title {
-  color: var(--color-muted);
-}
-
-.card.is-ghost {
-  cursor: grabbing;
-  opacity: 0.9;
-  z-index: 80;
-}
-
-.card.is-away,
-.nested-row.is-away {
-  opacity: 0.28;
-}
-
-.card-title {
-  margin: 0;
-  font-size: 13px;
-  font-weight: 500;
-  line-height: 1.35;
-  letter-spacing: -0.02em;
-  color: var(--color-ink);
-}
-
-.card.is-job .card-title,
-.card.is-job .card-input {
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-
-.card.is-sat .card-title {
-  font-size: 12px;
-  font-weight: 500;
-  text-transform: none;
-}
-
-.card-body,
-.nested-body,
-.card-body-input,
-.nested-body-input {
-  margin: 4px 0 0;
-  font-size: 12px;
-  font-weight: 400;
-  line-height: 1.4;
-  letter-spacing: 0;
-  text-transform: none;
-  color: var(--color-muted);
-  cursor: text;
-}
-
-.card-body-input,
-.nested-body-input {
-  display: block;
-  width: 100%;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  outline: none;
-  caret-color: var(--color-live);
-  color: var(--color-ink);
-}
-
-.card-hitch {
-  margin: 4px 0 0;
-  font-size: 11px;
-  font-weight: 400;
-  letter-spacing: 0.04em;
-  text-transform: none;
-  color: var(--color-muted);
-}
-
-.nest-tick {
-  display: block;
-  margin: 4px 0 0;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: var(--color-muted);
-  font: inherit;
-  font-size: 12px;
-  letter-spacing: 0.04em;
-  cursor: pointer;
-}
-
-.nest-tick:hover,
-.nest-tick:focus-visible {
-  color: var(--color-live);
-  outline: none;
-}
-
-.jack {
-  position: absolute;
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  border: 1.5px solid var(--color-muted);
-  background: var(--color-ground);
-  box-shadow: inset 0 0 0 2px var(--color-ground);
-  z-index: 4;
-}
-
-.jack.is-live {
-  border-color: var(--color-live);
-  background: var(--color-live);
-  box-shadow: inset 0 0 0 2px var(--color-ground);
-}
-
-.card.is-job > .jack {
-  top: 12px;
-  right: -5px;
-}
-
-.card.is-sat > .jack {
-  top: 8px;
-  left: -5px;
+  top: 19px;
 }
 
 .jack-anchor {
-  position: absolute;
   width: 1px;
   height: 1px;
-  opacity: 0;
-  pointer-events: none;
+  left: 1px;
 }
 
-.card.is-job > .jack-anchor {
-  top: 16px;
-  right: 0;
+/* Held inside the card edge: the lane stack scrolls, so anything overhanging clips. */
+.jack {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: var(--color-surface);
+  border: 1.5px solid var(--color-line-2);
+  z-index: 2;
 }
 
-.card.is-sat > .jack-anchor {
-  top: 12px;
-  left: 0;
+.jack.is-sat {
+  left: 3px;
 }
 
-.nested-row .jack,
-.nested-row .jack-anchor {
-  top: 6px;
-  right: 0;
+.jack.is-host {
+  right: 3px;
 }
 
-.nest-list {
-  margin-top: 6px;
+.slab.is-loose {
+  border-style: dashed;
+  border-color: var(--color-line-2);
 }
 
-.nest-list.has-well {
-  margin-top: 8px;
-  padding: 6px;
-  border: 1px solid var(--color-hair);
-  background: color-mix(in srgb, var(--color-well) 70%, var(--color-card));
+.slab.is-loose .jack {
+  border-color: var(--color-accent);
 }
 
-.nested-block {
-  margin: 0 0 4px;
-}
+/* ----------------------------------------------------------------- drawer */
 
-.nested-row {
-  position: relative;
-  padding: 5px 14px 4px 8px;
-  cursor: grab;
-  border: 1px solid var(--color-hair);
-  background: var(--color-card);
-  border-radius: 0;
-}
-
-.nested-title,
-.nested-input {
-  margin: 0;
-  font-size: 12px;
-  font-weight: 400;
-  line-height: 1.35;
-  letter-spacing: 0;
-  text-transform: none;
-  color: var(--color-ink);
-}
-
-.nested-input,
-.card-input {
-  width: 100%;
-  margin: 0;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: var(--color-ink);
-  outline: none;
-  caret-color: var(--color-live);
-}
-
-.card-input {
-  font-size: 13px;
-  font-weight: 500;
-  letter-spacing: -0.02em;
-}
-
-.directory {
-  min-height: 0;
-  overflow: auto;
-  padding: 12px 18px 24px;
-  font-size: 13px;
-  line-height: 20px;
-  border-top: 0;
-}
-
-.dir-forest {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  gap: 12px 36px;
-}
-
-.dir-col {
-  min-width: 260px;
-  flex: 1 1 260px;
-  font-variant-ligatures: none;
-}
-
-.dir-row {
-  display: grid;
-  grid-template-columns: max-content minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 0 4px;
-  min-height: 20px;
-}
-
-.dir-row.is-ghost {
-  cursor: grabbing;
-}
-
-.dir-stem {
-  margin: 0;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: var(--color-muted);
-  white-space: pre;
-  font-size: 13px;
-  line-height: 22px;
-  text-align: left;
-  font-variant-ligatures: none;
-}
-
-.dir-stem.is-fold {
-  cursor: pointer;
-}
-
-.dir-name {
-  justify-self: start;
-  max-width: 100%;
-  margin: 0;
-  padding: 1px 6px;
-  border: 0;
-  background: transparent;
-  color: var(--color-ink);
-  font-size: 13px;
-  line-height: 18px;
-  text-align: left;
-  cursor: pointer;
-  border-radius: 0;
-}
-
-.dir-name.is-on {
-  background: var(--color-live);
-  color: var(--color-live-ink);
-}
-
-.dir-name.is-on .find-mark {
-  background: transparent;
-  color: inherit;
-}
-
-.dir-row.is-urgent .dir-name:not(.is-on) {
-  color: var(--color-mark);
-}
-
-.dir-row.is-found .dir-name:not(.is-on) {
-  color: var(--color-live);
-}
-
-.dir-input {
-  width: 100%;
-  margin: 0;
-  padding: 1px 6px;
-  border: 0;
-  background: var(--color-live);
-  color: var(--color-live-ink);
-  font-size: 13px;
-  line-height: 20px;
-  outline: none;
-  caret-color: var(--color-live-ink);
-  border-radius: 0;
-}
-
-.dir-on {
-  opacity: 0;
-  padding: 0 2px;
-  border: 0;
-  background: transparent;
-  color: var(--color-muted);
-  font-family: var(--font-plaque);
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  line-height: 18px;
-  cursor: pointer;
-}
-
-.dir-on.is-live {
-  color: var(--color-live);
-}
-
-.dir-row:hover .dir-on,
-.dir-row.is-selected .dir-on,
-.dir-on:focus-visible {
-  opacity: 1;
-}
-
-.dir-ghost {
-  display: block;
-  margin: 2px 0 0;
-  padding: 1px 0;
-  border: 0;
-  background: transparent;
-  color: var(--color-hair);
-  font-size: 13px;
-  line-height: 22px;
-  text-align: left;
-  cursor: text;
-  white-space: pre;
-}
-
-.sidebar {
+/*
+ * The rail ends where the field does, and the sliver below it is the dump's own
+ * top edge — same 286px column, same white, one hairline between them, so the
+ * right rail reads as running the whole page rather than stopping. Hanging the
+ * rail past the field to reach the screen edge instead cost more than it bought:
+ * it is 24px of the dump's header, clipped at every scroll position, because the
+ * catalogue starts exactly where the field ends and the drawer paints over it.
+ */
+.drawer {
+  position: absolute;
+  inset: 0 0 0 auto;
+  z-index: 10;
   display: flex;
   flex-direction: column;
-  min-height: 0;
-  border-left: 1px solid var(--color-chrome);
-  background: var(--color-panel);
+  width: var(--drawer-width);
+  padding: 19px 18px 24px;
+  background-color: var(--color-surface);
+  border-left: 1px solid var(--color-line);
+  overflow-y: auto;
 }
 
-.studio-find {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  gap: 0 10px;
-  align-items: center;
-  padding: 14px 14px 10px;
-  border-bottom: 1px solid var(--color-chrome);
-}
-
-.find-label {
-  font-family: var(--font-plaque);
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  color: var(--color-muted);
-}
-
-.find-input {
-  width: 100%;
-  margin: 0;
-  padding: 4px 0;
-  border: 0;
-  background: transparent;
-  color: var(--color-ink);
-  font-size: 14px;
-  outline: none;
-  caret-color: var(--color-live);
-}
-
-.find-input::placeholder {
-  color: color-mix(in srgb, var(--color-muted) 70%, transparent);
-}
-
-.find-echo {
-  grid-column: 1 / -1;
-  margin: 2px 0 0;
-  font-size: 11px;
-  color: var(--color-muted);
-}
-
-.scratch-list {
-  flex: 1;
-  min-height: 0;
-  overflow: auto;
-  padding: 12px 12px 20px;
+.drawer-top {
   display: flex;
-  flex-direction: column;
+  align-items: center;
   gap: 8px;
+  flex: none;
 }
 
-.scratch-block {
-  background: var(--color-card);
-  border-radius: 0;
-  border: 1px solid var(--color-hair);
-  padding: 10px 12px 8px;
-  cursor: grab;
-  transition: transform 140ms ease;
+.drawer-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0;
+  background: none;
+  border: 0;
+  font-family: var(--font-plaque);
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 20px;
+  letter-spacing: 0;
+  text-transform: uppercase;
+  color: var(--color-active);
 }
 
-.scratch-block.is-on {
-  border-color: color-mix(in srgb, var(--color-live) 55%, var(--color-hair));
+/* The plaque's caps ride above the line's optical centre; the dot goes with them. */
+.drawer-dot {
+  width: 11px;
+  height: 11px;
+  margin-bottom: 4px;
+  border-radius: 50%;
+  background-color: currentColor;
 }
 
-.scratch-date {
-  margin: 0 0 6px;
-  font-size: 11px;
-  letter-spacing: 0.06em;
-  color: var(--color-muted);
+.drawer-status.is-pending {
+  color: var(--color-pending);
 }
 
-.scratch-hitch {
+.drawer-status.is-rnd {
+  color: var(--color-rnd);
+}
+
+.drawer-status.is-done {
+  color: var(--color-done);
+}
+
+.drawer-status.is-dusted {
+  color: var(--color-dusted);
+}
+
+.drawer-close {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  margin-left: auto;
+  background: none;
+  border: 0;
+  border-radius: 6px;
+  color: var(--color-ink-2);
+}
+
+.drawer-close:hover {
+  background-color: var(--color-ground);
+  color: var(--color-ink);
+}
+
+.drawer-close svg {
+  width: 19px;
+  height: 19px;
+}
+
+.drawer-title {
+  margin: 21px 0 0;
+  font-family: var(--font-plaque);
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 32px;
+  letter-spacing: 0.016em;
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+}
+
+.drawer-title-input {
+  width: 100%;
+  margin: 21px 0 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  outline: none;
+  font-family: var(--font-plaque);
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 32px;
+  letter-spacing: 0.016em;
+  text-transform: uppercase;
+}
+
+.drawer-folder {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 13px 0 0;
+  padding: 0;
+  background: none;
+  border: 0;
+  font-size: 15.5px;
+  line-height: 21px;
+  color: #454545;
+}
+
+.drawer-folder:hover {
+  color: var(--color-accent);
+}
+
+.drawer-folder svg {
+  flex: none;
+  width: 21px;
+  height: 21px;
+  color: #6f6f6f;
+}
+
+.drawer-rule {
+  flex: none;
+  height: 1px;
+  margin: 19px 0 0;
+  background-color: var(--color-line);
+  border: 0;
+}
+
+/*
+ * The comp sets these in the condensed face, not the body one: same 86px of ink
+ * for DESCRIPTION, but taller caps inside it. So they are plaques like the lane
+ * heads and the job names, two sizes down — which is also the reading that made
+ * the drawer's own labels the page's worst-scoring text while they were set in
+ * the body sans, spaced out to reach the same width at three quarters the cap.
+ */
+.drawer-label {
+  margin: 21px 0 0;
+  font-family: var(--font-plaque);
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 18px;
+  letter-spacing: 0.015em;
+  text-transform: uppercase;
+  color: var(--color-ink-2);
+}
+
+.drawer-body + .drawer-label {
+  margin-top: 39px;
+}
+
+.drawer-body {
+  margin: 12px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+}
+
+.drawer-body p {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 25px;
+  color: #2b2b2b;
+  overflow-wrap: anywhere;
+}
+
+.drawer-body-empty {
+  color: var(--color-ink-2);
+}
+
+.drawer-body-input {
+  width: 100%;
+  margin: 9px 0 0;
+  padding: 9px 10px;
+  background-color: var(--color-ground);
+  border: 1px solid var(--color-line);
+  border-radius: 6px;
+  outline: none;
+  font-size: 15px;
+  line-height: 1.55;
+  resize: vertical;
+}
+
+.drawer-body-input:focus {
+  border-color: var(--color-accent);
+}
+
+.subtasks {
+  margin: 20px 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.subtask {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+
+.subtask-tick {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  background-color: var(--color-surface);
+  border: 1.5px solid var(--color-line-2);
+  border-radius: var(--radius-tick);
+  color: transparent;
+}
+
+.subtask-tick svg {
+  width: 12px;
+  height: 12px;
+}
+
+.subtask.is-done .subtask-tick {
+  background-color: var(--color-accent);
+  border-color: var(--color-accent);
+  color: var(--color-accent-ink);
+}
+
+.subtask-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 12.5px;
+  line-height: 20px;
+  color: var(--color-ink);
+  overflow-wrap: anywhere;
+}
+
+/*
+ * A done subtask keeps its full-strength text. The filled tick is the whole
+ * signal; greying the sentence too would read as "cancelled", not "finished".
+ */
+
+.subtask-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  border: 0;
+  background: none;
+  outline: none;
+  font-size: 15px;
+}
+
+.subtask-add {
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  opacity: 0;
+  transition: opacity 120ms ease, color 120ms ease;
+  padding: 0;
+  background: none;
+  border: 0;
+  color: var(--color-ink-2);
+  font-size: 15px;
+  text-align: left;
+}
+
+.drawer:hover .subtask-add,
+.subtask-add:focus-visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.subtask-add:hover {
+  color: var(--color-accent);
+}
+
+.subtask-add-glyph {
+  flex: none;
+  width: 19px;
+  height: 19px;
+  color: var(--color-ink-3);
+}
+
+/* -------------------------------------------------------------- catalogue */
+
+/*
+ * The field carries on below the board: same ground, same white panels on the
+ * same hairline, same plaque heads. The directory is the tree, the dump is the
+ * tape, and the dump takes the drawer's width so the right rail stays put.
+ */
+.catalogue {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--drawer-width);
+  gap: var(--lane-gap);
+  align-items: start;
+  padding: 0 16px 39px;
+}
+
+.directory,
+.dump {
+  min-width: 0;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-slab);
+}
+
+.section-head {
   display: flex;
   align-items: baseline;
-  gap: 8px;
-  margin: 0 0 6px;
-  font-size: 11px;
-  letter-spacing: 0.04em;
-  color: var(--color-muted);
-}
-
-.scratch-unhitch {
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: var(--color-muted);
-  font: inherit;
-  font-size: 11px;
-  letter-spacing: 0.04em;
-  cursor: pointer;
-}
-
-.scratch-unhitch:hover,
-.scratch-unhitch:focus-visible {
-  color: var(--color-mark);
-  outline: none;
-}
-
-.scratch-text {
-  display: block;
-  width: 100%;
+  gap: 10px;
   margin: 0;
-  padding: 0;
-  border: 0;
-  resize: none;
-  background: transparent;
-  color: var(--color-ink);
-  font-size: 13px;
-  line-height: 1.45;
-  outline: none;
-  caret-color: var(--color-live);
+  padding: 15px 19px 21px;
 }
 
-.scratch-ghost {
-  padding: 10px 12px;
-  color: var(--color-hair);
-  font-size: 12px;
-  letter-spacing: 0.04em;
-  user-select: none;
-}
-
-.scratch-ghost.is-add {
+.section-name {
   margin: 0;
-  border: 1px dashed var(--color-hair);
-  background: transparent;
-  color: var(--color-muted);
-  text-align: left;
-  cursor: pointer;
+  font-family: var(--font-plaque);
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 22px;
+  letter-spacing: 0.055em;
+  text-transform: uppercase;
 }
 
-.scratch-ghost.is-add:hover,
-.scratch-ghost.is-add:focus-visible {
-  border-color: var(--color-live);
-  color: var(--color-live);
-  outline: none;
+.section-note {
+  font-size: 15px;
+  color: var(--color-ink-2);
+  font-variant-numeric: tabular-nums;
 }
 
-.find-mark {
-  background: var(--color-live);
-  color: var(--color-live-ink);
-  padding: 0 1px;
+/*
+ * Wide columns, not narrow ones: a subtask sits four stems deep, and a narrow
+ * column is where its name starts losing its tail to an ellipsis. Folders flow
+ * rather than sit on a grid, so a short folder does not hold a row open.
+ */
+.forest {
+  columns: 400px;
+  column-gap: 28px;
+  padding: 0 10px 14px;
 }
 
-.manager.is-folio {
-  display: flex;
-  flex-direction: column;
-  grid-template-columns: none;
-  gap: 0;
-  padding: 0;
-  overflow: auto;
+.forest-col {
+  break-inside: avoid;
+  min-width: 0;
 }
 
-.folio-bar {
+.stem {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  flex-shrink: 0;
-  padding: 8px 14px 0;
-}
-
-.folio-plaque,
-.folio-close {
-  margin: 0;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  font-family: var(--font-plaque);
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.16em;
-  color: var(--color-muted);
-  cursor: pointer;
-}
-
-.folio-plaque:hover,
-.folio-close:hover,
-.folio-plaque:focus-visible,
-.folio-close:focus-visible {
-  color: var(--color-live);
-  outline: none;
-}
-
-.folio-transport {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  flex-shrink: 0;
-  margin: 8px 10px 0;
-  border: 1px solid var(--color-chrome);
-}
-
-.folio-lane {
-  padding: 6px 10px;
-  border-right: 1px solid var(--color-chrome);
-  font-family: var(--font-plaque);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  color: var(--color-muted);
-}
-
-.folio-lane:last-child {
-  border-right: 0;
-}
-
-.folio-doc {
-  position: relative;
-  flex: 1;
-  min-height: 0;
-  margin: 10px 10px 12px;
-  padding: 18px 20px 16px;
-  background: var(--color-card);
-  border: 1px solid var(--color-hair);
-  cursor: grab;
-  overflow: auto;
-}
-
-.folio-doc.is-job > .jack,
-.folio-doc.is-job > .jack-anchor {
-  top: 22px;
-  right: -5px;
-}
-
-.folio-doc.is-sat > .jack,
-.folio-doc.is-sat > .jack-anchor {
-  top: 18px;
-  left: -5px;
-}
-
-.folio-doc .card-title,
-.folio-doc .card-input {
-  font-size: 28px;
-  font-weight: 700;
-  line-height: 1.15;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--color-ink);
-}
-
-.folio-doc.is-sat .card-title,
-.folio-doc.is-sat .card-input {
-  font-size: 22px;
-  letter-spacing: 0;
-  text-transform: none;
-}
-
-.folio-body,
-.folio-body-input {
-  display: block;
+  gap: 0;
   width: 100%;
-  min-height: 12em;
-  margin: 16px 0 0;
+  padding: 1px 9px;
+  background: none;
+  border: 0;
+  border-radius: 5px;
+  font-size: 13.5px;
+  line-height: 18px;
+  text-align: left;
+}
+
+.stem:hover {
+  background-color: var(--color-ground);
+}
+
+.stem.is-live {
+  background-color: var(--color-accent-wash);
+}
+
+.stem.is-found .stem-name {
+  font-weight: 600;
+}
+
+.stem-ghost {
+  color: var(--color-ink-2);
+}
+
+.stem-ghost:hover {
+  color: var(--color-accent);
+}
+
+.stem-add-glyph {
+  /* Sits in the disclosure column, so the label lands on the job names above. */
+  flex: none;
+  width: 14px;
+  height: 14px;
+  margin-right: 3px;
+}
+
+/*
+ * The stems are the tree's structure, not a decoration under it, so they are
+ * set in the tint that every other mark on the page is held to rather than a
+ * grey faint enough to guess at.
+ */
+.stem-rule {
+  flex: none;
+  color: var(--color-ink-3);
+  font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+  font-size: 12.5px;
+  /* The row pitch is set to the box-drawing glyph so the verticals actually join. */
+  line-height: 18px;
+  white-space: pre;
+}
+
+.stem-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.stem.is-project .stem-name {
+  font-weight: 600;
+}
+
+/* A job in the tree is the same plaque as a job on the board, one size down. */
+.stem.is-job .stem-name {
+  font-family: var(--font-plaque);
+  font-size: 14.5px;
+  font-weight: 700;
+  line-height: 18px;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+}
+
+.stem-status {
+  flex: none;
+  margin-left: 12px;
+  padding: 0;
+  background: none;
+  border: 0;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--color-ink-2);
+}
+
+.stem-status:hover {
+  color: var(--color-accent);
+}
+
+.stem-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  border: 0;
+  background: none;
+  outline: none;
+  font-size: 13.5px;
+}
+
+/*
+ * The disclosure is a drawn mark from the same set as the rest of the chrome,
+ * not another dash: a dash in this column reads as one more length of stem and
+ * the tree stops being legible. It turns from the chip's caret to the button's
+ * chevron, which is the field's one way of saying open and shut.
+ */
+.stem-fold {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 14px;
+  height: 18px;
+  padding: 0;
+  background: none;
+  border: 0;
+  color: var(--color-ink-3);
+}
+
+.stem-fold svg {
+  width: 11px;
+  height: 11px;
+}
+
+.stem-fold:hover {
+  color: var(--color-ink);
+}
+
+.notes {
+  display: flex;
+  flex-direction: column;
+  padding: 0 10px 6px;
+}
+
+.note {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 12px;
+  padding: 9px;
+  border-radius: 5px;
+}
+
+.note + .note {
+  box-shadow: 0 -1px 0 var(--color-line);
+}
+
+.note:hover {
+  background-color: var(--color-ground);
+}
+
+.note.is-live {
+  background-color: var(--color-accent-wash);
+}
+
+.note-date {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 20px;
+  color: var(--color-ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.note-text {
+  min-width: 0;
   padding: 0;
   border: 0;
-  resize: none;
-  background: transparent;
-  color: var(--color-ink);
-  font-size: 15px;
-  font-weight: 400;
-  line-height: 1.5;
-  letter-spacing: 0;
-  text-transform: none;
-  caret-color: var(--color-live);
-  cursor: text;
-}
-
-.folio-body-input {
+  background: none;
   outline: none;
+  font-size: 13.5px;
+  line-height: 20px;
+  resize: none;
+  overflow: hidden;
 }
 
-.folio-doc .nest-list.is-folio {
-  margin-top: 18px;
+.note-leash {
+  grid-column: 2;
+  padding: 0;
+  background: none;
+  border: 0;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--color-accent);
+  text-align: left;
 }
 
-.studio.is-folio .directory {
-  opacity: 0.92;
+/* The tape's last line is empty and writes: the same ledger row the tree uses. */
+.dump-add {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  padding: 9px;
+  background: none;
+  border: 0;
+  border-radius: 5px;
+  box-shadow: 0 -1px 0 var(--color-line);
+  color: var(--color-ink-2);
+  font-size: 13.5px;
+  text-align: left;
+}
+
+.dump-add:hover {
+  background-color: var(--color-ground);
+  color: var(--color-accent);
+}
+
+.dump-add-glyph {
+  flex: none;
+  width: 15px;
+  height: 15px;
+}
+
+/* ----------------------------------------------------------------- states */
+
+/*
+ * A find hit is washed in the one accent; the board has no second colour. The
+ * rule under it is the accent at full strength rather than the hairline tint,
+ * because this is now the only place a hit is declared: it is a mark that
+ * carries meaning and has to clear 3:1, which the hairline tint does not.
+ */
+.find-mark {
+  background-color: var(--color-accent-wash);
+  box-shadow: inset 0 -1px 0 var(--color-accent);
+  color: inherit;
+  border-radius: 2px;
+}
+
+/* ----------------------------------------------------------------- motion
+ * The one authored moment is the pull: a line of a job comes out of the drawer,
+ * pays out a cable that goes taut as it crosses the board, lands in a lane as a
+ * card, and the cable settles back into slack. Everything here serves that —
+ * the lift that says the thing is in the air, the cable that says it is still
+ * attached, and the reveals that get the drawer and its lines on screen without
+ * a cut. Nothing decorative, and all of it off under reduced motion.
+ */
+
+/* Airborne: the thing leaves the page and casts a shadow on it. */
+@keyframes lift {
+  from {
+    transform: scale(0.99);
+  }
+  to {
+    transform: scale(1.025);
+  }
+}
+
+.slab.is-ghost,
+.subtask.is-ghost {
+  animation: lift 130ms cubic-bezier(0.2, 0.7, 0.3, 1) forwards;
+}
+
+/*
+ * A subtask in the air is on its way to being a card, so it borrows the card's
+ * plate to travel on — hairline and all. Its own row has no surface to lift.
+ */
+.subtask.is-ghost {
+  box-sizing: content-box;
+  padding: 11px 13px;
+  background-color: var(--color-surface);
+  border: 1px solid #e8e8e8;
+  border-radius: var(--radius-slab);
+  box-shadow: 0 8px 20px rgb(21 21 21 / 0.13);
+}
+
+/* The row it came out of holds its place, faint, until the drop resolves. */
+.subtask.is-away {
+  opacity: 0.32;
+}
+
+/*
+ * Slack is the resting state and the leash animates its own sag frame by frame,
+ * so only the colour crosses over — going taut is a change of state, not a jump.
+ */
+.leash-core {
+  transition: stroke 140ms ease;
+}
+
+/* The drawer arrives from the rail it lives on rather than cutting in. */
+@keyframes drawer-in {
+  from {
+    opacity: 0;
+    transform: translateX(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.drawer {
+  animation: drawer-in 170ms cubic-bezier(0.2, 0.7, 0.3, 1) both;
+}
+
+/*
+ * The drawer's own lines come in behind it, close enough together to read as
+ * one movement and staggered enough that the eye lands on the title first.
+ */
+@keyframes line-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.drawer-title,
+.drawer-folder,
+.drawer-body,
+.subtasks {
+  animation: line-in 200ms cubic-bezier(0.2, 0.7, 0.3, 1) both;
+}
+
+.drawer-folder {
+  animation-delay: 30ms;
+}
+
+.drawer-body {
+  animation-delay: 55ms;
+}
+
+.subtasks {
+  animation-delay: 80ms;
+}
+
+/* ------------------------------------------------------------- responsive */
+
+/*
+ * The comp's lane is 196px and at the comp's width the last one runs under the
+ * drawer, which is what the comp shows. Five of those plus the drawer clear
+ * each other at 1354, so from there the rail is held open at every width — the
+ * board never reflows when a job opens, and the dump below stands in the same
+ * rail — and the lanes take the remaining slack rather than leaving dead ground.
+ */
+@media (min-width: 1360px) {
+  .board {
+    grid-auto-columns: minmax(var(--lane-width), 1fr);
+    padding-right: calc(var(--drawer-width) + 16px);
+  }
+}
+
+/*
+ * Narrow: the field stops being one screen and becomes one column. The board
+ * keeps its own sideways scroll, because five lanes are the point, and the
+ * drawer and the catalogue fall in under it as the next panels down — which is
+ * also the only width where the whole field is reachable by scrolling alone.
+ */
+@media (max-width: 900px) {
+  .field {
+    height: auto;
+  }
+
+  .topbar {
+    flex-wrap: wrap;
+    height: auto;
+    padding: 11px 14px 12px;
+    gap: 10px 12px;
+  }
+
+  /* The name and the primary action hold the first line between them. */
+  .topbar-brand {
+    order: 1;
+  }
+
+  .new-job {
+    order: 2;
+    margin-left: auto;
+  }
+
+  .find {
+    order: 3;
+    flex: 1 1 100%;
+    margin-left: 0;
+  }
+
+  /*
+   * The filters run off the edge on one line rather than stacking into a third
+   * and fourth row. On a narrow screen the board is what the screen is for, and
+   * a filter is something you reach for.
+   */
+  .topbar-filters {
+    order: 4;
+    flex: 1 1 100%;
+    flex-wrap: nowrap;
+    gap: 8px;
+    margin-left: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .topbar-filters::-webkit-scrollbar {
+    display: none;
+  }
+
+  /*
+   * The lanes take the tallest one's height rather than each their own. Only one
+   * is on screen at a time here, so a short lane left at its natural height puts
+   * a screen of bare ground under its last card while the tall lane that set the
+   * board's height sits off the right edge — the slack belongs inside the panel,
+   * which is where the comp and every wider width already put it.
+   */
+  .board {
+    grid-auto-columns: min(80vw, 320px);
+    align-items: stretch;
+    height: auto;
+    /* One seam for the whole column: board to drawer to catalogue to tape. */
+    padding: 14px;
+  }
+
+  .drawer {
+    position: static;
+    width: auto;
+    margin: 0 14px 14px;
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius-slab);
+  }
+
+  .catalogue {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 14px;
+    padding: 0 14px 24px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition-duration: 0ms !important;
+    animation-duration: 0ms !important;
+  }
 }
