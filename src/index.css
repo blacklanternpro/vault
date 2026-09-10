@@ -465,6 +465,12 @@
  * card — so the resting board is exactly the comp's, and the thing you reach
  * for is there the moment you reach. It takes the card's own background so it
  * masks the plate it sits on rather than patching white over a washed one.
+ *
+ * Hidden means unhittable, the way the lane's and the drawer's own hidden rows
+ * already work. That is only half of it: a tap synthesises hover before it
+ * synthesises the click, so the reveal and the hit arrive in one gesture and
+ * the corner is live again. The other half is in Board.tsx, which declines a
+ * press that did not come from a mouse and lets it reach the card instead.
  */
 .slab-shovel {
   position: absolute;
@@ -480,12 +486,14 @@
   border-radius: 6px;
   color: var(--color-ink-3);
   opacity: 0;
+  pointer-events: none;
   transition: opacity 110ms ease, color 110ms ease, background-color 110ms ease;
 }
 
 .slab:hover .slab-shovel,
 .slab-shovel:focus-visible {
   opacity: 1;
+  pointer-events: auto;
 }
 
 .slab-shovel:hover {

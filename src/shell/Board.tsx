@@ -61,6 +61,17 @@ export function Board({
   const layout = useMemo(() => ({ doc, filterId, laneFilter, urgentOnly }), [doc, filterId, laneFilter, urgentOnly])
   useBoardFlip(boardRef, layout, settling)
 
+  /*
+   * The shovel is invisible until the pointer is on the card, which only guards
+   * it against a pointer that arrives before it presses. A tap synthesises the
+   * hover and the click together: the press lands on the card, the hover it
+   * brings reveals the shovel, and the click that follows finds it there, so a
+   * finger aimed at the card's corner would move the job instead of opening it.
+   * Reading the press wherever it lands lets the shovel decline anything that
+   * is not a mouse and hand the gesture back to the card.
+   */
+  const pressedWith = useRef('mouse')
+
   function cardsIn(col: ColName) {
     if (laneFilter && laneFilter !== col) return []
     return cards.filter((n) => laneOf(n.status) === col && (!urgentOnly || Boolean(n.urgent)))
@@ -109,6 +120,9 @@ export function Board({
       role="list"
       aria-label="Jobs by status"
       ref={boardRef}
+      onPointerDownCapture={(e) => {
+        pressedWith.current = e.pointerType
+      }}
     >
       <Filament
         doc={doc}
@@ -168,8 +182,12 @@ export function Board({
                         className="slab-shovel"
                         data-testid={`slab-shovel-${node.id}`}
                         aria-label={`Move ${node.title.trim() || 'job'} to ${LANE_PLAQUE[shoveTo]}`}
-                        onPointerDown={(e) => e.stopPropagation()}
+                        onPointerDown={(e) => {
+                          if (e.pointerType === 'mouse') e.stopPropagation()
+                        }}
                         onClick={(e) => {
+                          /* detail 0 is the keyboard, which never presses first. */
+                          if (e.detail !== 0 && pressedWith.current !== 'mouse') return
                           e.stopPropagation()
                           onShovel(node.id)
                         }}
