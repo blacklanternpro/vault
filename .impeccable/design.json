@@ -383,7 +383,7 @@
       {
         "name": "drawer-width",
         "value": "286px",
-        "purpose": "The right rail. The notes tape below the fold takes the same width so the rail stands in one line down the page."
+        "purpose": "The right rail. The notes tape below the fold takes the same width, but not the same edge: the drawer bleeds to the screen while the tape keeps the page gutter, so the tape sits 16px inboard."
       },
       {
         "name": "fold-cue",
