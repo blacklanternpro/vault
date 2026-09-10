@@ -1,31 +1,40 @@
 @import 'tailwindcss';
 @import '@fontsource-variable/public-sans/wght.css';
+@import '@fontsource-variable/sofia-sans-semi-condensed/wght.css';
 
 /*
  * VAULT WORLDWIDE — the board.
- * Measured from .impeccable/mocks/canon-board.webp; palette and type sampled
- * off the comp pixels (.impeccable/build/spec.json), face ranked by font-match.
+ * Every number here is measured off .impeccable/mocks/canon-board.webp: colours
+ * sampled from comp pixels, type sizes derived from ink-row profiles, boxes from
+ * border scans. Both faces are the ones font-match ranked (.impeccable/build/spec.json).
  */
 
 @theme {
-  --color-ground: #f7f8f9;
+  --color-ground: #f2f3f6;
   --color-surface: #ffffff;
   --color-ink: #151515;
-  --color-ink-2: #6f7175;
-  --color-ink-3: #9a9c9f;
-  --color-line: #e4e6e8;
-  --color-line-2: #d6d9dc;
-  --color-accent: #0b68f8;
+  --color-ink-2: #666a70;
+  --color-ink-3: #8f9298;
+  --color-line: #e5e6e8;
+  --color-line-2: #d7d9dd;
+  --color-accent: #0b6ef3;
   --color-accent-ink: #ffffff;
-  --color-accent-wash: #eef4fe;
+  --color-accent-wash: #f1f6fe;
   --color-accent-line: #a9c9fb;
   --color-urgent: #d92c20;
 
   --font-sans: 'Public Sans Variable', 'Public Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  /* The plaque face: job names and lane names, the only caps the board shouts. */
+  --font-plaque: 'Sofia Sans Semi Condensed Variable', 'Sofia Sans Semi Condensed', 'Public Sans Variable', 'Helvetica Neue', Helvetica, Arial, sans-serif;
 
   --radius-slab: 8px;
   --radius-control: 8px;
   --radius-tick: 4px;
+
+  /* Board metrics, straight off the comp's border scan. */
+  --lane-width: 196px;
+  --lane-gap: 10px;
+  --drawer-width: 286px;
 }
 
 @layer base {
@@ -106,9 +115,8 @@
 .topbar {
   display: flex;
   align-items: center;
-  gap: 14px;
-  height: 66px;
-  padding: 0 16px;
+  height: 69px;
+  padding: 0 20px 0 16px;
   background-color: var(--color-surface);
   border-bottom: 1px solid var(--color-line);
 }
@@ -116,19 +124,20 @@
 .topbar-brand {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 11px;
   flex: none;
 }
 
 .brand-mark {
   display: block;
-  width: 26px;
-  height: 26px;
+  width: 36px;
+  height: 33px;
   color: var(--color-ink);
 }
 
 .brand-name {
   margin: 0;
+  padding-top: 4px;
   font-size: 18px;
   font-weight: 700;
   letter-spacing: 0.01em;
@@ -139,11 +148,11 @@
 .find {
   display: flex;
   align-items: center;
-  gap: 9px;
-  flex: 1 1 378px;
-  max-width: 378px;
+  gap: 13px;
+  flex: 0 0 377px;
   height: 40px;
-  padding: 0 12px;
+  margin-left: 55px;
+  padding: 0 14px;
   background-color: var(--color-surface);
   border: 1px solid var(--color-line);
   border-radius: var(--radius-control);
@@ -167,7 +176,7 @@
   min-width: 0;
   border: 0;
   background: none;
-  font-size: 15px;
+  font-size: 13.5px;
   outline: none;
 }
 
@@ -177,7 +186,7 @@
 
 .find-keys {
   flex: none;
-  font-size: 13px;
+  font-size: 12px;
   color: var(--color-ink-3);
   letter-spacing: 0.04em;
 }
@@ -190,26 +199,55 @@
   letter-spacing: 0.04em;
 }
 
+/*
+ * The chips pack against the search field and the primary action pins to the
+ * right rail, so the slack between them absorbs whatever the labels cost.
+ */
 .topbar-filters {
   display: flex;
   align-items: center;
   gap: 10px;
-  flex: none;
-  margin-left: auto;
+  flex: 1 1 auto;
+  min-width: 0;
+  margin-left: 28px;
 }
 
 .chip {
+  position: relative;
   display: inline-flex;
   align-items: center;
-  gap: 7px;
+  gap: 8px;
   height: 36px;
-  padding: 0 12px;
+  padding: 0 12px 0 13px;
   background-color: var(--color-surface);
   border: 1px solid var(--color-line);
   border-radius: var(--radius-control);
-  font-size: 15px;
+  font-size: 14.5px;
   color: var(--color-ink);
   white-space: nowrap;
+  cursor: pointer;
+}
+
+.chip:focus-within {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px var(--color-accent-wash);
+}
+
+.chip-label {
+  pointer-events: none;
+}
+
+.chip-select {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  border-radius: inherit;
+  background: none;
+  opacity: 0;
+  appearance: none;
+  cursor: pointer;
 }
 
 .chip:hover {
@@ -217,31 +255,25 @@
 }
 
 .chip-caret {
-  width: 14px;
-  height: 14px;
+  flex: none;
+  width: 16px;
+  height: 16px;
   color: var(--color-ink-2);
-}
-
-.chip select {
-  border: 0;
-  background: none;
-  outline: none;
-  font-size: 15px;
-  appearance: none;
-  cursor: pointer;
+  pointer-events: none;
 }
 
 .new-job {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  height: 36px;
-  padding: 0 12px 0 11px;
+  gap: 10px;
+  height: 38px;
+  margin-left: auto;
+  padding: 0 7px 0 15px;
   background-color: var(--color-accent);
   border: 1px solid var(--color-accent);
   border-radius: var(--radius-control);
   color: var(--color-accent-ink);
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
   white-space: nowrap;
 }
@@ -250,39 +282,43 @@
   background-color: #0a5cdd;
 }
 
-.new-job-glyph,
-.new-job-chevron {
-  width: 15px;
-  height: 15px;
+.new-job-glyph {
+  width: 16px;
+  height: 16px;
 }
 
+/* The chevron is thrown to the far edge in the comp, away from `+ New`. */
 .new-job-chevron {
+  width: 17px;
+  height: 17px;
+  margin-left: 10px;
   opacity: 0.75;
 }
 
 /* ------------------------------------------------------------------ stage */
 
+/*
+ * The drawer floats over the right of the stage rather than taking a column, so
+ * opening a job never reshuffles the lanes underneath. In the comp the DUSTED
+ * lane runs on under the panel, which is what fixes this behaviour.
+ */
 .stage {
   position: relative;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
   min-height: 0;
-}
-
-.stage.has-drawer {
-  grid-template-columns: minmax(0, 1fr) 282px;
 }
 
 /* ------------------------------------------------------------------ board */
 
 .board {
+  position: relative;
   display: grid;
   grid-auto-flow: column;
-  grid-auto-columns: minmax(196px, 1fr);
-  gap: 6px;
+  grid-auto-columns: var(--lane-width);
+  gap: var(--lane-gap);
   align-items: start;
+  height: 100%;
   min-height: 0;
-  padding: 19px 14px 26px;
+  padding: 21px 16px 39px;
   overflow-x: auto;
   overflow-y: hidden;
 }
@@ -290,7 +326,6 @@
 .lane {
   display: flex;
   flex-direction: column;
-  min-width: 196px;
   height: 100%;
   min-height: 0;
   background-color: var(--color-surface);
@@ -304,13 +339,15 @@
   justify-content: space-between;
   gap: 8px;
   flex: none;
-  padding: 15px 16px 13px;
+  padding: 15px 19px 21px;
 }
 
 .lane-name {
-  font-size: 16px;
-  font-weight: 600;
-  letter-spacing: 0.045em;
+  font-family: var(--font-plaque);
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 22px;
+  letter-spacing: 0.055em;
   text-transform: uppercase;
 }
 
@@ -324,15 +361,11 @@
 .lane-stack {
   display: flex;
   flex-direction: column;
-  gap: 9px;
+  gap: 15px;
   flex: 1 1 auto;
   min-height: 0;
-  padding: 0 12px 12px;
+  padding: 0 10px 10px;
   overflow-y: auto;
-}
-
-.lane.is-quiet .lane-stack {
-  opacity: 0.92;
 }
 
 /* ------------------------------------------------------------------ slabs */
@@ -340,9 +373,10 @@
 .slab {
   position: relative;
   flex: none;
-  padding: 13px 14px 14px;
+  min-height: 94px;
+  padding: 23px 14px 18px;
   background-color: var(--color-surface);
-  border: 1px solid var(--color-line);
+  border: 1px solid #e8e8e8;
   border-radius: var(--radius-slab);
   text-align: left;
   transition: border-color 120ms ease, background-color 120ms ease;
@@ -376,31 +410,49 @@
 
 .slab-head {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 8px;
+}
+
+/*
+ * A done card drops its ring into a gutter and runs the plaque and the folder
+ * down one text column beside it, the way the comp's DONE lane does. Both rows
+ * spend the card's side padding, so the longest name still holds one line.
+ */
+.slab-head:has(.slab-tick) {
+  gap: 7px;
+  margin-left: -5px;
+  margin-right: -14px;
+}
+
+.slab:has(.slab-tick) .slab-folder {
+  margin-right: -14px;
+  padding-left: 28px;
 }
 
 .slab-tick {
   flex: none;
-  width: 16px;
-  height: 16px;
-  margin-top: 2px;
-  color: var(--color-ink-3);
+  width: 21px;
+  height: 21px;
+  color: #5b5b5b;
 }
 
 .slab-title {
   margin: 0;
-  font-size: 16px;
-  font-weight: 600;
-  letter-spacing: 0.01em;
+  font-family: var(--font-plaque);
+  font-size: 15.5px;
+  font-weight: 700;
+  line-height: 20px;
+  letter-spacing: 0;
   text-transform: uppercase;
   overflow-wrap: anywhere;
 }
 
 .slab-folder {
-  margin: 5px 0 0;
-  font-size: 15px;
-  color: var(--color-ink-2);
+  margin: 11px 0 0;
+  font-size: 12.5px;
+  line-height: 16px;
+  color: #4a4a4a;
   overflow-wrap: anywhere;
 }
 
@@ -428,38 +480,18 @@
 }
 
 .slab-input {
-  font-size: 16px;
-  font-weight: 600;
-  letter-spacing: 0.01em;
+  font-family: var(--font-plaque);
+  font-size: 15.5px;
+  font-weight: 700;
+  line-height: 20px;
+  letter-spacing: 0;
   text-transform: uppercase;
 }
 
 .slab-folder-input {
-  margin-top: 5px;
-  font-size: 15px;
+  margin-top: 9px;
+  font-size: 12.5px;
   color: var(--color-ink-2);
-}
-
-.slab-nest {
-  margin: 10px 0 0;
-  padding: 0;
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
-
-.slab-nest-row {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  font-size: 14px;
-  color: var(--color-ink-2);
-}
-
-.slab-nest-row.is-done {
-  color: var(--color-ink-3);
-  text-decoration: line-through;
 }
 
 .lane-add {
@@ -467,6 +499,8 @@
   align-items: center;
   gap: 8px;
   flex: none;
+  opacity: 0;
+  transition: opacity 120ms ease, border-color 120ms ease, color 120ms ease;
   width: 100%;
   padding: 11px 14px;
   background: none;
@@ -475,6 +509,11 @@
   color: var(--color-ink-2);
   font-size: 15px;
   text-align: left;
+}
+
+.lane:hover .lane-add,
+.lane-add:focus-visible {
+  opacity: 1;
 }
 
 .lane-add:hover {
@@ -572,10 +611,13 @@
 /* ----------------------------------------------------------------- drawer */
 
 .drawer {
+  position: absolute;
+  inset: 0 0 0 auto;
+  z-index: 10;
   display: flex;
   flex-direction: column;
-  min-height: 0;
-  padding: 26px 20px 20px;
+  width: var(--drawer-width);
+  padding: 19px 18px 24px;
   background-color: var(--color-surface);
   border-left: 1px solid var(--color-line);
   overflow-y: auto;
@@ -591,20 +633,24 @@
 .drawer-status {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   padding: 0;
   background: none;
   border: 0;
-  font-size: 15px;
-  font-weight: 600;
-  letter-spacing: 0.07em;
+  font-family: var(--font-plaque);
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 20px;
+  letter-spacing: 0;
   text-transform: uppercase;
   color: var(--color-accent);
 }
 
+/* The plaque's caps ride above the line's optical centre; the dot goes with them. */
 .drawer-dot {
-  width: 9px;
-  height: 9px;
+  width: 11px;
+  height: 11px;
+  margin-bottom: 4px;
   border-radius: 50%;
   background-color: currentColor;
 }
@@ -643,86 +689,94 @@
 }
 
 .drawer-close svg {
-  width: 15px;
-  height: 15px;
+  width: 19px;
+  height: 19px;
 }
 
 .drawer-title {
-  margin: 18px 0 0;
-  font-size: 30px;
+  margin: 21px 0 0;
+  font-family: var(--font-plaque);
+  font-size: 32px;
   font-weight: 700;
-  line-height: 1.1;
-  letter-spacing: 0.005em;
+  line-height: 32px;
+  letter-spacing: 0.016em;
   text-transform: uppercase;
   overflow-wrap: anywhere;
 }
 
 .drawer-title-input {
   width: 100%;
-  margin: 18px 0 0;
+  margin: 21px 0 0;
   padding: 0;
   border: 0;
   background: none;
   outline: none;
-  font-size: 30px;
+  font-family: var(--font-plaque);
+  font-size: 32px;
   font-weight: 700;
-  line-height: 1.1;
-  letter-spacing: 0.005em;
+  line-height: 32px;
+  letter-spacing: 0.016em;
   text-transform: uppercase;
 }
 
 .drawer-folder {
   display: flex;
   align-items: center;
-  gap: 9px;
-  margin: 10px 0 0;
+  gap: 10px;
+  margin: 13px 0 0;
   padding: 0;
   background: none;
   border: 0;
-  font-size: 15px;
-  color: var(--color-ink-2);
+  font-size: 15.5px;
+  line-height: 21px;
+  color: #454545;
 }
 
 .drawer-folder:hover {
-  color: var(--color-ink);
+  color: var(--color-accent);
 }
 
 .drawer-folder svg {
   flex: none;
-  width: 17px;
-  height: 17px;
-  color: var(--color-ink-3);
+  width: 21px;
+  height: 21px;
+  color: #6f6f6f;
 }
 
 .drawer-rule {
   flex: none;
   height: 1px;
-  margin: 17px 0 0;
+  margin: 19px 0 0;
   background-color: var(--color-line);
   border: 0;
 }
 
 .drawer-label {
-  margin: 18px 0 0;
-  font-size: 14px;
+  margin: 20px 0 0;
+  font-size: 12px;
   font-weight: 600;
-  letter-spacing: 0.09em;
+  line-height: 18px;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
   color: var(--color-ink-2);
 }
 
+.drawer-body + .drawer-label {
+  margin-top: 39px;
+}
+
 .drawer-body {
-  margin: 9px 0 0;
+  margin: 12px 0 0;
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  gap: 11px;
 }
 
 .drawer-body p {
   margin: 0;
-  font-size: 15px;
-  line-height: 1.55;
-  color: #282828;
+  font-size: 13.5px;
+  line-height: 25px;
+  color: #2b2b2b;
   overflow-wrap: anywhere;
 }
 
@@ -748,12 +802,12 @@
 }
 
 .subtasks {
-  margin: 11px 0 0;
+  margin: 20px 0 0;
   padding: 0;
   list-style: none;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 18px;
 }
 
 .subtask {
@@ -766,8 +820,8 @@
   display: grid;
   place-items: center;
   flex: none;
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
   padding: 0;
   background-color: var(--color-surface);
   border: 1.5px solid var(--color-line-2);
@@ -789,14 +843,16 @@
 .subtask-name {
   flex: 1 1 auto;
   min-width: 0;
-  font-size: 15px;
+  font-size: 12.5px;
+  line-height: 20px;
   color: var(--color-ink);
   overflow-wrap: anywhere;
 }
 
-.subtask.is-done .subtask-name {
-  color: var(--color-ink-2);
-}
+/*
+ * A done subtask keeps its full-strength text. The filled tick is the whole
+ * signal; greying the sentence too would read as "cancelled", not "finished".
+ */
 
 .subtask-input {
   flex: 1 1 auto;
@@ -810,9 +866,10 @@
 .subtask-add {
   display: flex;
   align-items: center;
-  gap: 11px;
+  gap: 12px;
   width: 100%;
-  margin-top: 2px;
+  opacity: 0;
+  transition: opacity 120ms ease, color 120ms ease;
   padding: 0;
   background: none;
   border: 0;
@@ -821,14 +878,19 @@
   text-align: left;
 }
 
+.drawer:hover .subtask-add,
+.subtask-add:focus-visible {
+  opacity: 1;
+}
+
 .subtask-add:hover {
   color: var(--color-accent);
 }
 
 .subtask-add-glyph {
   flex: none;
-  width: 18px;
-  height: 18px;
+  width: 19px;
+  height: 19px;
   color: var(--color-ink-3);
 }
 
@@ -952,7 +1014,7 @@
 
 .stem-status {
   flex: none;
-  margin-left: 8px;
+  margin-left: 10px;
   font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.06em;
@@ -1068,9 +1130,14 @@
 
 /* ------------------------------------------------------------- responsive */
 
-@media (max-width: 1180px) {
-  .stage.has-drawer {
-    grid-template-columns: minmax(0, 1fr) 268px;
+/*
+ * The comp's lane is 196px wide. Past the point where five of those plus the
+ * drawer leave slack, the lanes take the slack rather than leaving dead ground.
+ */
+@media (min-width: 1500px) {
+  .board {
+    grid-auto-columns: minmax(var(--lane-width), 1fr);
+    padding-right: calc(var(--drawer-width) + 16px);
   }
 }
 
@@ -1084,34 +1151,41 @@
     flex-wrap: wrap;
     height: auto;
     padding: 12px 14px;
+    gap: 12px;
   }
 
   .find {
     order: 3;
     flex-basis: 100%;
     max-width: none;
+    margin-left: 0;
   }
 
   .topbar-filters {
     order: 2;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-left: auto;
   }
 
-  .stage,
-  .stage.has-drawer {
-    grid-template-columns: minmax(0, 1fr);
+  .new-job {
+    margin-left: 10px;
   }
 
   .board {
-    grid-auto-columns: minmax(240px, 82vw);
-    padding: 14px;
+    grid-auto-columns: min(82vw, 320px);
+    height: auto;
+    padding: 14px 14px 24px;
   }
 
   .lane {
     height: auto;
-    max-height: 76vh;
+    max-height: 74vh;
   }
 
   .drawer {
+    position: static;
+    width: auto;
     border-left: 0;
     border-top: 1px solid var(--color-line);
   }

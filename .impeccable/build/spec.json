@@ -2035,7 +2035,32 @@
           "weight": 0.5225
         },
         "widthClass": "condensed",
-        "weightClass": "medium"
+        "weightClass": "medium",
+        "chosen": {
+          "family": "Biryani",
+          "weight": 400,
+          "fontSizePx": 13,
+          "source": "index",
+          "fp": {
+            "lines": 1,
+            "glyphs": 32,
+            "capHeightPx": 12.3,
+            "inkIsDark": true,
+            "allCaps": false,
+            "advance": 0.5271,
+            "advTall": 0.3514,
+            "advX": 0.5406,
+            "gap": 0.1081,
+            "xRatio": 0.6872,
+            "stemW": 0.1623,
+            "contrast": 1.0501,
+            "serif": null,
+            "densTall": 0.5541,
+            "densX": 0.598,
+            "weight": 0.5541
+          },
+          "stamp": "8c87399096d5"
+        }
       }
     },
     {
