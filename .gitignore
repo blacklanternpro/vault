@@ -17,8 +17,14 @@ dist-ssr
 !.vscode/extensions.json
 .idea
 .DS_Store
+# Impeccable session runtime (decision-page daemons, local overrides, captures)
+.impeccable/questions
+.impeccable/config.local.json
+.impeccable/review
+
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
+.impeccable/build/crops

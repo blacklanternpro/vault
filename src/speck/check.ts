@@ -18,6 +18,32 @@ import {
 } from './machine'
 import { COL_ORDER } from './tokens'
 
+/**
+ * Behaviour fixture. Kept separate from SEED_SOURCE so the shipped seed can
+ * carry demonstration content without dragging every machine assertion with it.
+ */
+const FIXTURE = `PIPE vault
+  COL pending
+  COL rnd
+  COL active
+  COL done
+  COL dusted
+NEST
+  NODE 1 "site" status none
+    NODE 10 "HOME PAGE" status active
+      NODE 11 "lock type ramp" status active URGENT
+      NODE 12 "crop hero still" status active
+      NODE 13 "still loop" status rnd LOOSE
+        BODY "8s loop, no sting"
+    NODE 20 "TYPE SPEC" status rnd
+    NODE 30 "REPO" status pending
+    NODE 40 "CONTACT" status done
+    NODE 50 "OLD GRID" status dusted
+  NODE 2 "print" status none
+    NODE 60 "RUN SHEET" status pending
+DUMP
+  NOTE 09.09.26 "type ramp 700 / 400"`
+
 const SITE = 1
 const PRINT = 2
 const HOME = 10
@@ -33,23 +59,33 @@ export function runSpeckChecks(): string[] {
   const fails: string[] = []
   const fail = (msg: string) => fails.push(msg)
 
-  const seed = SEED_SOURCE
-  if (/PLACE\s+(SEAL|SKULL|CAL)/.test(seed)) fail('seed salt PLACE')
-  if (/\bINV\b/.test(seed)) fail('seed INV')
-  if (/\bGRAIN\b/.test(seed)) fail('seed GRAIN')
-  if (/\bSCAN\b/.test(seed)) fail('seed SCAN')
-  if (/GLYPH/.test(seed)) fail('seed GLYPH')
-  if (/scout ridge|INGRESS|SUPABASE|telemetry overlay|COLD STORAGE|OLD SPIKE|"ops"/.test(seed)) {
+  if (/PLACE\s+(SEAL|SKULL|CAL)/.test(SEED_SOURCE)) fail('seed salt PLACE')
+  if (/\bINV\b/.test(SEED_SOURCE)) fail('seed INV')
+  if (/\bGRAIN\b/.test(SEED_SOURCE)) fail('seed GRAIN')
+  if (/\bSCAN\b/.test(SEED_SOURCE)) fail('seed SCAN')
+  if (/GLYPH/.test(SEED_SOURCE)) fail('seed GLYPH')
+  if (/scout ridge|INGRESS|SUPABASE|telemetry overlay|COLD STORAGE|OLD SPIKE|"ops"/.test(SEED_SOURCE)) {
     fail('stale ops-room demo')
   }
 
-  const doc = parseDoc(seed)
-  if (doc.pipeName !== 'vault') fail(`pipe name ${doc.pipeName}`)
-  if (doc.cols.join(' ') !== 'pending rnd active done dusted') fail(`cols ${doc.cols.join(' ')}`)
-  if (doc.inv) fail('parsed INV')
-  if (doc.places.some((p) => p.organ === 'CAL' || p.organ === 'SEAL' || p.organ === 'SKULL')) {
+  const shipped = parseDoc(SEED_SOURCE)
+  if (shipped.pipeName !== 'vault') fail(`pipe name ${shipped.pipeName}`)
+  if (shipped.cols.join(' ') !== 'pending rnd active done dusted') fail(`cols ${shipped.cols.join(' ')}`)
+  if (shipped.inv) fail('parsed INV')
+  if (shipped.places.some((p) => p.organ === 'CAL' || p.organ === 'SEAL' || p.organ === 'SKULL')) {
     fail('parsed salt places')
   }
+  for (const col of COL_ORDER) {
+    if (!shipped.nodes.some((n) => n.status === col)) fail(`seed has no ${col} job`)
+  }
+  const shippedBody = shipped.nodes.find((n) => (n.body ?? '').includes('\n'))
+  if (!shippedBody) fail('seed has no multi-paragraph body')
+  else if (byId(parseDoc(serializeDoc(shipped)), shippedBody.id)?.body !== shippedBody.body) {
+    fail('multi-paragraph body round-trip')
+  }
+
+  const seed = FIXTURE
+  const doc = parseDoc(seed)
 
   const nRepo = byId(doc, REPO)
   if (!nRepo || nRepo.status !== 'pending' || nRepo.parent !== SITE || nRepo.title !== 'REPO') {
@@ -139,7 +175,7 @@ NEST
 
   result = commitLine('CLEAR', freshSession(), result.source)
   if (parseDoc(result.source).pipeName !== 'vault') fail('CLEAR seed')
-  if (!byId(parseDoc(result.source), REPO)) fail('CLEAR nodes')
+  if (parseDoc(result.source).nodes.length !== shipped.nodes.length) fail('CLEAR nodes')
   if (/PLACE\s+CAL/.test(result.source)) fail('CLEAR restored CAL')
 
   const staged = stageCard(freshSession(), seed, HOME, 'done')

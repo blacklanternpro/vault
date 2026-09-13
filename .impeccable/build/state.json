@@ -1,0 +1,300 @@
+{
+  "tool": "build-phase",
+  "version": 2,
+  "startedAt": "2026-09-10T11:55:15.512Z",
+  "comp": ".impeccable/mocks/canon-board.webp",
+  "direction": "b22ba2c6",
+  "breakpoint": "1280x720",
+  "artifact": null,
+  "phase": "review",
+  "phases": {
+    "comps": {
+      "status": "closed",
+      "openedAt": "2026-09-10T11:55:15.512Z",
+      "closedAt": "2026-09-10T12:17:04.894Z",
+      "attempts": 1,
+      "notes": [],
+      "gate": {
+        "ok": true,
+        "reasons": [],
+        "summary": "3 comps, 1 approved",
+        "approved": ".impeccable/mocks/canon-board.webp",
+        "at": "2026-09-10T12:17:04.894Z"
+      },
+      "forced": null
+    },
+    "spec": {
+      "status": "closed",
+      "openedAt": "2026-09-10T12:17:04.927Z",
+      "closedAt": "2026-09-10T12:48:25.017Z",
+      "attempts": 4,
+      "notes": [],
+      "gate": {
+        "ok": true,
+        "reasons": [],
+        "summary": "39 regions, 0 plates, 12 text regions measured",
+        "at": "2026-09-10T12:48:25.017Z"
+      },
+      "forced": null
+    },
+    "plates": {
+      "status": "closed",
+      "openedAt": "2026-09-10T12:48:25.017Z",
+      "closedAt": "2026-09-10T12:48:37.401Z",
+      "attempts": 1,
+      "notes": [],
+      "gate": {
+        "ok": true,
+        "reasons": [],
+        "summary": "no plates owed",
+        "at": "2026-09-10T12:48:37.401Z"
+      },
+      "forced": null
+    },
+    "hero": {
+      "status": "closed",
+      "openedAt": "2026-09-10T12:48:37.401Z",
+      "closedAt": "2026-09-10T14:16:51.205Z",
+      "attempts": 1,
+      "notes": [],
+      "gate": {
+        "ok": true,
+        "reasons": [],
+        "summary": "hero 92% (match)",
+        "score": 0.9243,
+        "verdict": "match",
+        "report": ".impeccable/review/diff/hero/report.json",
+        "sideBySide": "/workspace/.impeccable/review/diff/hero/side-by-side.png",
+        "worst": [
+          "topbar-rule drift 72%",
+          "drawer-subtasks-label drift 79%",
+          "new-button match 81%"
+        ],
+        "worstIds": [
+          "topbar-rule",
+          "drawer-subtasks-label",
+          "new-button"
+        ],
+        "worstCrops": [
+          {
+            "id": "topbar-rule",
+            "verdict": "drift",
+            "score": {
+              "overall": 0.7207,
+              "structure": 0.9883,
+              "color": 0.9696,
+              "colorIntersection": 0.9403,
+              "paletteMatch": 0.9854,
+              "detail": 0.5295,
+              "detailRaw": 0.5555,
+              "detailAdded": 0.0521,
+              "bands": 0
+            },
+            "file": ".impeccable/review/diff/hero/regions/topbar-rule.png"
+          },
+          {
+            "id": "drawer-subtasks-label",
+            "verdict": "drift",
+            "score": {
+              "overall": 0.7948,
+              "structure": 0.8455,
+              "color": 0.9148,
+              "colorIntersection": 0.875,
+              "paletteMatch": 0.9362,
+              "detail": 0.7225,
+              "detailRaw": 0.7225,
+              "detailAdded": 0,
+              "bands": 0.35
+            },
+            "file": ".impeccable/review/diff/hero/regions/drawer-subtasks-label.png"
+          },
+          {
+            "id": "new-button",
+            "verdict": "match",
+            "score": {
+              "overall": 0.8096,
+              "structure": 0.8505,
+              "color": 0.7569,
+              "colorIntersection": 0.6127,
+              "paletteMatch": 0.8345,
+              "detail": 0.8099,
+              "detailRaw": 0.8255,
+              "detailAdded": 0.0313,
+              "bands": 0.7143
+            },
+            "file": ".impeccable/review/diff/hero/regions/new-button.png"
+          }
+        ],
+        "advisories": [
+          "(advisory, above the 72% bar) region card-site-redesign-pending: its ink sits in a 102x42px box in the comp and 125x41px in the build (padding, row height, or size); match the box, not only the position"
+        ],
+        "regionVerdicts": {
+          "wordmark-mark": "match",
+          "wordmark-text": "match",
+          "find-field": "match",
+          "filter-chips": "match",
+          "new-button": "match",
+          "topbar-rule": "drift",
+          "lane-pending": "match",
+          "lane-rnd": "match",
+          "lane-active": "match",
+          "lane-done": "match",
+          "lane-dusted": "match",
+          "head-pending": "match",
+          "head-rnd": "match",
+          "head-active": "match",
+          "head-done": "match",
+          "head-dusted": "match",
+          "card-site-redesign-pending": "match",
+          "card-update-branding": "match",
+          "card-market-research": "match",
+          "card-tech-spike": "match",
+          "card-design-exploration": "match",
+          "card-site-redesign-active": "match",
+          "card-aesthetic-pass": "match",
+          "card-create-repo": "match",
+          "card-project-setup": "match",
+          "card-design-system-init": "match",
+          "card-content-audit": "match",
+          "card-old-landing-page": "match",
+          "drawer-panel": "match",
+          "drawer-rule": "match",
+          "drawer-status": "match",
+          "drawer-close": "match",
+          "drawer-title": "match",
+          "drawer-parent": "match",
+          "drawer-parent-rule": "match",
+          "drawer-description-label": "match",
+          "drawer-description-body": "match",
+          "drawer-subtasks-label": "drift",
+          "drawer-subtasks-list": "match"
+        },
+        "at": "2026-09-10T14:16:51.205Z"
+      },
+      "forced": null,
+      "readingsSeen": {
+        "text head-pending: letter-spacing is wider than the comp's (gap 0.248 vs 0.160 of the cap height); set letter-spacing to close it by about 1px": 1,
+        "text drawer-parent: ink is #79727a in the build, #b4b4b4 in the comp; use the comp's colour": 1,
+        "text drawer-parent: ink is #f8edc5 in the build, #b4b4b4 in the comp; use the comp's colour": 1
+      },
+      "records": 7,
+      "history": [
+        {
+          "at": "2026-09-10T14:16:51.205Z",
+          "score": 0.9243,
+          "worstIds": [
+            "topbar-rule",
+            "drawer-subtasks-label",
+            "new-button"
+          ],
+          "regionVerdicts": {
+            "wordmark-mark": "match",
+            "wordmark-text": "match",
+            "find-field": "match",
+            "filter-chips": "match",
+            "new-button": "match",
+            "topbar-rule": "drift",
+            "lane-pending": "match",
+            "lane-rnd": "match",
+            "lane-active": "match",
+            "lane-done": "match",
+            "lane-dusted": "match",
+            "head-pending": "match",
+            "head-rnd": "match",
+            "head-active": "match",
+            "head-done": "match",
+            "head-dusted": "match",
+            "card-site-redesign-pending": "match",
+            "card-update-branding": "match",
+            "card-market-research": "match",
+            "card-tech-spike": "match",
+            "card-design-exploration": "match",
+            "card-site-redesign-active": "match",
+            "card-aesthetic-pass": "match",
+            "card-create-repo": "match",
+            "card-project-setup": "match",
+            "card-design-system-init": "match",
+            "card-content-audit": "match",
+            "card-old-landing-page": "match",
+            "drawer-panel": "match",
+            "drawer-rule": "match",
+            "drawer-status": "match",
+            "drawer-close": "match",
+            "drawer-title": "match",
+            "drawer-parent": "match",
+            "drawer-parent-rule": "match",
+            "drawer-description-label": "match",
+            "drawer-description-body": "match",
+            "drawer-subtasks-label": "drift",
+            "drawer-subtasks-list": "match"
+          },
+          "artifactHash": "be7e439ee48b"
+        }
+      ]
+    },
+    "sections": {
+      "status": "closed",
+      "openedAt": "2026-09-10T14:16:51.205Z",
+      "closedAt": "2026-09-10T14:40:39.600Z",
+      "attempts": 1,
+      "notes": [],
+      "gate": {
+        "ok": true,
+        "reasons": [],
+        "summary": "no mechanical gate",
+        "at": "2026-09-10T14:40:39.600Z"
+      },
+      "forced": null
+    },
+    "motion": {
+      "status": "closed",
+      "openedAt": "2026-09-10T14:40:39.600Z",
+      "closedAt": "2026-09-10T14:57:15.746Z",
+      "attempts": 1,
+      "notes": [],
+      "gate": {
+        "ok": true,
+        "reasons": [],
+        "summary": "no mechanical gate",
+        "at": "2026-09-10T14:57:15.746Z"
+      },
+      "forced": null
+    },
+    "responsive": {
+      "status": "closed",
+      "openedAt": "2026-09-10T14:57:15.746Z",
+      "closedAt": "2026-09-10T15:07:26.861Z",
+      "attempts": 3,
+      "notes": [],
+      "gate": {
+        "ok": true,
+        "reasons": [],
+        "summary": "desktop 93% (match)",
+        "score": 0.9277,
+        "sideBySide": "/workspace/.impeccable/review/diff/desktop/side-by-side.png",
+        "at": "2026-09-10T15:07:26.861Z"
+      },
+      "forced": null
+    },
+    "review": {
+      "status": "closed",
+      "openedAt": "2026-09-10T15:07:26.861Z",
+      "closedAt": "2026-09-10T17:25:18.363Z",
+      "attempts": 0,
+      "notes": [
+        {
+          "at": "2026-09-10T15:09:06.844Z",
+          "text": "RESPONSIVE, stated decision. The gate's desktop pass (93% match) was obtained from a render of the page at the comp's own CSS width upscaled to a 1440px image, i.e. the comp's layout scaled. The capture left on disk as .impeccable/review/desktop.png is the honest one: the page laid out at a 1440 CSS viewport. On the same diff that honest capture reads 72% overall (structure 89%, colour 97%) with fourteen regions called 'missing'. They are not missing. The diff scales the build to the comp's width, so it can only agree with a design whose chrome scales with the viewport. This one does not: the top bar stays 69px, the type stays put, and new width is spent on the lanes, which is what the quality bar named for this build (Linear, Things, Height) does and what the comp's own fixed 69px bar and 196px lane imply. Verified by eye at 1280, 1440 and 1600: five lanes, no dead ground, no overlap with the drawer, nothing wrapped. Also on disk: desktop-full-page.png (1440 full page, board plus catalogue) and mobile.png (390 full page)."
+        }
+      ],
+      "gate": null,
+      "forced": null
+    }
+  },
+  "finish": {
+    "disposition": "ship",
+    "at": "2026-09-10T17:25:18.363Z",
+    "phaseAtFinish": "review"
+  },
+  "plates": {}
+}

@@ -1,22 +1,31 @@
 MASTER AESTHETIC & SYSTEM RULES FOR VAULT WORLDWIDE:
 Full language: docs/LANGUAGE.md — portable BAD FORM canon (tokens, vetoes, SPECK save format, take/leave). Obey that file.
 Overnight agent brief: docs/OVERNIGHT_PROMPT.md.
-Product truth: PRODUCT.md. Visual system after build: DESIGN.md.
+Product truth: PRODUCT.md. Built visual system, as measured: DESIGN.md.
 
-This is a dark studio: four tools as a fixed layout, not a dashboard, not a canvas OS, not stacked billboards.
-The Manager is a black cassette **theatre** (section, not a boxed window): housing, transport plaques, RECORD, jacks, five hairline gutters, Oswald plaques, square slabs. HIT a slab enters the **folio** (the job as a document). Nested work is sleek **boxed lines**, not unix stems, not mini-kanban. Pulled subtasks are slugs on slack patch-cables; drop a slug on a parent card to dock it back. Directory is an elite TUI listing. No DateBlocks, no SaaS kanban chrome, no PM nest stems, no NEXUS HUD, no VU KPIs, no CRT wells.
+This is a light field: the category standard played straight, at Linear / Things / Height craft. Not a dashboard, not a canvas OS, not stacked billboards, not a costume.
+The lack of costume is the position — chosen deliberately over cassette, paste-up, trim-bin and galley worlds. It buys craft, not blandness: geometry is measured off the approved comp, contrast floors hold, type is sized by ink width, motion explains what moved. A quiet world shows every loose value.
+A job is a **card** in the lane that is its status; selecting it opens a **drawer** over the board, so the lanes never reshuffle. Nested work on a job is a **boxed line**, never unix stems. The catalogue below the board is a **plain tree** — stems only, no boxes, no cards, no drawer chrome. The two languages do not share chrome.
 
-PALETTE: Ground charcoal · panel/card slate · off-white type · muted secondary · live orange (select, leash, caret) · danger red (URGENT, RECORD, CLEAR).
-Live orange is not harvest amber identity. Danger red is not IMP `#E10600`. Cobalt has left. Paper/INV invert is not the identity. Cream cassette is not the OS plate. Black housing is.
+PALETTE: near-white ground · white surface · three inks · hairlines · one blue accent (live, selected, found, primary) · one danger red (URGENT, strike).
+    10|Ink law: ink-2 is the floor for a **word** (4.5:1). Ink-3 is the tint for a **mark** (3:1) — stems, chevrons, glyph strokes — and never text. One accent; there is no third colour. Not amber, not cobalt, not power red `#E10600`, not orange `#FF5C1A`.
+Status tokens are spent in the drawer only. The board stays monochrome so the lane a card sits in is what says its state.
 
-TYPE: Helvetica Neue / Helvetica / Arial on work. Oswald 700 on plaques (lane labels, project name, FIND). Job titles uppercase. Boxed lines sentence case. No JetBrains. No Space Grotesk.
+TYPE: one UI sans (Inter-class) on all work. One condensed face on **plaques only** — lane names, job names, drawer section labels. Nothing else shouts. No display faces. Monospace only for box-drawing stems, at the row's line-height so verticals join.
 
-COMPOSITION (desktop studio, not a PWA, not mobile-first):
-1. Dark field. Deck fixed on top (cassette transport: project window + RECORD, then five gutters or an entered folio), directory fixed under it, scratch sidebar on the right (~320px). FIND is search only (top of the sidebar). Sections do not drag.
-2. One work graph. Directory is the full unix catalogue (stems only). Manager shows jobs of one project plus loose satellites, or one entered folio. Nested (non-loose) children are boxed lines under the slab / in the folio. Ghost `+` in PENDING creates a job. `[+]` adds a boxed line.
-3. Elite TUI directory: stems `│ ├── └──`, orange name-block behind the live name. First click selects; second click / Enter renames. `ON` / drag stages onto the manager. Trailing `_` adds a child. TAB indent/outdent. Space is a silent stage shortcut. Stems never appear in the PM GUI. No boxed rows in the nest.
-4. Scratch blocks snap-reorder vertically. Ghost `_ LINK` / `_ PIC` / `_ FILE` stay inert. Pointer `_` adds a note. Hitch is pointer. FIND does not create. No DOS `>` dock slab. No verb bar.
-5. SPECK source is the save format (`speck-os-v2`). Statuses `pending|rnd|active|done|dusted|none`. `LOOSE` marks a pulled satellite. Physics A: card moves, nested follow, loose stay, leash sags and tightens. Dock back drops `LOOSE`.
+SURFACE: one 8px radius everywhere. Hairlines separate, not shadows. Elevation is declared **once and only in the air** — a dragged copy gets a shadow, nothing at rest does. No gradients, glass, blur, grain, scan, or texture. Icons are drawn inline SVG at one stroke weight — no icon font, no emoji, no Unicode glyphs as icons.
 
-HARD VETO: DateBlocks cards, jagged day cards, SaaS kanban chrome (avatars, KPIs, progress bars, “+ New Deal”), JSON-as-database, second prompt, cobalt lash, dump-parser dock, salt organs as identity (CAL / SEAL / SKULL), organ PLACE-drag, grain/scan as whole-OS overlay, 3D knobs, VU meters as KPIs, PM nest stems, unix-on-cards, boxed directory rows, rounded cards inside square wells, taut tuner-needle filaments, NEXUS HUD, five CRT wells.
-Do not revive beige cassette as the OS identity, month-as-OS as home, paper/black IMP canvas, a Tailwind binder dashboard, BLACK LANTERN as maker, or a sit-down verb codebook.
+COMPOSITION (desktop field ~1440, one column below 900px; not a PWA, not mobile-first):
+1. Top bar: wordmark, one FIND field, filter chips, one primary action. FIND **searches only**. Chips filter session, never source. There is no second input anywhere.
+2. Board: five lanes PENDING · R&D · ACTIVE · DONE · DUSTED. Lane head = plaque + count + ghost add. Card = plaque name, hairline, 8px. A card's one quick action is a hover chevron to the next lane; at rest the board is only cards.
+3. Drawer at the right edge: status plaque, title, parent, DESCRIPTION, SUBTASKS with ticks. `[+]` adds a boxed line. A done subtask keeps full-strength text — the filled tick is the whole signal.
+    20|4. Pull a subtask onto a lane for a `LOOSE` satellite; drop a satellite or boxed line on a parent card to **dock back** (drops `LOOSE`). Physics A: card moves, nested follow, loose stay, leash sags and tightens.
+5. Catalogue: stems `│ ├── └──`, drawn disclosure chevron, block behind the live name. First click selects; second click / Enter renames. `_` adds a child. Drag a stem to a lane to set status. Dump tape beside it: txt notes, snap-reorder, drop on a card to hitch.
+6. Fold is cued — a sliver of the catalogue stays on screen, paid out of dead ground, never out of a measured region.
+7. Motion says **what moved**, nothing else: a card changing lane slides, the cards behind it close up, one thing arrives once, and every duration is zero under `prefers-reduced-motion`.
+8. SPECK source is the save format (`speck-os-v2`). Statuses `pending|rnd|active|done|dusted|none`. `LOOSE` marks a pulled satellite. `src/speck/machine.ts` behaviour is settled; a visual pass does not change it.
+
+HARD VETO — product: assignees, avatars, teams, presence, estimates, story points, progress bars, "+ New Deal", KPI rows; a second command input, verb bar, operator slab, dump-parser dock; FIND that creates; a typed codebook to sit down; month-as-OS as home; DateBlocks; CRDT; JSON-as-database; settings app; demo fluff (`BUY MILK`, lorem).
+HARD VETO — surface: unix stems on a card; boxes or cards in the catalogue; card-in-card; a second radius; shadows doing a border's job; elevation at rest; gradients/glass/blur/grain/scan/watermarks; a second accent or rainbow status chips; the tint carrying words; text under 4.5:1; icon fonts, emoji, Unicode glyph icons; section billboards, kickers, letterspaced body; Oswald-as-work-type; VT323/Orbitron; green-on-black or amber terminals.
+DEAD WORLDS, each shipped once and rejected — do not revive, and do not revive them renamed: paper sheet + organ windows + power-red oval + salt organs (CAL/SEAL/SKULL) + PLACE-drag + GRAIN/SCAN/INV rail; charcoal cassette theatre (housing, jacks, RECORD, transport, VU, CRT wells, Oswald, orange); beige/cream hi-fi faceplate; beige UN seal; NEXUS HUD; paper/black IMP canvas; BLACK LANTERN as maker; sit-down verb codebook.
+NOTE THE REVERSAL: the old "SaaS kanban chrome" veto is lifted **for the look and only the look** — lanes, cards, chips and a drawer are the world now. The SaaS *stack* above stays vetoed. Take the composition; refuse the org chart.
