@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type RefObject } from 'react'
-import { byId, satellitesOf, type Doc } from '../speck/doc'
+import { byId, type Doc, type GraphNode } from '../speck/doc'
 
 export type LiveLeash = {
   id: number
@@ -13,7 +13,8 @@ type Cable = { id: number; d: string; taut: boolean }
 
 type Props = {
   doc: Doc
-  projectId: number | null
+  /** The LOOSE nodes on screen; each one gets a cable back to its parent. */
+  satellites: GraphNode[]
   hostRef: RefObject<HTMLElement | null>
   liveRef: RefObject<LiveLeash | null>
   dragging: boolean
@@ -39,7 +40,7 @@ function cablePath(x1: number, y1: number, x2: number, y2: number, sag: number):
 
 type Frozen = { id: number; sag: number }
 
-export function Filament({ doc, projectId, hostRef, liveRef, dragging }: Props) {
+export function Filament({ doc, satellites, hostRef, liveRef, dragging }: Props) {
   const [cables, setCables] = useState<Cable[]>([])
   const lastLive = useRef<Frozen | null>(null)
   const frozen = useRef<Frozen | null>(null)
@@ -54,19 +55,23 @@ export function Filament({ doc, projectId, hostRef, liveRef, dragging }: Props) 
       return
     }
     const box = host.getBoundingClientRect()
+    // The svg is pinned to the host's padding box, so it scrolls with the lanes;
+    // measure against that same scrolled origin or the cables drift when panned.
+    const ox = box.left - host.scrollLeft
+    const oy = box.top - host.scrollTop
     const live = liveRef.current
 
     const jackOf = (id: number): { x: number; y: number } | null => {
       if (live && live.id === id) {
-        return { x: live.x - box.left, y: live.y - box.top }
+        return { x: live.x - ox, y: live.y - oy }
       }
       const el = host.querySelector(`[data-jack="${id}"]`)
       if (!(el instanceof HTMLElement)) return null
       const r = el.getBoundingClientRect()
-      return { x: r.left + r.width / 2 - box.left, y: r.top + r.height / 2 - box.top }
+      return { x: r.left + r.width / 2 - ox, y: r.top + r.height / 2 - oy }
     }
 
-    const pairs: { id: number; parent: number }[] = satellitesOf(doc, projectId)
+    const pairs: { id: number; parent: number }[] = satellites
       .filter((sat) => sat.parent != null)
       .map((sat) => ({ id: sat.id, parent: sat.parent as number }))
 
@@ -99,7 +104,7 @@ export function Filament({ doc, projectId, hostRef, liveRef, dragging }: Props) 
       })
     }
     setCables(next)
-  }, [doc, hostRef, liveRef, projectId])
+  }, [doc, hostRef, liveRef, satellites])
 
   const measureRef = useRef(measure)
   measureRef.current = measure

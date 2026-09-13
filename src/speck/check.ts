@@ -10,10 +10,39 @@ import {
   freshSession,
   hitchNote,
   pullCard,
+  dockCard,
+  searchFind,
+  selectNode,
   stageCard,
   typeField,
 } from './machine'
 import { COL_ORDER } from './tokens'
+
+/**
+ * Behaviour fixture. Kept separate from SEED_SOURCE so the shipped seed can
+ * carry demonstration content without dragging every machine assertion with it.
+ */
+const FIXTURE = `PIPE vault
+  COL pending
+  COL rnd
+  COL active
+  COL done
+  COL dusted
+NEST
+  NODE 1 "site" status none
+    NODE 10 "HOME PAGE" status active
+      NODE 11 "lock type ramp" status active URGENT
+      NODE 12 "crop hero still" status active
+      NODE 13 "still loop" status rnd LOOSE
+        BODY "8s loop, no sting"
+    NODE 20 "TYPE SPEC" status rnd
+    NODE 30 "REPO" status pending
+    NODE 40 "CONTACT" status done
+    NODE 50 "OLD GRID" status dusted
+  NODE 2 "print" status none
+    NODE 60 "RUN SHEET" status pending
+DUMP
+  NOTE 09.09.26 "type ramp 700 / 400"`
 
 const SITE = 1
 const PRINT = 2
@@ -30,23 +59,33 @@ export function runSpeckChecks(): string[] {
   const fails: string[] = []
   const fail = (msg: string) => fails.push(msg)
 
-  const seed = SEED_SOURCE
-  if (/PLACE\s+(SEAL|SKULL|CAL)/.test(seed)) fail('seed salt PLACE')
-  if (/\bINV\b/.test(seed)) fail('seed INV')
-  if (/\bGRAIN\b/.test(seed)) fail('seed GRAIN')
-  if (/\bSCAN\b/.test(seed)) fail('seed SCAN')
-  if (/GLYPH/.test(seed)) fail('seed GLYPH')
-  if (/scout ridge|INGRESS|SUPABASE|telemetry overlay|COLD STORAGE|OLD SPIKE|"ops"/.test(seed)) {
+  if (/PLACE\s+(SEAL|SKULL|CAL)/.test(SEED_SOURCE)) fail('seed salt PLACE')
+  if (/\bINV\b/.test(SEED_SOURCE)) fail('seed INV')
+  if (/\bGRAIN\b/.test(SEED_SOURCE)) fail('seed GRAIN')
+  if (/\bSCAN\b/.test(SEED_SOURCE)) fail('seed SCAN')
+  if (/GLYPH/.test(SEED_SOURCE)) fail('seed GLYPH')
+  if (/scout ridge|INGRESS|SUPABASE|telemetry overlay|COLD STORAGE|OLD SPIKE|"ops"/.test(SEED_SOURCE)) {
     fail('stale ops-room demo')
   }
 
-  const doc = parseDoc(seed)
-  if (doc.pipeName !== 'vault') fail(`pipe name ${doc.pipeName}`)
-  if (doc.cols.join(' ') !== 'pending rnd active done dusted') fail(`cols ${doc.cols.join(' ')}`)
-  if (doc.inv) fail('parsed INV')
-  if (doc.places.some((p) => p.organ === 'CAL' || p.organ === 'SEAL' || p.organ === 'SKULL')) {
+  const shipped = parseDoc(SEED_SOURCE)
+  if (shipped.pipeName !== 'vault') fail(`pipe name ${shipped.pipeName}`)
+  if (shipped.cols.join(' ') !== 'pending rnd active done dusted') fail(`cols ${shipped.cols.join(' ')}`)
+  if (shipped.inv) fail('parsed INV')
+  if (shipped.places.some((p) => p.organ === 'CAL' || p.organ === 'SEAL' || p.organ === 'SKULL')) {
     fail('parsed salt places')
   }
+  for (const col of COL_ORDER) {
+    if (!shipped.nodes.some((n) => n.status === col)) fail(`seed has no ${col} job`)
+  }
+  const shippedBody = shipped.nodes.find((n) => (n.body ?? '').includes('\n'))
+  if (!shippedBody) fail('seed has no multi-paragraph body')
+  else if (byId(parseDoc(serializeDoc(shipped)), shippedBody.id)?.body !== shippedBody.body) {
+    fail('multi-paragraph body round-trip')
+  }
+
+  const seed = FIXTURE
+  const doc = parseDoc(seed)
 
   const nRepo = byId(doc, REPO)
   if (!nRepo || nRepo.status !== 'pending' || nRepo.parent !== SITE || nRepo.title !== 'REPO') {
@@ -136,7 +175,7 @@ NEST
 
   result = commitLine('CLEAR', freshSession(), result.source)
   if (parseDoc(result.source).pipeName !== 'vault') fail('CLEAR seed')
-  if (!byId(parseDoc(result.source), REPO)) fail('CLEAR nodes')
+  if (parseDoc(result.source).nodes.length !== shipped.nodes.length) fail('CLEAR nodes')
   if (/PLACE\s+CAL/.test(result.source)) fail('CLEAR restored CAL')
 
   const staged = stageCard(freshSession(), seed, HOME, 'done')
@@ -197,8 +236,14 @@ NEST
     freshSession(),
     seed,
   )
-  if (tab0.session.field?.slot !== 'title') fail('tab0 title')
-  const tab1 = cycleField(tab0.session, tab0.source, 1)
+  if (tab0.session.pipeOpen !== LOOP || tab0.session.field) fail(`folio open ${tab0.session.pipeOpen} ${tab0.session.field?.slot}`)
+  const tabTitle = applyHit(
+    { kind: 'SLOT', x: 0, y: 0, w: 10, h: 10, z: 10, payload: `${LOOP}:title` },
+    tab0.session,
+    tab0.source,
+  )
+  if (tabTitle.session.field?.slot !== 'title') fail('tab0 title')
+  const tab1 = cycleField(tabTitle.session, tabTitle.source, 1)
   if (tab1.session.field?.slot !== 'body') fail(`tab1 ${tab1.session.field?.slot}`)
   const tab2 = cycleField(tab1.session, tab1.source, 1)
   if (tab2.session.field?.slot !== 'subtask') fail(`tab2 ${tab2.session.field?.slot}`)
@@ -261,6 +306,10 @@ NEST
   const bodySaved = commitFieldLine(typeField(bodyHit.session, 'new sting'), bodyHit.source)
   if (byId(parseDoc(bodySaved.source), LOOP)?.body !== 'new sting') fail('body write')
 
+  const escKeep = applyKey('Escape', false, typeField(bodyHit.session, 'keep sting'), bodyHit.source)
+  if (byId(parseDoc(escKeep.source), LOOP)?.body !== 'keep sting') fail('esc commits body')
+  if (escKeep.session.pipeOpen != null || escKeep.session.field) fail('esc after body still open')
+
   const hitchLive = hitchNote(freshSession(), seed, 0, HOME)
   const hitchNote0 = parseDoc(hitchLive.source).notes[0]
   if (hitchNote0?.node !== HOME || hitchNote0.text !== SEED_NOTE) fail(`hitch live ${JSON.stringify(hitchNote0)}`)
@@ -301,6 +350,37 @@ NEST
     hitchThenKill.source,
   )
   if (parseDoc(afterKillHitch.source).notes[0]?.node != null) fail('kill cleared hitch')
+
+  const pulledThenDock = dockCard(freshSession(), pulled.source, RAMP, HOME)
+  const dockedRamp = byId(parseDoc(pulledThenDock.source), RAMP)
+  if (dockedRamp?.loose) fail('dock clears LOOSE')
+  if (dockedRamp?.parent !== HOME) fail(`dock parent ${dockedRamp?.parent}`)
+  if (!nestedOf(parseDoc(pulledThenDock.source), HOME).some((n) => n.id === RAMP)) fail('dock nested again')
+  if (managerCards(parseDoc(pulledThenDock.source), SITE).some((n) => n.id === RAMP)) fail('dock left the rack')
+  if (/NODE 11[^\n]*LOOSE/.test(serializeDoc(parseDoc(pulledThenDock.source)))) fail('dock serialize LOOSE')
+
+  const loopDock = dockCard(freshSession(), seed, LOOP, HOME)
+  if (byId(parseDoc(loopDock.source), LOOP)?.loose) fail('dock seed satellite')
+  if (!nestedOf(parseDoc(loopDock.source), HOME).some((n) => n.id === LOOP)) fail('dock loop boxed')
+
+  const picked = selectNode(freshSession(), seed, REPO)
+  if (picked.session.selected?.kind !== 'NODE' || picked.session.selected.id !== REPO) fail('select node')
+  if (picked.session.field) fail('select opened field')
+  if (picked.session.pipeOpen != null) fail('select opened folio')
+
+  const homeFolio = applyHit(
+    { kind: 'NODE', x: 0, y: 0, w: 10, h: 10, z: 10, payload: HOME },
+    freshSession(),
+    seed,
+  )
+  if (homeFolio.session.pipeOpen !== HOME || homeFolio.session.field) fail('home folio')
+
+  const searched = searchFind(freshSession(), seed, 'loop')
+  if (searched.session.find !== 'loop') fail(`searchFind ${searched.session.find}`)
+  if (searched.session.selected?.kind !== 'NODE' || searched.session.selected.id !== LOOP) fail('searchFind select')
+  const noteCount = parseDoc(seed).notes.length
+  const searchNote = searchFind(freshSession(), seed, 'NOTE should not append')
+  if (parseDoc(searchNote.source).notes.length !== noteCount) fail('FIND created a note')
 
   return fails
 }
