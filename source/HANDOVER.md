@@ -97,7 +97,7 @@ git clone -b bedsit-sandbox https://github.com/blacklanternpro/vault /home/claud
 python3 build.py
 ```
 
-`build.py` concatenates `p1 p2 p3 p4 p5 p5b p8a p8b p8c p8d p8e p8h p8i p8j p8f p8g p9m p6 p7` into `all.mjs`. All of them share **one module scope**. It writes three outputs:
+`build.py` concatenates `p1 p2 p3 p4 p5 p5b p8a p8b p8c p8d p8e p8h p8i p8j p8f p8g p9m p9v p6 p7` into `all.mjs`. All of them share **one module scope**. It writes three outputs:
 
 | Output | What it is |
 | --- | --- |
