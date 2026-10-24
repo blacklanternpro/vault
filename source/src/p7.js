@@ -293,8 +293,8 @@ function inPull(dx,dy){if(!locked||SEAT.active)return;mouse.dx+=dx;mouse.dy+=dy;
 function inWheel(dy){if(!locked)return;if(SEAT.active){SEAT.def.wheel(dy);return;}setTool(tool+(dy>0?1:-1));}
 function bindInput(){document.addEventListener('keydown',e=>{if(e.code==='Tab')e.preventDefault();keys[e.code]=true;inKey(e.code,e.repeat);});
   document.addEventListener('keyup',e=>{keys[e.code]=false;});
-  document.addEventListener('mousedown',e=>{if(TOUCH&&e.sourceCapabilities&&e.sourceCapabilities.firesTouchEvents)return;inDown(e.button);});
-  document.addEventListener('mouseup',e=>{if(TOUCH&&e.sourceCapabilities&&e.sourceCapabilities.firesTouchEvents)return;inUp(e.button);});
+  document.addEventListener('mousedown',e=>{if(TOUCH&&!document.pointerLockElement)return;inDown(e.button);});
+  document.addEventListener('mouseup',e=>{if(TOUCH&&!document.pointerLockElement)return;inUp(e.button);});
   document.addEventListener('contextmenu',e=>e.preventDefault());
   document.addEventListener('mousemove',e=>{if(TOUCH&&!document.pointerLockElement)return;inLook(e.movementX,e.movementY);});
   document.addEventListener('wheel',e=>inWheel(e.deltaY),{passive:true});

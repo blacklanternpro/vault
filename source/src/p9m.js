@@ -46,7 +46,7 @@ body.touch.playing #mob{display:block}
 #rotate b{font-size:46px;display:block;margin-bottom:14px;animation:rot 1.6s ease-in-out infinite}
 @keyframes rot{50%{transform:rotate(90deg)}}
 @media (orientation:portrait){body.touch #rotate{display:flex}}`;document.head.appendChild(st);}
-function mobileInit(){MOB.on=false;document.body.classList.add('touch');mobileCSS();const vp=document.querySelector('meta[name=viewport]');if(vp)vp.setAttribute('content','width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover');
+function mobileInit(){MOB.on=false;document.body.classList.add('touch');phoneTier(true);mobileCSS();const vp=document.querySelector('meta[name=viewport]');if(vp)vp.setAttribute('content','width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover');
   const go=document.getElementById('go');if(go)go.textContent='TAP TO ENTER';const box=overlay.querySelector('.box');if(box){const p=document.createElement('div');p.style.cssText='margin-top:12px;font-size:11px;letter-spacing:1px;color:#c9a227';p.textContent='TOUCH: left thumb = move (push to the edge to sprint) · drag right half = look · ACTION / ALT are LMB / RMB · hold ACTION or ALT and drag down = pull · ≡ = light, quality, pause, sensitivity';box.insertBefore(p,go);}
   const rot=document.createElement('div');rot.id='rotate';rot.innerHTML='<b>⟳</b>TURN YOUR PHONE SIDEWAYS<br><br><span style="font-size:11px;color:#8d877a">BEDSIT IS A LANDSCAPE BEDSIT</span>';document.body.appendChild(rot);
   const mob=document.createElement('div');mob.id='mob';document.body.appendChild(mob);const B=(id,txt)=>{const b=document.createElement('div');b.id=id;b.className='mb';b.textContent=txt;mob.appendChild(b);MOB.el[id]=b;return b;};

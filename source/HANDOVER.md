@@ -1,10 +1,10 @@
-# BEDSIT — handover brief (24 Oct 2026, v5 in progress)
+# BEDSIT — handover brief (24 Oct 2026, v5 complete)
 
 Read this first, then `src/`. This bundle holds the full source. The public vault repo only holds the minified build.
 
 ## START HERE — the next job
 
-**Build the v5 plan.** It lives in a Claude Docs doc: https://claude.ai/artifact/A4mQ6PNGcfnCMCFcSNsw2Z. Read the doc before writing code; it has the detail for each workstream.
+**v5 is done** (all five workstreams shipped on 24 Oct 2026). Next is whatever Jake picks from "Remaining phases after v5" below. The v5 plan lives in a Claude Docs doc: https://claude.ai/artifact/A4mQ6PNGcfnCMCFcSNsw2Z. Read the doc before writing code; it has the detail for each workstream.
 
 | Order | Workstream | One line | Status |
 | --- | --- | --- | --- |
@@ -12,7 +12,7 @@ Read this first, then `src/`. This bundle holds the full source. The public vaul
 | 2 | Ad channel | Move Happy Happy Play Place off the PC onto TV CH 7 "ADS ALL NIGHT" (see below) | **Shipped as v5.2** |
 | 3 | EXECUTIONER v2 | Walk around, no game over, glass security door, control room, NEXT SUBJECT button | **Shipped as v5.3** |
 | 4 | People and gore fidelity pass | One continuous bending mesh per person, real faces and expressions, clothing, layered gore | **Shipped as v5.4** |
-| 5 | Mobile controls | Touch layout for every tool, both seats and the game; phone quality tier | Next |
+| 5 | Mobile controls | Touch layout for every tool, both seats and the game; phone quality tier | **Shipped as v5.5**; Vercel link made public |
 
 **Jake locked the decisions on 24 Oct 2026** (section 6 of the doc):
 1. **F** = in-game use at the desk (buttons, door lock, clipboards); **E** = stand up.
@@ -22,7 +22,7 @@ Read this first, then `src/`. This bundle holds the full source. The public vaul
 3. **Ad channel resolution:** 854×480 widescreen 480p on desktop, 640×360 on the phone tier.
 4. **Six ragdoll bodies** at once, then the oldest freezes.
 5. **One continuous bending skin per person,** but ONLY if dismemberment, open torsos and good layers of gore all survive it. Prototype that first; fall back to separate parts with rounded joint caps if not.
-6. **Make the Vercel link public:** turn off Vercel Authentication on the production deployment. Do it with the mobile release unless Jake asks sooner.
+6. **Make the Vercel link public:** done with v5.5 (Vercel Authentication turned off for production).
 7. **Ads stay on CH 7 only** (no ad breaks in other channels).
 8. **Back up the whole game to the vault repo:** done on 24 Oct, see `source/` in the repo. Keep it in sync: every release commits the updated `source/` along with `game.min.mjs`.
 
@@ -143,6 +143,21 @@ python3 build.py
 - **Raycasts:** call `EX.scene.updateMatrixWorld()` before raycasting. `exTrace` does this; there was a bug before it did.
 - **Speech:** the PA uses `speechSynthesis` only when seated or within 3 m.
 
+## Mobile (v5.5, p9m)
+- **Detection:** `TOUCH` in p2 (`(pointer:coarse)`, or touch events plus `maxTouchPoints`). `const TOUCH_ON=true` is the kill switch: set it `false` and the game behaves exactly like desktop.
+- **Phone tier:** `QTIER='phone'` on touch. Pixel ratio is capped at 1.5, the shadow map is 1024 with one shadow light, minor lamps are off, `mkDrawable` canvases are capped at about 1 Mpx and the TV ad channel renders at 640×360. The panel's QUALITY button cycles phone → full → perf (`qualityCycle`).
+- **Input:** everything goes through the p7 entry points `inKey/inDown/inUp/inLook/inPull/inWheel`, so touch never re-implements game logic.
+  - Left half of the screen is a floating stick that drives `keys.W/A/S/D` (pushed to the rim it sprints).
+  - Right half is look-drag (`inLook`).
+  - Holding ACT or ALT turns a right-half drag into the pull for prying and ripping (`inPull`; look freezes while held).
+  - Mouse events are ignored on touch unless the pointer is locked, because phones fire synthetic mouse events after touches.
+- **Buttons** (`#mob`, contextual via `mobileRelabel` every frame):
+  - Walking: ACT (LMB), ALT (RMB), USE (E), KICK, JUMP, CROUCH, TOOL (tap cycles, hold opens the radial picker), ≡ panel.
+  - Couch: CH ▲ / SQUINT / STAND / CH ▼ / PWR / VOL.
+  - Desk: FIRE / SIGHTS / RELOAD / USE (F, shown when the prompt is up) / STAND / ≡ (Tab menu; then SELECT and the stick move it).
+- **Entering:** the overlay tap calls `mobileEnter` (Android fullscreen + landscape lock; iOS ignores both, so a rotate card shows in portrait).
+- **Untested on a real iPhone/Android.** `pw_mob.py` and `pw_mob3.py` run Chromium phone emulation (844×390, touch, CDP touch events) only.
+
 ## Tests
 Run from `/tmp/build2`; they read `all.mjs`. Each harness runs in jsdom + node-canvas with a mocked renderer.
 
@@ -156,6 +171,7 @@ Run from `/tmp/build2`; they read `all.mjs`. Each harness runs in jsdom + node-c
 | `harness_ex2.mjs` | v5.3 EXECUTIONER v2: walking + collision, F on the locked handle, door glass stops bullets, handle shot twice opens the door, walking into the control room (scientists cower), cover + NEXT SUBJECT, intake walk to a free mark, lights, clipboard notes, completion banner, alarm without game over, ragdoll cap, menu new session, quit + relaunch. `pw_ex2.py` takes the matching browser shots (`ONLY=hatch` for one) |
 | `pw_gore.py` | Full-screen game-camera shots of faces, scientists, a scream, severed arm, open torso, head chunk, pools and the intake walk (uses `__EXVIEW` + `EX.dbgCam`) |
 | `harness_tv.mjs` | v5.1 couch + TV: sit via E, look clamp, full-rate redraw, channels/volume/mute/sleep, reel captions, room light, power, TV CH button, remote pop + refit, can't-sit lines, desk still works, tipped couch. `tvart.mjs <t…>` dumps CH 7 frames at those reel times to `tvart.png` (needs `game_test_tv.mjs`, written by `harness_tv.mjs`); `sofawake.mjs` checks the sofa wakes without cushions jumping |
+| `pw_mob.py`, `pw_mob2.py`, `pw_mob3.py` | v5.5 phone emulation: touch class + pixel ratio, TAP TO ENTER, look drag, stick walking, tool cycling, couch buttons (`pw_mob2`), desk FIRE/in-game walking/menu (`pw_mob3`). Screenshots `m_*.png` |
 | `harness_ex.mjs` | Full EXECUTIONER flow. Its renderer mock adds `setRenderTarget/getRenderTarget/getClearColor/getClearAlpha/setClearColor`; its step adds `updateSeat` and `renderExecutioner` |
 
 **Headless Chromium:**

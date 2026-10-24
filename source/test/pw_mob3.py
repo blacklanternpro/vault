@@ -1,0 +1,27 @@
+import asyncio
+from playwright.async_api import async_playwright
+async def main():
+    async with async_playwright() as p:
+        b=await p.chromium.launch(executable_path='/opt/pw-browsers/chromium-1243/chrome-linux64/chrome',args=['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--no-sandbox'])
+        ctx=await b.new_context(viewport={'width':844,'height':390},is_mobile=True,has_touch=True)
+        pg=await ctx.new_page();logs=[];pg.on('pageerror',lambda e: logs.append(str(e)))
+        cdp=await ctx.new_cdp_session(pg)
+        async def touch(kind,pts): await cdp.send('Input.dispatchTouchEvent',{'type':kind,'touchPoints':[{'x':x,'y':y,'id':i} for (i,x,y) in pts]})
+        await pg.goto('http://localhost:8765/index.html',wait_until='load')
+        await pg.wait_for_function('window.__DEMO !== undefined',timeout=300000);await pg.wait_for_timeout(1000)
+        await pg.tap('#go');await pg.wait_for_timeout(1500)
+        await pg.evaluate("async()=>{const D=window.__DEMO;D.PC.use();for(let i=0;i<3;i++){D.PC.t=5;await new Promise(r=>requestAnimationFrame(r));}D.player.body.position.set(-1.9,0.4,-2.4);D.SEAT.use();D.exGo('intro');D.EX.st=1.25;}")
+        await pg.wait_for_timeout(4000)
+        r=await pg.evaluate("()=>({at:window.__DEMO.SEAT.at,state:window.__DEMO.EX.state,vis:[...document.querySelectorAll('#mob .mb')].filter(b=>!b.classList.contains('hide')&&b.id).map(b=>b.id+':'+b.textContent),mag:window.__DEMO.EX.mag})");print('desk',r)
+        await pg.tap('#mAct');await pg.wait_for_timeout(1500)
+        z0=await pg.evaluate("()=>window.__DEMO.EX.P.z")
+        await touch('touchStart',[(2,120,300)])
+        for k in range(1,6): await touch('touchMove',[(2,120,300-12*k)])
+        await pg.wait_for_timeout(3000);await touch('touchEnd',[])
+        r=await pg.evaluate("()=>({mag:window.__DEMO.EX.mag,z:window.__DEMO.EX.P.z})");print('after fire+walk',r,'z0',z0)
+        await pg.tap('#mMenu');await pg.wait_for_timeout(300)
+        await pg.click('text=PAUSE GAME');await pg.wait_for_timeout(1500)
+        print('menu',await pg.evaluate("()=>JSON.stringify(window.__DEMO.EX.menu)"),await pg.evaluate("()=>document.getElementById('mAct').textContent"))
+        await pg.screenshot(path='/tmp/build2/m_desk.png')
+        print(logs[:5]);await b.close()
+asyncio.run(main())

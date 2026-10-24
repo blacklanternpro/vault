@@ -3,7 +3,7 @@
 const canvas=document.getElementById('c');
 const renderer=new THREE.WebGLRenderer({canvas,antialias:true,powerPreference:'high-performance'});
 /* v5.5: touch devices start in a phone quality tier (P cycles phone → full → performance) */
-const TOUCH_ON=false;/* v5.4 ships with the touch layer dormant; v5.5 turns it on */
+const TOUCH_ON=true;
 const TOUCH=TOUCH_ON&&(()=>{try{return(window.matchMedia&&matchMedia('(pointer:coarse)').matches)||(('ontouchstart' in window)&&navigator.maxTouchPoints>0);}catch(e){return false;}})();let QTIER=TOUCH?'phone':'full';
 const QUALITY={pr:Math.min(devicePixelRatio,TOUCH?1.5:2)};renderer.setPixelRatio(QUALITY.pr);renderer.setSize(innerWidth,innerHeight);
 renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=0.95;renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.autoClear=false;
