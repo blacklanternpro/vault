@@ -2,6 +2,7 @@ import {JSDOM} from 'jsdom';import {createCanvas} from 'canvas';
 const dom=new JSDOM(`<!DOCTYPE html><body><canvas id="c"></canvas><div id="hud"><div id="flash"></div><div id="cross"></div><div id="tool"></div><div id="hint"></div><div id="pwr"></div><div id="bar"><div id="barLabel"></div><div id="barTrack"><div id="barFill"></div></div></div><div id="msg"></div><div id="slots"><div></div><div></div><div></div><div></div><div></div></div><div id="stats"></div></div><div id="overlay"></div></body>`,{pretendToBeVisual:true});
 const win=dom.window;globalThis.window=win;globalThis.document=win.document;globalThis.innerWidth=1280;globalThis.innerHeight=720;globalThis.devicePixelRatio=1;globalThis.addEventListener=()=>{};globalThis.requestAnimationFrame=()=>0;globalThis.HTMLElement=win.HTMLElement;
 const oc=win.document.createElement.bind(win.document);win.document.createElement=(t)=>{if(t==='canvas'){const c=createCanvas(16,16);c.style={};c.addEventListener=()=>{};c.requestPointerLock=()=>{};return c;}return oc(t);};globalThis.AudioContext=undefined;
-await import('./game_test_tv.mjs');const G=globalThis.G;let off=0;
-for(const s of G.TVREEL.segs){let worst=0,sum=0,n=0;for(let t=0;t<s.dur;t+=0.25){G.TVB.t=off+t;const a=performance.now();G.tvReelDraw(G.TVH.x,854,480);const d=performance.now()-a;worst=Math.max(worst,d);sum+=d;n++;}console.log(s.id.padEnd(8),'avg',(sum/n).toFixed(2),'ms worst',worst.toFixed(2),'ms (node-canvas, CPU)');off+=s.dur;}
-console.log('reel total',G.TVREEL.total,'s');
+await import('./game_test_tv.mjs');const G=globalThis.G;
+for(const ch of(process.env.CH||'7').split(',').map(Number)){const R=G.CHANNELS[ch].reel;let off=0;console.log('CH',ch);
+for(const s of R.segs){let worst=0,sum=0,n=0;for(let t=0;t<s.dur;t+=0.25){G.TVB.t=off+t;const a=performance.now();G.tvReelDraw(G.TVH.x,854,480,R);const d=performance.now()-a;worst=Math.max(worst,d);sum+=d;n++;}console.log(s.id.padEnd(8),'avg',(sum/n).toFixed(2),'ms worst',worst.toFixed(2),'ms (node-canvas, CPU)');off+=s.dur;}
+console.log('reel total',R.total.toFixed(1),'s');}

@@ -15,27 +15,29 @@ tvhInit(854,480);if(TOUCH)tvhInit(640,360);/* decision 3: the phone tier draws t
 /* ---------- channels */
 Object.assign(TV,{ch:7,vol:0.6,mute:false,sleep:0,sleepSet:0,src:'snow',drawn:0,osd:{banner:3,vol:0,sleep:0},spoke:false});
 const TV_VOLS=[0.15,0.35,0.6,0.85,1];
-const CHANNELS={7:{name:'ADS ALL NIGHT',reel:true}};/* 1–9; the others are snow until the thrash / news / sitcom channels land */
+function mkReel(){return{segs:[],total:0,cur:-1,prev:0,lt:0,rec:false};}
+const TVREEL=mkReel();/* CH 7's reel. Every reel channel owns one; they all run off the one broadcast clock, so they're all live */
+const CHANNELS={7:{name:'ADS ALL NIGHT',reel:TVREEL}};/* 1–9: CH 2 news, CH 5 sitcom, CH 7 ads and CH 9 metal (p8h–p8j add theirs); the rest are snow */
+function tvReel(c){const C=CHANNELS[c===undefined?TV.ch:c];return C&&C.reel&&C.reel.segs.length?C.reel:null;}
 function tvChName(c){const C=CHANNELS[c];return C?C.name:'NO SIGNAL';}
 function tvOSD(k,d){TV.osd[k]=d||(k==='banner'?3:2.2);}
 function tvChannel(v,rel){const was=TV.ch;TV.ch=rel?((TV.ch-1+v+90)%9)+1:clamp(v|0,1,9);tvOSD('banner');if(TV.ch!==was){tvCut();TVA.noise({dur:0.12,gain:0.12,type:'bandpass',f:2600,q:0.6});}}
-function tvCut(){/* channel change or power off: kill whatever the old channel had scheduled */TVA.stopAll();TVA.segTr=null;TVREEL.cur=-1;if(TV.spoke){VO.cancel();TV.spoke=false;}TVCAP.t=0;}
+function tvCut(){/* channel change or power off: kill whatever the old channel had scheduled */TVA.stopAll();TVA.segTr=null;for(const k in CHANNELS)if(CHANNELS[k].reel)CHANNELS[k].reel.cur=-1;if(TV.spoke){VO.cancel();TV.spoke=false;}TVCAP.t=0;}
 function tvButtonZone(h){if(!h||!h.point||!TV.core||!TV.on||TV.state!=='on')return'power';const l=TV.core.mesh.worldToLocal(h.point.clone());return l.z<-0.3?'ch':'power';}
 
 /* ---------- the reel engine: segments draw in a virtual 854×480 space, scaled to the canvas */
 const TVB={t:0};/* broadcast clock */
-const TVREEL={segs:[],total:0,cur:-1,prev:0,lt:0,rec:false};
-function tvReelAdd(seg){seg.cues=seg.cues||[];TVREEL.segs.push(seg);TVREEL.total+=seg.dur;}
-function tvReelAt(t){let x=TVREEL.total>0?t%TVREEL.total:0;for(let i=0;i<TVREEL.segs.length;i++){const d=TVREEL.segs[i].dur;if(x<d)return[i,x];x-=d;}return[0,0];}
-function tvReelRun(live){if(!TVREEL.segs.length)return;const [i,lt]=tvReelAt(TVB.t);TVREEL.lt=lt;if(!live){TVREEL.cur=-1;return;}const seg=TVREEL.segs[i];
-  if(TVREEL.cur!==i){const fresh=TVREEL.cur===-1;TVREEL.cur=i;TVREEL.prev=fresh?lt:-1e-6;TVA.segTr=null;TVREEL.rec=TVT.start(seg.id,fresh?lt:0);}
-  for(const c of seg.cues)if(c.t>TVREEL.prev&&c.t<=lt&&!(c.snd&&TVREEL.rec)){try{c.fn(seg);}catch(e){console.warn('tv cue',seg.id,c.t,e&&e.message);}}TVREEL.prev=lt;}
+function tvReelAdd(seg,R=TVREEL){seg.cues=seg.cues||[];R.segs.push(seg);R.total+=seg.dur;}
+function tvReelAt(t,R=TVREEL){let x=R.total>0?t%R.total:0;for(let i=0;i<R.segs.length;i++){const d=R.segs[i].dur;if(x<d)return[i,x];x-=d;}return[0,0];}
+function tvReelRun(live){const R=tvReel();if(!R)return;const [i,lt]=tvReelAt(TVB.t,R);R.lt=lt;if(!live){R.cur=-1;return;}const seg=R.segs[i];
+  if(R.cur!==i){const fresh=R.cur===-1;R.cur=i;R.prev=fresh?lt:-1e-6;TVA.segTr=null;R.rec=TVT.start(seg.id,fresh?lt:0);}
+  for(const c of seg.cues)if(c.t>R.prev&&c.t<=lt&&!(c.snd&&R.rec)){try{c.fn(seg);}catch(e){console.warn('tv cue',seg.id,c.t,e&&e.message);}}R.prev=lt;}
 /* optional real recordings: audio/tv/manifest.json beside index.html ({"hhpp1":"hhpp1.mp3",…}, keys = segment ids). A recorded ad
    replaces that ad's music, effects and voice in one go (captions still show); tuning in mid-ad starts it at the right offset. */
 const TVT={tried:false,base:null,manifest:null,bufs:{},
   init(){if(this.tried)return;this.tried=true;try{if(!/^https?:$/.test(location.protocol))return;this.base=new URL('audio/tv/',location.href);fetch(new URL('manifest.json',this.base)).then(r=>r.ok?r.json():null).then(m=>{if(m&&typeof m==='object')this.manifest=m;}).catch(()=>{});}catch(e){}},
   start(k,off){this.init();if(!this.manifest||!this.manifest[k]||!TVA.ready)return false;const b=this.bufs[k];if(b===undefined){this.bufs[k]=null;fetch(new URL(this.manifest[k],this.base)).then(r=>r.arrayBuffer()).then(a=>S.ctx.decodeAudioData(a)).then(buf=>{this.bufs[k]=buf;}).catch(()=>{});return false;}if(!b)return false;const s=TVA.c.createBufferSource();s.buffer=b;s.connect(TVA.out());s.start(0,Math.min(Math.max(0,off||0),b.duration-0.05));return true;}};
-function tvReelDraw(x,W,H){if(!TVREEL.segs.length){x.fillStyle='#000';x.fillRect(0,0,W,H);return;}const [i,lt]=tvReelAt(TVB.t);const seg=TVREEL.segs[i];x.save();x.scale(W/854,H/480);x.beginPath();x.rect(0,0,854,480);x.clip();seg.draw(x,854,480,lt,seg);x.restore();}
+function tvReelDraw(x,W,H,R){R=R||tvReel()||TVREEL;if(!R.segs.length){x.fillStyle='#000';x.fillRect(0,0,W,H);return;}const [i,lt]=tvReelAt(TVB.t,R);const seg=R.segs[i];x.save();x.scale(W/854,H/480);x.beginPath();x.rect(0,0,854,480);x.clip();seg.draw(x,854,480,lt,seg);x.restore();}
 
 /* ---------- TV audio: a speaker-sim bus of its own, inheriting EXA's synth voices */
 const TVA=Object.assign(Object.create(EXA),{ready:false,c:null,in:null,bus:null,tracks:[],humG:null,pn:null,hiss:null,hissF:null,segTr:null,
@@ -51,7 +53,7 @@ const _tvp=V3(),_tvq=V3();
 
 /* ---------- captions (HUD, only while you're on the couch) */
 const TVCAP={who:'',text:'',t:0,el:null,w:null,x:null,shown:''};
-function tvSay(who,text,dur,voice,o){TVCAP.who=who||'';TVCAP.text=text;TVCAP.t=dur||Math.max(2.2,text.length*0.07);if(!voice||TVREEL.rec)return;if(VO.speak(text,voice,o)){TV.spoke=true;return;}TVA.babble(voice==='tvm'?118:205,text.length,'');}
+function tvSay(who,text,dur,voice,o){TVCAP.who=who||'';TVCAP.text=text;TVCAP.t=dur||Math.max(2.2,text.length*0.07);if(!voice||(tvReel()||TVREEL).rec)return;if(VO.speak(text,voice,o)){TV.spoke=true;return;}TVA.babble(voice==='tvm'?118:205,text.length,'');}
 function tvCaptions(dt){if(TVCAP.t>0)TVCAP.t-=dt;if(!TVCAP.el){const el=document.getElementById('cap');if(!el)return;TVCAP.el=el;TVCAP.w=document.createElement('b');TVCAP.x=document.createElement('span');el.appendChild(TVCAP.w);el.appendChild(TVCAP.x);}
   const playing=TV.glass&&TV.state==='on';let who='',txt='';if(SEAT.at==='couch'&&playing){if(!CHANNELS[TV.ch]){txt='[STATIC HISS · CH '+TV.ch+' · NO SIGNAL]';}else if(TVCAP.t>0){who=TVCAP.who;txt=TVCAP.text;}if(TV.mute&&txt)txt+='  [MUTED]';}
   const key=who+'|'+txt;if(key===TVCAP.shown)return;TVCAP.shown=key;TVCAP.w.textContent=who?who+':':'';TVCAP.x.textContent=txt;TVCAP.el.style.display=txt?'block':'none';}
@@ -72,7 +74,7 @@ function tvLight(dt,playing){if(!TVL.light)return;TVL.t-=dt;if(playing&&TVL.t<=0
   if(!playing)TVL.ti=0;const a=1-Math.exp(-dt*14);TVL.i=lerp(TVL.i,TVL.ti,a);TVL.col.lerp(TVL.tgt,a);TVL.light.intensity=TVL.i*(TV.crack?0.7:1);TVL.light.color.copy(TVL.col);}
 function tvAudio(dt){TVB.t+=dt;for(const k in TV.osd)TV.osd[k]=Math.max(0,TV.osd[k]-dt);
   if(TV.sleep>0){TV.sleep-=dt;if(TV.sleep<=0){TV.sleep=0;TV.sleepSet=0;if(TV.on){TV.on=false;tvCut();HUD.msg('[SLEEP TIMER. THE TV GAVE UP BEFORE YOU DID.]',2.2);}}}
-  const playing=!!(TV.core&&TV.glass&&TV.state==='on');const live=playing&&!!CHANNELS[TV.ch];if(!live&&(TVA.segTr||TVREEL.cur!==-1))tvCut();tvReelRun(live);
+  const playing=!!(TV.core&&TV.glass&&TV.state==='on');const live=playing&&!!CHANNELS[TV.ch];const R=tvReel();if(!live&&(TVA.segTr||(R&&R.cur!==-1)))tvCut();tvReelRun(live);
   if(!TVA.ready&&S.ctx)TVA.init();
   if(TVA.ready){const pos=TV.core?TV.core.mesh.getWorldPosition(_tvp):null;const g=playing&&!TV.mute?TV.vol*(SEAT.at==='couch'?0.9:Math.min(1,S.dist(pos)*1.5)):0;TVA.level(g);TVA.hissLevel(playing&&!CHANNELS[TV.ch]?(TV.crack?0.045:0.06):0,TV.crack?1800:3200);TVA.pan(pos);}
   tvLight(dt,playing);tvCaptions(dt);updateCouchVM(dt);}
