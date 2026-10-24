@@ -20,6 +20,8 @@ const S=new SoundEngine();const P=new Particles(scene,3500);
 const hitRoot=new THREE.Group();scene.add(hitRoot);
 const ents=[];const dynamics=[];const asms=[];let power=true;
 const FLOOR_Y=0.012;/* top of floating floor */
+/* v6: ?villa builds the villa instead of the bedsit (p9v); the bedsit stays the default until the villa is finished */
+const VILLA=(()=>{try{return !!(window.__VILLA||/[?&]villa\b/i.test(location.search));}catch(e){return false;}})();
 /* optional BVH acceleration */
 let BVH=null;try{BVH=await import('three-mesh-bvh');THREE.Mesh.prototype.raycast=BVH.acceleratedRaycast;THREE.BufferGeometry.prototype.computeBoundsTree=BVH.computeBoundsTree;THREE.BufferGeometry.prototype.disposeBoundsTree=BVH.disposeBoundsTree;}catch(e){BVH=null;}
 function bvh(geo){if(BVH&&geo.attributes.position.count>60){try{geo.computeBoundsTree({indirect:true});}catch(e){try{geo.computeBoundsTree();}catch(e2){}}}return geo;}
@@ -86,7 +88,7 @@ class StaticBatch{constructor(mat){this.mat=mat;this.members=new Set();this.mesh
 const entById=new Map();
 function canBatch(e){if(!e.mesh||e.dynamic||e.noBatch)return false;let ok=true;e.mesh.traverse(o=>{if(o.isLight)ok=false;if(o.isMesh&&Array.isArray(o.material))ok=false;});return ok;}
 function batchEnt(e){if(BATCH_LIVE||e.batched||!canBatch(e))return;e.mesh.updateMatrixWorld(true);const mats=new Set();e.mesh.traverse(o=>{if(o.isMesh&&o.material&&!Array.isArray(o.material))mats.add(o.material);});if(!mats.size)return;for(const m of mats){let b=BATCHES.get(m);if(!b){b=new StaticBatch(m);BATCHES.set(m,b);}b.members.add(e);batchDirty.add(b);}e.batched=true;e.batchMats=mats;hitRoot.remove(e.mesh);}
-function unbatchEnt(e){if(!e.batched)return;for(const m of e.batchMats){const b=BATCHES.get(m);if(b)b.hide(e);}e.batched=false;e.batchMats=null;if(e.alive&&e.mesh&&e.mesh.parent!==hitRoot)hitRoot.add(e.mesh);}
+function unbatchEnt(e){if(!e.batched)return;for(const m of e.batchMats){const b=e.batchRef||BATCHES.get(m);if(b)b.hide(e);}e.batched=false;e.batchMats=null;e.batchRef=null;if(e.alive&&e.mesh&&e.mesh.parent!==hitRoot)hitRoot.add(e.mesh);}
 function rebatchEnt(e){/* geometry of a static ent changed: give it its own mesh again */unbatchEnt(e);}
 let batchPending=[];
 function flushBatches(){if(batchPending.length){for(const e of batchPending){if(e.alive&&!e.dynamic)batchEnt(e);}batchPending=[];}if(batchDirty.size){for(const b of batchDirty)b.rebuild();batchDirty.clear();}}
@@ -94,7 +96,7 @@ function flushBatches(){if(batchPending.length){for(const e of batchPending){if(
 const ENTID={n:0};
 function registerBody(b){b.material=b.material||matDefault;b.aabbNeedsUpdate=true;b.updateAABB();world.addBody(b);}
 function ensureBody(e){if(!e.body&&e.mkBody){e.body=e.mkBody();e.body.ent=e;registerBody(e.body);}return e.body;}
-function mkEnt(o){const e=Object.assign({id:ENTID.n++,kind:'prop',mat:'chip',mass:1,hp:3,dynamic:false,anchored:true,bonds:new Set(),screws:[],joints:[],asm:null,restsOn:null,dependents:[],drawable:null,alive:true,born:now,label:''},o);ents.push(e);entById.set(e.id,e);if(e.mesh){e.mesh.userData.ent=e;hitRoot.add(e.mesh);if(!e.dynamic)batchPending.push(e);}if(e.body){e.body.ent=e;registerBody(e.body);}return e;}
+function mkEnt(o){const e=Object.assign({id:ENTID.n++,kind:'prop',mat:'chip',mass:1,hp:3,dynamic:false,anchored:true,bonds:new Set(),screws:[],joints:[],asm:null,restsOn:null,dependents:[],drawable:null,alive:true,born:now,label:''},o);ents.push(e);entById.set(e.id,e);if(e.mesh){e.mesh.userData.ent=e;if(!e.dormant){hitRoot.add(e.mesh);if(!e.dynamic)batchPending.push(e);}}if(e.body){e.body.ent=e;if(!e.dormant)registerBody(e.body);}return e;}
 function boxBody(hx,hy,hz,pos,quat){const b=new CANNON.Body({mass:0,shape:new CANNON.Box(new CANNON.Vec3(hx,hy,hz))});b.position.set(pos.x,pos.y,pos.z);if(quat)b.quaternion.copy(quat);b.allowSleep=true;b.sleepSpeedLimit=0.3;b.sleepTimeLimit=3;return b;}
 function boxEnt(w,h,d,pos,mat,o={}){const g=new THREE.BoxGeometry(w,h,d);const m=new THREE.Mesh(g,mat);m.position.copy(pos);if(o.quat)m.quaternion.copy(o.quat);m.castShadow=o.shadow!==false;m.receiveShadow=true;const b=boxBody(w/2,h/2,d/2,pos,o.quat?qC(o.quat):null);const e=mkEnt(Object.assign({mesh:m,body:b,size:V3(w,h,d)},o));return e;}
 function syncMesh(e){if(!e.mesh||!e.body)return;const b=e.body;e.mesh.position.copy(b.interpolatedPosition);e.mesh.quaternion.copy(b.interpolatedQuaternion);}
@@ -141,8 +143,8 @@ function shards(p,n,col){P.emit(p,{count:n,color:col,cvar:0.1,size:0.02,svar:0.0
 /* plan extents */
 const PX=3.25,PZ=4.25,PH=2.7;
 let floorDrawable=null,floorSlabCanvas=null,bathFloorDrawable=null;
-function floorUV(x,z,d){if(d&&d===bathFloorDrawable)return[(x-BATH.x0)/(BATH.x1-BATH.x0),(BATH.z1-z)/(BATH.z1-BATH.z0)];return[(x+PX)/(2*PX),(PZ-z)/(2*PZ)];}
-function floorDrawableAt(x,z){return inBath(x,z)?bathFloorDrawable:floorDrawable;}
+function floorUV(x,z,d){if(VILLA)return[(x-VF.x0)/VF.w,(VF.z1-z)/VF.d];if(d&&d===bathFloorDrawable)return[(x-BATH.x0)/(BATH.x1-BATH.x0),(BATH.z1-z)/(BATH.z1-BATH.z0)];return[(x+PX)/(2*PX),(PZ-z)/(2*PZ)];}
+function floorDrawableAt(x,z){return VILLA?floorDrawable:inBath(x,z)?bathFloorDrawable:floorDrawable;}
 function floorDust(x,z,r,a){const d=floorDrawableAt(x,z);if(!d)return;const uv=floorUV(x,z,d);d.blot(uv[0],uv[1],r*(d===bathFloorDrawable?400:230),'235,232,225',a);}
 function floorPuddle(x,z,r,g,b){const d=floorDrawableAt(x,z);if(!d)return;const uv=floorUV(x,z,d);const col=r===undefined||(b>0.85&&r<0.7)?'40,60,90':`${(r*200)|0},${(g*200)|0},${(b*200)|0}`;d.blot(uv[0],uv[1],24+Math.random()*16,col,r!==undefined&&r>0.8?0.16:0.08);}
 const BATH={x0:0.71,x1:PX,z0:1.51,z1:PZ};function inBath(x,z){return x>BATH.x0&&z>BATH.z0;}
@@ -164,7 +166,7 @@ function faceToWallU(f,u){return f.side>0?u:f.L-u;}
 function mkCeiling(){const w={name:'C',kind:'ceiling',L:2*PZ,H:2*PX,origin:V3(-PX,PH,-PZ),right:V3(0,0,1),up:V3(1,0,0),normal:V3(0,-1,0),depthZ:V3(0,1,0),studs:[],noggins:[],plates:[],openings:[],wires:[],faces:[],thick:0.1,frameDepth:0.055,a:V3(-PX,0,-PZ),b:V3(-PX,0,PZ),dir:V3(0,0,1),n:V3(0,-1,0)};w.q=new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(w.right,w.up,w.depthZ));WALLS.push(w);return w;}
 
 /* ============================================================ TIMBER */
-function timberEnt(w,axis,from,to,cross,depthMid,o={}){const a=axis==='v';const len=to-from;const mid=(from+to)/2;const u=a?cross:mid,v=a?mid:cross;const center=wallPoint(w,u,v,depthMid);const size=a?V3(0.045,len,0.09):V3(len,0.045,0.09);const g=new THREE.BoxGeometry(size.x,size.y,size.z);const m=new THREE.Mesh(g,M.timber);m.position.copy(center);m.quaternion.copy(w.q);m.castShadow=false;m.receiveShadow=true;const b=boxBody(size.x/2,size.y/2,size.z/2,center,qC(w.q));const e=mkEnt(Object.assign({mesh:m,body:b,kind:'stud',mat:'timber',wall:w,axis,from,to,cross,depth:depthMid,size,mass:Math.max(0.8,len*2.1),hp:14,cut:0,anchors:[]},o));return e;}
+function timberEnt(w,axis,from,to,cross,depthMid,o={}){const a=axis==='v';const len=to-from;const mid=(from+to)/2;const u=a?cross:mid,v=a?mid:cross;const center=wallPoint(w,u,v,depthMid);const size=a?V3(0.045,len,0.09):V3(len,0.045,0.09);const g=new THREE.BoxGeometry(size.x,size.y,size.z);const m=new THREE.Mesh(g,M.timber);m.position.copy(center);m.quaternion.copy(w.q);m.castShadow=false;m.receiveShadow=true;const b=boxBody(size.x/2,size.y/2,size.z/2,center,qC(w.q));const e=mkEnt(Object.assign({dormant:!!w.dormant,mesh:m,body:b,kind:'stud',mat:'timber',wall:w,axis,from,to,cross,depth:depthMid,size,mass:Math.max(0.8,len*2.1),hp:14,cut:0,anchors:[]},o));return e;}
 function inOpening(w,u,v){for(const op of w.openings){if(u>=op.u0-0.001&&u<=op.u1+0.001&&v>=op.v0-0.001&&v<=op.v1+0.001)return op;}return null;}
 function buildWallFrame(w){const L=w.L,H=w.H,D=w.frameDepth;
   const bp=timberEnt(w,'u',0,L,0.0225,D,{plate:true,label:'bottom plate'});const tp=timberEnt(w,'u',0,L,H-0.0225,D,{plate:true,label:'top plate'});w.plates.push(bp,tp);
@@ -179,7 +181,7 @@ function plateAt(w,u,top){for(const p of w.plates){if(!p.alive||p.dynamic||p.col
 function recomputeTimber(){for(const w of WALLS){const H=w.H;const ok=e=>e.alive&&!e.dynamic;const ceil=w.kind==='ceiling';
     for(const p of w.plates){if(ok(p))p.anchored=!p.collapsed;}
     /* a stud end only holds if the plate it is nailed to is still there; ceiling joists bear on the W/E top plates */
-    const endOK=(s,top)=>ceil?(top?!!plateAt(WE,WE.L-s.cross,true):!!plateAt(WW,s.cross,true)):!!plateAt(w,s.cross,top);
+    const endOK=(s,top)=>w.endOK?w.endOK(s,top):ceil?(top?!!plateAt(WE,WE.L-s.cross,true):!!plateAt(WW,s.cross,true)):!!plateAt(w,s.cross,top);
     for(const s of w.studs){if(!ok(s))continue;s.anchored=(s.from<=0.046&&endOK(s,false))||(s.to>=H-0.046&&endOK(s,true))||(ceil&&s.anchors&&s.anchors.some(a=>a>0.05&&a<H-0.05&&a>=s.from-0.01&&a<=s.to+0.01));}
     for(const n of w.noggins){if(!ok(n))continue;n.anchored=n.studU.some(u=>studSegmentsAt(w,u,n.cross,0.04).some(s=>s.anchored));}
     for(const s of w.studs){if(!ok(s)||s.anchored)continue;s.anchored=w.noggins.some(n=>ok(n)&&n.anchored&&n.studU.some(u=>Math.abs(u-s.cross)<0.001)&&n.cross>=s.from-0.03&&n.cross<=s.to+0.03);}
@@ -211,7 +213,7 @@ function collapseTopPlate(w,left,right){const H=w.H,D=w.frameDepth;for(const cut
   for(const p of w.plates.slice()){if(!p.alive||p.dynamic||p.cross<H/2)continue;if(p.from>=left-0.02&&p.to<=right+0.02){p.collapsed=true;dropTimber(p);p.body.velocity.set(0,-0.6,0);}}
   const mid=wallPoint(w,(left+right)/2,H-0.05,0);S.snap(mid);S.groan(mid,2);S.crumble(mid,1.2);shakeCam(1.0);for(let k=0;k<6;k++)dust(wallPoint(w,lerp(left,right,Math.random()),H-0.1,-0.05),18,1.4);
   HUD.msg(`[${w.kind==='ext'?'LOAD-BEARING':'PARTITION'} TOP PLATE FRACTURED OVER ${(right-left).toFixed(1)} m]`,3);
-  if(w.kind!=='ext')return;const C=WC,CL=C.L,CH=C.H;let reg=null;
+  if(w.kind!=='ext'||VILLA)return;const C=WC,CL=C.L,CH=C.H;let reg=null;
   const splitJ=(cu,v)=>{const j=C.studs.find(s=>s.alive&&!s.dynamic&&Math.abs(s.cross-cu)<0.001&&v>s.from+0.06&&v<s.to-0.06);if(j)splitTimber(j,wallPoint(C,cu,v,j.depth));};
   if(w===WW||w===WE){/* joist ends bearing on this plate: cut where the first truss picks them up; the end bay drops */const lo=w===WW?left:CL-right,hi=w===WW?right:CL-left;for(const cu of C.studU){if(cu<lo-0.02||cu>hi+0.02)continue;splitJ(cu,w===WW?1.24:CH-1.24);}reg={u0:lo-0.3,u1:hi+0.3,v0:w===WW?0:CH-1.6,v1:w===WW?1.6:CH};}
   else{/* N/S: the edge joist sits on this plate along its length */const cu=w===WN?C.studU[0]:C.studU[C.studU.length-1];const v0=w===WN?2*PX-right:left,v1=w===WN?2*PX-left:right;splitJ(cu,v0);splitJ(cu,v1);for(const s of C.studs){if(s.alive&&!s.dynamic&&Math.abs(s.cross-cu)<0.001&&s.from>=v0-0.02&&s.to<=v1+0.02){s.collapsed=true;dropTimber(s);}}reg={u0:w===WN?0:CL-0.9,u1:w===WN?0.9:CL,v0:v0-0.3,v1:v1+0.3};}
@@ -219,11 +221,14 @@ function collapseTopPlate(w,left,right){const H=w.H,D=w.frameDepth;for(const cut
 function structuralUpdate(){recomputeTimber();if(checkSpanCollapse())recomputeTimber();checkStructuralJoints();recomputeSupport();}
 
 /* ============================================================ SCREWS (instanced) */
-const SCREW_MAX=4000;const screwGeo=new THREE.CylinderGeometry(0.0035,0.0025,0.028,6);screwGeo.rotateX(Math.PI/2);const screwHeadGeo=new THREE.CylinderGeometry(0.0055,0.0055,0.0025,8);screwHeadGeo.rotateX(Math.PI/2);
+const SCREW_MAX=VILLA?16000:4000;const screwGeo=new THREE.CylinderGeometry(0.0035,0.0025,0.028,6);screwGeo.rotateX(Math.PI/2);const screwHeadGeo=new THREE.CylinderGeometry(0.0055,0.0055,0.0025,8);screwHeadGeo.rotateX(Math.PI/2);
 const screwMesh=new THREE.InstancedMesh(screwGeo,M.darkMetal,SCREW_MAX);const screwHead=new THREE.InstancedMesh(screwHeadGeo,M.darkMetal,SCREW_MAX);screwMesh.count=0;screwHead.count=0;screwMesh.userData.kind='screws';screwHead.userData.kind='screws';screwMesh.frustumCulled=false;screwHead.frustumCulled=false;hitRoot.add(screwMesh);hitRoot.add(screwHead);
 const screws=[];const _m4=new THREE.Matrix4(),_s1=V3(1,1,1),_s0=V3(0,0,0);
-function addScrew(f,stud,u,v){const id=screws.length;if(id>=SCREW_MAX)return null;const shaftPos=facePoint(f,u,v,0.0215);const headPos=facePoint(f,u,v,0.0085);_m4.compose(shaftPos,f.q,_s1);screwMesh.setMatrixAt(id,_m4);_m4.compose(headPos,f.q,_s1);screwHead.setMatrixAt(id,_m4);screwMesh.count=screwHead.count=id+1;const sc={id,f,w:f.wall,stud,u,v,chunk:null,alive:true,pos:headPos};screws.push(sc);stud.screws.push(sc);return sc;}
-function hideScrew(sc){if(!sc.alive)return;sc.alive=false;_m4.compose(sc.pos,sc.f.q,_s0);screwMesh.setMatrixAt(sc.id,_m4);screwHead.setMatrixAt(sc.id,_m4);screwMesh.instanceMatrix.needsUpdate=true;screwHead.instanceMatrix.needsUpdate=true;if(sc.stud){const i=sc.stud.screws.indexOf(sc);if(i>=0)sc.stud.screws.splice(i,1);}if(sc.chunk){const i=sc.chunk.screws.indexOf(sc);if(i>=0)sc.chunk.screws.splice(i,1);}}
+/* instance slots are handed out lazily: a dormant wall's screws (v6) get theirs when the wall wakes; SCREW_IDX maps a slot back to its screw */
+let SCREW_N=0;const SCREW_IDX=[];
+function screwInstance(sc){if(sc.id>=0||SCREW_N>=SCREW_MAX)return;sc.id=SCREW_N++;SCREW_IDX[sc.id]=sc;_m4.compose(facePoint(sc.f,sc.u,sc.v,0.0215),sc.f.q,sc.alive?_s1:_s0);screwMesh.setMatrixAt(sc.id,_m4);_m4.compose(sc.pos,sc.f.q,sc.alive?_s1:_s0);screwHead.setMatrixAt(sc.id,_m4);screwMesh.count=screwHead.count=SCREW_N;screwMesh.instanceMatrix.needsUpdate=true;screwHead.instanceMatrix.needsUpdate=true;}
+function addScrew(f,stud,u,v){if(!f.wall.dormant&&SCREW_N>=SCREW_MAX)return null;const headPos=facePoint(f,u,v,0.0085);const sc={id:-1,f,w:f.wall,stud,u,v,chunk:null,alive:true,pos:headPos};if(!f.wall.dormant)screwInstance(sc);screws.push(sc);stud.screws.push(sc);return sc;}
+function hideScrew(sc){if(!sc.alive)return;sc.alive=false;if(sc.id>=0){_m4.compose(sc.pos,sc.f.q,_s0);screwMesh.setMatrixAt(sc.id,_m4);screwHead.setMatrixAt(sc.id,_m4);screwMesh.instanceMatrix.needsUpdate=true;screwHead.instanceMatrix.needsUpdate=true;}if(sc.stud){const i=sc.stud.screws.indexOf(sc);if(i>=0)sc.stud.screws.splice(i,1);}if(sc.chunk){const i=sc.chunk.screws.indexOf(sc);if(i>=0)sc.chunk.screws.splice(i,1);}}
 function popScrew(sc,toward){const p=sc.pos.clone();hideScrew(sc);S.ping(p);P.emit(p,{count:10,color:[0.93,0.92,0.9],size:0.03,life:1,spread:0.6,grav:2,drag:2,kind:1});const e=boxEnt(0.006,0.006,0.03,p.clone().addScaledVector(sc.f.normal,0.03),M.darkMetal,{kind:'frag',mat:'metal',mass:0.02,frag:true,shadow:false});makeDynamic(e);e.mesh.castShadow=false;const v=toward?toward.clone().multiplyScalar(2.5):sc.f.normal.clone().multiplyScalar(2);e.body.velocity.set(v.x+rnd(-1,1),v.y+1.5,v.z+rnd(-1,1));e.body.angularVelocity.set(rnd(-20,20),rnd(-20,20),rnd(-20,20));}
 const ringGeo=new THREE.CircleGeometry(0.03,12);const ringCanvas=mkCanvas(64,64);{const x=ringCanvas.getContext('2d');const g=x.createRadialGradient(32,32,2,32,32,32);g.addColorStop(0,'rgba(240,238,232,0.95)');g.addColorStop(0.5,'rgba(240,238,232,0.6)');g.addColorStop(1,'rgba(240,238,232,0)');x.fillStyle=g;x.fillRect(0,0,64,64);}
 const ringMat=new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(ringCanvas),transparent:true,depthWrite:false});
@@ -262,7 +267,7 @@ function faceHide(c){if(c.fhidden||!c.fseg||!c.face.mesh)return;c.fhidden=true;c
 function faceShow(c){if(!c.fhidden||!c.fseg||!c.face.mesh)return;c.fhidden=false;const pa=c.face.mesh.geometry.attributes.position,A=pa.array,S0=c.wgeo.attributes.position.array;for(const [src,dst,n] of c.fseg){A.set(S0.subarray(src*3,(src+n)*3),dst*3);pa.addUpdateRange(dst*3,n*3);}pa.needsUpdate=true;}
 function chunkMats(c){return[c.face.paperMat,c.mat==='tile'?M.cement:M.gypsum,c.mat==='tile'?M.cement:M.gypsumBack];}
 /* lift an attached chunk out of the merged face into its own mesh so it can flex under a pry bar */
-function liftChunk(c){if(c.flexMesh||!c.attached||!c.alive)return c.flexMesh;const m=new THREE.Mesh(c.geo,chunkMats(c));m.position.copy(c.center);m.quaternion.copy(c.face.q);m.castShadow=true;m.receiveShadow=true;m.userData.ent=c;hitRoot.add(m);c.flexMesh=m;faceHide(c);c.flexD=0;
+function liftChunk(c){if(c.flexMesh||!c.attached||!c.alive)return c.flexMesh;if(c.wall&&c.wall.dormant)villaWake(c.wall);const m=new THREE.Mesh(c.geo,chunkMats(c));m.position.copy(c.center);m.quaternion.copy(c.face.q);m.castShadow=true;m.receiveShadow=true;m.userData.ent=c;hitRoot.add(m);c.flexMesh=m;faceHide(c);c.flexD=0;
   c.unflex=(keep)=>{if(!c.flexMesh)return;if(keep&&!c.attached){c.unflex=null;return;}if(c.flexMesh.parent)c.flexMesh.parent.remove(c.flexMesh);c.flexMesh=null;c.unflex=null;faceShow(c);};return m;}
 function flexChunk(c,d,pivotUV){/* push the sheet out along the face normal by d (m), hinged a little about the pry point */const m=liftChunk(c);if(!m)return;c.flexD=d;const f=c.face;m.position.copy(c.center).addScaledVector(f.normal,d);m.quaternion.copy(f.q);if(pivotUV){const du=pivotUV.u-c.cu,dv=pivotUV.v-c.cv;const L=Math.max(0.1,Math.hypot(du,dv));m.rotateOnAxis(V3(-dv/L,du/L,0),-d*1.6);}}
 function chunkDirect(c){return c.screws.some(s=>s.alive&&s.stud&&s.stud.alive&&!s.stud.dynamic&&s.stud.anchored);}
@@ -273,7 +278,7 @@ function recomputeSupport(){let changed=true;let guard=0;
     for(const f of FACES){for(const c of f.chunks){if(!c.alive||!c.attached)continue;let ok=c._d;if(!ok){for(const n of c.bonds){if(n.alive&&n.attached&&n._d){ok=true;break;}}}if(!ok){detachChunk(c,null,0.6,false);changed=true;}}}}
   checkStructuralJoints();}
 function capInto(v,f,max){/* limit the into-the-wall component so loose sheet can't tunnel through batts/studs in one physics step */const n=f.normal;const into=-v.dot(n);if(into>max)v.addScaledVector(n,into-max);return v;}
-function detachChunk(c,dir,imp=0,leaveScrews=false){if(!c.alive||!c.attached)return;c.attached=false;const f0=c.face;if(c.shape){c.fbody.removeShape(c.shape);c.fbody.aabbNeedsUpdate=true;c.fbody.updateBoundingRadius();f0.shapeToChunk.delete(c.shape);c.shape=null;}
+function detachChunk(c,dir,imp=0,leaveScrews=false){if(!c.alive||!c.attached)return;if(c.wall&&c.wall.dormant)villaWake(c.wall);c.attached=false;const f0=c.face;if(c.shape){c.fbody.removeShape(c.shape);c.fbody.aabbNeedsUpdate=true;c.fbody.updateBoundingRadius();f0.shapeToChunk.delete(c.shape);c.shape=null;}
   /* body starts where the sheet currently is (it may be flexed out) and ignores the face it came from for a moment, so it doesn't explode off its neighbours */const bpos=c.bc.clone().addScaledVector(f0.normal,c.flexD||0);const nb=boxBody(c.hw,c.hh,0.005,bpos,qC(c.flexMesh?c.flexMesh.quaternion:f0.q));nb.ent=c;nb.collisionFilterMask=-1&~16;c.body=nb;registerBody(nb);after(0.35,()=>{if(c.body===nb)nb.collisionFilterMask=-1;});
   for(const sc of c.screws.slice()){if(leaveScrews){sc.chunk=null;const i=c.screws.indexOf(sc);c.screws.splice(i,1);dustRing(sc);}else hideScrew(sc);}
   for(const n of c.bonds){n.bonds.delete(c);}c.bonds.clear();
@@ -283,7 +288,7 @@ function detachChunk(c,dir,imp=0,leaveScrews=false){if(!c.alive||!c.attached)ret
 function clipHalf(poly,px,py,nx,ny){/* keep the side where (x-p)·n >= 0 (Sutherland-Hodgman, one plane) */const out=[];for(let i=0;i<poly.length;i++){const a=poly[i],b=poly[(i+1)%poly.length];const da=(a[0]-px)*nx+(a[1]-py)*ny,db=(b[0]-px)*nx+(b[1]-py)*ny;if(da>=0)out.push(a);if((da>=0)!==(db>=0)){const t=da/(da-db);out.push([a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t]);}}return out;}
 function polyArea(p){let a=0;for(let i=0,j=p.length-1;i<p.length;j=i++)a+=(p[j][0]+p[i][0])*(p[j][1]-p[i][1]);return Math.abs(a/2);}
 function jagCut(poly,px,py){/* roughen the straight edges created by the clip (those passing near the impact point's rays) */const out=[];for(let i=0;i<poly.length;i++){const a=poly[i],b=poly[(i+1)%poly.length];out.push(a);const dx=b[0]-a[0],dy=b[1]-a[1];const len=Math.hypot(dx,dy);if(len<0.05)continue;/* a cut edge is collinear with the impact point */const cr=Math.abs((a[0]-px)*dy-(a[1]-py)*dx)/len;if(cr>0.004)continue;const nx=-dy/len,ny=dx/len;const steps=Math.min(5,Math.floor(len/0.035));for(let k=1;k<steps;k++){const t=k/steps+(Math.random()-0.5)*0.4/steps;const j=(Math.random()-0.5)*Math.min(0.035,len*0.18);out.push([a[0]+dx*t+nx*j,a[1]+dy*t+ny*j]);}}return out;}
-function shardChunk(c,p,dir,force=1){if(!c.alive||!c.attached)return false;const f=c.face;const uv=faceUV(f,p);const poly=c.poly;
+function shardChunk(c,p,dir,force=1){if(!c.alive||!c.attached)return false;if(c.wall&&c.wall.dormant)villaWake(c.wall);const f=c.face;const uv=faceUV(f,p);const poly=c.poly;
   let px=clamp(uv.u,c.cu-c.hw*0.7,c.cu+c.hw*0.7),py=clamp(uv.v,c.cv-c.hh*0.7,c.cv+c.hh*0.7);if(!pip(poly,px,py)){px=c.cu;py=c.cv;}
   const k=Math.random()<0.45?2:3;const a0=Math.random()*Math.PI*2;const angs=[];for(let i=0;i<k;i++)angs.push(a0+i*Math.PI*2/k+(Math.random()-0.5)*(k===3?0.7:0.5));
   const pieces=[];if(k===2){const nx=Math.cos(angs[0]),ny=Math.sin(angs[0]);pieces.push(clipHalf(poly,px,py,nx,ny),clipHalf(poly,px,py,-nx,-ny));}

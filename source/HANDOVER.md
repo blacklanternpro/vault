@@ -1,8 +1,30 @@
-# BEDSIT — handover brief (24 Oct 2026, v5.6: TV channels)
+# BEDSIT — handover brief (24 Oct 2026, v6.0: the villa shell, on `?villa`)
 
 Read this first, then `src/`. This bundle holds the full source. The public vault repo only holds the minified build.
 
-## START HERE — the next job
+## START HERE — the next job (v6: the villa)
+
+**The bedsit is being replaced by a house.** Jake: "We are quickly outgrowing our boots here in the bedsit… Our base. Our home of destruction." The v6 plan is a Claude Docs doc: https://claude.ai/artifact/SZXbwtYLu7GA6BX5h5JpuA. Read it before writing code. Phase 4 (gas stove) and Phase 5 (vibe pack) are parked and fold into villa workstreams 3 and 7; the optimisation pass comes after move-in.
+
+**4/23 Banksia Court:** a 3-bed, 2-bath (ensuite off the master) brick-veneer villa, built 1987, cheap early-2000s refit; slab with carpet, vinyl and tiles; single garage, no car; fenced yard; rented through Gary's Property Group; about 154 m². All ten plan decisions are locked in the doc.
+
+| WS | Scope | Status |
+| --- | --- | --- |
+| 0 | Plan as data, empty walkable shell, lazy wall insides, perf gate | **Shipped as v6.0 on `?villa`**; waiting on Jake's 4060 fps |
+| 1 | Shell: doors, skirting, cornice, floor finishes, windows that open | next |
+| 2 | Services: wiring, switches, plumbing, gas, hot water | |
+| 3 | Kitchen, dining, laundry + Phase 4 gas stove | |
+| 4 | Bathrooms | |
+| 5 | Living + office: move the couch/TV and desk/PC/EXECUTIONER | |
+| 6 | Bedrooms, garage, outside | |
+| 7 | Lived-in pass + Phase 5 vibe pack | |
+| 8 | Move in (villa becomes the default, bedsit retired), then the optimisation pass | |
+
+**Perf gate (per workstream):** 60 fps on Jake's RTX 4060, ≤300 draw calls, ≤900 active bodies. Swiftshader frame times mean nothing; use calls/tris/bodies from `pw_villa.py` and Jake's real number.
+
+**The villa lives behind a flag until move-in:** `?villa` (or `window.__VILLA=true`). Without it the game is the bedsit, unchanged. See the p9v row and "The villa" section.
+
+### v5 (done, kept for reference)
 
 **v5 is done** (all five workstreams shipped on 24 Oct 2026), and **v5.6 added the rest of Phase 2: the TV channels** (CH 2 news, CH 5 sitcom, CH 9 metal; see the source map). Jake's order from here: finish the whole upgrade scope first (Phase 4 gas stove, then Phase 5 vibe pack, see "Remaining phases"), **then** an optimisation and polish pass. The v5 plan lives in a Claude Docs doc: https://claude.ai/artifact/A4mQ6PNGcfnCMCFcSNsw2Z. Read the doc before writing code; it has the detail for each workstream.
 
@@ -130,6 +152,7 @@ python3 build.py
 | **p8f** | v5.3 EXECUTIONER v2: `exBuildV2` (door opening in the right pier x 2.2–3.0 with jambs, wired-glass leaf `EX.doorLeaf` hinged at x 2.95 swinging to −1.5 rad into the control room, handle/lock/keypad, intake hatch in the left wall z 1.3–2.3 with a dark corridor, kneel marks painted on the floor and its pristine copy, console `NEXT SUBJECT` button under `EX.coverG`, cell-lights rocker, green glow light), `exV2Reset` (per-session state), subjects (`exSubjectLook` variety: build 0.85/1/1.25, skin, shaved/buzz/balding/pony, beard/moustache/stubble, teardrop/neck/knuckle tattoos, number; `TEMPER` defiant/pleading/praying/silent/laughing; `CHARGES`; `exSpawnSubject`, `exSubjectWalk`; `MARKS` = 3 painted + 3 fallback), walking (`exMove`, `exSolids` 2D boxes + circles, player r 0.22, eased 1.4 m/s, head bob, footsteps), `exV2Hit` (door glass cracks/stops bullets, handle 2 hits → `exBlowHandle`, keypad, button, cover), `exUseTarget`/`EX.use` (F), `exSubjectDone` (TEST COMPLETE banner), `exAlarm` (10 s klaxon + red strobe, game continues), `exEnterControl` (scientists cower + `BEG` lines), `exRagCap` (6 live ragdolls, oldest freezes: bodies removed, meshes stay; gibs capped at 48), pause menu (`exMenuToggle/Move/Pick`), `exDrawHUDv2` (prompt, banner, clipboard notes, menu). The old `endC`/`endD` states are unreachable now |
 | **p8g** | v5.4 people + gore. **One continuous skin per person:** every rig part keeps its hit proxy (material `visible:false`, still raycast and still driven by the pose code / ragdolls); `exSkinHuman` builds one `THREE.Skeleton` whose bones *share* the proxies' `matrixWorld` objects (no per-frame copy) and one `SkinnedMesh` piece per segment at the scene root, with each piece's ends weighted into its neighbours (proximal 0.5 to the parent, distal 0.42 to the child; torso↔pelvis). `exSkinSever` cuts those weights when a limb comes off; `exSkinDispose` on round clear. Shaped geometry shared by proxy + skin (`exLimbGeo`, `exTorsoGeo`, `exPelvisGeo`, `exSkullGeo`) so wound UVs line up. Heads: `exHeadBuild` (sculpted skull, 256 px `txFace2` painted to the sculpt via `fUV`, eye spheres, lids, ears, mouth group) + `exFaceUpdate` (blink, talk via `H.talkT` set in `exSay`, scream via `exScream` → `H.screamOT`, squeeze on hit, slack/half-lidded dead). `exHandMesh` (mitten + thumb, clenched when cuffed), `exShoe` (soles), `exDress` (collar, rolled sleeves, lapels, lanyard + ID, split coat back). Gore: `exExitWound` (raycasts back through the proxy for the exit, big ragged wound + spray + splat behind), `exSoak` (blood spreads through cloth over ~3 s), `exHeadGraze` (an off-centre head hit on the living grazes), `exHeadChunk` (first corpse head hit takes the jaw or a skull piece; the second bursts it), layered `exCap` stumps, `exOpenTorso` (ribs, sternum, lungs, heart, fat rim, verlet gut loops `exUpdateGuts`), irregular wet Phong pools, `exUpdateSmears` (body sliding on the floor), directional spatter in `splatAt`, wrapped `EXA.scream/flesh` + `EXA.crunch/deathRattle`. Debug: `window.__EXVIEW=true` renders the game camera full-screen; `EX.dbgCam` (Vector3) pins the game camera |
 | **p9m** | v5.5 mobile (see the mobile section) |
+| **p9v** | v6 villa (see "The villa"). `VP` = the plan (rooms as plan-metre rectangles, `open` pairs, `openings`, `spawn`), `vX/vZ` plan→world, `VROOM`, `vRoomAtWorld`; `villaWalls` derives walls from shared room edges (`VW.walls/ext`); `vFaceCanvas/vFaceCols/vFaceRows` (sheets that skip slivers near openings); `villaBrickLines/villaBricks` (one brick skin per side, holes at openings); `villaWake(w)`; `villaFloor` (one painted floor drawable, 48 px/m), `villaCeiling` (one face for the whole house), `villaRoof` (hip, 22.5°), `villaOpenings` (merged liners + bronze frames, glass panes are ents), `villaOutside`, `villaLights`/`villaLightPick`/`updateVilla` (pool of four PointLights), `buildVilla`, `villaAfterBoot` |
 | p6 | Input state, player physics, `updateCamera`, `castRay` |
 | p7 | Tools, `damageProp`, `crackScreen`, `bindInput` (seat routing: mousemove → `EX.look`, mousedown → `EX.trigger` / `EX.ads`, wheel → lean, R → `EX.reload`), `updateTools` (seat early-exit, E stands), main `loop` (`seatHold` instead of player physics while seated; `updateSeat` after `updateCamera`; viewmodel skipped while seated; `renderExecutioner()` after the main render), `window.__DEMO` exports (EX, SEAT, MON, EXA, sitDown, standUp, exStart, exGo, exFire, exReset, …) |
 
@@ -160,6 +183,15 @@ python3 build.py
   - Desk: FIRE / SIGHTS / RELOAD / USE (F, shown when the prompt is up) / STAND / ≡ (Tab menu; then SELECT and the stick move it).
 - **Entering:** the overlay tap calls `mobileEnter` (Android fullscreen + landscape lock; iOS ignores both, so a rotate card shows in portrait).
 - **Untested on a real iPhone/Android.** `pw_mob.py` and `pw_mob3.py` run Chromium phone emulation (844×390, touch, CDP touch events) only.
+
+## The villa (v6, p9v)
+- **Flag:** `VILLA` (p2) is true for `?villa` or `window.__VILLA`. p7 `buildWorld` calls `buildVilla()` instead of the bedsit; the loop calls `updateVilla(dt)`; the fridge loop is skipped. p3 empties `WALLS` after `mkCeiling` in villa mode.
+- **Plan:** offset ox −8.8, oz −4.9 (plan metres → world). Rooms in p9v `VP.rooms`; the built layout differs from the doc's first drawing (entry corridor 1.2 m wide, office at the front, bath lobby with the WC and basin). Internal walls are trimmed 0.11 at T-junctions.
+- **Dormant walls (the big perf idea):** studs, plates, noggins, batts and screws exist as data only, with no body, mesh or screw instance (`mkEnt` honours `dormant`). The first time a wall is opened up (`detachChunk`, `shardChunk`, `liftChunk`, a saw kerf) `villaWake(w)` registers its bodies, builds a per-wall StaticBatch (`batchRef`) and instances its screws. One wake ≈ +23 bodies, +172 screws.
+- **Lazy screws:** `addScrew` stores screws with `id:-1` on dormant walls; `screwInstance` gives them an InstancedMesh slot later. Raycasts map instance ids through `SCREW_IDX`. `SCREW_MAX` is 16000 in villa mode.
+- **Lights:** a HemisphereLight (ground colour = fake bounce light; without it every ceiling and door head far from a lamp goes black), ambient, a dim moon, and a pool of four PointLights that hop to the fixtures nearest you every 0.15 s (`pool[0]` always sits in your room and is the only shadow caster).
+- **Load numbers (empty house):** 317 bodies (bedsit 775), 46 walls, 73 faces, 2,627 sheet chunks, 788 dormant timber pieces, 160 batts, 7,743 screws (0 instanced), 10.2 Mpx of canvas, 60–248 draw calls depending on the view, 104k–192k triangles, headless boot about 3–4 s (bedsit about 11 s). 0 chunks fall at load.
+- **Tests:** `harness_villa.mjs` (counts, walking, shards a hall|living sheet and checks the wall wakes; writes `game_test_villa.mjs`); `pw_villa.py [spots…]` (browser shots `v_<spot>.png` plus calls/tris/bodies; spots entry, hall, kitchen, living, master, bath, garage, front, back, halldoor, halldoor2; `NOSHADOW=1` for perf mode).
 
 ## Tests
 Run from `/tmp/build2`; they read `all.mjs`. Each harness runs in jsdom + node-canvas with a mocked renderer.
@@ -208,7 +240,7 @@ Run from `/tmp/build2`; they read `all.mjs`. Each harness runs in jsdom + node-c
    - All brands are invented: MERIDIAN, Compliance Interactive, Toot Toot Junction, Windoze. No real logos, and no famous cartoon trains.
 
 ## Remaining phases after v5
-Phase 2 is done (v5.6). Then Jake's optimisation and polish pass once Phases 4 and 5 are in.
+Phase 2 is done (v5.6). Phases 4 and 5 are parked and now ride along with the villa (WS 3 and WS 7). The optimisation and polish pass comes after move-in.
 - **Phase 4:** gas stove and explosion.
 - **Phase 5:** vibe pack (bond meter, answering machine, neon SWILL sign, 2 a.m. lighting toggle, guitar and amp, swing-anything, clutter, ambience, ceiling fan).
 

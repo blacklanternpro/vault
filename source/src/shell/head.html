@@ -48,6 +48,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07080b;font-family:"L
 #overlay td{padding:4px 10px 4px 0;border-bottom:1px solid #1c1d20;vertical-align:top}
 #overlay td:first-child{color:#c9a227;white-space:nowrap;width:150px}
 #overlay .go{margin-top:22px;text-align:center;font-size:13px;letter-spacing:4px;color:#111;background:#e8e0c8;padding:10px;animation:bl 1.4s infinite}
+#overlay a{color:#c9a227}
 #overlay .load{margin-top:22px;text-align:center;font-size:12px;letter-spacing:3px;color:#8d877a}
 @keyframes bl{50%{opacity:.55}}
 </style>
@@ -85,7 +86,10 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07080b;font-family:"L
     <tr><td>TEXTA</td><td>hold LMB on walls, floor, fridge, desk, screens = draw</td></tr>
     <tr><td>L · P</td><td>work flashlight · performance mode for weak GPUs (shadows off, 75% res)</td></tr>
     <tr><td>PHONE</td><td>landscape · left thumb = move (push to the edge to sprint) · drag the right half = look · ACTION / ALT = LMB / RMB · hold ACTION or ALT and drag down = pull (pry, rip) · USE appears when there's something to use · tap the tool icon to cycle, hold it to pick · ≡ = light, quality (phone / full / performance), pause, look speed, exit</td></tr>
+    <tr><td>NEW HOUSE</td><td id="vrow">we're moving. Preview the empty shell of the new place: <a href="?villa" onclick="event.stopPropagation()">4/23 BANKSIA COURT →</a> (walls, ceilings, roof and yard so far; everything you smash still works, nothing's moved in yet)</td></tr>
   </table>
   <div class="go" id="go">CLICK TO ENTER THE APARTMENT</div>
   <div class="load" id="load">BUILDING…</div>
 </div></div>
+<script>if(/[?&]villa\b/i.test(location.search)){const b=document.querySelector('#overlay .box');b.querySelector('h1').textContent='4/23 BANKSIA COURT';b.querySelector('h2').textContent='3 BED · 2 BATH · BRICK VENEER, 1987 · EMPTY · WORK IN PROGRESS';document.getElementById('vrow').innerHTML='the house is a bare shell for now (v6 workstream 0). <a href="./" onclick="event.stopPropagation()">← back to the bedsit</a>';document.getElementById('go').textContent='CLICK TO ENTER THE HOUSE';}</script>
+

@@ -9,6 +9,7 @@ const WBW=mkWall('BW',0.6,PZ,0.6,1.51,'int');       /* bathroom west wall, faces
 const WNN=mkWall('NN',-PX,2.4,-1.9,2.4,'int');      /* nook north nib, faces bed */
 const WNE=mkWall('NE',-1.0,2.51,-1.0,PZ,'int');     /* nook east wall, faces entry corridor */
 const WC=mkCeiling();
+if(VILLA)WALLS.length=0;/* v6: the bedsit's walls still exist as objects (old code may name them) but are never built */
 WS.openings.push({u0:2.5,u1:3.32,v0:0,v1:2.1,kind:'door',label:'entry door'});
 WBW.openings.push({u0:1.75,u1:2.57,v0:0,v1:2.1,kind:'door',label:'bathroom door'});
 WC.openings.push({u0:0.6,u1:1.8,v0:0.6,v1:1.8,kind:'skylight'},{u0:0.6,u1:1.8,v0:4.2,v1:5.4,kind:'skylight'});
@@ -106,9 +107,9 @@ function buildSkirting(){for(const w of WALLS){if(w.kind==='ceiling')continue;fo
 /* ============================================================ INSULATION (pink glasswool batts in the external stud bays) */
 const BATTS=[];const BATT_GEOS={};
 function battGeo(w,h,t,k){const key=w.toFixed(2)+'|'+h.toFixed(2)+'|'+k;if(BATT_GEOS[key])return BATT_GEOS[key];const g=new THREE.BoxGeometry(w,h,t,5,12,1);const pa=g.attributes.position,uv=g.attributes.uv;for(let i=0;i<pa.count;i++){const x=pa.getX(i),y=pa.getY(i),z=pa.getZ(i);const ex=1-Math.pow(Math.min(1,Math.abs(x)/(w/2)),4),ey=1-Math.pow(Math.min(1,Math.abs(y)/(h/2)),6);const puff=(0.005+0.005*Math.sin(y*21+k*1.7)*Math.sin(x*29+k*2.3))*ex*ey;pa.setZ(i,z+Math.sign(z)*puff);pa.setX(i,x*(1+0.025*Math.sin(y*15+k)));uv.setXY(i,uv.getX(i)*w/0.42,uv.getY(i)*h/0.42);}g.computeVertexNormals();BATT_GEOS[key]=g;return g;}
-function buildBatts(){for(const w of[WN,WS,WE,WW]){const us=w.studU.slice().sort((a,b)=>a-b);const H=w.H;for(let i=0;i<us.length-1;i++){const a=us[i]+0.0225,b=us[i+1]-0.0225;const bw=b-a-0.005;if(bw<0.15)continue;const cu=(a+b)/2;if(w.openings.some(op=>cu>op.u0-0.05&&cu<op.u1+0.05))continue;const hasNog=w.noggins.some(n=>n.label==='noggin'&&cu>n.from&&cu<n.to);
+function buildBatts(walls){for(const w of(walls||[WN,WS,WE,WW])){const us=w.studU.slice().sort((a,b)=>a-b);const H=w.H;for(let i=0;i<us.length-1;i++){const a=us[i]+0.0225,b=us[i+1]-0.0225;const bw=b-a-0.005;if(bw<0.15)continue;const cu=(a+b)/2;if(w.openings.some(op=>cu>op.u0-0.05&&cu<op.u1+0.05))continue;const hasNog=w.noggins.some(n=>n.label==='noggin'&&cu>n.from&&cu<n.to);
       const halves=hasNog?[[0.048,1.3245],[1.3755,H-0.048]]:[[0.048,H-0.048]];let k=0;for(const [v0,v1] of halves){const h=v1-v0,t=0.075;const g=battGeo(bw,h,t,(i*2+k++)%5);const m=new THREE.Mesh(g,M.batt);const pos=wallPoint(w,cu,(v0+v1)/2,0.0105+t/2+0.001);m.position.copy(pos);m.quaternion.copy(w.q);m.castShadow=true;m.receiveShadow=true;
-        /* a real (static) collider so plaster debris knocked into the bay lands against the glasswool instead of vanishing into it */const body=boxBody(bw/2*0.96,h/2*0.98,t/2*0.8,pos,qC(w.q));const e=mkEnt({mesh:m,body,kind:'batt',mat:'batt',wall:w,size:V3(bw,h,t),mass:0.9,hp:99,label:'glasswool batt',damp:0.55,adamp:0.8,bayU:cu});BATTS.push(e);}}}}
+        /* a real (static) collider so plaster debris knocked into the bay lands against the glasswool instead of vanishing into it */const body=boxBody(bw/2*0.96,h/2*0.98,t/2*0.8,pos,qC(w.q));const e=mkEnt({dormant:!!w.dormant,mesh:m,body,kind:'batt',mat:'batt',wall:w,size:V3(bw,h,t),mass:0.9,hp:99,label:'glasswool batt',damp:0.55,adamp:0.8,bayU:cu});BATTS.push(e);}}}}
 
 /* ============================================================ MISC HELPERS */
 function cylMesh(r0,r1,h,mat,seg=12){const m=new THREE.Mesh(new THREE.CylinderGeometry(r0,r1,h,seg),mat);m.castShadow=true;m.receiveShadow=true;return m;}
