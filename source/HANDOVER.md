@@ -1,4 +1,4 @@
-# BEDSIT — handover brief (24 Oct 2026, v6.0: the villa shell, on `?villa`)
+# BEDSIT — handover brief (24 Oct 2026, v6.1: villa wall junctions + roof space, on `?villa`)
 
 Read this first, then `src/`. This bundle holds the full source. The public vault repo only holds the minified build.
 
@@ -11,6 +11,7 @@ Read this first, then `src/`. This bundle holds the full source. The public vaul
 | WS | Scope | Status |
 | --- | --- | --- |
 | 0 | Plan as data, empty walkable shell, lazy wall insides, perf gate | **Shipped as v6.0 on `?villa`**; waiting on Jake's 4060 fps |
+| 0.1 | Jake's v6.0 notes: slits at wall junctions; manholes into the roof (hall + garage), hinged covers, climb up | **Shipped as v6.1** |
 | 1 | Shell: doors, skirting, cornice, floor finishes, windows that open | next |
 | 2 | Services: wiring, switches, plumbing, gas, hot water | |
 | 3 | Kitchen, dining, laundry + Phase 4 gas stove | |
@@ -191,7 +192,10 @@ python3 build.py
 - **Lazy screws:** `addScrew` stores screws with `id:-1` on dormant walls; `screwInstance` gives them an InstancedMesh slot later. Raycasts map instance ids through `SCREW_IDX`. `SCREW_MAX` is 16000 in villa mode.
 - **Lights:** a HemisphereLight (ground colour = fake bounce light; without it every ceiling and door head far from a lamp goes black), ambient, a dim moon, and a pool of four PointLights that hop to the fixtures nearest you every 0.15 s (`pool[0]` always sits in your room and is the only shadow caster).
 - **Load numbers (empty house):** 317 bodies (bedsit 775), 46 walls, 73 faces, 2,627 sheet chunks, 788 dormant timber pieces, 160 batts, 7,743 screws (0 instanced), 10.2 Mpx of canvas, 60–248 draw calls depending on the view, 104k–192k triangles, headless boot about 3–4 s (bedsit about 11 s). 0 chunks fall at load.
-- **Tests:** `harness_villa.mjs` (counts, walking, shards a hall|living sheet and checks the wall wakes; writes `game_test_villa.mjs`); `pw_villa.py [spots…]` (browser shots `v_<spot>.png` plus calls/tris/bodies; spots entry, hall, kitchen, living, master, bath, garage, front, back, halldoor, halldoor2; `NOSHADOW=1` for perf mode).
+- **Wall junctions (v6.1):** `vTrimWalls` gives each overlapping square at a junction to one wall: a wall that merely ends there is cut back; at a corner where both end, it cuts whichever leaves no end face showing into a room (v6.0's rule cut walls that only touched another wall's line and left 17 slits of 11 cm into the cavity). The ends that really are open (4 of them, at open-plan doorways) are listed in `VW.freeEnds` and wrapped by `villaEndCaps` (a plaster strip, merged static mesh: it does not fall when the wall is gutted).
+- **Roof space (v6.1):** `VP.manholes` (hall at plan x≈10, garage at x≈2.25) are 600 square holes in the ceiling face, edges on joist centrelines (no slivers), with trimmers (noggins) either end. `villaManholes` builds the trim ring (merged) and a cover per hole: an ent driven by the bedsit's `kinDoor` (E = OPEN/CLOSE MANHOLE, hangs down 1.5 rad) whose `onHit` counts damage and `villaBreakCover` smashes it into four pieces at 2.6. Opening or breaking a cover wakes the ceiling (`villaWake(VW.ceiling)`: 30 joist bodies, ~1,850 ceiling screws instanced). `villaRoofSpace` adds rafters/jacks at 600, hips, ridge, underpurlins and struts onto the hallway walls (two merged meshes, one static compound collider) and hip-end roof colliders; `villaRoofUnder` draws the tile undersides and battens (the outside roof is FrontSide now).
+- **Climbing (v6.1):** `villaPlayer(dt)` runs at the top of `updatePlayerPhysics` in villa mode. Under an open hole, with your eye within 38 cm of the ceiling and your last ground at least 18 cm up (`player.lastGroundY`, from `groundCheck`), SPACE runs `villaClimb`: a scripted 0.85 s lift through the hole and 0.6 m forward onto the joists (player collisions off meanwhile). In the roof, CROUCH over the hole drops you back down. `groundCheck` counts ceiling sheet bodies (group 16) in villa mode, and `updateCamera` clamps the eye height to the headroom above (so the camera never pokes through a ceiling, rafter or roof). In the roof, `updateVilla` fades the house lights and the bounce light so the only light is what comes up through the hole (or the torch). Something to stand on: `villaProps` puts a platform ladder in the garage and a milk crate in the hall.
+- **Tests:** `harness_villa.mjs` (counts, walking, shards a hall|living sheet and checks the wall wakes, then v6.1: junction overlaps + open ends, manholes, floor jump can't reach, crate climb, walking the joists, dropping back down, smashing the garage cover, low-roof eye clamp; writes `game_test_villa.mjs`); `pw_villa2.py [shots…]` (v6.1 browser shots `v2_<shot>.png`: junction, cap, arch, mh_closed, mh_open, climb, roof, roof2, garage); `pw_villa.py [spots…]` (browser shots `v_<spot>.png` plus calls/tris/bodies; spots entry, hall, kitchen, living, master, bath, garage, front, back, halldoor, halldoor2; `NOSHADOW=1` for perf mode).
 
 ## Tests
 Run from `/tmp/build2`; they read `all.mjs`. Each harness runs in jsdom + node-canvas with a mocked renderer.
