@@ -68,17 +68,17 @@ function seatTarget(){const m=PC.crt.mesh;m.updateMatrixWorld(true);const G=MON;
 function canSit(){if(!crtAlive())return false;const m=PC.crt.mesh;const up=V3(0,1,0).applyQuaternion(m.getWorldQuaternion(new THREE.Quaternion()));const sc=m.localToWorld(V3(0,MON.sy,MON.fz));return up.y>0.85&&sc.y>0.6;}
 SEATS.desk={name:'desk',
   can(){return canSit()?null:'[THE MONITOR IS NOT WHERE A MONITOR SHOULD BE]';},
-  keep(){if(!canSit())return'[THE DESK GAVE UP ON YOU]';if(!PC.on||PC.state!=='desktop')return'[SCREEN WENT DEAD]';return null;},
+  keep(){if(!canSit())return'[THE DESK GAVE UP ON YOU]';if(!PC.on||PC.state!=='desktop')return'[SCREEN WENT DEAD]';if(!EX.running)return'[YOU QUIT TO THE DESKTOP. THE ICON IS STILL THERE.]';return null;},
   target(){seatTarget();},
-  view(){return{yaw:SEAT.yaw+EX.aimYaw*0.035,pitch:SEAT.pitch+EX.aimPitch*0.03,fov:EX.ads?54:60};},
-  hint:'SEATED · MOUSE = AIM · LMB = FIRE · HOLD RMB = IRON SIGHTS · R = RELOAD · WHEEL = LEAN IN/OUT · E = STAND UP',
+  view(){const w=clamp(Math.atan2(Math.sin(EX.aimYaw),Math.cos(EX.aimYaw)),-1,1);return{yaw:SEAT.yaw+w*0.035,pitch:SEAT.pitch+clamp(EX.aimPitch,-0.6,0.5)*0.03,fov:EX.ads?54:60};},
+  hint:'SEATED · WASD = WALK (IN GAME) · MOUSE = LOOK/AIM · LMB = FIRE · HOLD RMB = IRON SIGHTS · R = RELOAD · F = USE (IN GAME) · TAB = PAUSE · WHEEL = LEAN IN/OUT · E = STAND UP',
   onSit(){S.thud(SEAT.stand,0.5);S.click(SEAT.eye,1200);if(!EX.running)exStart();HUD.msg(EX.state==='play'?'[BACK AT THE DESK]':'[2:14 AM. YOU DOUBLE-CLICK IT.]',1.6);},
   onStand(){EX.ads=false;},
   look(dx,dy){EX.look(dx,dy);},
-  down(b){if(b===0)EX.trigger();if(b===2)EX.ads=true;},
+  down(b){if(b===0)EX.trigger();if(b===2&&!EX.menu)EX.ads=true;},
   up(b){if(b===2)EX.ads=false;},
   wheel(d){SEAT.lean=clamp(SEAT.lean+(d>0?0.06:-0.06),0.34,0.95);},
-  key(c){if(c==='KeyR')EX.reload();else if(c==='KeyF'&&EX.use)EX.use();}};
+  key(c){if(c==='Tab'){exMenuToggle();return;}if(EX.menu){if(c==='KeyW'||c==='ArrowUp')exMenuMove(-1);else if(c==='KeyS'||c==='ArrowDown')exMenuMove(1);else if(c==='Enter'||c==='KeyF'||c==='Space')exMenuPick();return;}if(c==='KeyR')EX.reload();else if(c==='KeyF'&&EX.use)EX.use();}};
 function sitDown(kind){kind=kind||'desk';const def=SEATS[kind];if(!def)return;if(SEAT.active){if(SEAT.at===kind)return;standUp();}const why=def.can();if(why){HUD.msg(why,1.6);return;}
   if(held)drop();if(grab){grab=null;HUD.hideBar();}resetTool();SEAT.def=def;SEAT.at=kind;SEAT.ly=0;SEAT.lp=0;def.target();SEAT.active=true;const v=def.view();SEAT.vy=v.yaw;SEAT.vp=v.pitch;SEAT.vf=v.fov;
   player.body.velocity.set(0,0,0);player.body.position.x=SEAT.stand.x;player.body.position.z=SEAT.stand.z;player.body.wakeUp();

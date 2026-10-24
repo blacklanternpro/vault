@@ -284,7 +284,7 @@ function updateTools(dt){kick.cd=Math.max(0,kick.cd-dt);if(SEAT.active){if(keys.
 
 /* ============================================================ INPUT */
 const overlay=document.getElementById('overlay');
-function bindInput(){document.addEventListener('keydown',e=>{if(e.code==='Tab')e.preventDefault();keys[e.code]=true;if(!locked)return;if(e.code==='KeyL'){flashOn=!flashOn;S.clatter(player.pos);HUD.msg(flashOn?'[WORK LIGHT ON]':'[WORK LIGHT OFF]',0.8);}if(e.code==='KeyP'){perfMode=!perfMode;applyQuality();}if(SEAT.active){SEAT.def.key(e.code);return;}if(e.code.startsWith('Digit')){const n=parseInt(e.code.slice(5));if(n>=1&&n<=5)setTool(n-1);}});
+function bindInput(){document.addEventListener('keydown',e=>{if(e.code==='Tab')e.preventDefault();keys[e.code]=true;if(!locked)return;if(e.code==='KeyL'){flashOn=!flashOn;S.clatter(player.pos);HUD.msg(flashOn?'[WORK LIGHT ON]':'[WORK LIGHT OFF]',0.8);}if(e.code==='KeyP'){perfMode=!perfMode;applyQuality();}if(SEAT.active){if(!e.repeat||SEAT.at==='couch')SEAT.def.key(e.code);return;}if(e.code.startsWith('Digit')){const n=parseInt(e.code.slice(5));if(n>=1&&n<=5)setTool(n-1);}});
   document.addEventListener('keyup',e=>{keys[e.code]=false;});
   document.addEventListener('mousedown',e=>{if(!locked)return;if(SEAT.active){SEAT.def.down(e.button);S.resume();return;}if(e.button===0){mouse.l=true;mouse.lp=true;}if(e.button===2){mouse.r=true;mouse.rp=true;}S.resume();});
   document.addEventListener('mouseup',e=>{if(SEAT.active&&SEAT.def.up)SEAT.def.up(e.button);if(e.button===2)EX.ads=false;if(e.button===0){mouse.l=false;mouse.lr=true;}if(e.button===2){mouse.r=false;mouse.rr=true;}});
@@ -340,5 +340,5 @@ for(const f of FACES)for(const c of f.chunks)chunkById.set(c.id,c);
 setTool(1);setTool(0);HUD.setPower(true);HUD.msg('[STUDIO · 6.5m × 8.5m · THE RENT IS DUE · GET YOUR BOND BACK]',4);
 SUN.spots.forEach(s=>s.intensity=70);
 window.__DEMO={player,world,ents,dynamics,keys,mouse,castRay,setTool,HUD,renderer,scene,camera,get locked(){return locked;},set locked(v){locked=v;},get perfMode(){return perfMode;},set perfMode(v){perfMode=v;applyQuality();},bootKick,hammerSmash,hammerTap,hammerBegin,HA,VMA,VM,FACES,WALLS,asms,P,BATTS,BATCHES,DRAWABLES,UPLOAD,shardChunk,knockLoose,structuralUpdate,pickUp,ramThrust,get held(){return held;},dbg:{anim,hammer,saw,crow,texta,HA,VMA,VM_REST,updateReticle,flexChunk,pryTarget,pryStep,endPry,applyQuality,QUALITY},FRIDGE,TV,PC,MW,KETTLE,TOAST,CORDS,useTarget,dentEnt,unplugCord,EX,SEAT,MON,EXA,sitDown,standUp,exStart,exGo,exFire,exReset,detachPart,crtImplode,makeDynamic,stats:()=>({fps:fpsShow,physMs,renderMs,calls:drawCalls,tris:drawTris,bodies:world.bodies.length,dyn:dynamics.length})};
-Object.assign(window.__DEMO,{COUCH,SEATS,TVREEL,TVB,TVH,TVA,TVCAP,TVL,LIVING,tvChannel,remoteCmd,remotePop,couchWhy,tvTick,tvReelAt});
+Object.assign(window.__DEMO,{exBlowHandle,exPressNext,exSpawnSubject,exMenuToggle,exMenuPick,exUseTarget,exSetLights,COUCH,SEATS,TVREEL,TVB,TVH,TVA,TVCAP,TVL,LIVING,tvChannel,remoteCmd,remotePop,couchWhy,tvTick,tvReelAt});
 loop();

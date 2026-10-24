@@ -44,6 +44,8 @@ function txFace(o){const W=128,H=128,c=mkCanvas(W,H),x=c.getContext('2d');x.fill
   x.fillStyle='rgba(0,0,0,0.16)';x.fillRect(fx-3,H*0.48,6,14);x.fillStyle='rgba(0,0,0,0.25)';x.fillRect(fx-5,H*0.6,10,2);
   x.fillStyle=o.lip||'#7a4a40';x.fillRect(fx-9,H*0.67,18,3);x.fillStyle='rgba(0,0,0,0.25)';x.fillRect(fx-9,H*0.665,18,1);
   if(o.stubble){for(let i=0;i<900;i++){const a=xr()*Math.PI,r=18+xr()*16;x.fillStyle='rgba(25,20,16,0.35)';x.fillRect(fx+Math.cos(a)*r*0.9,H*0.58+Math.sin(a)*r*0.7,1,1);}}
+  if(o.beard){for(let i=0;i<2600;i++){const a=xr()*Math.PI,r=14+xr()*24;x.fillStyle=o.beard;x.globalAlpha=0.55;x.fillRect(fx+Math.cos(a)*r*1.05,H*0.6+Math.sin(a)*r*0.75,2,2);}x.globalAlpha=1;x.fillStyle=o.lip||'#7a4a40';x.fillRect(fx-8,H*0.67,16,3);}
+  if(o.mous){x.fillStyle=o.mous;x.fillRect(fx-12,H*0.625,24,5);x.fillRect(fx-13,H*0.64,4,6);x.fillRect(fx+9,H*0.64,4,6);}
   if(o.tear){x.fillStyle='#2a3550';x.beginPath();x.moveTo(fx-13,H*0.535);x.quadraticCurveTo(fx-16,H*0.565,fx-13,H*0.575);x.quadraticCurveTo(fx-10,H*0.565,fx-13,H*0.535);x.fill();}
   if(o.scar){x.strokeStyle='rgba(150,90,80,0.8)';x.lineWidth=1.5;x.beginPath();x.moveTo(fx+16,H*0.36);x.lineTo(fx+22,H*0.52);x.stroke();}
   for(const s of[0.0,0.5]){x.fillStyle='rgba(0,0,0,0.1)';x.fillRect(W*s+W*0.47,H*0.42,8,16);}/* ears */
@@ -94,16 +96,16 @@ function exBuild(){if(EX.built)return;EX.built=true;_xs=417;
   /* cell: x −3..3, z −2.5..4.5, ceiling 3.0. Window wall at z −2.5 (0.35 thick), observation room behind it */
   EX.floor=exEnvPlane(6,7,V3(0,0,1),[-PI/2,0,0],txFloor(),null,{paint:true,vertical:false});
   exEnvPlane(6,7,V3(0,3,1),[PI/2,0,0],txConcrete(256,256,{base:'#4b4945',g:72}),[2,2]);
-  exEnvPlane(7,3,V3(-3,1.5,1),[0,PI/2,0],txWallSide('CELL 04'),null,{paint:true});exEnvPlane(7,3,V3(3,1.5,1),[0,-PI/2,0],txWallSide(''),null,{paint:true});exEnvPlane(6,3,V3(0,1.5,4.5),[0,PI,0],txWallSide(''),null,{paint:true});
-  EX.backLow=exEnvPlane(6,1.05,V3(0,0.525,-2.5),[0,0,0],txWallBack(),null,{paint:true});
+  exEnvPlane(3.8,3,V3(-3,1.5,-0.6),[0,PI/2,0],txWallSide('CELL 04'),null,{paint:true});exEnvPlane(2.2,3,V3(-3,1.5,3.4),[0,PI/2,0],txConcrete(256,256,{base:'#5a5853',g:84,ties:[64,64],pour:true,streaks:12}),null,{paint:true});exEnvPlane(1.0,1.0,V3(-3,2.5,1.8),[0,PI/2,0],txConcrete(64,64,{base:'#5a5853',g:84,ties:[32,32]}),null,{paint:true});/* the intake hatch sits in the gap (p8f) */exEnvPlane(7,3,V3(3,1.5,1),[0,-PI/2,0],txWallSide(''),null,{paint:true});exEnvPlane(6,3,V3(0,1.5,4.5),[0,PI,0],txWallSide(''),null,{paint:true});
+  EX.backLow=exEnvPlane(5.2,1.05,V3(-0.4,0.525,-2.5),[0,0,0],txWallBack(),null,{paint:true});
   exEnvPlane(6,0.55,V3(0,2.725,-2.5),[0,0,0],txConcrete(512,48,{ties:[64,48]}),null,{paint:true});
-  exEnvPlane(0.8,1.4,V3(-2.6,1.75,-2.5),[0,0,0],txConcrete(64,128,{ties:[32,64]}),null,{paint:true});exEnvPlane(0.8,1.4,V3(2.6,1.75,-2.5),[0,0,0],txConcrete(64,128,{ties:[32,64]}),null,{paint:true});
+  exEnvPlane(0.8,1.4,V3(-2.6,1.75,-2.5),[0,0,0],txConcrete(64,128,{ties:[32,64]}),null,{paint:true});exEnvPlane(0.8,0.35,V3(2.6,2.275,-2.5),[0,0,0],txConcrete(64,32,{ties:[32,32]}),null,{paint:true});
   const rev=exLam({map:exTex(txConcrete(128,32,{}))});exEnvBox(4.4,0.04,0.35,V3(0,1.03,-2.675),rev);exEnvBox(4.4,0.04,0.35,V3(0,2.47,-2.675),rev);exEnvBox(0.04,1.44,0.35,V3(-2.22,1.75,-2.675),rev);exEnvBox(0.04,1.44,0.35,V3(2.22,1.75,-2.675),rev);
-  /* walls for the ragdolls */exStaticBox(0.4,3,8,V3(-3.2,1.5,1));exStaticBox(0.4,3,8,V3(3.2,1.5,1));exStaticBox(6,3,0.4,V3(0,1.5,4.7));exStaticBox(6,1.05,0.35,V3(0,0.525,-2.675));exStaticBox(6,0.55,0.35,V3(0,2.725,-2.675));exStaticBox(0.8,1.4,0.35,V3(-2.6,1.75,-2.675));exStaticBox(0.8,1.4,0.35,V3(2.6,1.75,-2.675));
+  /* walls for the ragdolls */exStaticBox(0.4,3,8,V3(-3.2,1.5,1));exStaticBox(0.4,3,8,V3(3.2,1.5,1));exStaticBox(6,3,0.4,V3(0,1.5,4.7));exStaticBox(5.2,1.05,0.35,V3(-0.4,0.525,-2.675));exStaticBox(6,0.55,0.35,V3(0,2.725,-2.675));exStaticBox(0.8,1.4,0.35,V3(-2.6,1.75,-2.675));exStaticBox(0.8,0.35,0.35,V3(2.6,2.275,-2.675));
   /* observation room: z −2.85..−6.2 */const obsTex=txObs();EX.obsFloor=exEnvPlane(6,3.35,V3(0,0.0,-4.525),[-PI/2,0,0],txLino(),null,{paint:true,vertical:false});
   exEnvPlane(6,2.8,V3(0,1.4,-6.2),[0,0,0],obsTex,[2,1],{paint:false});exEnvPlane(3.35,2.8,V3(-3,1.4,-4.525),[0,PI/2,0],obsTex,[1,1]);exEnvPlane(3.35,2.8,V3(3,1.4,-4.525),[0,-PI/2,0],obsTex,[1,1]);exEnvPlane(6,3.35,V3(0,2.8,-4.525),[PI/2,0,0],txConcrete(128,128,{base:'#cfd3cf',g:200}),[3,2]);
   exStaticBox(6,2.8,0.3,V3(0,1.4,-6.35));exStaticBox(0.3,2.8,3.4,V3(-3.15,1.4,-4.5));exStaticBox(0.3,2.8,3.4,V3(3.15,1.4,-4.5));
-  /* console under the glass, its monitors, the PA mic */const lam=exLam({color:0x3a3d40});const top=exLam({color:0x222426});exEnvBox(4.6,0.9,0.42,V3(0,0.45,-3.08),lam);exEnvBox(4.7,0.04,0.5,V3(0,0.92,-3.08),top,false);
+  /* console under the glass, its monitors, the PA mic */const lam=exLam({color:0x3a3d40});const top=exLam({color:0x222426});exEnvBox(4.2,0.9,0.42,V3(-0.05,0.45,-3.08),lam);exEnvBox(4.3,0.04,0.5,V3(-0.05,0.92,-3.08),top,false);EX.consoleTop=top;
   for(const mx of[-1.6,-0.2,1.2]){const scr=new THREE.Mesh(new THREE.BoxGeometry(0.36,0.28,0.3),exLam({color:0x2b2d2c}));scr.position.set(mx,1.08,-3.12);EX.env.add(scr);EX.envMeshes.push(scr);const gl=new THREE.Mesh(new THREE.PlaneGeometry(0.3,0.22),new THREE.MeshBasicMaterial({color:0x39d16a}));gl.position.set(mx,1.08,-3.271);gl.rotation.y=PI;EX.env.add(gl);}
   const mic=new THREE.Mesh(new THREE.CylinderGeometry(0.006,0.006,0.32,6),exLam({color:0x111111}));mic.position.set(0.25,1.06,-2.95);mic.rotation.x=0.5;EX.env.add(mic);
   /* door in the back wall */const door=exEnvBox(0.95,2.05,0.08,V3(2.25,1.025,-6.15),exLam({color:0x5b6366}),false);const dh=new THREE.Mesh(new THREE.BoxGeometry(0.14,0.03,0.05),exLam({color:0x999999}));dh.position.set(1.9,1.0,-6.09);EX.env.add(dh);const dw=new THREE.Mesh(new THREE.PlaneGeometry(0.25,0.35),new THREE.MeshBasicMaterial({color:0x0a0d10}));dw.position.set(2.25,1.6,-6.105);EX.env.add(dw);EX.door=door;
@@ -116,7 +118,7 @@ function exBuild(){if(EX.built)return;EX.built=true;_xs=417;
   EX.mLight=new THREE.PointLight(0xffb060,0,7,1.6);EX.scene.add(EX.mLight);
   const tri=new THREE.Group();const tmat=exLam({color:0x1a1a1a});for(let i=0;i<3;i++){const l=new THREE.Mesh(new THREE.CylinderGeometry(0.012,0.012,1.3,5),tmat);const a=i/3*PI*2;l.position.set(Math.cos(a)*0.22,0.62,Math.sin(a)*0.22);l.rotation.set(Math.sin(a)*0.35,0,-Math.cos(a)*0.35);tri.add(l);}const cam=new THREE.Mesh(new THREE.BoxGeometry(0.16,0.14,0.3),tmat);cam.position.y=1.32;tri.add(cam);const lens=new THREE.Mesh(new THREE.CylinderGeometry(0.04,0.045,0.09,10),exLam({color:0x050505}));lens.rotation.x=PI/2;lens.position.set(0,1.32,0.19);tri.add(lens);EX.recLed=new THREE.Mesh(new THREE.SphereGeometry(0.012,6,6),new THREE.MeshBasicMaterial({color:0xff1010}));EX.recLed.position.set(0.05,1.41,0.15);tri.add(EX.recLed);tri.position.set(-2.1,0,1.0);tri.rotation.y=-1.25;EX.env.add(tri);
   const bucket=new THREE.Mesh(new THREE.CylinderGeometry(0.15,0.12,0.3,10,1,true),exLam({color:0x7a6a2a,side:THREE.DoubleSide}));bucket.position.set(2.55,0.15,-2.15);EX.env.add(bucket);const mop=new THREE.Mesh(new THREE.CylinderGeometry(0.012,0.012,1.4,5),exLam({color:0x8a7a5a}));mop.position.set(2.62,0.72,-2.2);mop.rotation.z=-0.22;EX.env.add(mop);
-  exInitParticles();exBuildGun();exBuildOverlay();exInitHumansShared();}
+  exInitParticles();exBuildGun();exBuildOverlay();exInitHumansShared();exBuildV2();}
 
 /* ---------- the gun (in the camera) */
 function exBuildGun(){const g=new THREE.Group();const blued=exLam({color:0x1c1d20});const grip=exLam({color:0x2b2622});const skin=exLam({map:exTex(txSkin('#c99c7e',[201,156,126]))});const sleeve=exLam({color:0x31353a});
@@ -156,29 +158,32 @@ function mkHuman(o){/* o: kind 'pris'|'sci', look */const H={o,kind:o.kind,alive
   const C=o.cloth;const cloth=(n,w,h,extra)=>partMat(H,n,txCloth(w,h,C.base,C.rgb,extra||{}));const skinC=()=>txSkin(o.skin,o.skinRGB);
   const P=(name,mesh,L0,r)=>{const p={name,mesh,L0,r,hits:0,body:null,severed:false,gone:false,opened:false,H};mesh.userData.hp=p;mesh.traverse(ch=>ch.userData.hp=p);H.group.add(mesh);H.parts[name]=p;return p;};
   /* torso: tapered box */const tg=new THREE.BoxGeometry(0.38,LEN.to,0.22,2,3,1);{const a=tg.attributes.position;for(let i=0;i<a.count;i++){const y=a.getY(i)/LEN.to+0.5;a.setX(i,a.getX(i)*(0.8+0.2*y));a.setZ(i,a.getZ(i)*(0.9+0.1*y));}tg.computeVertexNormals();}
-  P('torso',new THREE.Mesh(tg,cloth('torso',128,128,o.kind==='pris'?{text:'0417',text2:'0417',font:'bold 24px monospace',ty:56}:{coat:true})),LEN.to,0.19);
+  P('torso',new THREE.Mesh(tg,cloth('torso',128,128,o.kind==='pris'?{text:o.num||'0417',text2:o.num||'0417',font:'bold 24px monospace',ty:56}:{coat:true})),LEN.to,0.19);
   P('pelvis',new THREE.Mesh(new THREE.BoxGeometry(0.33,0.2,0.22),partMat(H,'pelvis',txCloth(64,64,C.leg||C.base,C.legRGB||C.rgb))),0.2,0.16);
   if(o.coatSkirt){const sk=new THREE.Mesh(new THREE.BoxGeometry(0.42,0.5,0.27),partMat(H,'skirt',txCloth(64,64,C.base,C.rgb)));sk.position.y=-0.3;H.parts.pelvis.mesh.add(sk);sk.userData.hp=H.parts.pelvis;}
   /* head */const hm=new THREE.Mesh(new THREE.SphereGeometry(0.105,12,10),partMat(H,'head',txFace(o.face)));hm.scale.set(0.93,1.13,1.02);const head=new THREE.Group();head.add(hm);
   const nose=new THREE.Mesh(new THREE.BoxGeometry(0.028,0.045,0.035),exLam({map:exTex(skinC())}));nose.position.set(0,-0.012,0.105);head.add(nose);
-  const neck=cyl(0.048,0.055,0.12,exLam({map:exTex(skinC())}));neck.position.y=-0.105;head.add(neck);
+  const nkc=skinC();if(o.neckTat){const nx=nkc.getContext('2d');nx.strokeStyle='rgba(30,40,60,0.8)';nx.lineWidth=1.5;for(let i=0;i<6;i++){nx.beginPath();nx.moveTo(16,32);nx.lineTo(16+Math.cos(i)*14,32+Math.sin(i)*14);nx.stroke();}for(let r=5;r<15;r+=4){nx.beginPath();nx.arc(16,32,r,0,7);nx.stroke();}}const neck=cyl(0.048,0.055,0.12,exLam({map:exTex(nkc)}));neck.position.y=-0.105;head.add(neck);
+  if(o.pony){const pt=new THREE.Mesh(new THREE.CylinderGeometry(0.022,0.012,0.16,6),exLam({color:new THREE.Color(o.face.hair||'#1a1410')}));pt.position.set(0,-0.02,-0.115);pt.rotation.x=0.35;head.add(pt);}
+  if(o.hood){const hd=new THREE.Mesh(new THREE.SphereGeometry(0.135,10,8),exLam({map:exTex(txCloth(64,64,'#3a3328',[58,51,40]))}));hd.scale.set(0.95,1.25,1.05);hd.position.y=-0.01;head.add(hd);const tie=new THREE.Mesh(new THREE.CylinderGeometry(0.06,0.07,0.03,8),exLam({color:0x2a241c}));tie.position.y=-0.13;head.add(tie);H.hood=[hd,tie];}
   if(o.glasses){const gm=exLam({color:0x111111});for(const s of[-1,1]){const r=new THREE.Mesh(new THREE.BoxGeometry(0.045,0.032,0.006),gm);r.position.set(s*0.038,0.012,0.104);head.add(r);}const br=new THREE.Mesh(new THREE.BoxGeometry(0.2,0.006,0.006),gm);br.position.set(0,0.02,0.1);head.add(br);}
   if(o.hairMesh==='bob'){const hb=new THREE.Mesh(new THREE.SphereGeometry(0.118,10,8,0,Math.PI*2,0,Math.PI*0.62),exLam({color:0x2a1c14}));hb.scale.set(0.98,1.15,1.05);hb.position.set(0,0.01,-0.008);head.add(hb);const back=new THREE.Mesh(new THREE.BoxGeometry(0.22,0.14,0.08),exLam({color:0x2a1c14}));back.position.set(0,-0.06,-0.07);head.add(back);}
   if(o.hairMesh==='mess'){const hb=new THREE.Mesh(new THREE.SphereGeometry(0.112,9,7,0,Math.PI*2,0,Math.PI*0.48),exLam({color:0x1c1612}));hb.scale.set(1,1.18,1.06);hb.position.set(0,0.015,-0.01);hb.rotation.x=-0.15;head.add(hb);}
   P('head',head,0.17,0.11);
   for(const n of LIMBS){const b=BONES[n];const arm=n.indexOf('Arm')>0;const L0=arm?(n[0]==='u'?LEN.up:LEN.fo):(n.startsWith('thigh')?LEN.th:LEN.sh);
     const m=cyl(b.r,b.r2,L0,partMat(H,n,arm?(o.kind==='sci'?txCloth(64,64,C.base,C.rgb):txCloth(64,64,C.base,C.rgb)):txCloth(64,64,C.leg||C.base,C.legRGB||C.rgb)));
-    if(n.startsWith('lArm')){const hand=new THREE.Mesh(new THREE.BoxGeometry(0.07,0.09,0.034),exLam({map:exTex(skinC())}));hand.position.y=-L0/2-0.045;m.add(hand);
+    if(n.startsWith('lArm')){const hc=skinC();if(o.knuckles){const hx=hc.getContext('2d');hx.fillStyle='rgba(25,30,45,0.85)';hx.font='bold 9px monospace';const w=(n==='lArmL'?o.knuckles.slice(0,4):o.knuckles.slice(4,8));for(let i=0;i<4;i++)hx.fillText(w[i]||'',8+i*12,40);}const hand=new THREE.Mesh(new THREE.BoxGeometry(0.07,0.09,0.034),exLam({map:exTex(hc)}));hand.position.y=-L0/2-0.045;m.add(hand);
       if(o.kind==='pris'){const cuff=new THREE.Mesh(new THREE.TorusGeometry(0.038,0.007,4,10),exLam({color:0x9aa0a6}));cuff.rotation.x=PI_2;cuff.position.y=-L0/2+0.01;m.add(cuff);}
-      if(o.kind==='sci'&&n==='lArmL'){const cb=new THREE.Group();const brd=new THREE.Mesh(new THREE.BoxGeometry(0.23,0.012,0.31),exLam({color:0x7a5532}));const pap=new THREE.Mesh(new THREE.PlaneGeometry(0.2,0.27),exLam({color:0xeeeee6}));pap.rotation.x=-PI_2;pap.position.y=0.0065;cb.add(brd,pap);cb.position.set(0.09,-L0/2-0.06,0.03);cb.rotation.set(0.2,0,-0.25);m.add(cb);}
+      if(o.kind==='sci'&&n==='lArmL'){const cb=new THREE.Group();const brd=new THREE.Mesh(new THREE.BoxGeometry(0.23,0.012,0.31),exLam({color:0x7a5532}));const pap=new THREE.Mesh(new THREE.PlaneGeometry(0.2,0.27),exLam({color:0xeeeee6}));pap.rotation.x=-PI_2;pap.position.y=0.0065;cb.add(brd,pap);cb.position.set(0.09,-L0/2-0.06,0.03);cb.rotation.set(0.2,0,-0.25);m.add(cb);cb.userData.clipOf=H;H.clip=cb;}
       if(o.kind==='sci'&&n==='lArmR'){const pen=new THREE.Mesh(new THREE.CylinderGeometry(0.004,0.004,0.13,5),exLam({color:0x223399}));pen.position.set(0,-L0/2-0.08,0.02);pen.rotation.x=0.6;m.add(pen);}}
     if(n.startsWith('shin')){const foot=new THREE.Mesh(new THREE.BoxGeometry(0.09,0.06,0.24),exLam({color:o.shoe||0x1a1a1a}));m.add(foot);m.userData.foot=foot;}
     P(n,m,L0,b.r);}
-  H.J=exPose(H,0);H.Jfrom=null;exPlace(H);return H;}
+  if(o.build&&o.build!==1){for(const n in H.parts){if(n==='head')continue;const m=H.parts[n].mesh;const k=n==='torso'||n==='pelvis'?o.build:Math.sqrt(o.build);m.scale.x*=k;m.scale.z*=k;H.parts[n].r*=k;}}
+  H.mode=o.mode;H.J=exPose(H,0);H.Jfrom=null;exPlace(H);return H;}
 
 /* --- poses: return joint positions in the human's local frame (+z = facing) */
-function exPose(H,t){return H.kind==='pris'?poseKneel(H,t):poseStand(H,t);}
-function poseKneel(H,t){const br=Math.sin(t*1.6+H.phase)*0.008,tr=(0.4+H.hurt*2.5)*(Math.sin(t*31)+Math.sin(t*19.3))*0.0016;const J={};
+function exPose(H,t){return H.kind==='pris'&&H.mode!=='walk'?poseKneel(H,t):poseStand(H,t);}
+function poseKneel(H,t){const tm=H.temper,br=Math.sin(t*1.6+H.phase)*0.008+(tm==='praying'?Math.sin(t*2.2)*0.03:0),tr=(0.4+H.hurt*2.5+(tm==='laughing'&&H.laughT>0?6:0)+(tm==='pleading'?1.2:0))*(Math.sin(t*31)+Math.sin(t*19.3))*0.0016;const J={};
   J.knL=V3(-0.11,0.065,0.02);J.knR=V3(0.11,0.065,0.02);J.hipL=along(J.knL,nrm(0,1,-0.1),LEN.th);J.hipR=along(J.knR,nrm(0,1,-0.1),LEN.th);J.anL=along(J.knL,nrm(-0.05,0.01,-1),LEN.sh);J.anR=along(J.knR,nrm(0.05,0.01,-1),LEN.sh);
   J.hipM=J.hipL.clone().add(J.hipR).multiplyScalar(0.5);J.hipM.y+=0.06;const lean=0.3+br*2+H.hurt*0.25;J.chest=along(J.hipM,nrm(tr*20,1,lean),LEN.to);J.chest.y+=br;
   J.shL=J.chest.clone().add(V3(-0.19,-0.05,-0.025));J.shR=J.chest.clone().add(V3(0.19,-0.05,-0.025));J.elL=along(J.shL,nrm(-0.14,-0.72,-0.66),LEN.up);J.elR=along(J.shR,nrm(0.14,-0.72,-0.66),LEN.up);
@@ -194,6 +199,7 @@ function poseStand(H,t){const J={};const a=H.act;const br=Math.sin(t*1.5+H.phase
   if(a==='cower'||a==='hide'){[eL,wL]=armTo(sL,V3(-0.5,0.35,0.75),J.head.clone().add(V3(0.04,0.14,0.08)));[eR,wR]=armTo(sR,V3(0.5,0.35,0.75),J.head.clone().add(V3(-0.04,0.14,0.08)));}
   else if(a==='handsup'){[eL,wL]=armTo(sL,V3(-0.7,0.35,0.35),sL.clone().add(V3(-0.2,0.6,0.1)));[eR,wR]=armTo(sR,V3(0.7,0.35,0.35),sR.clone().add(V3(0.2,0.6,0.1)));wL.x+=Math.sin(t*14)*0.01;wR.x+=Math.sin(t*15)*0.01;}
   else if(a==='door'){[eL,wL]=armTo(sL,V3(-0.1,-0.7,0.6),sL.clone().add(V3(0.05,-0.2,0.5)));[eR,wR]=armTo(sR,V3(0.1,-0.4,1),sR.clone().add(V3(0.02,-0.25,0.55+Math.sin(t*22)*0.03)));}
+  else if(H.kind==='pris'){const cf=J.hipM.clone().add(V3(0,0.06,-0.2));[eL,wL]=armTo(sL,V3(-0.25,-0.9,-0.35),cf.clone().add(V3(-0.03,0,0)));[eR,wR]=armTo(sR,V3(0.25,-0.9,-0.35),cf.clone().add(V3(0.03,0,0)));}
   else{[eL,wL]=armTo(sL,V3(-0.06,-1,0.3),sL.clone().add(V3(0.17,-0.32,0.34)));
     if(a==='tap'){[eR,wR]=armTo(sR,V3(0.15,-0.2,1),sR.clone().add(V3(-0.05,0.08,0.52+Math.max(0,Math.sin(t*13))*0.05)));}
     else if(a==='away'){[eR,wR]=armTo(sR,V3(0.3,-0.75,0.55),J.head.clone().add(V3(0.01,-0.07,0.1)));}
@@ -218,7 +224,7 @@ function exPlace(H){const J=H.J,P=H.parts;const right=J.shR.clone().sub(J.shL);c
 /* --- ragdolls */
 const JLINK=[['pelvis','torso','hipM'],['torso','head','chest'],['torso','uArmL','shL'],['uArmL','lArmL','elL'],['torso','uArmR','shR'],['uArmR','lArmR','elR'],['pelvis','thighL','hipL'],['thighL','shinL','knL'],['pelvis','thighR','hipR'],['thighR','shinR','knR']];
 const _hwq=new THREE.Quaternion(),_hwp=V3(),_hws=V3();
-function exRagdoll(H){if(H.rag)return;H.rag=true;H.group.updateMatrixWorld(true);const Jw={};for(const k in H.J)if(H.J[k]&&H.J[k].isVector3&&k!=='look')Jw[k]=H.group.localToWorld(H.J[k].clone());
+function exRagdoll(H){if(H.rag)return;H.rag=true;H.ragAt=EX.pt;H.group.updateMatrixWorld(true);const Jw={};for(const k in H.J)if(H.J[k]&&H.J[k].isVector3&&k!=='look')Jw[k]=H.group.localToWorld(H.J[k].clone());
   for(const n in H.parts){const p=H.parts[n];if(p.gone)continue;const m=p.mesh;m.updateMatrixWorld(true);m.matrixWorld.decompose(_hwp,_hwq,_hws);EX.scene.attach(m);
     let shape;if(n==='head')shape=new CANNON.Sphere(0.105);else if(n==='torso')shape=new CANNON.Box(new CANNON.Vec3(0.17,LEN.to*m.scale.y/2,0.105));else if(n==='pelvis')shape=new CANNON.Box(new CANNON.Vec3(0.16,0.1,0.105));else shape=new CANNON.Box(new CANNON.Vec3(p.r*0.9,p.L0*m.scale.y/2,p.r*0.9));
     const b=new CANNON.Body({mass:BMASS[n]});b.addShape(shape);b.position.set(_hwp.x,_hwp.y,_hwp.z);b.quaternion.set(_hwq.x,_hwq.y,_hwq.z,_hwq.w);b.linearDamping=0.06;b.angularDamping=0.6;b.collisionFilterGroup=2;b.collisionFilterMask=1;b.allowSleep=true;b.sleepSpeedLimit=0.15;b.sleepTimeLimit=0.8;EX.world.addBody(b);p.body=b;}
@@ -237,7 +243,7 @@ function exSever(H,n,dir,pt){const p=H.parts[n];if(!p||p.severed||p.gone||!BONES
   let pw;if(c){pw=V3();const v=c.bodyA===par.body?c.pivotA:c.pivotB;const w=par.body.pointToWorldFrame(v);pw.set(w.x,w.y,w.z);EX.world.removeConstraint(c);delete H.cons[k];}else pw=V3(p.body.position.x,p.body.position.y,p.body.position.z);
   p.severed=true;const out=V3(p.body.position.x,p.body.position.y,p.body.position.z).sub(pw).normalize();exCap(par.mesh,pw,out,p.r);exCap(p.mesh,pw,out.clone().negate(),p.r);exBleed(par.mesh,pw,out,H.alive?6:2.5,H.alive?9:4);exBleed(p.mesh,pw,out.clone().negate(),1.6,3);
   exImpulse(p,dir.clone().add(V3(0,0.5,0)).normalize(),(n.startsWith('thigh')?40:16),pt);exEmit(pw,out,40,3,1.0,0,BLOOD);EXA.wet(1.2);return true;}
-function exBurstHead(H,dir,pt){const p=H.parts.head;if(p.gone)return;if(!H.rag)exRagdoll(H);const c=H.cons.chest;const tor=H.parts.torso;let pw=V3(p.body.position.x,p.body.position.y,p.body.position.z);if(c){const v=c.bodyA===tor.body?c.pivotA:c.pivotB;const w=tor.body.pointToWorldFrame(v);pw.set(w.x,w.y,w.z);EX.world.removeConstraint(c);delete H.cons.chest;}
+function exBurstHead(H,dir,pt){const p=H.parts.head;if(p.gone||(H.rag&&!p.body))return;if(!H.rag)exRagdoll(H);const c=H.cons.chest;const tor=H.parts.torso;let pw=V3(p.body.position.x,p.body.position.y,p.body.position.z);if(c){const v=c.bodyA===tor.body?c.pivotA:c.pivotB;const w=tor.body.pointToWorldFrame(v);pw.set(w.x,w.y,w.z);EX.world.removeConstraint(c);delete H.cons.chest;}
   const hp=V3(p.body.position.x,p.body.position.y,p.body.position.z);EX.world.removeBody(p.body);p.body=null;p.gone=true;p.mesh.visible=false;if(p.mesh.parent)p.mesh.parent.remove(p.mesh);
   const up=hp.clone().sub(pw).normalize();exCap(tor.mesh,pw,up,0.055);exBleed(tor.mesh,pw,up,5,10);exEmit(hp,dir,90,4.5,1.4,0,BLOOD);exEmit(hp,dir,20,2,2,1,[0.55,0.1,0.1]);
   const cols=[0xe6dccb,0x7a0c0c,0xa83a3a,0xc59a80];for(let i=0;i<7;i++){const s=0.025+xr()*0.035;const m=new THREE.Mesh(new THREE.BoxGeometry(s,s*0.8,s*1.2),exLam({color:cols[i%4]}));m.position.copy(hp);EX.scene.add(m);const b=new CANNON.Body({mass:0.15});b.addShape(new CANNON.Box(new CANNON.Vec3(s/2,s*0.4,s*0.6)));b.position.set(hp.x,hp.y,hp.z);b.collisionFilterGroup=2;b.collisionFilterMask=1;b.linearDamping=0.1;EX.world.addBody(b);const v=dir.clone().multiplyScalar(2+xr()*3).add(V3((xr()-0.5)*3,1+xr()*2,(xr()-0.5)*3));b.velocity.set(v.x,v.y,v.z);b.angularVelocity.set((xr()-0.5)*20,(xr()-0.5)*20,(xr()-0.5)*20);EX.gibs.push({m,b});}
