@@ -81,7 +81,7 @@ function exMove(dt){const P=EX.P;if(!P)return;let f=0,s=0;if(SEAT.at==='desk'&&!
   const y=EX.aimYaw;let tx=-Math.sin(y)*f+Math.cos(y)*s,tz=-Math.cos(y)*f-Math.sin(y)*s;const tl=Math.hypot(tx,tz);if(tl>0){tx=tx/tl*1.4;tz=tz/tl*1.4;}
   const k=1-Math.exp(-dt*8);P.vx=lerp(P.vx,tx,k);P.vz=lerp(P.vz,tz,k);P.x+=P.vx*dt;P.z+=P.vz*dt;exCollide(P,0.22);
   const sp=Math.hypot(P.vx,P.vz);P.ph+=dt*sp*5.6;P.bob=Math.sin(P.ph)*0.028*Math.min(1,sp/1.4);const st=Math.floor(P.ph/Math.PI);if(st!==P.lastStep&&sp>0.3){P.lastStep=st;const lino=P.z<-2.85;EXA.noise({dur:0.07,gain:0.11,type:'lowpass',f:lino?650:420});EXA.noise({dur:0.03,gain:0.05,type:'bandpass',f:lino?3200:1800,q:2});}
-  EX.cam.position.set(P.x,1.62+P.bob,P.z);if(!EX.entered&&P.z<-2.9){EX.entered=true;exEnterControl();}}
+  if(EX.dbgCam){EX.cam.position.copy(EX.dbgCam);return;}EX.cam.position.set(P.x,1.62+P.bob,P.z);if(!EX.entered&&P.z<-2.9){EX.entered=true;exEnterControl();}}
 
 /* ---------- the door */
 function exV2Hit(ob,h,d){const k=ob.userData.v2;

@@ -67,14 +67,14 @@ const VO={vs:null,pick(kind){if(!window.speechSynthesis)return null;const vs=spe
   cancel(){try{if(window.speechSynthesis)speechSynthesis.cancel();}catch(e){}}};
 
 /* ---------- captions */
-function exSay(who,text,dur,key){EX.cap={who,text,t:dur||Math.max(2.2,text.length*0.075)};EX.hudDirty=true;if(key&&EXT.play(key))return;
+function exSay(who,text,dur,key){EX.cap={who,text,t:dur||Math.max(2.2,text.length*0.075)};EX.hudDirty=true;{const sp=who==='SUB'?EX.pris:(EX.sci||[]).find(s=>s.name===who);if(sp&&sp.alive&&!/^\[/.test(text))sp.talkT=Math.min(EX.cap.t,text.length*0.06+0.4);}if(key&&EXT.play(key))return;
   if(who==='PA'){EXA.squelch();if(!VO.speak(text,'pa'))EXA.babble(150,text.length,'pa');}else if(who==='SUB'){const f0=EX.pris?EX.pris.f0:102;if(f0)EXA.babble(f0,text.length,'low');}else if(who&&who.startsWith('DR'))EXA.babble(who==='DR HALE'?210:135,text.length,'');}
 
 /* ---------- the round */
 const SCI_LOOKS=[{name:'DR VOSS',pos:[-1.35,-3.6],face:{skin:'#e3b79d',sr:227,sg:183,sb:157,hair:'#a3a39e',hairLine:0.36,bald:true,brow:'#888'},glasses:true,voice:'m',skin:'#e3b79d',skinRGB:[227,183,157],leg:'#4f4134',role:'hide',target:[-0.92,-3.42],end:'write'},
   {name:'DR HALE',pos:[0.05,-3.72],face:{skin:'#d8a88b',sr:216,sg:168,sb:139,hair:'#2a1c14',hairLine:0.42,lip:'#9a4a4a'},hairMesh:'bob',voice:'f',skin:'#d8a88b',skinRGB:[216,168,139],leg:'#2b2b33',role:'door',target:[1.92,-5.72],end:'nod'},
   {name:'DR AMES',pos:[1.4,-3.52],face:{skin:'#c99878',sr:201,sg:152,sb:120,hair:'#1c1612',hairLine:0.34},hairMesh:'mess',voice:'m',skin:'#c99878',skinRGB:[201,152,120],leg:'#3a3a3a',role:'handsup',target:[0.7,-5.85],end:'away'}];
-function exClearRound(){for(const H of EX.humans){for(const k in H.cons)EX.world.removeConstraint(H.cons[k]);for(const n in H.parts){const p=H.parts[n];if(p.body)EX.world.removeBody(p.body);if(p.mesh.parent)p.mesh.parent.remove(p.mesh);p.mesh.traverse(o=>{if(o.isMesh){o.geometry.dispose();if(o.material.map)o.material.map.dispose();o.material.dispose();}});}EX.scene.remove(H.group);}
+function exClearRound(){for(const H of EX.humans){exSkinDispose(H);for(const k in H.cons)EX.world.removeConstraint(H.cons[k]);for(const n in H.parts){const p=H.parts[n];if(p.body)EX.world.removeBody(p.body);if(p.mesh.parent)p.mesh.parent.remove(p.mesh);p.mesh.traverse(o=>{if(o.isMesh){o.geometry.dispose();if(o.material.map)o.material.map.dispose();o.material.dispose();}});}EX.scene.remove(H.group);}
   EX.humans.length=0;EX.sci.length=0;EX.pris=null;for(const g of EX.gibs){EX.scene.remove(g.m);EX.world.removeBody(g.b);}EX.gibs.length=0;for(const p of EX.pools){EX.scene.remove(p.m);p.m.material.dispose();}EX.pools.length=0;EX.bleeds.length=0;for(const s of EX.shells)EX.scene.remove(s.m);EX.shells.length=0;
   EXP.life.fill(0);for(let i=0;i<EXP.N;i++)EXP.pos[i*3+1]=-99;EXP.pts.geometry.attributes.position.needsUpdate=true;}
 function exGlassBase(){const s=EX.glassS,x=s.x,W=s.c.width,H=s.c.height;x.clearRect(0,0,W,H);x.fillStyle='rgba(140,170,165,0.14)';x.fillRect(0,0,W,H);for(let i=0;i<5;i++){x.fillStyle=`rgba(255,255,255,${0.025+xr()*0.035})`;x.save();x.translate(60+i*100+xr()*30,0);x.transform(1,0,-0.6,1,0,0);x.fillRect(0,0,20+xr()*40,H);x.restore();}x.strokeStyle='rgba(30,35,35,0.6)';x.lineWidth=4;x.strokeRect(0,0,W,H);s.dirty=true;}
@@ -83,6 +83,7 @@ function exReset(){exClearRound();for(const s of EX.surfs.values()){if(s.pristin
   _xs=1000+((now*1000)|0)%9000;
   exV2Reset();exSpawnSubject(true);
   for(const L of SCI_LOOKS){const H=mkHuman({kind:'sci',pos:V3(L.pos[0],0,L.pos[1]),rotY:0,mode:'stand',cloth:{base:'#e5e5de',rgb:[229,229,222],leg:L.leg,legRGB:[70,60,50]},coatSkirt:true,skin:L.skin,skinRGB:L.skinRGB,face:L.face,glasses:L.glasses,hairMesh:L.hairMesh,shoe:0x1a120c});H.name=L.name;H.voice=L.voice;H.role=L.role;H.tgt=L.target;H.endAct=L.end;EX.humans.push(H);EX.sci.push(H);}}
+function exHeadOffset(p,h,d){const c=p.mesh.getWorldPosition(V3());return c.sub(h.point).cross(d).length();}
 function exHitList(){const t=[EX.env];if(!EX.glassBroken)t.push(EX.glass);if(EX.v2hits)for(const m of EX.v2hits)if(m.parent&&m.visible!==false)t.push(m);for(const H of EX.humans)for(const n in H.parts){const p=H.parts[n];if(!p.gone)t.push(p.mesh);}for(const g of EX.gibs)t.push(g.m);return t;}
 
 /* ---------- shooting */
@@ -106,17 +107,17 @@ function exGlassHit(h,d){EX.glassHits++;EXA.glassTick();const s=EX.glassS;exPain
 function exGlassBreak(){if(EX.glassBroken)return;EX.glassBroken=true;EX.glass.visible=false;if(EX.glassBody&&EX.glassBody.world)EX.world.removeBody(EX.glassBody);EXA.glassBreak();EXA.feedback();VO.cancel();
   for(let i=0;i<14;i++)exEmit(V3((xr()-0.5)*4.2,1.1+xr()*1.3,-2.68),V3((xr()-0.5)*0.6,-0.2,(xr()-0.5)),14,1.6,1.0,1,GLASSC);
   EX.cap={who:'',text:'',t:0};let d=0.25;for(const H of EX.sci){if(!H.alive||H.downed)continue;H.panic=true;H.screamT=d;d+=0.35+xr()*0.4;}EX.pris.headUpT=6;EX.pris.lookWin=6;EX.hudDirty=true;}
-function exHitPart(p,h,d){const H=p.H,n=p.name;p.hits++;exWound(p,h.uv,n==='head');exEmit(h.point,d.clone().negate(),8,1.1,1.1,0,BLOOD);exEmit(h.point,d,20,3.2,0.6,0,BLOOD);exEmit(h.point,d,3,0.5,1.2,1,[0.45,0.05,0.05]);exSplatFrom(h.point,d,n==='head'?0.42:0.26);EXA.flesh();
+function exHitPart(p,h,d){const H=p.H,n=p.name;p.hits++;exWound(p,h.uv,n==='head');exEmit(h.point,d.clone().negate(),8,1.1,1.1,0,BLOOD);exEmit(h.point,d,20,3.2,0.6,0,BLOOD);exEmit(h.point,d,3,0.5,1.2,1,[0.45,0.05,0.05]);exSplatFrom(h.point,d,n==='head'?0.42:0.26);EXA.flesh();exSoak(p,h.uv,n==='torso');if(n!=='head'&&(n==='torso'||n==='pelvis'||xr()<0.7))exExitWound(p,h,d);H.squeezeT=0.9;
   if(p.body)exImpulse(p,d,n==='head'?5:8,h.point);else{const dl=d.clone().applyAxisAngle(V3(0,1,0),-H.group.rotation.y);H.kick.addScaledVector(dl,n==='head'?0.05:0.035);H.kv.addScaledVector(dl,0.9);}
   if(H.kind==='pris'&&!H.hit){H.hit=true;H.hitAt=EX.pt;if(H.firstShotAt<0)H.firstShotAt=EX.pt;}
-  if(H.alive){const dm={head:500,torso:34,pelvis:26}[n]||14;H.health-=dm;H.hurt=Math.min(1,H.hurt+0.5);
-    if(n==='head')exKill(H,p,h,d,'head');
-    else if(LIMBS.includes(n)&&p.hits>=2){H.downed=true;H.bleed=Math.max(H.bleed,11);exSever(H,n,d,h.point);EXA.scream(H.voice,'long');H.screamT=1.6;if(H.health<=0)exKill(H,p,h,d,'body');}
+  if(H.alive){if(n==='head'&&!H.grazed&&exHeadOffset(p,h,d)>0.066){H.grazed=true;exHeadGraze(H,h,d);return;}const dm={head:500,torso:34,pelvis:26}[n]||14;H.health-=dm;H.hurt=Math.min(1,H.hurt+0.5);
+    if(n==='head'){exExitWound(p,h,d);exKill(H,p,h,d,'head');}
+    else if(LIMBS.includes(n)&&p.hits>=2){H.downed=true;H.bleed=Math.max(H.bleed,11);exSever(H,n,d,h.point);exScream(H,'long');H.screamT=1.6;if(H.health<=0)exKill(H,p,h,d,'body');}
     else if(H.health<=0)exKill(H,p,h,d,'body');
-    else{EXA.scream(H.voice,'hit');if(H.kind==='sci'&&!H.panic&&!H.downed){H.panic=true;H.screamT=1.2;}if(H.kind==='pris'&&H.alive&&H===EX.pris&&!H.saidHit){H.saidHit=true;const T=TEMPER[H.temper];if(T)setTimeout(()=>{if(H.alive)exSay('SUB',T.hit[(xr()*T.hit.length)|0],2);},350);if(H.temper==='laughing')H.laughT=3;}}
+    else{exScream(H,'hit');if(H.kind==='sci'&&!H.panic&&!H.downed){H.panic=true;H.screamT=1.2;}if(H.kind==='pris'&&H.alive&&H===EX.pris&&!H.saidHit){H.saidHit=true;const T=TEMPER[H.temper];if(T)setTimeout(()=>{if(H.alive)exSay('SUB',T.hit[(xr()*T.hit.length)|0],2);},350);if(H.temper==='laughing')H.laughT=3;}}
     if(n==='torso'&&p.hits>=3)exOpenTorso(H);}
-  else{if(n==='head'&&p.hits>=2)exBurstHead(H,d,h.point);else if(LIMBS.includes(n)&&p.hits>=2)exSever(H,n,d,h.point);else if(n==='torso'&&p.hits>=3)exOpenTorso(H);}}
-function exKill(H,p,h,d,cause){if(!H.alive)return;H.alive=false;H.health=0;if(!H.rag)exRagdoll(H);exImpulse(p.body?p:H.parts.torso,d,cause==='head'?11:15,h.point);if(cause==='head'){exEmit(h.point,d,50,4,0.9,0,BLOOD);exSplatFrom(h.point,d,0.6);EXA.wet(0.8);}else EXA.scream(H.voice,'gurgle');exDied(H);}
+  else{if(n==='head'){H.chs=(H.chs||0)+1;if(H.chs===1)exHeadChunk(H,d,h.point);else exBurstHead(H,d,h.point);}else if(LIMBS.includes(n)&&p.hits>=2)exSever(H,n,d,h.point);else if(n==='torso'&&p.hits>=3)exOpenTorso(H);}}
+function exKill(H,p,h,d,cause){if(!H.alive)return;H.alive=false;H.health=0;if(!H.rag)exRagdoll(H);exImpulse(p.body?p:H.parts.torso,d,cause==='head'?11:15,h.point);if(cause==='head'){exEmit(h.point,d,50,4,0.9,0,BLOOD);exSplatFrom(h.point,d,0.6);EXA.wet(0.8);}else exScream(H,'gurgle');exDied(H);}
 function exDied(H){H.alive=false;H.downed=false;EX.poolQ=EX.poolQ||[];EX.poolQ.push({H,t:1.4});if(H.kind==='pris')exSubjectDone(H);
   if(EX.sci.length&&EX.sci.every(s=>!s.alive))exAlarm();}
 
@@ -124,17 +125,17 @@ function exDied(H){H.alive=false;H.downed=false;EX.poolQ=EX.poolQ||[];EX.poolQ.p
 const _tl=V3();
 function exBrain(H,dt,live){H.group.updateMatrixWorld(true);_tl.copy(EX.cam.position);H.watch.copy(H.group.worldToLocal(_tl.clone()));
   if(H.rag){if(H.alive&&H.downed){H.health-=H.bleed*dt;H.writheT=(H.writheT||0)-dt;if(H.writheT<=0){H.writheT=0.3+xr()*0.6;const ps=Object.values(H.parts).filter(q=>q.body&&!q.gone);const q=ps[(xr()*ps.length)|0];if(q)exImpulse(q,V3(xr()-0.5,0.7+xr()*0.6,xr()-0.5).normalize(),2.5+xr()*5,q.body.position);}
-      H.screamT-=dt;if(H.screamT<=0){H.screamT=1.3+xr()*1.8;EXA.scream(H.voice,H.health>45?'long':(H.health>20?'moan':'sob'));}if(H.health<=0){EXA.scream(H.voice,'gurgle');exDied(H);}}return;}
+      H.screamT-=dt;if(H.screamT<=0){H.screamT=1.3+xr()*1.8;exScream(H,H.health>45?'long':(H.health>20?'moan':'sob'));}if(H.health<=0){exScream(H,'gurgle');exDied(H);}}return;}
   if(!H.alive)return;H.hurt=Math.max(0,H.hurt-dt*0.04);
   if(H.kind==='pris'){if(H.stage==='enter'||H.stage==='kneel'){exSubjectWalk(H,dt);return;}if(H.laughT>0)H.laughT-=dt;if(H.temper==='silent'||H.temper==='pleading')H.headUpT=Math.max(H.headUpT,0.5);if(H.temper==='praying'&&H.headUpT>0.6)H.headUpT=0.6;if(H.lookWin>0){H.lookWin-=dt;H.group.updateMatrixWorld(true);H.watch.copy(H.group.worldToLocal(V3(0,1.7,-3.5)));}if(H.headUpT>0){H.headUpT-=dt;H.headUp=Math.min(1,H.headUp+dt*1.6);}else H.headUp=Math.max(0,H.headUp-dt*0.8);
-    if(H.hurt>0.3&&H.health<70&&live){H.groanT=(H.groanT||2)-dt;if(H.groanT<=0){H.groanT=2.5+xr()*2.5;EXA.scream(H.voice,'moan');}}return;}
-  /* scientists */if(H.panic){if(!H.ran){H.ran=true;EXA.scream(H.voice,'panic');const line={hide:'[sobbing] We only observe— we only OBSERVE!',door:'SECURITY! OPEN THE DOOR! OPEN IT!',handsup:"Please! It's not real— it's a TEST, it's just a test!"}[H.role];exSay(H.name,line,3.4);}
-    if(H.cower){const tp=EX.cam.position;const dx=tp.x-H.group.position.x,dz=tp.z-H.group.position.z;const want=Math.atan2(dx,dz);let r=want-H.group.rotation.y;r=Math.atan2(Math.sin(r),Math.cos(r));H.group.rotation.y+=r*Math.min(1,dt*4);H.walkAmt=Math.max(0,H.walkAmt-dt*5);exSetAct(H,'cower');H.begT-=dt;if(H.begT<=0){H.begT=3.5+xr()*3;const B=BEG[H.name]||['Please.'];H.begI=((H.begI||0)+1)%B.length;exSay(H.name,B[H.begI],3);EXA.scream(H.voice,'sob');}return;}
+    if(H.hurt>0.3&&H.health<70&&live){H.groanT=(H.groanT||2)-dt;if(H.groanT<=0){H.groanT=2.5+xr()*2.5;exScream(H,'moan');}}return;}
+  /* scientists */if(H.panic){if(!H.ran){H.ran=true;exScream(H,'panic');const line={hide:'[sobbing] We only observe— we only OBSERVE!',door:'SECURITY! OPEN THE DOOR! OPEN IT!',handsup:"Please! It's not real— it's a TEST, it's just a test!"}[H.role];exSay(H.name,line,3.4);}
+    if(H.cower){const tp=EX.cam.position;const dx=tp.x-H.group.position.x,dz=tp.z-H.group.position.z;const want=Math.atan2(dx,dz);let r=want-H.group.rotation.y;r=Math.atan2(Math.sin(r),Math.cos(r));H.group.rotation.y+=r*Math.min(1,dt*4);H.walkAmt=Math.max(0,H.walkAmt-dt*5);exSetAct(H,'cower');H.begT-=dt;if(H.begT<=0){H.begT=3.5+xr()*3;const B=BEG[H.name]||['Please.'];H.begI=((H.begI||0)+1)%B.length;exSay(H.name,B[H.begI],3);exScream(H,'sob');}return;}
     const tx=H.tgt[0],tz=H.tgt[1];const dx=tx-H.group.position.x,dz=tz-H.group.position.z;const dd=Math.hypot(dx,dz);
     if(dd>0.08){const sp=1.9*dt;H.group.position.x+=dx/dd*Math.min(sp,dd);H.group.position.z+=dz/dd*Math.min(sp,dd);const want=Math.atan2(dx,dz);let r=want-H.group.rotation.y;r=Math.atan2(Math.sin(r),Math.cos(r));H.group.rotation.y+=r*Math.min(1,dt*10);H.walkAmt=Math.min(1,H.walkAmt+dt*5);H.walkPh+=dt*10;if(H.act!=='watch')exSetAct(H,'watch');}
     else{H.walkAmt=Math.max(0,H.walkAmt-dt*5);const face=H.role==='door'?Math.PI:0;let r=face-H.group.rotation.y;r=Math.atan2(Math.sin(r),Math.cos(r));H.group.rotation.y+=r*Math.min(1,dt*6);exSetAct(H,H.role==='door'?'door':H.role==='hide'?'hide':'handsup');
       if(H.role==='door'){H.rattleT=(H.rattleT||0)-dt;if(H.rattleT<=0){H.rattleT=0.7+xr()*0.6;EXA.rattle();}}}
-    H.screamT-=dt;if(H.screamT<=0){H.screamT=2.2+xr()*3;EXA.scream(H.voice,H.role==='hide'?'sob':'panic');}return;}
+    H.screamT-=dt;if(H.screamT<=0){H.screamT=2.2+xr()*3;exScream(H,H.role==='hide'?'sob':'panic');}return;}
   H.actT-=dt;if(H.actT<=0){const r=xr();if(H.act==='write'||H.act==='tap'){exSetAct(H,'watch');H.actT=3+xr()*4;}else{exSetAct(H,r<0.55?'write':'watch');H.actT=2.5+xr()*3;}}
   if(H.act==='tap'){H.tapT=(H.tapT||0)-dt;if(H.tapT<=0){H.tapT=0.48;EXA.tap();}}}
 
@@ -148,7 +149,7 @@ function exUpdate3D(dt){if(EX.menu){if(EX.hudDirty)exDrawHUD();return;}const liv
   if(EX.reloadT>0){EX.reloadT-=dt;if(EX.reloadT<=0){EX.reloadT=0;EX.mag=12;EX.hudDirty=true;}}
   if(EX.cap.t>0){EX.cap.t-=dt;if(EX.cap.t<=0)EX.hudDirty=true;}if(EX.objT>0){EX.objT-=dt;if(EX.objT<=0)EX.hudDirty=true;}
   const ph=Math.floor(EX.st*2)%2;if(ph!==EX.blink){EX.blink=ph;EX.hudDirty=true;}
-  for(const H of EX.humans){exBrain(H,dt,live);exAnimate(H,dt);}
+  for(const H of EX.humans){exBrain(H,dt,live);exAnimate(H,dt);exFaceUpdate(H,dt);}exUpdateGuts(dt);exUpdateSoaks(dt);exUpdateSmears();
   if(EX.state==='play'&&live)exScript(dt);
   let dyn=EX.gibs.length>0;for(const H of EX.humans)if(H.rag){dyn=true;break;}if(dyn)EX.world.step(1/60,dt,3);for(const H of EX.humans)exSyncRag(H);for(const g of EX.gibs){g.m.position.copy(g.b.position);g.m.quaternion.copy(g.b.quaternion);}
   if(EX.poolQ)for(let i=EX.poolQ.length-1;i>=0;i--){const q=EX.poolQ[i];q.t-=dt;if(q.t<=0){exPool(q.H);EX.poolQ.splice(i,1);}}

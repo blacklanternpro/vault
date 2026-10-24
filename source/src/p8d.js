@@ -10,7 +10,7 @@
 const TVH={W:854,H:480,cv:null,x:null,tex:null};
 function tvhInit(w,h){TVH.W=w;TVH.H=h;TVH.cv=mkCanvas(w,h);TVH.x=TVH.cv.getContext('2d');const old=TVH.tex;TVH.tex=new THREE.CanvasTexture(TVH.cv);TVH.tex.colorSpace=THREE.SRGBColorSpace;TVH.tex.generateMipmaps=false;TVH.tex.minFilter=THREE.LinearFilter;TVH.tex.magFilter=THREE.LinearFilter;
   TVH.x.fillStyle='#000';TVH.x.fillRect(0,0,w,h);if(old){if(TV.picture&&TV.picture.material.emissiveMap===old){TV.picture.material.emissiveMap=TVH.tex;TV.picture.material.needsUpdate=true;}old.dispose();}}
-tvhInit(854,480);
+tvhInit(854,480);if(TOUCH)tvhInit(640,360);/* decision 3: the phone tier draws the ad channel at 640×360 */
 
 /* ---------- channels */
 Object.assign(TV,{ch:7,vol:0.6,mute:false,sleep:0,sleepSet:0,src:'snow',drawn:0,osd:{banner:3,vol:0,sleep:0},spoke:false});

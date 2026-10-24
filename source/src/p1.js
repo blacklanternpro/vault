@@ -71,7 +71,7 @@ class Drawable{
   rect(u0,v0,u1,v1,src){/* draw a whole source canvas into a uv rect */const w=this.canvas.width,h=this.canvas.height;const x0=Math.min(u0,u1)*w,x1=Math.max(u0,u1)*w,y0=(1-Math.max(v0,v1))*h,y1=(1-Math.min(v0,v1))*h;this.ctx.drawImage(src,x0,y0,x1-x0,y1-y0);this.mark(x0,y0,x1,y1);}
   fill(color){this.ctx.fillStyle=color;this.ctx.fillRect(0,0,this.canvas.width,this.canvas.height);this.flag();}
 }
-const DRAWABLES=[];function mkDrawable(canvas){const d=new Drawable(canvas);DRAWABLES.push(d);return d;}
+const DRAWABLES=[];function mkDrawable(canvas){/* phone tier: big paint-on canvases are capped at ~1 Mpx so Safari keeps the tab */if(typeof TOUCH!=='undefined'&&TOUCH&&canvas.width*canvas.height>1048576){const k=Math.sqrt(1048576/(canvas.width*canvas.height));const c2=mkCanvas(Math.max(16,Math.round(canvas.width*k)),Math.max(16,Math.round(canvas.height*k)));c2.getContext('2d').drawImage(canvas,0,0,c2.width,c2.height);canvas=c2;}const d=new Drawable(canvas);DRAWABLES.push(d);return d;}
 /* upload scheduler: oldest dirty first, at most 3 canvases per frame, each canvas at most every 1/30 s */
 const UPLOAD={pending:[],px:0};
 function flushDrawables(r){const L=UPLOAD.pending;L.length=0;for(const d of DRAWABLES){if(d.dirty&&now-d.lastUp>=1/30-1e-4)L.push(d);}if(!L.length)return;L.sort((a,b)=>a.dirtyAt-b.dirtyAt);let n=0;UPLOAD.px=0;for(const d of L){if(n>=3)break;UPLOAD.px+=d.upload(r);n++;}}
