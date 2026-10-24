@@ -60,10 +60,10 @@ const EXT={tried:false,base:null,manifest:null,bufs:{},
   has(k){return !!(this.manifest&&this.manifest[k]);},
   play(k){if(!this.has(k)||!EXA.ready)return false;const b=this.bufs[k];if(b===undefined){this.bufs[k]=null;fetch(new URL(this.manifest[k],this.base)).then(r=>r.arrayBuffer()).then(a=>S.ctx.decodeAudioData(a)).then(buf=>{this.bufs[k]=buf;this._p(buf);}).catch(()=>{});return true;}if(b){this._p(b);return true;}return false;},
   _p(buf){const s=EXA.c.createBufferSource();s.buffer=buf;s.connect(EXA.track());s.start();}};
-const VO={vs:null,pick(kind){if(!window.speechSynthesis)return null;const vs=speechSynthesis.getVoices()||[];if(!vs.length)return null;const want=kind==='ad'?[/Karen/i,/Catherine/i,/en-AU.*female/i,/UK English Female/i,/Hazel/i,/Zira/i,/Samantha/i,/female/i]:[/Daniel/i,/George/i,/UK English Male/i,/Ryan/i,/David/i,/Mark/i,/male/i];
+const VO={vs:null,pick(kind){if(!window.speechSynthesis)return null;const vs=speechSynthesis.getVoices()||[];if(!vs.length)return null;const want=(kind==='ad'||kind==='tv')?[/Karen/i,/Catherine/i,/en-AU.*female/i,/UK English Female/i,/Hazel/i,/Zira/i,/Samantha/i,/female/i]:[/Daniel/i,/George/i,/UK English Male/i,/Ryan/i,/David/i,/Mark/i,/male/i];
     for(const r of want){const v=vs.find(v=>r.test(v.name+' '+v.lang)&&/^en/i.test(v.lang));if(v)return v;}return vs.find(v=>/^en/i.test(v.lang))||vs[0];},
-  speak(text,kind){try{if(!window.speechSynthesis||!window.SpeechSynthesisUtterance)return false;const near=SEAT.active||(PC.crt&&player.pos.distanceTo(PC.crt.mesh.getWorldPosition(V3()))<3);if(!near)return false;const u=new SpeechSynthesisUtterance(text.replace(/—/g,', ').replace(/ZERO-FOUR-ONE-SEVEN/,'zero four one seven'));const v=this.pick(kind);if(v)u.voice=v;
-    u.rate=kind==='pa'?0.84:0.97;u.pitch=kind==='pa'?0.5:1.1;u.volume=SEAT.active?0.8:0.35;if(kind==='pa')speechSynthesis.cancel();speechSynthesis.speak(u);return true;}catch(e){return false;}},
+  speak(text,kind,o){try{if(!window.speechSynthesis||!window.SpeechSynthesisUtterance)return false;const tv=kind==='tv'||kind==='tvm';const near=tv?SEAT.at==='couch':((SEAT.at==='desk')||(PC.crt&&player.pos.distanceTo(PC.crt.mesh.getWorldPosition(V3()))<3));if(!near)return false;if(tv&&(TV.mute||TV.vol<=0.001))return true;const u=new SpeechSynthesisUtterance(text.replace(/—/g,', ').replace(/ZERO-FOUR-ONE-SEVEN/,'zero four one seven'));const v=this.pick(kind);if(v)u.voice=v;
+    u.rate=(o&&o.rate)||(kind==='pa'?0.84:kind==='tvm'?0.95:0.97);u.pitch=(o&&o.pitch)||(kind==='pa'?0.5:kind==='tvm'?0.8:1.1);u.volume=tv?Math.min(1,0.9*TV.vol):(SEAT.at==='desk')?0.8:0.35;if(kind==='pa')speechSynthesis.cancel();speechSynthesis.speak(u);return true;}catch(e){return false;}},
   cancel(){try{if(window.speechSynthesis)speechSynthesis.cancel();}catch(e){}}};
 
 /* ---------- captions */
@@ -141,7 +141,7 @@ function exEndComply(){if(EX.ending)return;EX.ending='C';EX.endT=0;}
 function exEndDefy(){if(EX.ending)return;EX.ending='D';exGo('endD');EXA.klaxon(4.4);VO.cancel();EX.cap={who:'',text:'',t:0};}
 
 /* ---------- the 3D frame */
-function exUpdate3D(dt){const live=SEAT.active||EX.state==='endD'||!!EX.ending;if(live&&EX.state==='play')EX.pt+=dt;
+function exUpdate3D(dt){const live=(SEAT.at==='desk')||EX.state==='endD'||!!EX.ending;if(live&&EX.state==='play')EX.pt+=dt;
   EX.cool=Math.max(0,EX.cool-dt);if(EX.autoReload>0){EX.autoReload-=dt;if(EX.autoReload<=0){EX.autoReload=-1;exReload();}}
   if(EX.reloadT>0){EX.reloadT-=dt;if(EX.reloadT<=0){EX.reloadT=0;EX.mag=12;EX.hudDirty=true;}}
   if(EX.cap.t>0){EX.cap.t-=dt;if(EX.cap.t<=0)EX.hudDirty=true;}if(EX.objT>0){EX.objT-=dt;if(EX.objT<=0)EX.hudDirty=true;}
@@ -167,7 +167,7 @@ function exScript(dt){const t=EX.pt,L=EX.lines,P=EX.pris;const once=(k,at,fn)=>{
   if(t>80){const k='loop'+Math.floor((t-80)/30);once(k,80+Math.floor((t-80)/30)*30,()=>exSay('PA',Math.floor((t-80)/30)%2?'YOUR HESITATION HAS BEEN NOTED.':'PROCEED.',2.6,'pa_proceed'));}
   if(EX.prisHit&&P.alive&&!L.finish&&t-EX.prisHitAt>6){L.finish=1;exSay('PA','FINISH IT.',2,'pa_finish');}}
 function exUpdateShells(dt){for(const s of EX.shells){if(s.rest)continue;s.t+=dt;s.v.y-=9.8*dt;s.m.position.addScaledVector(s.v,dt);s.m.rotation.x+=s.w.x*dt;s.m.rotation.y+=s.w.y*dt;if(s.m.position.y<0.006){s.m.position.y=0.006;s.v.y*=-0.35;s.v.x*=0.6;s.v.z*=0.6;s.w.multiplyScalar(0.5);if(Math.abs(s.v.y)<0.3){s.rest=true;s.m.rotation.set(0,s.m.rotation.y,PI_2);}}}}
-function exGunUpdate(dt){EX.adsK=lerp(EX.adsK,EX.ads&&SEAT.active?1:0,1-Math.exp(-dt*11));const fov=lerp(62,38,EX.adsK);if(Math.abs(EX.cam.fov-fov)>0.01){EX.cam.fov=fov;EX.cam.updateProjectionMatrix();}
+function exGunUpdate(dt){EX.adsK=lerp(EX.adsK,EX.ads&&(SEAT.at==='desk')?1:0,1-Math.exp(-dt*11));const fov=lerp(62,38,EX.adsK);if(Math.abs(EX.cam.fov-fov)>0.01){EX.cam.fov=fov;EX.cam.updateProjectionMatrix();}
   EX.recoil*=Math.exp(-dt*13);EX.kickP=(EX.kickP||0)*Math.exp(-dt*7);const br=Math.sin(now*1.3)*0.004*(1-EX.adsK*0.7);EX.cam.rotation.set(EX.aimPitch+EX.kickP+br*0.5,EX.aimYaw,0);
   const g=EX.gun,a=EX.adsK,r=EX.recoil;g.position.set(lerp(0.15,0,a),lerp(-0.16,-0.06,a)+br,lerp(-0.36,-0.46,a)+0.05*r);g.rotation.set(0.24*r,lerp(-0.04,0,a),0);
   if(EX.reloadT>0){const k=1-EX.reloadT/1.35;const s=Math.sin(Math.PI*k);g.position.y-=0.09*s;g.rotation.z=0.6*s;g.rotation.x+=-0.3*s;}else g.rotation.z=0;
@@ -185,7 +185,7 @@ function exGo(st){EX.state=st;EX.st=0;EX.c2dirty=true;EX.hudDirty=true;EX.is3D=(
   if(st==='ad'){EXA.stopAll();VO.cancel();EX.adCap='';EX.adI=0;if(!EXT.play('ad_jingle'))EXA.jingle(30);}}
 const AD_LINES=[[0.7,'At Happy Happy Play Place...','ad_1'],[3.8,'...retired racing greyhounds finally get to stop running.','ad_2'],[10.2,'A warm couch. A knitted jumper. All the naps they ever missed.','ad_3'],[17.2,'This is Biscuit. Biscuit likes toast, sunshine... and you.','ad_4'],[24.2,'Happy Happy Play Place. Sponsor a couch today.','ad_5']];
 function updateExecutioner(dt){if(!EX.running)return;if(!PC.on||PC.state!=='desktop'||!crtAlive()){exStop();return;}
-  const mp=PC.crt.mesh.getWorldPosition(V3());EXA.level(SEAT.active?1:0.9*S.dist(mp));EX.st+=dt;
+  const mp=PC.crt.mesh.getWorldPosition(V3());EXA.level((SEAT.at==='desk')?1:0.9*S.dist(mp));EX.st+=dt;
   switch(EX.state){case 'boot':if(EX.st>3.9)exGo('title');break;
     case 'intro':case 'play':case 'endD':exUpdate3D(dt);if(EX.state==='intro'&&EX.st>1.3)EX.state='play';if(EX.state==='endD'&&EX.st>4.4)exGo('ad');break;
     case 'endC':{const n=EX.st>1.9?2:(EX.st>0.4?1:0);if(n!==EX.endLines){EX.endLines=n;EX.c2dirty=true;if(n===1&&!EXT.play('pa_complete'))VO.speak('Test complete.','pa');if(n===2&&!EXT.play('pa_thankyou'))VO.speak('Thank you for your compliance.','pa');}if(EX.st>5.6)exGo('ad');break;}
@@ -284,7 +284,7 @@ function exNeed2D(){const t=EX.st;if(EX.state==='boot'){let n=0;for(const [at] o
 /* ---------- render into the monitor */
 const _ccol=new THREE.Color();
 function renderExecutioner(){if(!EX.running||!EX.rt||!EX.built||typeof renderer.setRenderTarget!=='function')return;
-  if(!SEAT.active){const p=PC.crt.mesh.localToWorld(V3(0,MON.sy,MON.fz));_pv.multiplyMatrices(camera.projectionMatrix,camera.matrixWorldInverse);_frus.setFromProjectionMatrix(_pv);if(!_frus.intersectsSphere(new THREE.Sphere(p,0.35)))return;if(now-EX.lastR<1/24)return;}
+  if(!(SEAT.at==='desk')){const p=PC.crt.mesh.localToWorld(V3(0,MON.sy,MON.fz));_pv.multiplyMatrices(camera.projectionMatrix,camera.matrixWorldInverse);_frus.setFromProjectionMatrix(_pv);if(!_frus.intersectsSphere(new THREE.Sphere(p,0.35)))return;if(now-EX.lastR<1/24)return;}
   EX.lastR=now;const is2D=!EX.is3D;if(is2D){const k=exNeed2D();if(k!==EX.c2key||EX.c2dirty){EX.c2dirty=false;exDraw2D();}}else if(EX.hudDirty)exDrawHUD();
   EX.q2.visible=is2D;EX.qh.visible=!is2D;EX.qr.visible=EX.state==='endD';EX.qr.material.opacity=EX.state==='endD'?0.18+0.14*Math.sin(EX.st*9):0;
   const fade=EX.state==='intro'?clamp(1-EX.st/1.2,0,1):(EX.ending==='C'?clamp(EX.endT/0.9,0,1):0);EX.qf.visible=fade>0;EX.qf.material.opacity=fade;

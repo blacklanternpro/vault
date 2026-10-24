@@ -5,7 +5,7 @@ LOOK="""const look=async(t,px,pz,dy)=>{D.player.body.position.set(px,0.4,pz);D.p
 async def main():
     shots=sys.argv[1].split(',') if len(sys.argv)>1 else None
     async with async_playwright() as p:
-        browser = await p.chromium.launch(executable_path='/opt/pw-browsers/chromium-1194/chrome-linux/chrome', args=['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--ignore-gpu-blocklist','--no-sandbox'])
+        browser = await p.chromium.launch(executable_path='/opt/pw-browsers/chromium-1243/chrome-linux64/chrome', args=['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--ignore-gpu-blocklist','--no-sandbox'])
         page = await browser.new_page(viewport={'width':800,'height':450})
         logs=[]
         page.on('console', lambda m: logs.append(f'{m.type}: {m.text}') if m.type in ('error','warning') else None)

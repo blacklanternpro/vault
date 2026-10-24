@@ -1,4 +1,4 @@
-# BEDSIT — handover brief (24 Oct 2026, end of v4 · start of v5)
+# BEDSIT — handover brief (24 Oct 2026, v5 in progress)
 
 Read this first, then `src/`. This bundle holds the full source. The public vault repo only holds the minified build.
 
@@ -6,13 +6,13 @@ Read this first, then `src/`. This bundle holds the full source. The public vaul
 
 **Build the v5 plan.** It lives in a Claude Docs doc: https://claude.ai/artifact/A4mQ6PNGcfnCMCFcSNsw2Z. Read the doc before writing code; it has the detail for each workstream.
 
-| Order | Workstream | One line |
-| --- | --- | --- |
-| 1 | Sit down and watch TV | Generalise `SEAT` (p8a) into a seat system: couch + desk, remote control, captions while seated |
-| 2 | Ad channel | Move Happy Happy Play Place off the PC onto TV CH 7 "ADS ALL NIGHT" (see below) |
-| 3 | EXECUTIONER v2 | Walk around, no game over, glass security door, control room, NEXT SUBJECT button |
-| 4 | People and gore fidelity pass | One continuous bending mesh per person, real faces and expressions, clothing, layered gore |
-| 5 | Mobile controls | Touch layout for every tool, both seats and the game; phone quality tier |
+| Order | Workstream | One line | Status |
+| --- | --- | --- | --- |
+| 1 | Sit down and watch TV | Generalise `SEAT` (p8a) into a seat system: couch + desk, remote control, captions while seated | **Shipped as v5.1** |
+| 2 | Ad channel | Move Happy Happy Play Place off the PC onto TV CH 7 "ADS ALL NIGHT" (see below) | Next |
+| 3 | EXECUTIONER v2 | Walk around, no game over, glass security door, control room, NEXT SUBJECT button | |
+| 4 | People and gore fidelity pass | One continuous bending mesh per person, real faces and expressions, clothing, layered gore | |
+| 5 | Mobile controls | Touch layout for every tool, both seats and the game; phone quality tier | |
 
 **Jake locked the decisions on 24 Oct 2026** (section 6 of the doc):
 1. **F** = in-game use at the desk (buttons, door lock, clipboards); **E** = stand up.
@@ -49,6 +49,7 @@ BEDSIT is a single-file, first-person demolition sandbox that runs in the browse
   5. texta
 - **Other keys:** F = kick. E = use / drop. L = flashlight. P = performance mode.
 - **The desk PC:** power it on, then E on the 21" monitor sits you down to play EXECUTIONER.
+- **The couch (v5.1):** E on the couch sits you facing the TV. Wheel/arrows/1-9 change channel, 0 power, V volume, M mute, T sleep timer (off/30/60/90), E stands. The remote lives on the couch arm.
 
 Owner: Jake (BAD FORM). He directs; Claude builds. He tests on a 4060 laptop through the Vercel link, and wants to try an iPhone 17 Pro later; that's the mobile workstream.
 
@@ -74,7 +75,7 @@ git clone -b bedsit-sandbox https://github.com/blacklanternpro/vault /home/claud
 python3 build.py
 ```
 
-`build.py` concatenates `p1 p2 p3 p4 p5 p5b p8a p8b p8c p6 p7` into `all.mjs`. All of them share **one module scope**. It writes three outputs:
+`build.py` concatenates `p1 p2 p3 p4 p5 p5b p8a p8b p8c p8d p6 p7` into `all.mjs`. All of them share **one module scope**. It writes three outputs:
 
 | Output | What it is |
 | --- | --- |
@@ -107,7 +108,7 @@ python3 build.py
    The alias `bedsit-sandbox-jake1987king-1642s-projects.vercel.app` sits behind Vercel auth. Verify with `mcp__Vercel__web_fetch_vercel_url`; on a 403 team scope, run `authorize_team_access`.
 6. Publish the artifact and send `index_1.html`.
 
-**Current live build:** game commit `846a0d23df59912b2c39d5c50d70230a48e3d949` (jsDelivr URL pinned to it), Vercel `dpl_9ef6Ed7rDCvypvfSkyxx37ZavR7j`. The source backup commit came after it, on the same branch.
+**Current live build:** the jsDelivr URL in `src/shell/vercel-shell.html` is pinned to the live game commit; `git log` on `bedsit-sandbox` shows the release commits.
 
 ## Source map
 | File | Contents |
@@ -118,9 +119,10 @@ python3 build.py
 | p4 | `compoundEnt`, joints (`breakJoint`, `checkJoints`), `shatterEnt`, support / collapse |
 | p5 | Apartment build: kitchen, living (sofa + TV wall), `buildDesk` (calls `buildCRT` and `buildTower`; chair at mx, dz+0.8), bed, bathroom, nook (armchair), doors, floor |
 | p5b | Appliances: dents, E-use system, kin doors, power cords, fridge, TV (`TV`, `TVS` 320×180), PC tower (`PC`, `crtDraw` desktop at 512×384), kitchen fittings, microwave, kettle, toaster, `updateAppliances` |
-| **p8a** | `MON` + `buildCRT` (21" FD monitor, screen ShaderMaterial mixing desktop canvas and `EX.rt`), `crtImplode`, `updateMonitor`, **`SEAT`** (`sitDown`, `standUp`, `seatTarget`, `updateSeat`, `seatHold`) |
+| **p8a** | `MON` + `buildCRT` (21" FD monitor, screen ShaderMaterial mixing desktop canvas and `EX.rt`), `crtImplode`, `updateMonitor`, **the seat system**: `SEAT` (state: `active`, `at` = 'desk'/'couch', `def`, look offsets `ly/lp`), `SEATS.desk` (a seat is data: `can/keep/target/view/hint/onSit/onStand/look/down/up/wheel/key`), `sitDown(kind)`, `standUp`, `seatTarget`, `updateSeat`, `seatHold`. p7's input handlers route to `SEAT.def.*` while seated; p8c uses `SEAT.at==='desk'` |
 | **p8b** | EXECUTIONER world: `EX` state object and render target (640×480), cell and observation room build (`exBuild`), paintable surfaces (`exSurf/splatAt/holeAt`), particles (`EXP`), gun viewmodel, human rigs (`mkHuman`, `poseKneel/poseStand`, `exAnimate/exPlace`), ragdolls (`exRagdoll`, ConeTwist joints, cuff P2P), gore (`exSever`, `exBurstHead`, `exOpenTorso`, `exWound`, bleeds, pools) |
 | **p8c** | `EXA` (game audio through a speaker-sim bus; voice formant synth for screams and babble; sting; jingle), `EXT` (manifest audio hook), `VO` (speech synthesis), round reset, `exFire/exTrace/exHitPart/exKill`, scientist and prisoner brains, `exScript` (PA lines), endings, state machine `exGo` (boot → title → intro → play → endC/endD → ad → boot), HUD canvas, 2D screens incl. **the HHPP ad (`exDrawAd` + `drawHound`/`drawCarer`/`drawCouch`/`drawLogo`)**, `renderExecutioner` |
+| **p8d** | v5.1 TV: `TVH` (854×480 program canvas, `tvhInit(w,h)` for the phone tier), `CHANNELS` (only 7 has content; others draw snow on `TVS`), `tvChannel`, `TVB` broadcast clock (always runs = live TV), **`TVREEL`** reel engine (`tvReelAdd({id,dur,draw(x,W,H,t),cues:[{t,fn}]})`; cues fire only while tuned in, so tuning in mid-ad skips past cues; split music beds into per-bar cues), `TVA` (TV speaker bus, inherits EXA's synth via `Object.create(EXA)`, stereo-panned from the TV's spot; `TVA.out()` = the current segment's track, killed by `tvCut()` on channel change/off), `tvSay` captions (`TVCAP`, DOM `#cap`, couch only) + speech (`VO.speak(text,'tv'/'tvm')`) or mumble when standing, OSD (banner/volume/mute/sleep), `TVL` room light (PointLight sampled from the picture), **`COUCH` + `SEATS.couch`** (can't-sit lines, look ±70°, fov 58), the remote (`buildRemote`, `remotePop` on a >3 m/s hit spits the door + two AAs, `remoteRefit`, `remoteCmd`, camera-held viewmodel), the TV's own CH ▲ button (E on the right third of the set). CH 7's v5.1 reel = owl station ident (8 s) + stand-by card (14 s); WS2 replaces the stand-by with the real ads |
 | p6 | Input state, player physics, `updateCamera`, `castRay` |
 | p7 | Tools, `damageProp`, `crackScreen`, `bindInput` (seat routing: mousemove → `EX.look`, mousedown → `EX.trigger` / `EX.ads`, wheel → lean, R → `EX.reload`), `updateTools` (seat early-exit, E stands), main `loop` (`seatHold` instead of player physics while seated; `updateSeat` after `updateCamera`; viewmodel skipped while seated; `renderExecutioner()` after the main render), `window.__DEMO` exports (EX, SEAT, MON, EXA, sitDown, standUp, exStart, exGo, exFire, exReset, …) |
 
@@ -146,11 +148,13 @@ Run from `/tmp/build2`; they read `all.mjs`. Each harness runs in jsdom + node-c
 | `harness5.mjs` | Appliance features |
 | `harness6.mjs` | Every assembly survives a wake; cords stay plugged |
 | `harness12.mjs` | Cords stay plugged for 10 s |
+| `harness_tv.mjs` | v5.1 couch + TV: sit via E, look clamp, full-rate redraw, channels/volume/mute/sleep, reel captions, room light, power, TV CH button, remote pop + refit, can't-sit lines, desk still works, tipped couch. `tvart.mjs <t…>` dumps CH 7 frames at those reel times to `tvart.png` (needs `game_test_tv.mjs`, written by `harness_tv.mjs`); `sofawake.mjs` checks the sofa wakes without cushions jumping |
 | `harness_ex.mjs` | Full EXECUTIONER flow. Its renderer mock adds `setRenderTarget/getRenderTarget/getClearColor/getClearAlpha/setClearColor`; its step adds `updateSeat` and `renderExecutioner` |
 
 **Headless Chromium:**
-- Use Chromium at `/opt/pw-browsers/chromium-1194/chrome-linux/chrome` with `--use-gl=angle --use-angle=swiftshader --enable-unsafe-swiftshader`.
+- Use Chromium at `/opt/pw-browsers/chromium-1243/chrome-linux64/chrome` (the path moved; `ls /opt/pw-browsers` if it moves again) with `--use-gl=angle --use-angle=swiftshader --enable-unsafe-swiftshader`.
 - It is **very slow**, roughly 1–3 s per frame. Drive states directly (`D.exGo('ad'); EX.st=13`; force `D.PC.t=5` to skip the boot) instead of waiting for real time. `pw_ex.py` shows the pattern.
+- `pw_tv.py` captures the couch, CH 7, OSD and room-light shots.
 - `pw9.py` captures appliance shots and `pw_min.py` smoke-tests the minified shell; serve `deploy/site` on port 8766 for that.
 
 ## Locked decisions (still in force)
@@ -182,6 +186,7 @@ Run from `/tmp/build2`; they read `all.mjs`. Each harness runs in jsdom + node-c
 - **Phase 5:** vibe pack (bond meter, answering machine, neon SWILL sign, 2 a.m. lighting toggle, guitar and amp, swing-anything, clutter, ambience, ceiling fan).
 
 ## Gotchas learned the hard way
+- **The sofa's backrest was on the TV side until v5.1** (frame back part at local z +0.325 while the cushions sat as if facing west). v5.1 moved it to −0.325 and resized the cushions so nothing overlaps; a wake no longer kicks them off.
 - **Shared module scope:**
   - Duplicate top-level names are a SyntaxError (`_m4`, `_vx` already clashed; p8b uses `_hvx`/`_hm4`).
   - Duplicate `function` declarations also break; replace a function, never redeclare it.

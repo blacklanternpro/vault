@@ -5,7 +5,7 @@ async def main():
     shots=sys.argv[1].split(',') if len(sys.argv)>1 and sys.argv[1] else None
     W=int(sys.argv[2]) if len(sys.argv)>2 else 960; H=W*9//16
     async with async_playwright() as p:
-        b=await p.chromium.launch(executable_path='/opt/pw-browsers/chromium-1194/chrome-linux/chrome',args=['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--ignore-gpu-blocklist','--no-sandbox','--autoplay-policy=no-user-gesture-required'])
+        b=await p.chromium.launch(executable_path='/opt/pw-browsers/chromium-1243/chrome-linux64/chrome',args=['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--ignore-gpu-blocklist','--no-sandbox','--autoplay-policy=no-user-gesture-required'])
         pg=await b.new_page(viewport={'width':W,'height':H});logs=[]
         pg.on('console',lambda m: logs.append(f'{m.type}: {m.text}') if m.type in ('error','warning') else None)
         pg.on('pageerror',lambda e: logs.append(f'PAGEERROR: {e}'))

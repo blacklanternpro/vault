@@ -55,22 +55,39 @@ function updateMonitor(dt){if(!MON.mat)return;const u=MON.mat.uniforms;const on=
   if(on){MON.warm=Math.min(1,MON.warm+dt/1.6);u.bright.value=0.08+0.92*MON.warm*MON.warm;u.collapse.value=0;}else{if(MON.collapse>0&&MON.collapse<1){MON.collapse=Math.min(1,MON.collapse+dt/0.32);}else MON.collapse=1;u.collapse.value=MON.collapse;u.bright.value=MON.collapse<1?1:0;}
   MON.mixG=lerp(MON.mixG,EX.running?1:0,1-Math.exp(-dt*14));u.mixG.value=MON.mixG;u.time.value=now;}
 
-/* ============================================================ SITTING DOWN AT THE DESK */
-const SEAT={active:false,blend:0,lean:0.58,eye:V3(),yaw:0,pitch:0,stand:V3(),n:V3(),fov:78};
-SEAT.use=()=>{if(!crtAlive()){HUD.msg('[NOTHING LEFT TO LOOK AT]',1);return;}if(PC.on&&(PC.state==='desktop'))sitDown();else if(!PC.on)pcToggle();else HUD.msg('[WAIT FOR IT TO BOOT]',1);};
+/* ============================================================ SEATS (v5) — one seat system, two seats.
+   A seat is data: where the eye goes, what it looks at, its field of view, and what the mouse and keys do while
+   you're in it. SEATS.desk aims in EXECUTIONER; SEATS.couch (p8d) looks round the room and drives the remote.
+   SEAT.active = seated anywhere; SEAT.at = 'desk' | 'couch' | null. */
+const SEAT={active:false,at:null,def:null,blend:0,lean:0.58,eye:V3(),yaw:0,pitch:0,stand:V3(),n:V3(),fov:78,vy:0,vp:0,vf:60,ly:0,lp:0};
+const SEATS={};
+SEAT.use=()=>{if(!crtAlive()){HUD.msg('[NOTHING LEFT TO LOOK AT]',1);return;}if(PC.on&&(PC.state==='desktop'))sitDown('desk');else if(!PC.on)pcToggle();else HUD.msg('[WAIT FOR IT TO BOOT]',1);};
 SEAT.useLabel=()=>{if(!crtAlive())return null;if(PC.on&&PC.state==='desktop')return EX.running?'SIT DOWN · BACK TO EXECUTIONER':'SIT DOWN · PLAY EXECUTIONER';if(PC.on)return null;return'PC POWER ON';};
 function seatTarget(){const m=PC.crt.mesh;m.updateMatrixWorld(true);const G=MON;const sc=m.localToWorld(V3(0,G.sy,G.fz));const n=m.localToWorld(V3(0,G.sy,G.fz+1)).sub(sc);n.y=0;if(n.lengthSq()<1e-6)n.set(0,0,1);n.normalize();
   SEAT.n.copy(n);SEAT.eye.copy(sc).addScaledVector(n,SEAT.lean);SEAT.eye.y=sc.y+0.075;SEAT.yaw=Math.atan2(n.x,n.z);SEAT.pitch=Math.atan2(sc.y-SEAT.eye.y,SEAT.lean);SEAT.stand.copy(sc).addScaledVector(n,SEAT.lean+0.62);return sc;}
 function canSit(){if(!crtAlive())return false;const m=PC.crt.mesh;const up=V3(0,1,0).applyQuaternion(m.getWorldQuaternion(new THREE.Quaternion()));const sc=m.localToWorld(V3(0,MON.sy,MON.fz));return up.y>0.85&&sc.y>0.6;}
-function sitDown(){if(SEAT.active)return;if(!canSit()){HUD.msg('[THE MONITOR IS NOT WHERE A MONITOR SHOULD BE]',1.4);return;}if(held)drop();if(grab){grab=null;HUD.hideBar();}resetTool();seatTarget();SEAT.active=true;
+SEATS.desk={name:'desk',
+  can(){return canSit()?null:'[THE MONITOR IS NOT WHERE A MONITOR SHOULD BE]';},
+  keep(){if(!canSit())return'[THE DESK GAVE UP ON YOU]';if(!PC.on||PC.state!=='desktop')return'[SCREEN WENT DEAD]';return null;},
+  target(){seatTarget();},
+  view(){return{yaw:SEAT.yaw+EX.aimYaw*0.035,pitch:SEAT.pitch+EX.aimPitch*0.03,fov:EX.ads?54:60};},
+  hint:'SEATED · MOUSE = AIM · LMB = FIRE · HOLD RMB = IRON SIGHTS · R = RELOAD · WHEEL = LEAN IN/OUT · E = STAND UP',
+  onSit(){S.thud(SEAT.stand,0.5);S.click(SEAT.eye,1200);if(!EX.running)exStart();HUD.msg(EX.state==='play'?'[BACK AT THE DESK]':'[2:14 AM. YOU DOUBLE-CLICK IT.]',1.6);},
+  onStand(){EX.ads=false;},
+  look(dx,dy){EX.look(dx,dy);},
+  down(b){if(b===0)EX.trigger();if(b===2)EX.ads=true;},
+  up(b){if(b===2)EX.ads=false;},
+  wheel(d){SEAT.lean=clamp(SEAT.lean+(d>0?0.06:-0.06),0.34,0.95);},
+  key(c){if(c==='KeyR')EX.reload();else if(c==='KeyF'&&EX.use)EX.use();}};
+function sitDown(kind){kind=kind||'desk';const def=SEATS[kind];if(!def)return;if(SEAT.active){if(SEAT.at===kind)return;standUp();}const why=def.can();if(why){HUD.msg(why,1.6);return;}
+  if(held)drop();if(grab){grab=null;HUD.hideBar();}resetTool();SEAT.def=def;SEAT.at=kind;SEAT.ly=0;SEAT.lp=0;def.target();SEAT.active=true;const v=def.view();SEAT.vy=v.yaw;SEAT.vp=v.pitch;SEAT.vf=v.fov;
   player.body.velocity.set(0,0,0);player.body.position.x=SEAT.stand.x;player.body.position.z=SEAT.stand.z;player.body.wakeUp();
-  HUD.el.hint.textContent='SEATED · MOUSE = AIM · LMB = FIRE · HOLD RMB = IRON SIGHTS · R = RELOAD · WHEEL = LEAN IN/OUT · E = STAND UP';HUD.el.cross.style.display='none';if(HUD.el.use)HUD.el.use.style.display='none';
-  S.thud(SEAT.stand,0.5);S.click(SEAT.eye,1200);if(!EX.running)exStart();HUD.msg(EX.state==='play'?'[BACK AT THE DESK]':'[2:14 AM. YOU DOUBLE-CLICK IT.]',1.6);}
-function standUp(why){if(!SEAT.active)return;SEAT.active=false;EX.ads=false;player.yaw=SEAT.yaw;player.pitch=clamp(SEAT.pitch,-0.4,0.4);player.lastYaw=player.yaw;player.lastPitch=player.pitch;HUD.el.hint.textContent=TOOLS[tool].hint;HUD.el.cross.style.display='';if(why)HUD.msg(why,1.8);}
+  HUD.el.hint.textContent=def.hint;HUD.el.cross.style.display='none';if(HUD.el.use)HUD.el.use.style.display='none';def.onSit();}
+function standUp(why){if(!SEAT.active)return;const def=SEAT.def;SEAT.active=false;SEAT.at=null;if(def&&def.onStand)def.onStand();player.yaw=SEAT.vy;player.pitch=clamp(SEAT.vp,-0.4,0.4);player.lastYaw=player.yaw;player.lastPitch=player.pitch;HUD.el.hint.textContent=TOOLS[tool].hint;HUD.el.cross.style.display='';if(why)HUD.msg(why,1.8);}
 function seatHold(){const b=player.body;b.velocity.x=0;b.velocity.z=0;}
 const _sp=V3();
-function updateSeat(dt){if(SEAT.active){if(!canSit()){standUp('[THE DESK GAVE UP ON YOU]');}else if(!PC.on||PC.state!=='desktop'){standUp('[SCREEN WENT DEAD]');}else seatTarget();}
+function updateSeat(dt){if(SEAT.active){const why=SEAT.def.keep();if(why)standUp(why);else{SEAT.def.target();const v=SEAT.def.view();SEAT.vy=v.yaw;SEAT.vp=v.pitch;SEAT.vf=v.fov;}}
   SEAT.blend=clamp(SEAT.blend+(SEAT.active?dt/0.55:-dt/0.4),0,1);if(SEAT.blend<=0.0001){if(Math.abs(camera.fov-78)>0.01){camera.fov=78;camera.updateProjectionMatrix();}return;}
   const e=SEAT.blend*SEAT.blend*(3-2*SEAT.blend);_sp.copy(yawObj.position).lerp(SEAT.eye,e);yawObj.position.copy(_sp);
-  let dy=SEAT.yaw+EX.aimYaw*0.035-player.yaw;dy=Math.atan2(Math.sin(dy),Math.cos(dy));yawObj.rotation.y=player.yaw+dy*e;pitchObj.rotation.x=lerp(player.pitch,SEAT.pitch+EX.aimPitch*0.03,e);pitchObj.rotation.z*=1-e;camera.position.x*=1-e;
-  const f=lerp(78,EX.ads&&SEAT.active?54:60,e);if(Math.abs(camera.fov-f)>0.01){camera.fov=f;camera.updateProjectionMatrix();}}
+  let dy=SEAT.vy-player.yaw;dy=Math.atan2(Math.sin(dy),Math.cos(dy));yawObj.rotation.y=player.yaw+dy*e;pitchObj.rotation.x=lerp(player.pitch,SEAT.vp,e);pitchObj.rotation.z*=1-e;camera.position.x*=1-e;
+  const f=lerp(78,SEAT.active?SEAT.vf:SEAT.vf,e);if(Math.abs(camera.fov-f)>0.01){camera.fov=f;camera.updateProjectionMatrix();}}
