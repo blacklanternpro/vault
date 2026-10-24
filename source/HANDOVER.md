@@ -9,8 +9,8 @@ Read this first, then `src/`. This bundle holds the full source. The public vaul
 | Order | Workstream | One line | Status |
 | --- | --- | --- | --- |
 | 1 | Sit down and watch TV | Generalise `SEAT` (p8a) into a seat system: couch + desk, remote control, captions while seated | **Shipped as v5.1** |
-| 2 | Ad channel | Move Happy Happy Play Place off the PC onto TV CH 7 "ADS ALL NIGHT" (see below) | Next |
-| 3 | EXECUTIONER v2 | Walk around, no game over, glass security door, control room, NEXT SUBJECT button | |
+| 2 | Ad channel | Move Happy Happy Play Place off the PC onto TV CH 7 "ADS ALL NIGHT" (see below) | **Shipped as v5.2** |
+| 3 | EXECUTIONER v2 | Walk around, no game over, glass security door, control room, NEXT SUBJECT button | Next |
 | 4 | People and gore fidelity pass | One continuous bending mesh per person, real faces and expressions, clothing, layered gore | |
 | 5 | Mobile controls | Touch layout for every tool, both seats and the game; phone quality tier | |
 
@@ -75,7 +75,7 @@ git clone -b bedsit-sandbox https://github.com/blacklanternpro/vault /home/claud
 python3 build.py
 ```
 
-`build.py` concatenates `p1 p2 p3 p4 p5 p5b p8a p8b p8c p8d p6 p7` into `all.mjs`. All of them share **one module scope**. It writes three outputs:
+`build.py` concatenates `p1 p2 p3 p4 p5 p5b p8a p8b p8c p8d p8e p6 p7` into `all.mjs`. All of them share **one module scope**. It writes three outputs:
 
 | Output | What it is |
 | --- | --- |
@@ -121,8 +121,9 @@ python3 build.py
 | p5b | Appliances: dents, E-use system, kin doors, power cords, fridge, TV (`TV`, `TVS` 320×180), PC tower (`PC`, `crtDraw` desktop at 512×384), kitchen fittings, microwave, kettle, toaster, `updateAppliances` |
 | **p8a** | `MON` + `buildCRT` (21" FD monitor, screen ShaderMaterial mixing desktop canvas and `EX.rt`), `crtImplode`, `updateMonitor`, **the seat system**: `SEAT` (state: `active`, `at` = 'desk'/'couch', `def`, look offsets `ly/lp`), `SEATS.desk` (a seat is data: `can/keep/target/view/hint/onSit/onStand/look/down/up/wheel/key`), `sitDown(kind)`, `standUp`, `seatTarget`, `updateSeat`, `seatHold`. p7's input handlers route to `SEAT.def.*` while seated; p8c uses `SEAT.at==='desk'` |
 | **p8b** | EXECUTIONER world: `EX` state object and render target (640×480), cell and observation room build (`exBuild`), paintable surfaces (`exSurf/splatAt/holeAt`), particles (`EXP`), gun viewmodel, human rigs (`mkHuman`, `poseKneel/poseStand`, `exAnimate/exPlace`), ragdolls (`exRagdoll`, ConeTwist joints, cuff P2P), gore (`exSever`, `exBurstHead`, `exOpenTorso`, `exWound`, bleeds, pools) |
-| **p8c** | `EXA` (game audio through a speaker-sim bus; voice formant synth for screams and babble; sting; jingle), `EXT` (manifest audio hook), `VO` (speech synthesis), round reset, `exFire/exTrace/exHitPart/exKill`, scientist and prisoner brains, `exScript` (PA lines), endings, state machine `exGo` (boot → title → intro → play → endC/endD → ad → boot), HUD canvas, 2D screens incl. **the HHPP ad (`exDrawAd` + `drawHound`/`drawCarer`/`drawCouch`/`drawLogo`)**, `renderExecutioner` |
-| **p8d** | v5.1 TV: `TVH` (854×480 program canvas, `tvhInit(w,h)` for the phone tier), `CHANNELS` (only 7 has content; others draw snow on `TVS`), `tvChannel`, `TVB` broadcast clock (always runs = live TV), **`TVREEL`** reel engine (`tvReelAdd({id,dur,draw(x,W,H,t),cues:[{t,fn}]})`; cues fire only while tuned in, so tuning in mid-ad skips past cues; split music beds into per-bar cues), `TVA` (TV speaker bus, inherits EXA's synth via `Object.create(EXA)`, stereo-panned from the TV's spot; `TVA.out()` = the current segment's track, killed by `tvCut()` on channel change/off), `tvSay` captions (`TVCAP`, DOM `#cap`, couch only) + speech (`VO.speak(text,'tv'/'tvm')`) or mumble when standing, OSD (banner/volume/mute/sleep), `TVL` room light (PointLight sampled from the picture), **`COUCH` + `SEATS.couch`** (can't-sit lines, look ±70°, fov 58), the remote (`buildRemote`, `remotePop` on a >3 m/s hit spits the door + two AAs, `remoteRefit`, `remoteCmd`, camera-held viewmodel), the TV's own CH ▲ button (E on the right third of the set). CH 7's v5.1 reel = owl station ident (8 s) + stand-by card (14 s); WS2 replaces the stand-by with the real ads |
+| **p8c** | `EXA` (game audio through a speaker-sim bus; voice formant synth for screams and babble; sting; jingle), `EXT` (manifest audio hook), `VO` (speech synthesis), round reset, `exFire/exTrace/exHitPart/exKill`, scientist and prisoner brains, `exScript` (PA lines), endings, state machine `exGo` (boot → title → intro → play → endC/endD → boot; the `ad` state was removed in v5.2), HUD canvas, 2D screens, `renderExecutioner`, `rrect`, `wrapText` |
+| **p8d** | v5.1 TV: `TVH` (854×480 program canvas, `tvhInit(w,h)` for the phone tier), `CHANNELS` (only 7 has content; others draw snow on `TVS`), `tvChannel`, `TVB` broadcast clock (always runs = live TV), **`TVREEL`** reel engine (`tvReelAdd({id,dur,draw(x,W,H,t),cues:[{t,fn}]})`; cues fire only while tuned in, so tuning in mid-ad skips past cues; split music beds into per-bar cues), `TVA` (TV speaker bus, inherits EXA's synth via `Object.create(EXA)`, stereo-panned from the TV's spot; `TVA.out()` = the current segment's track, killed by `tvCut()` on channel change/off), `tvSay` captions (`TVCAP`, DOM `#cap`, couch only) + speech (`VO.speak(text,'tv'/'tvm')`) or mumble when standing, OSD (banner/volume/mute/sleep), `TVL` room light (PointLight sampled from the picture), **`COUCH` + `SEATS.couch`** (can't-sit lines, look ±70°, fov 58), the remote (`buildRemote`, `remotePop` on a >3 m/s hit spits the door + two AAs, `remoteRefit`, `remoteCmd`, camera-held viewmodel), the TV's own CH ▲ button (E on the right third of the set). `TV_IDENT` (owl test card, 8 s), `tvTestCard`, `tvDrawOwl`, `tvText`, `tvHoot`. `tvReelDraw` scales a virtual 854×480 frame to the canvas, so segments always draw at 854×480. Couch extras: hold RMB = squint (fov 58→32), LMB = channel up. Recordings hook `TVT` (`audio/tv/manifest.json`, keys = segment ids: `ident hhpp1 gary toot bump quik hhpp2 swill hhpp3`; a recording replaces that ad's `snd` cues and speech, captions stay) |
+| **p8e** | v5.2 ad engine + CH 7 reel: HHPP characters moved from p8c (`drawHound`, `drawLogo`, `drawCarer`, `drawCouch`), kit (`sst`, `adFine`, `adBurst`, `adSparkle`, `adGrade`…), music (`beatGrid`, `songCues` = one cue per bar, `IN` instruments, `sing`), `drawToon` (front-on cartoon person with poses, hair, hats, Gary's shine/chain/teeth, cans, needles), `drawEngine` (original ride-on engine with a painted porcelain face panel), and the ads: `AD_HHPP1` Soft Landing 30 s, `AD_HHPP2` Biscuit's Birthday 30 s, `AD_HHPP3` Knit One, Love One 30 s, `AD_TOOT` 45 s, `AD_GARY` 20 s, `AD_QUIK` 20 s, `AD_SWILL` 20 s, `AD_BUMP` 6 s. Reel (223 s): ident · hhpp1 · gary · toot · bump · quik · hhpp2 · swill · ident · hhpp3 · bump |
 | p6 | Input state, player physics, `updateCamera`, `castRay` |
 | p7 | Tools, `damageProp`, `crackScreen`, `bindInput` (seat routing: mousemove → `EX.look`, mousedown → `EX.trigger` / `EX.ads`, wheel → lean, R → `EX.reload`), `updateTools` (seat early-exit, E stands), main `loop` (`seatHold` instead of player physics while seated; `updateSeat` after `updateCamera`; viewmodel skipped while seated; `renderExecutioner()` after the main render), `window.__DEMO` exports (EX, SEAT, MON, EXA, sitDown, standUp, exStart, exGo, exFire, exReset, …) |
 
@@ -148,13 +149,14 @@ Run from `/tmp/build2`; they read `all.mjs`. Each harness runs in jsdom + node-c
 | `harness5.mjs` | Appliance features |
 | `harness6.mjs` | Every assembly survives a wake; cords stay plugged |
 | `harness12.mjs` | Cords stay plugged for 10 s |
+| `tvperf.mjs` | Per-segment CPU draw cost of the reel (node-canvas is ~3× slower than a browser) |
 | `harness_tv.mjs` | v5.1 couch + TV: sit via E, look clamp, full-rate redraw, channels/volume/mute/sleep, reel captions, room light, power, TV CH button, remote pop + refit, can't-sit lines, desk still works, tipped couch. `tvart.mjs <t…>` dumps CH 7 frames at those reel times to `tvart.png` (needs `game_test_tv.mjs`, written by `harness_tv.mjs`); `sofawake.mjs` checks the sofa wakes without cushions jumping |
 | `harness_ex.mjs` | Full EXECUTIONER flow. Its renderer mock adds `setRenderTarget/getRenderTarget/getClearColor/getClearAlpha/setClearColor`; its step adds `updateSeat` and `renderExecutioner` |
 
 **Headless Chromium:**
 - Use Chromium at `/opt/pw-browsers/chromium-1243/chrome-linux64/chrome` (the path moved; `ls /opt/pw-browsers` if it moves again) with `--use-gl=angle --use-angle=swiftshader --enable-unsafe-swiftshader`.
 - It is **very slow**, roughly 1–3 s per frame. Drive states directly (`D.exGo('ad'); EX.st=13`; force `D.PC.t=5` to skip the boot) instead of waiting for real time. `pw_ex.py` shows the pattern.
-- `pw_tv.py` captures the couch, CH 7, OSD and room-light shots.
+- `pw_tv.py` captures the couch, CH 7, OSD, a sweep through every reel segment (watch for `tv cue` warnings) and room-light shots; `pw_tv2.py` is the quick couch + squint check. `node tvart.mjs out.png <reel seconds…>` renders reel frames headless (no browser).
 - `pw9.py` captures appliance shots and `pw_min.py` smoke-tests the minified shell; serve `deploy/site` on port 8766 for that.
 
 ## Locked decisions (still in force)
@@ -181,7 +183,7 @@ Run from `/tmp/build2`; they read `all.mjs`. Each harness runs in jsdom + node-c
    - All brands are invented: MERIDIAN, Compliance Interactive, Toot Toot Junction, Windoze. No real logos, and no famous cartoon trains.
 
 ## Remaining phases after v5
-- **Phase 2 rest:** thrash metal, news (corporate bonuses) and homely sitcom channels. They slot into the v5 channel system.
+- **Phase 2 rest:** thrash metal, news (corporate bonuses) and homely sitcom channels. They slot into the v5 channel system: add `CHANNELS[n]={name,reel:true}` plus a reel per channel (today `TVREEL` is CH 7's; generalise to one reel per channel).
 - **Phase 4:** gas stove and explosion.
 - **Phase 5:** vibe pack (bond meter, answering machine, neon SWILL sign, 2 a.m. lighting toggle, guitar and amp, swing-anything, clutter, ambience, ceiling fan).
 

@@ -26,6 +26,8 @@ async def main():
         await snap('look',"D.SEATS.couch.look(-500,60);out=D.SEAT.ly;",8)
         await snap('ch3',"D.SEATS.couch.look(500,-60);D.SEATS.couch.key('Digit3');out=D.TV.src;",6)
         await snap('vol',"D.SEATS.couch.key('Digit7');D.SEATS.couch.key('KeyV');D.SEATS.couch.key('KeyT');out=D.TV.vol;",6)
+        await snap('sweep',"D.SEATS.couch.key('Digit7');let off=0;const res=[];for(const s of D.TVREEL.segs){for(const f of [0.05,0.35,0.65,0.9]){D.TVB.t=off+s.dur*f;await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));}res.push(s.id);off+=s.dur;}D.TVB.t=58+27;out=res.join(',');",4)
+        await snap('tunnel',"D.TVB.t=58+27.5;out=D.TVCAP.text;",3)
         await snap('room',"D.standUp();for(let i=0;i<30;i++)await new Promise(r=>requestAnimationFrame(r));D.player.body.position.set(2.4,0.9,0.4);D.player.yaw=Math.atan2(-(-3.2-2.4),-(-1.0-0.4));D.player.pitch=-0.12;out=D.TVL.light.intensity;",8)
         print('\n'.join(l for l in logs if '404' not in l)[:3000])
         await b.close()

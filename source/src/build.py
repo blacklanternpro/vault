@@ -1,6 +1,6 @@
 import sys,base64,os,re
 B='/tmp/build2'
-src=''.join(open(f'{B}/{n}.js').read() for n in ['p1','p2','p3','p4','p5','p5b','p8a','p8b','p8c','p8d','p6','p7'])
+src=''.join(open(f'{B}/{n}.js').read() for n in ['p1','p2','p3','p4','p5','p5b','p8a','p8b','p8c','p8d','p8e','p6','p7'])
 open(f'{B}/all.mjs','w').write(src)
 head=open(f'{B}/shell/head.html').read();tail=open(f'{B}/shell/tail.html').read()
 PH="const GLB_ASSETS={};/* filled at build time with base64 GLBs */"

@@ -4,6 +4,6 @@ const dom=new JSDOM(`<!DOCTYPE html><body><canvas id="c"></canvas><div id="hud">
 const win=dom.window;globalThis.window=win;globalThis.document=win.document;globalThis.innerWidth=1280;globalThis.innerHeight=720;globalThis.devicePixelRatio=1;globalThis.addEventListener=()=>{};globalThis.requestAnimationFrame=()=>0;globalThis.HTMLElement=win.HTMLElement;
 const oc=win.document.createElement.bind(win.document);win.document.createElement=(t)=>{if(t==='canvas'){const c=createCanvas(16,16);c.style={};c.addEventListener=()=>{};c.requestPointerLock=()=>{};return c;}return oc(t);};globalThis.AudioContext=undefined;
 await import('./game_test_tv.mjs');const G=globalThis.G;
-const times=process.argv.slice(2).map(Number);const out=createCanvas(854*2,480*Math.ceil(times.length/2));const o=out.getContext('2d');
-times.forEach((t,i)=>{G.TVB.t=t;G.TV.osd.banner=0;G.tvReelDraw(G.TVH.x,G.TVH.W,G.TVH.H);o.drawImage(G.TVH.cv,(i%2)*854,Math.floor(i/2)*480);});
-fs.writeFileSync('/tmp/build2/tvart.png',out.toBuffer('image/png'));console.log('ok');
+const args=process.argv.slice(2);const outName=args[0].endsWith('.png')?args.shift():'/tmp/build2/tvart.png';const times=args.map(Number);const C=times.length>4?4:2,SC=C===4?0.5:1;const out=createCanvas(854*SC*C,480*SC*Math.ceil(times.length/C));const o=out.getContext('2d');
+times.forEach((t,i)=>{G.TVB.t=t;G.TV.osd.banner=0;G.tvReelDraw(G.TVH.x,G.TVH.W,G.TVH.H);o.drawImage(G.TVH.cv,(i%C)*854*SC,Math.floor(i/C)*480*SC,854*SC,480*SC);o.fillStyle='#ff0';o.font='bold 14px Arial';o.fillText(String(t),(i%C)*854*SC+6,Math.floor(i/C)*480*SC+16);});
+fs.writeFileSync(outName,out.toBuffer('image/png'));console.log('ok');
