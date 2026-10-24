@@ -1,0 +1,48 @@
+import {JSDOM} from 'jsdom';
+import {createCanvas} from 'canvas';
+const dom=new JSDOM(`<!DOCTYPE html><body><canvas id="c"></canvas><div id="hud"><div id="flash"></div><div id="cross"></div><div id="tool"></div><div id="hint"></div><div id="pwr"></div><div id="bar"><div id="barLabel"></div><div id="barTrack"><div id="barFill"></div></div></div><div id="msg"></div><div id="slots"><div></div><div></div><div></div><div></div><div></div></div><div id="stats"></div></div><div id="overlay"></div></body>`,{pretendToBeVisual:true});
+const win=dom.window;
+globalThis.window=win;globalThis.document=win.document;globalThis.innerWidth=1280;globalThis.innerHeight=720;globalThis.devicePixelRatio=1;
+globalThis.addEventListener=()=>{};globalThis.requestAnimationFrame=()=>0;globalThis.HTMLElement=win.HTMLElement;
+const origCreate=win.document.createElement.bind(win.document);
+win.document.createElement=(tag)=>{if(tag==='canvas'){const c=createCanvas(16,16);c.style={};c.addEventListener=()=>{};c.requestPointerLock=()=>{};return c;}return origCreate(tag);};
+globalThis.AudioContext=undefined;globalThis.webkitAudioContext=undefined;
+let src=(await import('fs')).readFileSync('all.mjs','utf8');
+src=src.replace(/const renderer=new THREE\.WebGLRenderer\([^;]*\);/, "const renderer={setPixelRatio(){},setSize(){},shadowMap:{},render(){},clear(){},clearDepth(){},info:{render:{calls:0}},setRenderTarget(){},getRenderTarget(){return null},getClearColor(c){return c},getClearAlpha(){return 1},setClearColor(){},toneMapping:0,toneMappingExposure:1,outputColorSpace:'',autoClear:true};");
+src=src.replace("const canvas=document.getElementById('c');","const canvas=document.getElementById('c');canvas.requestPointerLock=()=>{};");
+src=src.replace(/\nloop\(\);\n?$/,"\nglobalThis.G={EX,SEAT,MON,sitDown,standUp,exFire,exGo,exReset,exUpdate3D,renderExecutioner,crtAlive,EXP,pickUp,drop,pryTarget,pryStep,partAttached,detachPart,burstCan,milkBurst,SPRAYS,crackScreen,damageProp,handsGrab,handsUpdate,grabRef:()=>grab,TVS,ents,FRIDGE,TV,PC,MW,KETTLE,TOAST,CORDS,useTarget,dentEnt,unplugCord,KINDOORS,LIMITED,updateKinDoors,crtImplode,pcToggle,scene,ents,dynamics,asms,world,castRay,hammerTap,hammerSmash,bootKick,player,setTool,sawUpdate,mouse,keys,saw,crow,crowWedge,crowLever,handsGrab,handsUpdate,held:()=>held,grab:()=>grab,throwHeld,recomputeSupport,recomputeTimber,WALLS,FACES,WC,WE,WS,WBW,KITCH,DESK,BED,LIGHT,HUD,updateCamera,updateTools,syncAll,checkJoints,P,updateLight,textaUpdate,splitTimber,screws,BRICKS,ROOF,detachChunk,makeDynamic,wakeAsm,impact,damageProp,splitPart,cutWire,WIRES,PIPES,puncturePipe,updateLeak,cullDebris,arcFlash,tripBreaker,S,camera,yawObj,pitchObj,camFwd,fulcrumCheck,breakJoint,fixtureDrop,DOORS,FLOOR,plankAt,pryPlank,hammerPryStart,hammerPryUpdate,hitRoot,BVH:()=>BVH,now:()=>now,step(dt){now+=dt;if(SEAT.active)seatHold();else updatePlayerPhysics(dt);world.step(1/60,dt,3);updateHingeLimits();updateCords();runTimers();checkJoints();updateCamera(dt);yawObj.updateMatrixWorld(true);syncAll();P.update(dt);updateLight(dt);updateLeak(dt);updateAppliances(dt);updateSeat(dt);renderExecutioner();HUD.update(dt);cullDebris();flushBatches();for(const d of DRAWABLES)d.flush();scene.updateMatrixWorld(true);}};\n");
+(await import('fs')).writeFileSync('game_test_ex.mjs',src);
+
+await import('./game_test_ex.mjs');
+const G=globalThis.G;const V=(x,y,z)=>new G.camera.position.constructor(x,y,z);const step=(n=1)=>{for(let i=0;i<n;i++)G.step(1/60);};
+const T=(n,f)=>{const t=performance.now();const r=f();console.log(n.padEnd(36),((performance.now()-t)).toFixed(2)+'ms',r===undefined?'':JSON.stringify(r));return r;};
+step(90);
+const F=G.FRIDGE;console.log('fridge doors',F.doors.length,'contents',F.body.dependents.length,'cords',G.CORDS.length,'TV state',G.TV.state,'plugged',G.CORDS.map(c=>c.plugged));
+
+const EX=G.EX;const cam=()=>EX.cam;
+const aim=(tp)=>{const c=EX.cam.getWorldPosition(V(0,0,0));const d=tp.clone().sub(c);EX.aimYaw=Math.atan2(-d.x,-d.z);EX.aimPitch=Math.atan2(d.y,Math.hypot(d.x,d.z));EX.kickP=0;step(1);};
+const waitS=(st,max=70)=>{for(let i=0;i<max*60&&EX.state!==st;i++)step(1);step(50);return EX.state;};
+const wpos=(o)=>o.getWorldPosition(V(0,0,0));
+const fireAt=(o,dy=0)=>{const p=wpos(o);p.y+=dy;aim(p);EX.cool=0;EX.reloadT=0;if(EX.mag<1)EX.mag=12;const t=performance.now();G.exFire();return (performance.now()-t).toFixed(1)+'ms';};
+// boot the PC and sit down
+G.PC.use();step(60*4);console.log('PC state',G.PC.state,'crt alive',G.crtAlive(),'label',G.SEAT.useLabel());
+G.SEAT.use();console.log('seated',G.SEAT.active,'EX',EX.running,EX.state,'player at',G.player.body.position.x.toFixed(2),G.player.body.position.z.toFixed(2));
+step(60*5);console.log("state after boot",EX.state);G.EX.trigger();step(2);console.log('after trigger',EX.state,'humans',EX.humans.length);step(90);console.log('state',EX.state,'pt',EX.pt.toFixed(2),'cap',EX.cap.text);
+console.log('camera blend',G.SEAT.blend.toFixed(2),'fov',G.camera.fov.toFixed(1));
+const P=EX.pris;console.log('prisoner head y',wpos(P.parts.head.mesh).y.toFixed(2),'chest z',wpos(P.parts.torso.mesh).z.toFixed(2));for(const s of EX.sci)console.log(' sci',s.name,'head',wpos(s.parts.head.mesh).toArray().map(v=>v.toFixed(2)).join(','));
+// shoot the prisoner in the thigh twice: dismember + downed
+console.log('thigh shot',fireAt(P.parts.thighL.mesh));step(2);console.log(' thigh hits',P.parts.thighL.hits,'alive',P.alive,'health',P.health);fireAt(P.parts.thighL.mesh);step(2);console.log(' after 2nd: severed',P.parts.thighL.severed,'downed',P.downed,'rag',P.rag,'bleeds',EX.bleeds.length);
+step(60*3);console.log(' 3s later health',P.health.toFixed(0),'alive',P.alive,'torso y',P.parts.torso.body.position.y.toFixed(2));step(60*6);console.log(' 9s later alive',P.alive,'pools',EX.pools.length,'state',EX.state,'ending',EX.ending);
+step(60*6);console.log('state',EX.state);step(60*7);console.log('state (ad?)',EX.state,'adCap',EX.adCap);step(60*25);console.log('state after ad',EX.state);
+// round 2: defiance
+waitS("title");EX.trigger();step(90);console.log("round2",EX.state,'glass',EX.glassBroken);
+for(let i=0;i<5;i++){aim(V(-0.8+i*0.3,1.6,-2.68));EX.cool=0;G.exFire();step(8);}console.log(' glass hits',EX.glassHits,'broken',EX.glassBroken,'cap',EX.cap.text);
+step(60*3);for(const s of EX.sci)console.log(' sci',s.name,'act',s.act,'pos',s.group.position.x.toFixed(2),s.group.position.z.toFixed(2),'panic',s.panic);
+for(const s of EX.sci){for(let k=0;k<4&&s.alive;k++){fireAt(k<2?s.parts.head.mesh:s.parts.torso.mesh,0.0);step(3);}console.log(' shot',s.name,'alive',s.alive,'head hits',s.parts.head.hits,'torso hits',s.parts.torso.hits);}
+const v=EX.sci[2];if(v){fireAt(v.parts.lArmR.mesh);step(2);fireAt(v.parts.lArmR.mesh);step(2);fireAt(v.parts.torso.mesh);step(2);fireAt(v.parts.torso.mesh);step(2);fireAt(v.parts.torso.mesh);step(2);fireAt(v.parts.head.mesh);step(2);console.log(' corpse: arm severed',v.parts.lArmR.severed,'torso opened',v.parts.torso.opened,'head gone',v.parts.head.gone,'gibs',EX.gibs.length,'state',EX.state);}
+console.log(' state',EX.state,'ending',EX.ending);step(60*2);console.log(' corpse head shots on prisoner? prisoner alive',EX.pris.alive);
+fireAt(EX.pris.parts.head.mesh);step(2);console.log(' pris after head',EX.pris.alive);step(60*4);console.log('state',EX.state);
+// round 3: smash the CRT mid-game
+waitS("title");EX.trigger();step(90);console.log("round3",EX.state);G.standUp();step(30);console.log('stood',G.SEAT.active,'still running',EX.running);G.crtImplode&&0;
+const crt=G.PC.crt;G.damageProp(crt,3,wpos(G.PC.screen),V(0,0,-1),{object:G.PC.screen,uv:{x:0.5,y:0.5}});G.damageProp(crt,3,wpos(crt.mesh),V(0,0,-1),{object:G.PC.tube,uv:{x:0.5,y:0.5}});step(10);console.log('crt gone',G.PC.crtGone,'EX running',EX.running);
+console.log('DONE');process.exit(0);

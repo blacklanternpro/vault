@@ -1,0 +1,20 @@
+import {JSDOM} from 'jsdom';
+import {createCanvas} from 'canvas';
+const dom=new JSDOM(`<!DOCTYPE html><body><canvas id="c"></canvas><div id="hud"><div id="flash"></div><div id="cross"></div><div id="tool"></div><div id="hint"></div><div id="pwr"></div><div id="bar"><div id="barLabel"></div><div id="barTrack"><div id="barFill"></div></div></div><div id="msg"></div><div id="slots"><div></div><div></div><div></div><div></div><div></div></div><div id="stats"></div></div><div id="overlay"></div></body>`,{pretendToBeVisual:true});
+const win=dom.window;
+globalThis.window=win;globalThis.document=win.document;globalThis.innerWidth=1280;globalThis.innerHeight=720;globalThis.devicePixelRatio=1;
+globalThis.addEventListener=()=>{};globalThis.requestAnimationFrame=()=>0;globalThis.HTMLElement=win.HTMLElement;
+const origCreate=win.document.createElement.bind(win.document);
+win.document.createElement=(tag)=>{if(tag==='canvas'){const c=createCanvas(16,16);c.style={};c.addEventListener=()=>{};c.requestPointerLock=()=>{};return c;}return origCreate(tag);};
+globalThis.AudioContext=undefined;globalThis.webkitAudioContext=undefined;
+let src=(await import('fs')).readFileSync('all.mjs','utf8');
+src=src.replace(/const renderer=new THREE\.WebGLRenderer\([^;]*\);/, "const renderer={setPixelRatio(){},setSize(){},shadowMap:{},render(){},clear(){},clearDepth(){},info:{render:{calls:0}},toneMapping:0,toneMappingExposure:1,outputColorSpace:'',autoClear:true};");
+src=src.replace("const canvas=document.getElementById('c');","const canvas=document.getElementById('c');canvas.requestPointerLock=()=>{};");
+src=src.replace(/\nloop\(\);\n?$/,"\nglobalThis.G={pryTarget,pryStep,partAttached,detachPart,burstCan,milkBurst,SPRAYS,crackScreen,damageProp,handsGrab,handsUpdate,grabRef:()=>grab,TVS,ents,FRIDGE,TV,PC,MW,KETTLE,TOAST,CORDS,useTarget,dentEnt,unplugCord,KINDOORS,LIMITED,updateKinDoors,crtImplode,pcToggle,scene,ents,dynamics,asms,world,castRay,hammerTap,hammerSmash,bootKick,player,setTool,sawUpdate,mouse,keys,saw,crow,crowWedge,crowLever,handsGrab,handsUpdate,held:()=>held,grab:()=>grab,throwHeld,recomputeSupport,recomputeTimber,WALLS,FACES,WC,WE,WS,WBW,KITCH,DESK,BED,LIGHT,HUD,updateCamera,updateTools,syncAll,checkJoints,P,updateLight,textaUpdate,splitTimber,screws,BRICKS,ROOF,detachChunk,makeDynamic,wakeAsm,impact,damageProp,splitPart,cutWire,WIRES,PIPES,puncturePipe,updateLeak,cullDebris,arcFlash,tripBreaker,S,camera,yawObj,pitchObj,camFwd,fulcrumCheck,breakJoint,fixtureDrop,DOORS,FLOOR,plankAt,pryPlank,hammerPryStart,hammerPryUpdate,hitRoot,BVH:()=>BVH,now:()=>now,step(dt){now+=dt;updatePlayerPhysics(dt);world.step(1/60,dt,3);updateHingeLimits();updateCords();runTimers();checkJoints();updateCamera(dt);yawObj.updateMatrixWorld(true);syncAll();P.update(dt);updateLight(dt);updateLeak(dt);updateAppliances(dt);HUD.update(dt);cullDebris();flushBatches();for(const d of DRAWABLES)d.flush();scene.updateMatrixWorld(true);}};\n");
+(await import('fs')).writeFileSync('game_test6.mjs',src);
+
+await import('./game_test6.mjs');
+const G=globalThis.G;const step=(n=1)=>{for(let i=0;i<n;i++)G.step(1/60);};step(150);
+console.log('after 2.5s plugged',G.CORDS.map(c=>c.plugged),'TV',G.TV.state,'cord seg sleeping',G.CORDS.map(c=>c.segs.filter(s=>s.body.sleepState===2).length+'/'+c.segs.length));
+for(const name of['television','pc tower','fridge','microwave','open shelves','mug rail']){const a=G.asms.find(x=>x.name===name);const before=a.joints.filter(j=>j.intact).length;G.wakeAsm(a);let mv=0;for(let i=0;i<150;i++){G.step(1/60);for(const p of a.parts){if(p.alive&&p.body){const v=p.body.velocity.length();if(v>mv)mv=v;}}}const after=a.joints.filter(j=>j.intact).length;const broken=a.joints.filter(j=>!j.intact).map(j=>j.label);console.log(name.padEnd(14),'joints',before,'→',after,'max v',mv.toFixed(2),broken.length?'BROKE: '+[...new Set(broken)].join(','):'','cords',G.CORDS.map(c=>c.plugged),G.HUD.el.msg.textContent);}
+console.log('cords after wakes',G.CORDS.map(c=>c.plugged));
