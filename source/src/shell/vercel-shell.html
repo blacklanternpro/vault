@@ -38,6 +38,8 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07080b;font-family:"L
 #grab.target i,#grab.tension i,#grab.hold i{opacity:1}
 #use{position:absolute;left:50%;top:calc(50% + 22px);transform:translateX(-50%);font-size:11px;letter-spacing:2px;color:#111;background:#e8e0c8;padding:2px 8px;white-space:nowrap;display:none}
 #grabInfo{position:absolute;left:50%;top:calc(50% + 42px);transform:translateX(-50%);font-size:10px;letter-spacing:2px;color:#e8e0c8;background:rgba(10,11,12,.72);border-left:3px solid #c9a227;padding:3px 9px;white-space:pre;display:none}
+#cap{position:absolute;left:50%;bottom:12%;transform:translateX(-50%);max-width:72%;text-align:center;font-size:16px;line-height:1.4;letter-spacing:1px;color:#f4eedc;background:rgba(0,0,0,.74);padding:6px 16px;display:none;white-space:pre-wrap}
+#cap b{color:#e8c547;margin-right:9px}
 #overlay{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(5,6,8,.86);cursor:pointer;z-index:10}
 #overlay .box{max-width:760px;padding:34px 40px;background:#0f1012;border:1px solid #2a2c2f;border-top:6px solid #c9a227;box-shadow:0 30px 80px #000}
 #overlay h1{margin:0 0 6px;font-size:28px;letter-spacing:6px;color:#e8e0c8;font-weight:bold}
@@ -63,7 +65,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07080b;font-family:"L
   <div id="hint"></div>
   <div id="pwr" class="on">MAINS: LIVE</div>
   <div id="bar"><div id="barLabel"></div><div id="barTrack"><div id="barFill"></div></div></div>
-  <div id="msg"></div>
+  <div id="msg"></div><div id="cap"></div>
   <div id="slots"><div class="on">1 HAMMER</div><div>2 WRECKING BAR</div><div>3 SAWZALL</div><div>4 HANDS</div><div>5 TEXTA</div></div>
   <div id="stats"></div>
 </div>
@@ -79,15 +81,11 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07080b;font-family:"L
     <tr><td>E</td><td>use what you're looking at: fridge &amp; freezer doors, microwave, kettle, toaster, TV, PC power · drops whatever you're carrying</td></tr>
     <tr><td>APPLIANCES</td><td>fridge &amp; tins dent where you hit them · bills drop off the fridge door · TV cracks then shatters to the LCD · CRT star-cracks then implodes · pull RAM out of a running PC for a blue screen · metal in the microwave arcs · saw a live flex and the RCD trips</td></tr>
     <tr><td>DESK PC</td><td>E on the tower or monitor to power on · once it's on the desktop, E on the 21" monitor to sit down and play EXECUTIONER · mouse = aim · LMB = fire · hold RMB = iron sights · R = reload · wheel = lean in/out · E = stand up (the game keeps running — you can smash the tube mid-game)</td></tr>
+    <tr><td>COUCH &amp; TV</td><td>E on the couch to sit and watch · mouse = look around · wheel / ↑↓ = channel · 1-9 = channel · 0 = power · V = volume · M = mute · T = sleep timer · E = stand up · CH 7 is ADS ALL NIGHT · the remote is real: throw it and it pops its AAs (E near them to refit) · no remote = stand up and use the TV's own CH button (right side of the set)</td></tr>
     <tr><td>TEXTA</td><td>hold LMB on walls, floor, fridge, desk, screens = draw</td></tr>
     <tr><td>L · P</td><td>work flashlight · performance mode for weak GPUs (shadows off, 75% res)</td></tr>
   </table>
   <div class="go" id="go">CLICK TO ENTER THE APARTMENT</div>
   <div class="load" id="load">BUILDING…</div>
 </div></div>
-<script type="module">
-await import('https://cdn.jsdelivr.net/gh/blacklanternpro/vault@846a0d23df59912b2c39d5c50d70230a48e3d949/game.min.mjs');
-document.getElementById('load').style.display='none';
-</script>
-</body>
-</html>
+<script type="module">await import('https://cdn.jsdelivr.net/gh/blacklanternpro/vault@b9b55200c6864dee4a05b666423d1c058ddc8d1a/game.min.mjs');document.getElementById('load').style.display='none';</script></body></html>
