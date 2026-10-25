@@ -49,7 +49,7 @@ function damageProp(e,dmg,p,dir,hit){if(!e.alive)return;dir=dir||camFwd();
   if(e.keyboard&&(dmg>=1.3||e.acc>=2.6)){smashKeyboard(e,p,dir);return;}
   if(e.screenOK!==undefined&&e.screenMesh&&dmg>=0.8&&hit&&(e.strictScreen?e.strictScreen.includes(hit.object):(hit.object===e.screenMesh||dir.dot(e.screenMesh.getWorldDirection(V3()))<-0.3))){crackScreen(e,p,hit.uv,dir,dmg);if(!e.alive)return;}
   const dented=dentEnt(e,p,dir,dmg);
-  e.hp-=dmg;const m0=e.body&&e.body.mass?e.body.mass:(e.mass||1);/* v7.0: a hit only knocks a thing loose if its push would move it (same rule as bumps) */if(!(e.wakeThreshold&&dmg<e.wakeThreshold&&!e.dynamic)&&(e.dynamic||Math.min(dmg*3,(e.mass||1)*4)>Math.max(1.2,0.6*(e.mass||1))||e.hp<=0))wakeEnt(e);const m=e.body?e.body.mass:1;applyImpulse(e,dir.clone().multiplyScalar(Math.min(dmg*3,m*4)),p);
+  e.hp-=dmg;const m0=e.body&&e.body.mass?e.body.mass:(e.mass||1);/* v7.0: a hit only knocks a thing loose if its push would move it (same rule as bumps) */if(!(e.wakeThreshold&&dmg<e.wakeThreshold&&!e.dynamic)&&(e.dynamic||Math.min(dmg*1.8,(e.mass||1)*4)>Math.max(1.2,0.6*(e.mass||1))||e.hp<=0))wakeEnt(e);const m=e.body?e.body.mass:1;applyImpulse(e,dir.clone().multiplyScalar(Math.min(dmg*1.8,m*4)),p);
   if(e.mat==='metal'||e.mat==='copper'){if(!dented){S.clatter(p);S.thud(p,1.5);}sparks(p,Math.round(dmg*(dented?1.5:4)),[1,0.75,0.3]);}else if(e.mat==='foam'||e.mat==='fabric'||e.mat==='leaf'||e.mat==='batt'){S.thud(p,0.5);P.emit(p,{count:6,color:e.mat==='batt'?[0.93,0.66,0.7]:[0.6,0.55,0.45],size:0.02,life:1,spread:1,grav:2,drag:1.5,kind:1});}else if(e.mat==='plastic'||e.mat==='acrylic'){S.snap(p);P.emit(p,{count:6,color:[0.2,0.2,0.22],size:0.012,life:0.8,spread:1.5,grav:9});}else{S.thud(p,1.1);P.emit(p,{count:10,color:[0.75,0.6,0.4],size:0.012,life:0.9,spread:1.5,grav:9});}
   if(e===KITCH.fridge&&e.hp<=0&&S.loops.fridge){S.stopLoop('fridge');HUD.msg('[FRIDGE COMPRESSOR DEAD]',1.5);}
   if(e.hp<=0&&(e.kind==='furniture'||e.kind==='fixture')){e.hp=3;if(e.joints.length){const j=e.joints.slice().sort((a,b)=>a.pryWork-b.pryWork)[0];breakJoint(j);HUD.msg(`[${j.label.toUpperCase()} CRACKED]`,1.2);}else if((e.mat==='chip'||e.mat==='hollow'||e.mat==='timber')&&e.size&&e.mass<6){const ax=e.mat==='timber'?grainAxisOf(e):null;spawnFragments(p,5,e.mat==='timber'?'timber':'chip',0.07,dir.clone().multiplyScalar(2),2.5,ax,e.size?Math.max(e.size.x,e.size.y,e.size.z)*0.7:0.45);removeEnt(e);}}}
@@ -110,12 +110,13 @@ function pryStep(pr,dw,toward,isBar){/* returns true when the piece came free */
   return true;}
 
 /* ---------- HAMMER: 2nd-order spring viewmodel + 4-phase swing (wind-up, t³ whip, 45 ms hit-stop, spring rebound) ---------- */
-const HP={strike:{p:V3(-0.12,0.08,-0.1),r:V3(-1.15,0.12,0.2)},tap:{p:V3(-0.02,-0.015,-0.06),r:V3(-0.72,0.02,0.06)}};
-function hammerBegin(kind,pw){HA.st=kind;HA.t=0;HA.pw=pw;HA.p0.copy(VMA.ps.x);HA.r0.copy(VMA.rs.x);if(kind==='strike'){HA.dur=0.135-0.035*pw;HA.p1.copy(HP.strike.p);HA.r1.copy(HP.strike.r);S.whip(0.7+pw*0.6);}else{HA.dur=0.08;HA.p1.copy(HP.tap.p);HA.r1.copy(HP.tap.r);}}
-function hammerAnim(dt){if(HA.st==='strike'||HA.st==='tap'){HA.t+=dt;const u=Math.min(1,HA.t/HA.dur);const s=HA.st==='strike'?u*u*u:u*u;VMA.kin={p:HA.p0.clone().lerp(HA.p1,s),r:HA.r0.clone().lerp(HA.r1,s)};if(u>=1){const k=HA.st;HA.st='contact';if(k==='strike')hammerSmashContact();else hammerTapContact();}}
-  else if(HA.st==='tapReb'){HA.t+=dt;const u=Math.min(1,HA.t/0.025);VMA.kin={p:HP.tap.p.clone().multiplyScalar(1-0.65*u),r:HP.tap.r.clone().multiplyScalar(1-0.65*u)};if(u>=1){VMA.kin=null;VMA.ps.v.set(0,0.25,0.6);VMA.rs.v.set(6,0,0);HA.st='idle';}}}
+const HP={strike:{p:V3(-0.12,0.08,-0.1),r:V3(-1.15,0.12,0.2)},tap:{p:V3(-0.05,0.02,-0.09),r:V3(-0.95,0.05,0.12)},lift:{p:V3(0.02,0.07,0.05),r:V3(0.5,-0.03,-0.05)}};
+function hammerBegin(kind,pw){HA.st=kind;HA.t=0;HA.pw=pw;HA.p0.copy(VMA.ps.x);HA.r0.copy(VMA.rs.x);if(kind==='strike'){HA.dur=0.135-0.035*pw;HA.p1.copy(HP.strike.p);HA.r1.copy(HP.strike.r);S.whip(0.7+pw*0.6);}else{/* v7.1: lift 60 ms, then whip down */HA.st='tapLift';HA.dur=0.075;HA.p1.copy(HP.tap.p);HA.r1.copy(HP.tap.r);}}
+function hammerAnim(dt){if(HA.st==='tapLift'){HA.t+=dt;const u=Math.min(1,HA.t/0.06),s=1-(1-u)*(1-u);VMA.kin={p:HA.p0.clone().lerp(HP.lift.p,s),r:HA.r0.clone().lerp(HP.lift.r,s)};if(u>=1){HA.st='tap';HA.t=0;HA.p0.copy(HP.lift.p);HA.r0.copy(HP.lift.r);S.whip(0.35);}return;}
+  if(HA.st==='strike'||HA.st==='tap'){HA.t+=dt;const u=Math.min(1,HA.t/HA.dur);const s=u*u*u;VMA.kin={p:HA.p0.clone().lerp(HA.p1,s),r:HA.r0.clone().lerp(HA.r1,s)};if(u>=1){const k=HA.st;HA.st='contact';if(k==='strike')hammerSmashContact();else hammerTapContact();}}
+  else if(HA.st==='tapReb'){HA.t+=dt;const u=Math.min(1,HA.t/0.03);VMA.kin={p:HP.tap.p.clone().multiplyScalar(1-0.6*u),r:HP.tap.r.clone().multiplyScalar(1-0.6*u)};if(u>=1){VMA.kin=null;VMA.ps.v.set(0.03,0.4,0.75);VMA.rs.v.set(8,rnd(-0.6,0.6),-1.2);HA.st='idle';}}}
 function hammerTapContact(){const hit=castRay(2.3);if(!hit){S.whoosh();VMA.kin=null;VMA.rs.v.set(-4,0,0);HA.st='idle';return;}flashHit();const p=hit.point;
-  /* short hit-stop then a sharp 25 ms rebound off the surface, with a small camera nod */VMA.freeze=0.03;VMA.onUnfreeze=()=>{HA.st='tapReb';HA.t=0;};camPunch(0.7,rnd(-0.15,0.15),rnd(-0.25,0.25));shakeCam(0.12);
+  /* short hit-stop then a sharp 25 ms rebound off the surface, with a small camera nod */VMA.freeze=0.035;VMA.onUnfreeze=()=>{HA.st='tapReb';HA.t=0;};camPunch(1.05,rnd(-0.2,0.2),rnd(-0.35,0.35));shakeCam(0.18);
   if(hit.kind==='drywall'){const f=hit.ent.face;const uv=faceUV(f,p);const b=backingAt(f,uv.u,uv.v);const tile=hit.ent.mat==='tile';if(b){S.tapStud(p);if(tile)S.tapTile(p);HUD.msg(`[RESONANCE: SOLID TIMBER ${backLabel(b)}]`,1.3);}else{if(tile){S.tapTile(p);S.tapHollow(p);}else S.tapHollow(p);const wr=wireNear(f,uv.u,uv.v);const pp=pipeNear(f,uv.u,uv.v);HUD.msg(pp?'[RESONANCE: HOLLOW CAVITY · dull pipe clunk behind]':(wr?'[RESONANCE: HOLLOW CAVITY · faint cable rattle]':'[RESONANCE: HOLLOW CAVITY]'),1.3);}P.emit(p,{count:3,color:[0.9,0.9,0.86],size:0.03,life:0.8,spread:0.3,grav:1,drag:2,kind:1});}
   else if(hit.kind==='stud'||hit.kind==='truss'){S.tapStud(p);HUD.msg(hit.ent.pryWork&&!hit.ent.dynamic?`[RESONANCE: ${labelOf(hit.ent)} - LOOSE ON ITS NAILS]`:'[RESONANCE: EXPOSED TIMBER]',1);}
   else if(hit.kind==='trim'){S.tapStud(p);HUD.msg('[RESONANCE: BRADDED TRIM]',1);}
@@ -129,7 +130,7 @@ function hammerTapContact(){const hit=castRay(2.3);if(!hit){S.whoosh();VMA.kin=n
 function hammerSmashContact(){const pw=HA.pw;const hit=castRay(2.3);const dir=camFwd();
   if(!hit){/* follow-through: nothing stopped the head */S.whoosh();VMA.kin=null;VMA.ps.v.set(-0.25,-0.7,-0.6);VMA.rs.v.set(-8,0.4,1.2);HA.st='idle';return;}
   /* hit-stop: the viewmodel freezes on the contact pose for 45 ms, then springs back */VMA.freeze=0.045;VMA.onUnfreeze=()=>{VMA.kin=null;VMA.ps.v.set(0.06,0.55,0.9);VMA.rs.v.set(9+pw*5,rnd(-1,1),-2.5);HA.st='idle';};
-  impact(hit,2.0+(pw-0.25)/0.75*3.0,dir,'hammer');
+  impact(hit,2.0+(pw-0.25)/0.75*1.5,dir,'hammer');/* v7.1: 2.0-3.5 (5.0 reached across rooms) */
   const side=hit.normal.dot(camRight());camPunch(1.3+pw*1.7,-side*0.6,-side*1.2-0.35*pw);shakeCam(0.22+0.35*pw);
   const hard=['stud','truss','brick','brickwall','pipe','screw','floor'].includes(hit.kind)||(hit.ent&&(hit.ent.mat==='metal'||hit.ent.mat==='tile'));dust(hit.point,10+Math.round(pw*14),1+pw*0.4);if(hard)sparks(hit.point,5+Math.round(pw*10),[1,0.7,0.3],hit.normal);}
 function hammerSmash(pw){/* immediate (debug / test path) */HA.pw=pw;hammerSmashContact();}
@@ -298,7 +299,7 @@ function inUp(b){if(SEAT.active&&SEAT.def.up)SEAT.def.up(b);if(b===2)EX.ads=fals
 function inLook(dx,dy){if(!locked)return;if(SEAT.active){SEAT.def.look(dx,dy);return;}const s=0.0019;player.yaw-=dx*s;player.pitch=clamp(player.pitch-dy*s,-1.52,1.52);mouse.dx+=dx;mouse.dy+=dy;mouse.sx+=dx;mouse.sy+=dy;}
 function inPull(dx,dy){if(!locked||SEAT.active)return;mouse.dx+=dx;mouse.dy+=dy;mouse.sx+=dx;mouse.sy+=dy;}
 function inWheel(dy){if(!locked)return;if(SEAT.active){SEAT.def.wheel(dy);return;}setTool(tool+(dy>0?1:-1));}
-function bindInput(){document.addEventListener('keydown',e=>{if(e.code==='Tab')e.preventDefault();keys[e.code]=true;inKey(e.code,e.repeat);});
+function bindInput(){window.addEventListener('beforeunload',e=>{if(locked||(typeof SEAT!=='undefined'&&SEAT.active)){e.preventDefault();e.returnValue='';}});document.addEventListener('keydown',e=>{if(e.code==='Tab')e.preventDefault();keys[e.code]=true;inKey(e.code,e.repeat);});
   document.addEventListener('keyup',e=>{keys[e.code]=false;});
   document.addEventListener('mousedown',e=>{if(TOUCH&&!document.pointerLockElement)return;inDown(e.button);});
   document.addEventListener('mouseup',e=>{if(TOUCH&&!document.pointerLockElement)return;inUp(e.button);});

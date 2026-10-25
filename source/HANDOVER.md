@@ -1,4 +1,4 @@
-# BEDSIT — handover brief (25 Oct 2026, v7.0: polish on Jake's first play of the furnished house)
+# BEDSIT — handover brief (25 Oct 2026, v7.1: polish on Jake's first play of the furnished house)
 
 Read this first, then `src/`. This bundle holds the full source. The public vault repo only holds the minified build.
 
@@ -67,6 +67,7 @@ Read this first, then `src/`. This bundle holds the full source. The public vaul
 - **Runner + living rug:** 14 mm, own mesh (`noBatch`), no shadow, `vRugMat` with polygon offset (in a batch they self-shadowed and shimmered; walking never woke them).
 - **EXECUTIONER:** walk 3.2 m/s, `k=22` acceleration, bob scaled, radius 0.18 in the doorway; mop + bucket moved to the cell's far corner (−2.62, 4.1). Ragdolls: limb inertia floored at 0.006·m (an upper arm spun at 100 rad/s on its own axis), spin clamped to 18 rad/s, cuff pin maxForce 2000 → 140, `exRagSettle` sleeps a body whose trunk has been still 1.2 s (0.6 s after the first time) or that's been awake 2.5 s and isn't falling.
 - **Also:** ceiling fittings glow only for their own bulb (`veCeilLit`), so 2 AM is dark.
+- **v7.1 (Jake's first swing):** power hit back to 2.0–3.5 (5.0 cracked walls and threw things across rooms); a hit's push on a prop is `min(dmg*1.8, m*4)` (was ×3), the wake test uses the same number; the tap has a 60 ms lift (`HP.lift`) then a cubic whip into a deeper `HP.tap` pose, stronger camera punch and rebound. Crouch is Shift or **C** (Ctrl+W closed Jake's tab mid-crouch); `beforeunload` asks before leaving while the pointer is locked or you're seated.
 - **New tests:** `harness_bricks`, `harness_tough`, `harness_hammer`, `harness_runner`, `harness_exrag` (all in `runall.sh`, which runs every harness and writes `runall.log`); `pw_v7.py` browser shots `v7_*.png`.
 
 ## What it is
