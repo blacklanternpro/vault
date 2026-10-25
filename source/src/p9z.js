@@ -1,0 +1,125 @@
+
+/* ============================================================ v6.9 — WS7: LIVED-IN + THE VIBE PACK
+   p9z — the bond meter ($1,840, itemised, Gary inspects Thursday), the answering machine, a SWILL neon in the garage,
+   the 2 AM switch (N), a boxing bag that actually swings, clutter where people leave clutter, and the night outside. */
+
+/* ---------- the bond */
+const BOND={start:1840,items:new Map(),total:0,live:false,el:null,list:null,open:false,flash:0,said:{},t:0};
+function fmt$(n){const s=Math.abs(Math.round(n)).toString().replace(/\B(?=(\d{3})+(?!\d))/g,',');return(n<0?'−$':'$')+s;}
+function bondHit(key,amt,once){if(!VILLA||!BOND.live)return;if(once&&BOND.items.has(key))return;const it=BOND.items.get(key)||{n:0,amt:0};it.n++;it.amt+=amt;BOND.items.set(key,it);const was=BOND.start-BOND.total;BOND.total+=amt;BOND.flash=1;const left=BOND.start-BOND.total;
+  const say=(k,t)=>{if(BOND.said[k])return;BOND.said[k]=true;setTimeout(()=>HUD.msg(t,2.2),900);};
+  if(was>0&&left<=0)say('zero','[THE BOND IS GONE. EVERYTHING FROM HERE IS PERSONAL.]');else if(left<-5000)say('k5','[GARY HAS CALLED HIS LAWYER]');if(left<-25000)say('k25','[THIS IS NOW WORSE THAN 1987]');bondDraw();}
+function bondDraw(){if(!BOND.el)return;const left=BOND.start-BOND.total;BOND.el.textContent=BOND.total?`BOND ${fmt$(BOND.start)} · ${left>=0?'BACK: '+fmt$(left):'YOU OWE GARY '+fmt$(-left)}`:`BOND ${fmt$(BOND.start)} · [B] ITEMS`;
+  BOND.el.style.color=left>BOND.start*0.5?'#e8d8a0':left>0?'#e8a050':'#e06a4a';BOND.el.style.borderColor=left>BOND.start*0.5?'#5a5030':left>0?'#6a4018':'#6a2a1a';
+  if(BOND.list&&BOND.open){const rows=[...BOND.items.entries()].sort((a,b)=>b[1].amt-a[1].amt);BOND.list.innerHTML='<div style="color:#e8d8a0;margin-bottom:6px">4/23 BANKSIA CT · BOND LODGED '+fmt$(BOND.start)+'</div>'+(rows.length?rows.map(([k,v])=>`<div style="display:flex;justify-content:space-between;gap:18px"><span>${k}${v.n>1?' ×'+v.n:''}</span><span>${fmt$(-v.amt)}</span></div>`).join(''):'<div>NO DEDUCTIONS. YET.</div>')+`<div style="border-top:1px solid #4a4230;margin-top:6px;padding-top:4px;display:flex;justify-content:space-between"><span>${left>=0?'REFUND':'OWING'}</span><span>${fmt$(Math.abs(left))}</span></div><div style="margin-top:6px;color:#e06a4a">INSPECTION: THURSDAY 10AM</div>`;}}
+function bondUI(){const hud=document.getElementById('hud');if(!hud||BOND.el)return;const el=document.createElement('div');el.id='bond';el.style.cssText='position:absolute;right:18px;top:44px;font-size:11px;letter-spacing:2px;padding:5px 10px;border:1px solid #5a5030;background:#141209;color:#e8d8a0;transition:transform .15s';hud.appendChild(el);BOND.el=el;
+  const li=document.createElement('div');li.id='bondList';li.style.cssText='position:absolute;right:18px;top:74px;font-size:10px;letter-spacing:1px;padding:8px 10px;border:1px solid #4a4230;background:rgba(14,12,8,.92);color:#cfc6ae;min-width:250px;display:none;line-height:1.6';hud.appendChild(li);BOND.list=li;bondDraw();}
+function bondToggle(){BOND.open=!BOND.open;if(BOND.list)BOND.list.style.display=BOND.open?'block':'none';bondDraw();}
+/* what it costs: wrap the places things break. Only once the house has finished building, and only in the villa. */
+function bondHooks(){const wrap=(fn,pre)=>function(...a){try{pre(...a);}catch(e){}return fn.apply(this,a);};
+  detachChunk=wrap(detachChunk,(c)=>{if(!c||!c.alive||!c.attached)return;const k=c.face&&c.face.wall&&c.face.wall.kind;if(k&&String(k).startsWith('ceil'))bondHit('ceiling patching',70);else if(c.mat==='tile')bondHit('wall tiles',55);else bondHit('plasterboard patching',45);});
+  chipBrick=wrap(chipBrick,()=>bondHit('brickwork',85));
+  shatterEnt=wrap(shatterEnt,(e)=>{if(!e||!e.alive)return;const L=(e.label||'').toLowerCase();if(e.mat==='glass'&&e.vo)bondHit('window glass',260);else if(L.includes('mirror'))bondHit('mirrors',150);else if(L.includes('fitting')||L.includes('fluoro')||L.includes('light'))bondHit('light fittings',90);else bondHit('breakages',12);});
+  breakJoint=wrap(breakJoint,(j)=>{if(!j||!j.intact)return;const L=(j.label||'').toLowerCase();if(j.a&&j.a.door||j.b&&j.b.door||L.includes('door hinge'))bondHit('doors (re-hang)',160);else if(L.includes('hinge'))bondHit('cabinetry',45);});
+  vRipStrip=wrap(vRipStrip,(e)=>{if(e&&e.alive)bondHit('carpet',240);});vCutStrip=wrap(vCutStrip,()=>bondHit('carpet (cut)',90));
+  cutWire=wrap(cutWire,()=>bondHit('electrician',180));puncturePipe=wrap(puncturePipe,()=>bondHit('plumber',240));
+  vgExplode=wrap(vgExplode,()=>bondHit('gas explosion (structural)',12500));vFanThrow=wrap(vFanThrow,()=>bondHit('ceiling fan',180));
+  vgScorch=wrap(vgScorch,()=>bondHit('smoke & scorch',25));floorPuddle=wrap(floorPuddle,()=>bondHit('professional carpet clean',395,true));}
+
+/* ---------- the vibe: 2 AM, the neon, the night */
+const VIBE={am2:false,k:1,saved:null,neon:null,bag:null,am:null,amb:0,dogT:30};
+function vibeKey(code){if(!VILLA)return;if(code==='KeyB')bondToggle();if(code==='KeyN')vibe2am();}
+function vibe2am(){VIBE.am2=!VIBE.am2;if(VIBE.am2){VIBE.saved=VL.fix.map(f=>f.on);for(const f of VL.fix){if(f.lvl==='b')continue;if(f.circuit==='power')f.on=true;else f.on=false;}if(VIBE.neon)VIBE.neon.fix.on=true;HUD.msg('[2:07 AM]',1.6);}
+  else{if(VIBE.saved)VL.fix.forEach((f,i)=>{if(i<VIBE.saved.length)f.on=VIBE.saved[i];});VIBE.saved=null;HUD.msg('[LIGHTS ON. WHO TURNED THE LIGHTS OFF.]',1.2);}
+  if(typeof veSync==='function')veSync();}
+function texNeon(on){const c=mkCanvas(256,96),x=c.getContext('2d');x.clearRect(0,0,256,96);x.font='italic bold 58px Georgia, serif';x.textAlign='center';x.textBaseline='middle';x.lineJoin='round';
+  x.shadowColor='#ff2a7a';x.shadowBlur=on?18:0;x.strokeStyle=on?'#ff5a9a':'#5a3a44';x.lineWidth=7;x.strokeText('Swill',128,46);x.shadowBlur=on?6:0;x.strokeStyle=on?'#ffd0e4':'#6a4a54';x.lineWidth=2.5;x.strokeText('Swill',128,46);
+  x.font='bold 11px monospace';x.shadowBlur=on?8:0;x.fillStyle=on?'#7ae0ff':'#3a4a50';x.fillText('ICE COLD · MOSTLY',128,84);return c;}
+function villaNeon(){const F=vFr(3.2,5.0,-1,0);const p=F.at(0,1.85,0.03);const onT=mkTex(texNeon(true),1,1),offT=mkTex(texNeon(false),1,1);
+  const glow=new THREE.MeshBasicMaterial({map:onT,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,toneMapped:false});const g=new THREE.Group();const plane=new THREE.Mesh(new THREE.PlaneGeometry(0.9,0.34),glow);plane.position.z=0.012;g.add(plane);
+  const back=new THREE.Mesh(new THREE.BoxGeometry(0.94,0.38,0.012),new THREE.MeshStandardMaterial({color:0x1a1a1e,roughness:0.1,transparent:true,opacity:0.55}));g.add(back);g.position.copy(p);g.quaternion.copy(F.q);
+  const e=mkEnt({mesh:g,body:boxBody(0.47,0.19,0.02,p,qC(F.q)),kind:'prop',mat:'glass',mass:2,hp:1.5,label:'neon sign (SWILL)',wakeable:true,noBatch:true,shardCol:[1,0.4,0.7]});
+  const fix={x:p.x+F.n.x*0.3,y:p.y,z:p.z+F.n.z*0.3,i:2.6,col:0xff4a9a,room:VROOM.garage,circuit:'power',on:true};VL.fix.push(fix);VIBE.neon={e,fix,glow,onT,offT,flick:0,lit:true,p};
+  e.onShatter=((o)=>(...a)=>{fix.dead=true;VIBE.neon.dead=true;sparks(p,20,[1,0.5,0.8]);S.zap(p);if(o)o(...a);})(e.onShatter);
+  e.useLabel=()=>fix.on?'NEON OFF':'NEON ON';e.use=()=>{fix.on=!fix.on;S.click(p,1200);};}
+function villaBag(){/* a boxing bag on a chain from the garage ceiling: a real pendulum */const x=vX(1.55),z=vZ(6.9),top=PH-0.04;const anchor=new CANNON.Body({mass:0});anchor.position.set(x,top,z);world.addBody(anchor);
+  const red=new THREE.MeshStandardMaterial({color:0x8a1a1a,roughness:0.55});const bag=compoundEnt([{geo:new THREE.CylinderGeometry(0.17,0.17,0.95,16),x:0,y:0,z:0,mat:red,cyl:[0.17,0.17,0.95]},{geo:new THREE.CylinderGeometry(0.175,0.175,0.05,16),x:0,y:0.45,z:0,mat:M.black,noCollide:true},{geo:new THREE.CylinderGeometry(0.175,0.175,0.05,16),x:0,y:-0.45,z:0,mat:M.black,noCollide:true}],V3(x,top-0.9-0.475,z),{kind:'prop',mat:'fabric',mass:22,hp:9999,label:'boxing bag (EVERLAST? EVERLASTED.)',noBatch:true,damp:0.08,adamp:0.4});
+  makeDynamic(bag);bag.body.allowSleep=true;const c=new CANNON.PointToPointConstraint(bag.body,new CANNON.Vec3(0,0.9+0.475,0),anchor,new CANNON.Vec3(0,0,0));world.addConstraint(c);
+  const lg=new THREE.BufferGeometry().setFromPoints([V3(x,top,z),V3(x,top-0.9,z)]);const chain=new THREE.Line(lg,new THREE.LineBasicMaterial({color:0x8a8e90}));scene.add(chain);VIBE.bag={e:bag,c,chain,anchor};
+  bag.onHit=(p,dmg,dir)=>{S.thud(p,0.8);if(bag.body){bag.body.wakeUp();applyImpulse(bag,(dir||V3(0,0,1)).clone().setY(0).normalize().multiplyScalar(14+dmg*10),p);}};}
+
+/* ---------- the answering machine on the hall table */
+const VMSG=[['MESSAGE ONE. TUESDAY. 4:12 PM.','"G\'DAY, IT\'S GARY. JUST A REMINDER ABOUT THURSDAY. THE INSPECTION. TEN O\'CLOCK. I\'LL LET MYSELF IN."'],['MESSAGE TWO. TUESDAY. 11:58 PM.','"...is Shaz there? ...Shaz? ...sorry, wrong number."'],['MESSAGE THREE. WEDNESDAY. 7:03 AM.','"GARY AGAIN. DID YOU TAKE THE GNOME? THE GNOME WAS NOT INCLUDED IN THE LEASE. ALSO THE BINS."'],['END OF MESSAGES.','']];
+function villaHallTable(){const F=vFr(3.2,7.0,1,0);const tim=vMat(0x5a3a22,0.55);const tb=compoundEnt([{w:0.9,h:0.03,d:0.32,x:0,y:0.78,z:0,mat:tim},...[[-0.42,-0.13],[0.42,-0.13],[-0.42,0.13],[0.42,0.13]].map(([x,z])=>({w:0.035,h:0.78,d:0.035,x,y:0.39,z,mat:tim}))],F.at(0,0,0.17),{kind:'furniture',mat:'timber',mass:9,hp:8,label:'hall table',wakeable:true,quat:F.q});
+  const led=new THREE.MeshBasicMaterial({color:0xff2a1a});const am=compoundEnt([{w:0.24,h:0.06,d:0.17,x:0,y:0.03,z:0,mat:vMat(0x2a2826,0.45)},{w:0.012,h:0.012,d:0.012,x:0.08,y:0.065,z:0.05,mat:led,noCollide:true}],F.at(-0.2,0.795,0.18),{kind:'prop',mat:'plastic',mass:0.9,hp:3,label:'answering machine (1 NEW)',wakeable:true,noBatch:true,restsOn:tb,quat:F.q});tb.dependents.push(am);
+  VIBE.am={e:am,led,playing:false,heard:false,t:0};am.useLabel=()=>VIBE.am.playing?'STOP':'PLAY MESSAGES';am.use=()=>{const A=VIBE.am;if(!power){HUD.msg('[NO POWER · THE TAPE DOESN\'T MOVE]',1.2);return;}if(A.playing){A.playing=false;A.tok=(A.tok||0)+1;S.click(am.mesh.getWorldPosition(V3()),900);return;}A.playing=true;A.heard=true;am.label='answering machine';const tok=A.tok=(A.tok||0)+1;let t=0;const p=()=>am.mesh.getWorldPosition(V3());S.beep(1400,0.25,0,0.06);
+    VMSG.forEach(([a,b],i)=>{setTimeout(()=>{if(A.tok!==tok||!power)return;HUD.msg('['+a+']',1.6);S.beep(1000,0.15,0,0.05);},t);t+=1700;if(b){setTimeout(()=>{if(A.tok!==tok||!power)return;HUD.msg(b,Math.max(2.5,b.length/22));vBurble(p(),Math.max(2.2,b.length/24));},t);t+=Math.max(2600,b.length*48);}});setTimeout(()=>{if(A.tok===tok)A.playing=false;},t);};
+  /* key bowl, the mail, a photo of somebody else's family */const bowl=compoundEnt([{geo:new THREE.CylinderGeometry(0.1,0.06,0.05,14,1,true),x:0,y:0.025,z:0,mat:new THREE.MeshStandardMaterial({color:0x6a8aa0,roughness:0.3,side:THREE.DoubleSide}),cyl:[0.1,0.06,0.05]}],F.at(0.12,0.795,0.16),{kind:'prop',mat:'ceramic',mass:0.5,hp:1,label:'key bowl (no keys)',wakeable:true,restsOn:tb,quat:F.q,shardCol:[0.4,0.55,0.65]});tb.dependents.push(bowl);
+  for(let i=0;i<4;i++)vBoxOn(F,0.33,0.797+i*0.004,0.14,0.11,0.003,0.22,vMat([0xf2efe2,0xe8d8b0,0xf2efe2,0xd8e8f0][i],0.9),{mat:'fabric',mass:0.02,hp:1,label:['WATER BILL (OVERDUE)','PIZZA MENU','TO THE OCCUPANT','FINAL NOTICE (POWER)'][i]},tb);
+  {const c=mkCanvas(64,80),x=c.getContext('2d');x.fillStyle='#c8a868';x.fillRect(0,0,64,80);x.fillStyle='#8ab0d0';x.fillRect(6,6,52,40);x.fillStyle='#6a8a4a';x.fillRect(6,40,52,30);x.fillStyle='#3a2a20';for(let i=0;i<4;i++)x.fillRect(12+i*11,30,6,22);vWallPic(F,0,1.45,0.3,0.38,c,0.008);}
+  /* Gary's notice, taped beside the front door */{const c=mkCanvas(128,160),x=c.getContext('2d');x.fillStyle='#f4f0e2';x.fillRect(0,0,128,160);x.fillStyle='#c02a1a';x.font='bold 14px monospace';x.fillText('NOTICE OF',10,24);x.fillText('INSPECTION',10,42);x.fillStyle='#1a1a1a';x.font='bold 17px monospace';x.fillText('THURSDAY',10,72);x.fillText('10:00 AM',10,94);x.font='9px monospace';x.fillText('PROPERTY TO BE AS',10,118);x.fillText('YOU FOUND IT.',10,130);x.fillText('— G.',80,150);x.fillStyle='rgba(220,210,170,.6)';x.fillRect(48,0,32,8);vWallPic(vFr(4.4,8.9,-1,0),0,1.5,0.22,0.28,c,0.006);}
+  /* shoes by the door and the umbrella in the corner */for(let i=0;i<3;i++)for(const s of[-1,1]){const sh=boxEnt(0.1,0.085,0.27,V3(vX(3.34)+s*0.055,0.043,vZ(8.05+i*0.33)),vMat([0x2a1a12,0xe8e8e8,0x8a2a2a][i],0.6),{kind:'prop',mat:'fabric',mass:0.4,hp:5,label:['work boots','runners','thongs (the footwear)'][i],wakeable:true,quat:vQ(Math.PI/2+s*0.12+(Math.random()-0.5)*0.3)});}}
+function vBurble(p,dur){/* the answering machine voice: a small speaker doing its best */const n=Math.floor(dur*7);for(let i=0;i<n;i++)S.tone({f:110+Math.random()*90,f1:90+Math.random()*80,dur:0.09+Math.random()*0.08,type:'sawtooth',gain:0.035,pos:p,delay:i/7+Math.random()*0.03});S.noise({dur,gain:0.012,type:'bandpass',f:1800,pos:p});}
+
+/* ---------- clutter: dropped onto whatever is under it */
+const _rr=new CANNON.RaycastResult();
+function vDrop(px,pz,y0){_rr.reset();world.raycastClosest(new CANNON.Vec3(vX(px),y0,vZ(pz)),new CANNON.Vec3(vX(px),-0.3,vZ(pz)),{skipBackfaces:true,collisionFilterMask:-1},_rr);if(!_rr.hasHit)return{y:0,on:null};const e=_rr.body&&_rr.body.ent;return{y:_rr.hitPointWorld.y,on:e&&e.dependents&&(e.kind==='furniture'||e.kind==='prop'||e.kind==='fixture')&&e.label!=='carpet'?e:null};}
+function vClut(px,pz,y0,w,h,d,col,label,o={}){const s=vDrop(px,pz,y0);const e=boxEnt(w,h,d,V3(vX(px),s.y+h/2+0.002,vZ(pz)),o.mat3||vMat(col,o.r||0.8,o.m||0),Object.assign({kind:'prop',mat:o.mat||'chip',mass:o.mass||0.3,hp:o.hp||3,label,wakeable:true,quat:vQ(o.yaw!==undefined?o.yaw:(Math.random()-0.5)*0.8)},o.extra||{}));if(s.on){e.restsOn=s.on;s.on.dependents.push(e);}return e;}
+function vCan(px,pz,y0,label='SWILL can (empty)',lying){const s=vDrop(px,pz,y0);const e=compoundEnt([{geo:new THREE.CylinderGeometry(0.033,0.033,0.12,10),x:0,y:0,z:0,mat:VIBE.canMat||(VIBE.canMat=vMat(0x2a6a3a,0.35,0.6)),cyl:[0.033,0.033,0.12],rot:lying?[0,0,Math.PI/2]:[0,0,0]}],V3(vX(px),s.y+(lying?0.034:0.061),vZ(pz)),{kind:'prop',mat:'metal',mass:0.03,hp:1,label,wakeable:true,quat:vQ(Math.random()*6)});if(s.on){e.restsOn=s.on;s.on.dependents.push(e);}return e;}
+function texPizza(){const c=mkCanvas(64,64),x=c.getContext('2d');x.fillStyle='#d8c4a0';x.fillRect(0,0,64,64);x.fillStyle='#c02a1a';x.font='bold 10px monospace';x.fillText('PIZZA',14,26);x.fillText('PALACE',11,38);x.fillStyle='rgba(120,70,20,.35)';x.beginPath();x.arc(46,48,9,0,7);x.fill();return c;}
+function villaClutter(){const pz=new THREE.MeshStandardMaterial({map:mkTex(texPizza(),1,1),roughness:0.9}),card=vMat(0xd8c4a0,0.9);const pizza=(x,z,y0,yaw)=>vClut(x,z,y0,0.36,0.045,0.36,0,'pizza box (one slice left, Tuesday)',{mat3:pz,mass:0.3,yaw});
+  /* living room */pizza(9.15,7.45,0.8,0.3);vCan(9.4,6.95,0.8);vCan(7.95,6.3,0.5,'SWILL can (half)');vCan(8.1,8.2,0.5,'SWILL can (empty)',true);vCan(10.6,6.0,0.5,'SWILL can (empty)',true);
+  /* kitchen bench: the dishes, takeaway, cereal */for(let i=0;i<5;i++){const s=vDrop(4.6,0.3,1.2);const pl=compoundEnt([{geo:new THREE.CylinderGeometry(0.12,0.1,0.02,16),x:0,y:0,z:0,mat:M.china||M.ceramic,cyl:[0.12,0.1,0.02]}],V3(vX(4.62)+(Math.random()-0.5)*0.02,s.y+0.011+i*0.021,vZ(0.3)),{kind:'prop',mat:'ceramic',mass:0.4,hp:1,label:'dirty plate',wakeable:true,shardCol:[0.95,0.95,0.92]});if(s.on&&i===0){pl.restsOn=s.on;s.on.dependents.push(pl);}VIBE.lastPlate&&(pl.restsOn=VIBE.lastPlate,VIBE.lastPlate.dependents.push(pl));VIBE.lastPlate=pl;}VIBE.lastPlate=null;
+  vClut(3.45,0.3,1.2,0.16,0.08,0.12,0xf2f0ea,'takeaway container (FRIED RICE, 2 DAYS)');vClut(3.3,0.35,1.2,0.16,0.08,0.12,0xf2f0ea,'takeaway container (MYSTERY)');vClut(5.4,0.3,1.2,0.2,0.3,0.07,0xe0a020,'cereal box (CORN FLAKEY)',{mass:0.4});
+  /* dining table: the paper, the bills, salt and pepper */vClut(7.2,1.7,1.2,0.42,0.012,0.3,0xe8e4d8,'newspaper (THE WEST-ISH)',{mat:'fabric'});vClut(7.9,2.2,1.2,0.22,0.03,0.3,0xf2efe2,'bills (UNOPENED)',{mat:'fabric'});vClut(7.55,2.05,1.2,0.04,0.09,0.04,0xf2f2f2,'salt',{mat:'ceramic'});vClut(7.62,2.05,1.2,0.04,0.09,0.04,0x2a2a2a,'pepper',{mat:'ceramic'});
+  /* hallway runner + three frames */vClut(9.0,4.5,0.5,6.0,0.008,0.75,0x6a2a2a,'hallway runner',{mat:'fabric',mass:4,hp:60,yaw:0,extra:{damp:0.9,adamp:0.95,shadow:false}});
+  for(const [x,c] of[[6.6,0x8aa0b8],[8.3,0xb8a080],[13.6,0x7a9a6a]]){const cv=mkCanvas(48,64),g=cv.getContext('2d');g.fillStyle='#3a2a1c';g.fillRect(0,0,48,64);g.fillStyle='#'+c.toString(16).padStart(6,'0');g.fillRect(5,5,38,54);g.fillStyle='rgba(0,0,0,.25)';g.fillRect(10,26,28,26);vWallPic(vFr(x,4.0,0,1),0,1.55,0.3,0.4,cv,0.008);}
+  /* bedroom 2: the floor */pizza(16.1,3.45,0.6,1.1);vCan(15.4,3.6,0.5,'SWILL can (ashtray)');vCan(15.7,0.6,0.5,'SWILL can (empty)',true);vCan(16.9,0.9,0.6);
+  vClut(15.2,1.4,0.5,0.25,0.03,0.2,0xe8e8e8,'sock (one)',{mat:'fabric'});
+  /* bathroom: a towel on the floor */vClut(10.1,1.9,0.5,0.6,0.02,0.45,0x3a8aa0,'wet towel',{mat:'fabric',mass:0.6,extra:{damp:0.9}});
+  /* outside the back door: the empties */for(let i=0;i<6;i++)vCan(5.2+i*0.09,-0.4-(i%2)*0.08,0.3,'SWILL can (empty)',i%3===0);}
+
+/* ---------- the night outside */
+function vibeAmbience(dt){if(!S.ctx)return;const cp=camera.getWorldPosition(_tvp);const inside=!!vRoomAtWorld(cp.x,cp.z)&&cp.y>-0.3&&cp.y<PH+0.3;const under=cp.y<-0.35;
+  let leak=0;for(const s of VS.slides||[])leak+=s.slide&&s.slide.k>0.3?0.1:0;if(VS.roller&&VS.roller.k>0.2)leak+=0.2;const k=under?0.03:inside?Math.min(0.5,0.18+leak):1;VIBE.amb=lerp(VIBE.amb,k*(VIBE.am2?1.4:1),1-Math.exp(-dt*3));
+  if(!S.loops.vnight){S.drone('vnight',{noise:1,flt:'bandpass',ff:4300,q:4,base:0.02});S.drone('vtraffic',{noise:1,flt:'lowpass',ff:220,q:0.5,base:0.02});}S.droneGain('vnight',VIBE.amb);S.droneGain('vtraffic',VIBE.amb*(VIBE.am2?0.4:1));
+  if(Math.random()<dt*1.2*VIBE.amb){const f=4100+Math.random()*500,n=2+Math.random()*3|0;for(let i=0;i<n;i++)S.tone({f,dur:0.04,type:'sine',gain:0.018*VIBE.amb,delay:i*0.07});}
+  VIBE.dogT-=dt;if(VIBE.dogT<=0){VIBE.dogT=40+Math.random()*70;const p=V3(vX(-3)-12,0,vZ(-8)-6);for(let i=0;i<2+Math.random()*3;i++){S.tone({f:420,f1:260,dur:0.16,type:'sawtooth',gain:0.25*Math.max(0.15,VIBE.amb),delay:i*0.38});S.noise({dur:0.14,gain:0.12*Math.max(0.15,VIBE.amb),type:'bandpass',f:700,delay:i*0.38});}}}
+
+function villaWS7(){bondUI();villaNeon();villaBag();villaHallTable();villaClutter();bondHooks();}
+function updateWS7(dt){if(!BOND.live){BOND.t+=dt;if(BOND.t>1.5){BOND.live=true;}}if(BOND.flash>0&&BOND.el){BOND.flash=Math.max(0,BOND.flash-dt*3);BOND.el.style.transform=`scale(${1+BOND.flash*0.12})`;}
+  VIBE.k=lerp(VIBE.k,VIBE.am2?0.4:1,1-Math.exp(-dt*2.5));
+  const N=VIBE.neon;if(N&&!N.dead){const live=power&&N.fix.on&&N.e.alive;N.flick-=dt;if(live&&N.flick<=0&&Math.random()<dt*0.4){N.flick=0.05+Math.random()*0.25;}const lit=live&&N.flick<=0;if(lit!==N.lit){N.lit=lit;N.glow.map=lit?N.onT:N.offT;N.glow.needsUpdate=true;N.fix.i=lit?2.6:0;if(!lit&&live)S.zap&&Math.random()<0.5&&S.click(N.p,300);}
+    if(lit&&Math.random()<dt*2)S.noise({dur:0.3,gain:0.012,type:'bandpass',f:120,pos:N.p});if(N.e.dynamic){N.e.mesh.updateMatrixWorld(true);const w=N.e.mesh.getWorldPosition(V3());N.fix.x=w.x;N.fix.y=w.y;N.fix.z=w.z;}}
+  const B=VIBE.bag;if(B&&B.e.alive){const pos=B.chain.geometry.attributes.position;B.e.mesh.updateMatrixWorld(true);const t=B.e.mesh.localToWorld(V3(0,0.475,0));pos.setXYZ(1,t.x,t.y,t.z);pos.needsUpdate=true;}
+  const A=VIBE.am;if(A&&A.e.alive){A.led.color.setHex(power&&!A.heard&&Math.floor(performance.now()/500)%2?0xff2a1a:0x2a0806);}
+  vibeAmbience(dt);vcUpdate(dt);}
+
+/* ---------- room culling: furnished, the house is ~700 draw calls if every room draws; frustum culling can't see walls.
+   Every 0.2 s: which rooms could you see from here (your room, through open pairs free, through doors/arches/windows/
+   holes one step each, two steps max; from outside, the rooms whose openings are within 18 m)? Unbatched ents and wall
+   faces in the other rooms are hidden. Batches stay (house-wide, ~70 of them). Off underground and in the roof. */
+const VCULL={t:0,on:true,hid:new Set(),vis:null,key:''};
+function vcLinks(cam){const L=[];for(const p of VP.open)L.push([p[0],p[1],0,null,0]);
+  for(const w of VW.walls){const a=w.rooms.front,b=w.rooms.back;if(!VROOM[a]&&a!=='out'||!VROOM[b]&&b!=='out')continue;let pt=null,hw=0.5;
+    for(const o of w.openings){if(o.kind==='manhole')continue;let open=false;if(o.kind==='arch'||o.kind==='window'||o.kind==='slider')open=true;else if(o.kind==='door'||o.kind==='front'){const d=VS.doors.find(d=>d.vo&&d.vo.op===o);if(!d||!d.alive||d.dynamic||Math.abs(d.kin.ang)>0.04)open=true;}else if(o.kind==='roller'){if(!VS.roller||VS.roller.k>0.03||!VS.roller.e.alive)open=true;}
+      if(open){const c=wallPoint(w,(o.u0+o.u1)/2,1.2,0);if((a==='out'||b==='out')&&c.distanceTo(cam)>18)continue;pt=c;hw=(o.u1-o.u0)/2;break;}}
+    if(!pt&&!w.dormant){for(const f of w.faces){if(f.chunks.some(c=>!c.alive||!c.attached)){pt=wallPoint(w,w.L/2,1.2,0);hw=w.L/2;break;}}}if(pt)L.push([a,b,1,pt,hw]);}return L;}
+/* two steps away only if the second opening lines up with the first, as seen from here, and is ahead of you */
+function vcVisible(start,cam){const L=vcLinks(cam);const fwd=camera.getWorldDirection(V3());const best={[start]:{c:0,via:null}};const dir=p=>p.clone().sub(cam).normalize();
+  const ahead=p=>{const d=dir(p);return d.dot(fwd)>0.3||p.distanceTo(cam)<2.5;};let ch=true,guard=0;
+  while(ch&&guard++<40){ch=false;for(const [a,b,k,p,hw] of L){for(const [x,y] of[[a,b],[b,a]]){const X=best[x];if(!X||(x==='out'&&x!==start))continue;let c=X.c+k,via=X.via;
+      if(k===1){if(X.c===0){via={p,hw};if(!ahead(p)&&(start==='out'||p.distanceTo(cam)>3))continue;}else{if(!X.via||!ahead(p))continue;const V=X.via,dv=V.p.distanceTo(cam);const lim=Math.atan2(V.hw+0.35,Math.max(0.3,dv))+0.08;if(Math.acos(clamp(dir(V.p).dot(dir(p)),-1,1))>lim)continue;}}
+      if(c<=2&&(!best[y]||c<best[y].c)){best[y]={c,via};ch=true;}}}}return new Set(Object.keys(best));}
+function vcRoomsOf(e){/* the rooms an ent could be seen from: sample its centre and four points round it (doors sit on the line between two) */const m=e.mesh.matrixWorld.elements;const x=m[12],y=m[13],z=m[14];if(y<-0.4)return null;if(y>PH+0.25)return['roof'];const S=new Set();
+  for(const [dx,dz] of[[0,0],[0.22,0],[-0.22,0],[0,0.22],[0,-0.22]]){const r=vRoomAtWorld(x+dx,z+dz);S.add(r?r.id:'out');}return[...S];}
+function vcBig(e){if(e._vcBig!==undefined)return e._vcBig;let big=false;try{const b=new THREE.Box3().setFromObject(e.mesh);const s=b.getSize(V3());big=Math.max(s.x,s.z)>3.2;}catch(_){big=true;}e._vcBig=big;return big;}
+function vcRestore(){for(const o of VCULL.hid)o.visible=true;if(VCULL.hid.size)SHADOW.dirty=true;VCULL.hid.clear();VCULL.key='';}
+function vcUpdate(dt){VCULL.t-=dt;if(VCULL.t>0)return;VCULL.t=0.1;const cam=camera.getWorldPosition(V3());const skip=!VCULL.on||cam.y<-0.35||VCL.inRoof||cam.y>PH+0.1||(VB.built&&vbUnderground());if(skip){vcRestore();return;}
+  const r=vRoomAtWorld(cam.x,cam.z);const vis=vcVisible(r?r.id:'out',cam);VCULL.vis=vis;const want=new Set();
+  for(const e of ents){if(!e.alive||!e.mesh||e.batched||e.dormant||!e.mesh.parent)continue;if(e.dynamic||!e._vr)e._vr=vcRoomsOf(e);const rs=e._vr;if(!rs||rs[0]==='roof')continue;if(rs.some(x=>vis.has(x)))continue;if(vcBig(e))continue;want.add(e.mesh);}
+  for(const f of VW.faces){if(!f.mesh||!f.room||VROOM[f.room.id]!==f.room)continue;if(!vis.has(f.room.id)){want.add(f.mesh);continue;}
+    /* a face you're behind can't be seen, unless the wall's been opened (then you might be looking at its back through a hole) */if(f.wall.dormant){if(!f._n){const c=facePoint(f,f.L/2,f.H/2,0),c2=facePoint(f,f.L/2,f.H/2,0.05);const n=c2.sub(c).normalize();const rc=V3(vX((f.room.x0+f.room.x1)/2),c.y,vZ((f.room.z0+f.room.z1)/2));if(n.dot(rc.clone().sub(c))<0)n.negate();f._c=c;f._n=n;}if(cam.clone().sub(f._c).dot(f._n)<-0.02)want.add(f.mesh);}}
+  /* small details on unbatched things (fridge magnets, PC innards, knobs) drop out past 7 m */for(const e of ents){if(!e.alive||!e.mesh||e.batched||e.dormant||!e.mesh.parent||want.has(e.mesh))continue;if(!e._small){e._small=[];e.mesh.updateMatrixWorld(true);e.mesh.traverse(o=>{if(o===e.mesh||!o.isMesh||!o.geometry)return;if(!o.geometry.boundingSphere)o.geometry.computeBoundingSphere();const sc=o.getWorldScale(V3());const r=o.geometry.boundingSphere.radius*Math.max(sc.x,sc.y,sc.z);if(r<0.06)e._small.push(o);});}
+    if(!e._small.length)continue;const m=e.mesh.matrixWorld.elements;const d=Math.hypot(m[12]-cam.x,m[13]-cam.y,m[14]-cam.z);if(d>7)for(const o of e._small)want.add(o);}
+  let changed=false;for(const o of VCULL.hid)if(!want.has(o)){o.visible=true;changed=true;}const nh=new Set();for(const o of want){if(o.visible){o.visible=false;nh.add(o);changed=true;}else if(VCULL.hid.has(o))nh.add(o);}VCULL.hid=nh;if(changed)SHADOW.dirty=true;}
