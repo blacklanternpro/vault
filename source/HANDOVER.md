@@ -1,10 +1,29 @@
-# BEDSIT — handover brief (25 Oct 2026, v8.0: moved in, and the optimisation pass)
+# BEDSIT — handover brief (26 Oct 2026, v8.0: moved in, and the optimisation pass)
 
-Read this first, then `src/`. This bundle holds the full source. The public vault repo only holds the minified build.
+Read this first, then `src/`. The vault repo (`blacklanternpro/vault`, branch `bedsit-sandbox`, public) holds the minified build at the root and the full source + tests + this brief in `source/`.
 
-## START HERE — the next job (v6: the villa)
+## START HERE — where things stand (v8.0, 26 Oct 2026)
 
-**The bedsit is being replaced by a house.** Jake: "We are quickly outgrowing our boots here in the bedsit… Our base. Our home of destruction." The v6 plan is a Claude Docs doc: https://claude.ai/artifact/SZXbwtYLu7GA6BX5h5JpuA. Read it before writing code. Phase 4 (gas stove) and Phase 5 (vibe pack) are parked and fold into villa workstreams 3 and 7; the optimisation pass comes after move-in.
+**Everything planned is shipped.** The v6 villa plan (WS0–WS8) is done: 4/23 Banksia Court is the default level, `?bedsit` is the old flat, and v8.0's optimisation pass put every view under 300 draw calls (worst 266; see the v8.0 section). There is no open job: **ask Jake what's next.**
+
+**Live:** https://bedsit-sandbox.vercel.app (shell pinned to vault `e3feb2f`) · artifact https://claude.ai/artifact/DytGBQdZUodMQxNiateJqt (Version 22) · project doc `claude/bedsit-status.md` in the claude.ai project "Apartment game demo" (keep it current after each release).
+
+**Waiting on Jake:**
+- Real fps on v8.0: his work Optiplex 7020 was 47 fps in the kitchen on standard (v7.0), 60 on performance; and his RTX 4060 number (never measured yet). Swiftshader can't measure fps, only calls/tris/bodies.
+- TV sound notes (asked for earlier, never came).
+- Whether phones are OK now they boot the house (untested on a real phone).
+
+**Offered, not built (Jake to pick):**
+1. Texture atlas per proxy cell: labels, posters, magnets and notices still draw one call each (my pick only if the fps numbers say draws still matter).
+2. Stepping between ceiling joists in the roof space puts your foot through the ceiling (my pick if perf is fine).
+3. The outside's liminal feel (yard/street at night).
+4. TV power cord segments never sleep (CPU, small).
+
+**How a release goes:** build + test in `/tmp/build2` → `bash release.sh "<title>" "<body>"` (minifies, pushes the vault, waits for jsDelivr, pins `shell/vercel-shell.html`) → Vercel deploy of that shell (see Deploy pipeline) → curl the live page and diff against the shell → publish the artifact from `/home/claude/bedsit/index.html` → send `index_1.html` → update `HANDOVER.md` + the project doc → tell Jake (short, dry, a "my pick" for next). Pushing needs push access: `add_repo` (owner `blacklanternpro`, repo `vault`, access `push`), clone, then `register_repo_root`.
+
+## The villa plan (v6, done; kept for reference)
+
+**The bedsit was replaced by a house.** Jake: "We are quickly outgrowing our boots here in the bedsit… Our base. Our home of destruction." The v6 plan is a Claude Docs doc: https://claude.ai/artifact/SZXbwtYLu7GA6BX5h5JpuA. Read it before writing code. Phase 4 (gas stove) and Phase 5 (vibe pack) are parked and fold into villa workstreams 3 and 7; the optimisation pass comes after move-in.
 
 **4/23 Banksia Court:** a 3-bed, 2-bath (ensuite off the master) brick-veneer villa, built 1987, cheap early-2000s refit; slab with carpet, vinyl and tiles; single garage, no car; fenced yard; rented through Gary's Property Group; about 154 m². All ten plan decisions are locked in the doc.
 
@@ -123,7 +142,7 @@ git clone -b bedsit-sandbox https://github.com/blacklanternpro/vault /home/claud
 python3 build.py
 ```
 
-`build.py` concatenates `p1 p2 p3 p4 p5 p5b p8a p8b p8c p8d p8e p8h p8i p8j p8f p8g p9m p9v p9b p6 p7` into `all.mjs`. All of them share **one module scope**. It writes three outputs:
+`build.py` concatenates `p1 p2 p3 p4 p5 p5b p8a p8b p8c p8d p8e p8h p8i p8j p8f p8g p9m p9v p9b p9s p9e p9k p9w p9l p9r p9z p9o p6 p7` into `all.mjs`. All of them share **one module scope**. It writes three outputs:
 
 | Output | What it is |
 | --- | --- |
@@ -313,5 +332,6 @@ Phase 2 is done (v5.6). Phases 4 and 5 are parked and now ride along with the vi
 - **Headless aiming:** after setting yaw/pitch, wait frames before raycasting. Camera shake moves the aim between hits.
 - **Screen glass:** glass with `screenHit` routes through `crackScreen` before the generic glass branch, in `damageProp` and the kick.
 - **node-canvas** has no `Path2D` and may lack `roundRect`. Use the `rrect` helper and plain path functions.
-- **Don't `pkill -f <script name>`:** it can kill your own shell. Kill by PID.
+- **Don't `pkill -f <script name>`:** it can kill your own shell. Kill by PID. Same trap with `until ! pgrep -f "x.py"` wait loops: the loop's own command line matches, so it waits forever. Match `"python3 x.py"` or wait on a log line instead.
+- **Swiftshader + 2 cores:** a full `pw_perf8.py` sweep takes ~20 min; run it in the background and do other work. `runall.sh` (26 harnesses) takes ~10 min.
 - **Speech:** `speechSynthesis` isn't routable through Web Audio, so it is not positional. Keep it to seated or near-device use.
