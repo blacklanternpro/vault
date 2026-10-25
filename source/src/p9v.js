@@ -271,6 +271,7 @@ function villaProps(){const al=new THREE.MeshStandardMaterial({color:0xc4c8cc,ro
 /* ---------- lights: a pool of four that follows you */
 const VL={pool:[],fix:[],t:0,room:null,street:null};
 function villaLights(){/* the ground colour stands in for light bouncing off floors and walls: without it every ceiling away from a lamp goes black */VL.hemi=new THREE.HemisphereLight(0x666c78,0xd8c8b0,1.8);scene.add(VL.hemi);VL.amb=new THREE.AmbientLight(0x3a3f4a,0.28);scene.add(VL.amb);const moon=new THREE.DirectionalLight(0x8fa6d8,0.35);moon.position.set(-20,30,12);scene.add(moon);
+  /* v6.3: one more light for the basement flares, added now so no material recompiles when one is struck */VL.flare=new THREE.PointLight(0xff4a28,0,7,1.6);scene.add(VL.flare);
   for(let i=0;i<4;i++){const l=new THREE.PointLight(0xffe2b8,0,8,1.5);if(i===0){l.castShadow=true;l.shadow.mapSize.set(1024,1024);l.shadow.bias=-0.003;l.shadow.normalBias=0.02;l.shadow.radius=3;l.shadow.camera.near=0.1;l.shadow.camera.far=8;SHADOW.lights.push(l);}scene.add(l);VL.pool.push({l,fix:null,k:0});}
   const disc=[],tube=[];for(const r of VP.rooms){if(r.id==='bathx')continue;const cx=vX((r.x0+r.x1)/2),cz=vZ((r.z0+r.z1)/2);const fluoro=r.id==='garage'||r.id==='laundry';const big=r.id==='hall';
     if(big){for(const px of[5,9.5,14]){VL.fix.push({x:vX(px),z:cz,y:PH-0.32,i:5.5,col:0xffe6c4,room:r});disc.push([0.3,0.05,0.3,V3(vX(px),PH-0.03,cz),new THREE.Quaternion()]);}continue;}
@@ -281,8 +282,8 @@ function villaLightPick(){const p=camera.getWorldPosition(_tvp);const lvl=p.y<-0
   /* the shadow-casting light always sits in your room */const sh=VL.pool[0];const mine=pick[0];if(mine&&sh.fix!==mine){const other=VL.pool.find(s=>s.fix===mine);if(other){const t=other.fix;other.fix=sh.fix;other.k=0;if(other.fix)other.l.position.set(other.fix.x,other.fix.y,other.fix.z),other.l.color.setHex(other.fix.col);sh.fix=t;sh.k=0;sh.l.position.set(t.x,t.y,t.z);sh.l.color.setHex(t.col);SHADOW.dirty=true;}}}
 function updateVilla(dt){VL.t-=dt;if(VL.t<=0){VL.t=0.15;villaLightPick();}const on=power;
   /* in the roof space the house goes dark: only the shadow-casting light (in the room under the hole) gets up there, through the hole */VL.rk=lerp(VL.rk||0,VCL.inRoof?1:0,1-Math.exp(-dt*4));const rk=VL.rk,shadows=renderer.shadowMap&&renderer.shadowMap.enabled;
-  for(const s of VL.pool){const tgt=on&&s.fix&&s.fix.on!==false?s.fix.i:0;s.k=lerp(s.k,tgt,1-Math.exp(-dt*10));const keep=s===VL.pool[0]?(shadows?1:0.18):0;s.l.intensity=s.k*(1-rk*(1-keep));}
-  const below=VB.built&&vbUnderground();const lit=below?VB.fix.filter(f=>f.on&&power&&f.room===VL.room).length:1;VL.bk=lerp(VL.bk===undefined?0:VL.bk,below?(lit?0.45:0.04):1,1-Math.exp(-dt*5));
+  for(const s of VL.pool){const tgt=s.fix&&(s.fix.lvl==='b'?vbPowered()&&s.fix.on:on&&s.fix.on!==false)?s.fix.i:0;s.k=lerp(s.k,tgt,1-Math.exp(-dt*10));const keep=s===VL.pool[0]?(shadows?1:0.18):0;s.l.intensity=s.k*(1-rk*(1-keep));}
+  const below=VB.built&&vbUnderground();const lit=below?VB.fix.filter(f=>f.on&&vbPowered()&&f.room===VL.room).length+(VL.flare&&VL.flare.intensity>0?1:0):1;VL.bk=lerp(VL.bk===undefined?0:VL.bk,below?(lit?0.45:0.04):1,1-Math.exp(-dt*5));
   if(VL.hemi){VL.hemi.intensity=1.8*(1-0.88*rk)*VL.bk;VL.amb.intensity=0.28*(1-0.7*rk)*Math.max(0.15,VL.bk);}vbUpdate(dt);}
 
 /* ---------- build + boot */

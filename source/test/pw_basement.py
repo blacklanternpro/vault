@@ -12,6 +12,13 @@ SHOTS={
  'plant':     (6.6,-2.23,8.6, -0.6,0.0, OPEN),
  'tunnel':    (8.0,-2.23,6.8, -1.5708,0.0, OPEN),
  'escape':    (13.4,-2.23,7.3, -0.5,0.9, OPEN+"D.VB.carpet.found=true;if(D.VB.carpet.alive&&D.VB.carpet.kin.target===0)D.VB.carpet.use();if(D.VB.trap.kin.target===0)setTimeout(()=>D.VB.trap.use(),300);"),
+ 'bunk2':     (2.4,-2.23,6.6, -2.2,0.0, OPEN),
+ 'radio':     (2.9,-2.23,6.3, 1.4,-0.25, OPEN+"if(!D.VB.radio.on)D.VB.radio.use();"),
+ 'plant2':    (6.6,-2.23,6.0, 3.0,-0.1, OPEN),
+ 'flare':     (13.3,-2.23,6.3, 2.6,-0.3, OPEN+"D.vbLightFlare(D.VB.flares[0]);D.VB.fix.forEach(f=>f.on=false);"),
+ 'drum':      (4.9,-2.23,7.0, -1.9,-0.35, OPEN+"if(!D.VB.drums[1].punctured)D.vbPuncture(D.VB.drums[1],D.VB.drums[1].mesh.position.clone().add(new D.VB.drums[1].mesh.position.constructor(-0.12,0,0)),new D.VB.drums[1].mesh.position.constructor(1,0,0),[0.62,0.78,0.95],'TEST');"),
+ 'tunnel_in': (8.9,-2.23,6.8, -1.5708,-0.05, OPEN),
+ 'slump':     (9.6,-2.23,6.75, -1.3,-0.25, OPEN+"const pr=D.VB.tprops.find(e=>e.lag&&Math.abs(e.mesh.position.x-(11.2-8.8))<0.05);if(pr&&!pr.dynamic){pr.onHit(pr.mesh.position.clone(),3,null);D.makeDynamic(pr);}for(let i=0;i<90;i++)await new Promise(r=>requestAnimationFrame(r));"),
  'carpet':    (12.6,0.37,6.8, -1.5708,-0.75, ''),
  'peeled':    (12.5,0.37,6.8, -1.5708,-0.7, OPEN+"D.VB.carpet.found=true;if(D.VB.carpet.alive&&D.VB.carpet.kin.target===0)D.VB.carpet.use();if(D.VB.trap.kin.target===0)setTimeout(()=>D.VB.trap.use(),300);"),
 }

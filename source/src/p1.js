@@ -154,7 +154,7 @@ class Particles{
       this.vel[i3+1]-=this.grav[i]*dt;const dr=Math.max(0,1-this.drag[i]*dt);this.vel[i3]*=dr;this.vel[i3+1]*=dr;this.vel[i3+2]*=dr;
       this.pos[i3]+=this.vel[i3]*dt;this.pos[i3+1]+=this.vel[i3+1]*dt;this.pos[i3+2]+=this.vel[i3+2]*dt;
       const k=this.kind[i];
-      if(this.pos[i3+1]<FLOOR_Y+0.005){if(k===3){this.life[i]=0;this.pos[i3+1]=-999;this.alpha[i]=0;if(Math.random()<0.08)floorPuddle(this.pos[i3],this.pos[i3+2],this.col[i3],this.col[i3+1],this.col[i3+2],this.pos[i3+1]);continue;}this.pos[i3+1]=FLOOR_Y+0.005;this.vel[i3+1]=0;this.vel[i3]*=0.6;this.vel[i3+2]*=0.6;}
+      const fy=pFloorY(this.pos[i3],this.pos[i3+1],this.pos[i3+2]);if(this.pos[i3+1]<fy+0.005){if(k===3){this.life[i]=0;this.pos[i3+1]=-999;this.alpha[i]=0;if(Math.random()<0.08)floorPuddle(this.pos[i3],this.pos[i3+2],this.col[i3],this.col[i3+1],this.col[i3+2],this.pos[i3+1]);continue;}this.pos[i3+1]=fy+0.005;this.vel[i3+1]=0;this.vel[i3]*=0.6;this.vel[i3+2]*=0.6;}
       const f=this.life[i]/this.maxLife[i];
       if(k===1){this.alpha[i]=Math.min(1,f*1.4)*0.75;this.size[i]+=dt*0.08;}else if(k===2){this.alpha[i]=f<0.4?f/0.4:1;}else if(k===3){this.alpha[i]=0.85;}else{this.alpha[i]=Math.min(1,f*2);}}
     if(!any&&!this.wasAny)return;this.wasAny=any;const g=this.points.geometry;g.attributes.position.needsUpdate=true;g.attributes.aColor.needsUpdate=true;g.attributes.aSize.needsUpdate=true;g.attributes.aAlpha.needsUpdate=true;}
