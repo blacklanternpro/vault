@@ -1,6 +1,6 @@
 
 /* ============================================================ v6 · 0 — THE VILLA (prototype: an empty house)
-   p9v — 4/23 Banksia Court, built from a floor plan instead of four hard-coded walls. Only runs with ?villa.
+   p9v — 4/23 Banksia Court, built from a floor plan instead of four hard-coded walls. The default since v8.0 (?bedsit builds the old flat instead).
    - VP is the plan: rooms as rectangles in plan metres (x east, z from the back fence side 0 to the street 9.8), pairs of
      rooms with no wall between them, and openings placed on the line between two rooms (or a room and outside).
    - Walls are worked out from shared room edges: a stretch of line with different rooms either side is a wall; with
@@ -296,7 +296,7 @@ function villaLights(){/* the ground colour stands in for light bouncing off flo
 function villaLightPick(){const p=camera.getWorldPosition(_tvp);const lvl=p.y<-0.35?'b':'h';const r=lvl==='b'?vbRoomAt(p.x-VP.ox,p.z-VP.oz):vRoomAtWorld(p.x,p.z);VL.room=r;const sc=f=>Math.hypot(f.x-p.x,f.z-p.z)-(r&&f.room===r?100:0);const pick=VL.fix.filter(f=>(f.lvl||'h')===lvl).sort((a,b)=>sc(a)-sc(b)).slice(0,VL.pool.length);
   /* keep lights already on a picked fixture where they are; move the others */const free=VL.pool.filter(s=>!pick.includes(s.fix));for(const f of pick){if(VL.pool.some(s=>s.fix===f))continue;const s=free.shift();if(!s)break;s.fix=f;s.k=0;s.l.position.set(f.x,f.y,f.z);s.l.color.setHex(f.col);if(s.l.castShadow)SHADOW.dirty=true;}
   /* the shadow-casting light always sits in your room */const sh=VL.pool[0];const mine=pick[0];if(mine&&sh.fix!==mine){const other=VL.pool.find(s=>s.fix===mine);if(other){const t=other.fix;other.fix=sh.fix;other.k=0;if(other.fix)other.l.position.set(other.fix.x,other.fix.y,other.fix.z),other.l.color.setHex(other.fix.col);sh.fix=t;sh.k=0;sh.l.position.set(t.x,t.y,t.z);sh.l.color.setHex(t.col);SHADOW.dirty=true;}}}
-function updateVilla(dt){vSlides(dt);vParkUpdate();updateWS5(dt);updateWS6(dt);updateWS7(dt);veUpdate(dt);updateWS3(dt);updateWS4(dt);VL.t-=dt;if(VL.t<=0){VL.t=0.15;villaLightPick();}const on=VE.lights;
+function updateVilla(dt){vSlides(dt);vParkUpdate();updateWS8(dt);updateWS5(dt);updateWS6(dt);updateWS7(dt);veUpdate(dt);updateWS3(dt);updateWS4(dt);VL.t-=dt;if(VL.t<=0){VL.t=0.15;villaLightPick();}const on=VE.lights;
   /* in the roof space the house goes dark: only the shadow-casting light (in the room under the hole) gets up there, through the hole */VL.rk=lerp(VL.rk||0,VCL.inRoof?1:0,1-Math.exp(-dt*4));const rk=VL.rk,shadows=renderer.shadowMap&&renderer.shadowMap.enabled;
   for(const s of VL.pool){const tgt=s.fix&&!s.fix.dead&&(s.fix.lvl==='b'?vbPowered()&&s.fix.on:(s.fix.circuit==='power'?power:on)&&s.fix.on!==false)?s.fix.i:0;s.k=lerp(s.k,tgt,1-Math.exp(-dt*10));const keep=s===VL.pool[0]?(shadows?1:0.18):0;s.l.intensity=s.k*(1-rk*(1-keep));}
   const below=VB.built&&vbUnderground();const lit=below?VB.fix.filter(f=>f.on&&vbPowered()&&f.room===VL.room).length+(VL.flare&&VL.flare.intensity>0?1:0):1;VL.bk=lerp(VL.bk===undefined?0:VL.bk,below?(lit?0.45:0.04):1,1-Math.exp(-dt*5));

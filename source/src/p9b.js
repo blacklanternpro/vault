@@ -1,6 +1,6 @@
 
 /* ============================================================ v6.2 — THE BASEMENT (B1: dig it)
-   p9b — a 1987 owner's unpermitted fallout shelter under 4/23 Banksia Court. Villa only (?villa).
+   p9b — a 1987 owner's unpermitted fallout shelter under 4/23 Banksia Court. Villa only (the default since v8.0; ?bedsit skips it).
    - VB is a second floor plan in the same format as VP, one level down: floor 2.6 m below the house floor, ceiling = the
      underside of the house slab (0.3 m thick). Walls come from shared room edges like upstairs: room|room = timber stud with
      fibre-cement sheet (dormant until broken into), room|earth = concrete block retaining wall, the tunnel = timber lagging.
