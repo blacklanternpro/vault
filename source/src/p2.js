@@ -143,10 +143,10 @@ function shards(p,n,col){P.emit(p,{count:n,color:col,cvar:0.1,size:0.02,svar:0.0
 /* plan extents */
 const PX=3.25,PZ=4.25,PH=2.7;
 let floorDrawable=null,floorSlabCanvas=null,bathFloorDrawable=null;
-function floorUV(x,z,d){if(VILLA)return[(x-VF.x0)/VF.w,(VF.z1-z)/VF.d];if(d&&d===bathFloorDrawable)return[(x-BATH.x0)/(BATH.x1-BATH.x0),(BATH.z1-z)/(BATH.z1-BATH.z0)];return[(x+PX)/(2*PX),(PZ-z)/(2*PZ)];}
-function floorDrawableAt(x,z){return VILLA?floorDrawable:inBath(x,z)?bathFloorDrawable:floorDrawable;}
+function floorUV(x,z,d){if(VILLA){if(d&&d===VB.floorD)return[(x-VB.fx0)/VB.fw,(VB.fz1-z)/VB.fd];return[(x-VF.x0)/VF.w,(VF.z1-z)/VF.d];}if(d&&d===bathFloorDrawable)return[(x-BATH.x0)/(BATH.x1-BATH.x0),(BATH.z1-z)/(BATH.z1-BATH.z0)];return[(x+PX)/(2*PX),(PZ-z)/(2*PZ)];}
+function floorDrawableAt(x,z,y){return VILLA?((y!==undefined&&y<-1&&VB.floorD)?VB.floorD:floorDrawable):inBath(x,z)?bathFloorDrawable:floorDrawable;}
 function floorDust(x,z,r,a){const d=floorDrawableAt(x,z);if(!d)return;const uv=floorUV(x,z,d);d.blot(uv[0],uv[1],r*(d===bathFloorDrawable?400:230),'235,232,225',a);}
-function floorPuddle(x,z,r,g,b){const d=floorDrawableAt(x,z);if(!d)return;const uv=floorUV(x,z,d);const col=r===undefined||(b>0.85&&r<0.7)?'40,60,90':`${(r*200)|0},${(g*200)|0},${(b*200)|0}`;d.blot(uv[0],uv[1],24+Math.random()*16,col,r!==undefined&&r>0.8?0.16:0.08);}
+function floorPuddle(x,z,r,g,b,y){const d=floorDrawableAt(x,z,y);if(!d)return;const uv=floorUV(x,z,d);const col=r===undefined||(b>0.85&&r<0.7)?'40,60,90':`${(r*200)|0},${(g*200)|0},${(b*200)|0}`;d.blot(uv[0],uv[1],24+Math.random()*16,col,r!==undefined&&r>0.8?0.16:0.08);}
 const BATH={x0:0.71,x1:PX,z0:1.51,z1:PZ};function inBath(x,z){return x>BATH.x0&&z>BATH.z0;}
 
 /* ============================================================ WALL / FACE FRAMES */
