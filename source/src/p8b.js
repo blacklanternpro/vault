@@ -83,11 +83,11 @@ const BLOOD=[0.45,0.02,0.03],DUST=[0.55,0.53,0.5],GLASSC=[0.75,0.88,0.85];
 function exUpdateParticles(dt){const P=EXP.pos,Vv=EXP.vel;let any=false;for(let i=0;i<EXP.N;i++){if(EXP.life[i]<=0)continue;any=true;const i3=i*3;EXP.life[i]-=dt;const k=EXP.kind[i];const grav=k===1?2.5:9.8,drag=k===1?3:0.4;
   Vv[i3]*=1-drag*dt;Vv[i3+2]*=1-drag*dt;Vv[i3+1]=Vv[i3+1]*(1-drag*dt)-grav*dt;P[i3]+=Vv[i3]*dt;P[i3+1]+=Vv[i3+1]*dt;P[i3+2]+=Vv[i3+2]*dt;
   if(P[i3+1]<=0.003){if(k===0&&xr()<0.35)exFloorDrop(P[i3],P[i3+2]);EXP.life[i]=0;}
-  if(k===0&&!EX.glassBroken&&P[i3+2]<-2.62&&P[i3+2]>-2.74&&Math.abs(P[i3])<2.2&&P[i3+1]>1.05&&P[i3+1]<2.45){if(xr()<0.5)exGlassDrop(P[i3],P[i3+1]);EXP.life[i]=0;}
+  if(k===0&&!EX.glassBroken&&P[i3+2]<-2.62&&P[i3+2]>-2.74&&Math.abs(P[i3]+0.3)<2.2&&P[i3+1]>1.05&&P[i3+1]<2.45){if(xr()<0.5)exGlassDrop(P[i3],P[i3+1]);EXP.life[i]=0;}
   if(Math.abs(P[i3])>2.98||P[i3+2]>4.48||P[i3+2]<-6.15)EXP.life[i]=0;if(EXP.life[i]<=0)P[i3+1]=-99;}
   if(any)EXP.pts.geometry.attributes.position.needsUpdate=true;EXP.pts.geometry.attributes.color.needsUpdate=true;}
 function exFloorDrop(x,z){const f=z>-2.5?EX.floor:EX.obsFloor;const s=f&&EX.surfs.get(f);if(!s)return;const u=(x+s.wM/2)/s.wM,v=1-((z-f.position.z)+s.hM/2)/s.hM;if(u<0||u>1||v<0||v>1)return;dropAt(s,u,v);}
-function exGlassDrop(x,y){const s=EX.glassS;if(!s)return;const u=(x+2.2)/4.4,v=(y-1.05)/1.4;exPaint(s,u,v,(c,px,py)=>{c.fillStyle='rgba(110,4,8,0.75)';c.beginPath();c.arc(px,py,1.5+xr()*3,0,7);c.fill();if(xr()<0.3){c.fillRect(px-1,py,2,6+xr()*20);}});}
+function exGlassDrop(x,y){const s=EX.glassS;if(!s)return;const u=(x+2.5)/4.4,v=(y-1.05)/1.4;exPaint(s,u,v,(c,px,py)=>{c.fillStyle='rgba(110,4,8,0.75)';c.beginPath();c.arc(px,py,1.5+xr()*3,0,7);c.fill();if(xr()<0.3){c.fillRect(px-1,py,2,6+xr()*20);}});}
 
 /* ---------- the room */
 function exBuild(){if(EX.built)return;EX.built=true;_xs=417;
@@ -100,11 +100,11 @@ function exBuild(){if(EX.built)return;EX.built=true;_xs=417;
   EX.floor=exEnvPlane(6,7,V3(0,0,1),[-PI/2,0,0],txFloor(),null,{paint:true,vertical:false});
   exEnvPlane(6,7,V3(0,3,1),[PI/2,0,0],txConcrete(256,256,{base:'#4b4945',g:72}),[2,2]);
   exEnvPlane(3.8,3,V3(-3,1.5,-0.6),[0,PI/2,0],txWallSide('CELL 04'),null,{paint:true});exEnvPlane(2.2,3,V3(-3,1.5,3.4),[0,PI/2,0],txConcrete(256,256,{base:'#5a5853',g:84,ties:[64,64],pour:true,streaks:12}),null,{paint:true});exEnvPlane(1.0,1.0,V3(-3,2.5,1.8),[0,PI/2,0],txConcrete(64,64,{base:'#5a5853',g:84,ties:[32,32]}),null,{paint:true});/* the intake hatch sits in the gap (p8f) */exEnvPlane(7,3,V3(3,1.5,1),[0,-PI/2,0],txWallSide(''),null,{paint:true});exEnvPlane(6,3,V3(0,1.5,4.5),[0,PI,0],txWallSide(''),null,{paint:true});
-  EX.backLow=exEnvPlane(5.2,1.05,V3(-0.4,0.525,-2.5),[0,0,0],txWallBack(),null,{paint:true});
+  EX.backLow=exEnvPlane(4.9,1.05,V3(-0.55,0.525,-2.5),[0,0,0],txWallBack(),null,{paint:true});
   exEnvPlane(6,0.55,V3(0,2.725,-2.5),[0,0,0],txConcrete(512,48,{ties:[64,48]}),null,{paint:true});
-  exEnvPlane(0.8,1.4,V3(-2.6,1.75,-2.5),[0,0,0],txConcrete(64,128,{ties:[32,64]}),null,{paint:true});exEnvPlane(0.8,0.35,V3(2.6,2.275,-2.5),[0,0,0],txConcrete(64,32,{ties:[32,32]}),null,{paint:true});
-  const rev=exLam({map:exTex(txConcrete(128,32,{}))});exEnvBox(4.4,0.04,0.35,V3(0,1.03,-2.675),rev);exEnvBox(4.4,0.04,0.35,V3(0,2.47,-2.675),rev);exEnvBox(0.04,1.44,0.35,V3(-2.22,1.75,-2.675),rev);exEnvBox(0.04,1.44,0.35,V3(2.22,1.75,-2.675),rev);
-  /* walls for the ragdolls */exStaticBox(0.4,3,8,V3(-3.2,1.5,1));exStaticBox(0.4,3,8,V3(3.2,1.5,1));exStaticBox(6,3,0.4,V3(0,1.5,4.7));exStaticBox(5.2,1.05,0.35,V3(-0.4,0.525,-2.675));exStaticBox(6,0.55,0.35,V3(0,2.725,-2.675));exStaticBox(0.8,1.4,0.35,V3(-2.6,1.75,-2.675));exStaticBox(0.8,0.35,0.35,V3(2.6,2.275,-2.675));
+  exEnvPlane(0.5,1.4,V3(-2.75,1.75,-2.5),[0,0,0],txConcrete(40,128,{ties:[32,64]}),null,{paint:true});exEnvPlane(1.1,0.35,V3(2.45,2.275,-2.5),[0,0,0],txConcrete(88,32,{ties:[32,32]}),null,{paint:true});
+  const rev=exLam({map:exTex(txConcrete(128,32,{}))});exEnvBox(4.4,0.04,0.35,V3(-0.3,1.03,-2.675),rev);exEnvBox(4.4,0.04,0.35,V3(-0.3,2.47,-2.675),rev);exEnvBox(0.04,1.44,0.35,V3(-2.52,1.75,-2.675),rev);exEnvBox(0.04,1.44,0.35,V3(1.92,1.75,-2.675),rev);
+  /* walls for the ragdolls */exStaticBox(0.4,3,8,V3(-3.2,1.5,1));exStaticBox(0.4,3,8,V3(3.2,1.5,1));exStaticBox(6,3,0.4,V3(0,1.5,4.7));exStaticBox(4.9,1.05,0.35,V3(-0.55,0.525,-2.675));exStaticBox(6,0.55,0.35,V3(0,2.725,-2.675));exStaticBox(0.5,1.4,0.35,V3(-2.75,1.75,-2.675));exStaticBox(1.1,0.35,0.35,V3(2.45,2.275,-2.675));
   /* observation room: z −2.85..−6.2 */const obsTex=txObs();EX.obsFloor=exEnvPlane(6,3.35,V3(0,0.0,-4.525),[-PI/2,0,0],txLino(),null,{paint:true,vertical:false});
   exEnvPlane(6,2.8,V3(0,1.4,-6.2),[0,0,0],obsTex,[2,1],{paint:false});exEnvPlane(3.35,2.8,V3(-3,1.4,-4.525),[0,PI/2,0],obsTex,[1,1]);exEnvPlane(3.35,2.8,V3(3,1.4,-4.525),[0,-PI/2,0],obsTex,[1,1]);exEnvPlane(6,3.35,V3(0,2.8,-4.525),[PI/2,0,0],txConcrete(128,128,{base:'#cfd3cf',g:200}),[3,2]);
   exStaticBox(6,2.8,0.3,V3(0,1.4,-6.35));exStaticBox(0.3,2.8,3.4,V3(-3.15,1.4,-4.5));exStaticBox(0.3,2.8,3.4,V3(3.15,1.4,-4.5));
@@ -112,7 +112,7 @@ function exBuild(){if(EX.built)return;EX.built=true;_xs=417;
   for(const mx of[-1.6,-0.2,1.2]){const scr=new THREE.Mesh(new THREE.BoxGeometry(0.36,0.28,0.3),exLam({color:0x2b2d2c}));scr.position.set(mx,1.08,-3.12);EX.env.add(scr);EX.envMeshes.push(scr);const gl=new THREE.Mesh(new THREE.PlaneGeometry(0.3,0.22),new THREE.MeshBasicMaterial({color:0x39d16a}));gl.position.set(mx,1.08,-3.271);gl.rotation.y=PI;EX.env.add(gl);}
   const mic=new THREE.Mesh(new THREE.CylinderGeometry(0.006,0.006,0.32,6),exLam({color:0x111111}));mic.position.set(0.25,1.06,-2.95);mic.rotation.x=0.5;EX.env.add(mic);
   /* door in the back wall */const door=exEnvBox(0.95,2.05,0.08,V3(2.25,1.025,-6.15),exLam({color:0x5b6366}),false);const dh=new THREE.Mesh(new THREE.BoxGeometry(0.14,0.03,0.05),exLam({color:0x999999}));dh.position.set(1.9,1.0,-6.09);EX.env.add(dh);const dw=new THREE.Mesh(new THREE.PlaneGeometry(0.25,0.35),new THREE.MeshBasicMaterial({color:0x0a0d10}));dw.position.set(2.25,1.6,-6.105);EX.env.add(dw);EX.door=door;
-  /* the glass (bullet-resistant, until it isn't) */const gc=mkCanvas(512,160);EX.glassCanvas=gc;const gtex=exTex(gc);const gm=new THREE.Mesh(new THREE.PlaneGeometry(4.4,1.4),new THREE.MeshBasicMaterial({map:gtex,transparent:true,depthWrite:false,toneMapped:false}));gm.position.set(0,1.75,-2.68);EX.scene.add(gm);EX.glass=gm;EX.glassS={mesh:gm,c:gc,x:gc.getContext('2d'),tex:gtex,wM:4.4,hM:1.4,vertical:true,dirty:false};EX.surfs.set(gm,EX.glassS);
+  /* the glass (bullet-resistant, until it isn't) */const gc=mkCanvas(512,160);EX.glassCanvas=gc;const gtex=exTex(gc);const gm=new THREE.Mesh(new THREE.PlaneGeometry(4.4,1.4),new THREE.MeshBasicMaterial({map:gtex,transparent:true,depthWrite:false,toneMapped:false}));gm.position.set(-0.3,1.75,-2.68);EX.scene.add(gm);EX.glass=gm;EX.glassS={mesh:gm,c:gc,x:gc.getContext('2d'),tex:gtex,wM:4.4,hM:1.4,vertical:true,dirty:false};EX.surfs.set(gm,EX.glassS);
   /* PA speaker, tube light, the camera on its tripod, a bucket and mop */
   const spk=new THREE.Mesh(new THREE.BoxGeometry(0.36,0.22,0.12),exLam({color:0x3d3f3a}));spk.position.set(0,2.8,-2.42);EX.env.add(spk);for(let i=0;i<6;i++){const s=new THREE.Mesh(new THREE.BoxGeometry(0.28,0.012,0.01),exLam({color:0x111111}));s.position.set(0,2.73+i*0.025,-2.358);EX.env.add(s);}
   const tubeM=new THREE.Mesh(new THREE.BoxGeometry(1.25,0.05,0.1),new THREE.MeshBasicMaterial({color:0xeaf2ff}));tubeM.position.set(0,2.95,0.35);EX.env.add(tubeM);EX.tube=tubeM;const tube2=new THREE.Mesh(new THREE.BoxGeometry(1.25,0.05,0.1),exLam({color:0x55585a}));tube2.position.set(0,2.95,3.2);EX.env.add(tube2);

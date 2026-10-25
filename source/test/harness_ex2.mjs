@@ -21,13 +21,14 @@ step(60);G.PC.use();step(60*4);G.SEAT.use();step(60*5);G.EX.trigger();step(2);G.
 // walk forward into the window wall
 G.keys.KeyW=true;EX.aimYaw=0;step(60*5);G.keys.KeyW=false;step(20);console.log('walked to z',EX.P.z.toFixed(2),'(wall at -2.5, r .22) cam',EX.cam.position.z.toFixed(2));
 // walk to the door, try the handle with F
-EX.P.x=2.6;EX.P.z=-1.8;step(5);aim(V(2.29,1.0,-2.5));console.log('use target',JSON.stringify(G.exUseLabel(G.exUseTarget())));EX.use();step(5);console.log(' cap',EX.cap.text,'locked',EX.door.locked);
+EX.P.x=2.6;EX.P.z=-1.8;step(5);aim(V(2.03,1.0,-2.5));console.log('use target',JSON.stringify(G.exUseLabel(G.exUseTarget())));EX.use();step(5);console.log(' cap',EX.cap.text,'locked',EX.door.locked);
 // walk into the closed door
 G.keys.KeyW=true;EX.aimYaw=0;step(120);G.keys.KeyW=false;console.log(' blocked at z',EX.P.z.toFixed(2));
 // shoot the door glass: stops
-const n0=EX.sci.filter(s=>s.alive).length;fireAt(V(2.6,1.4,-2.55));console.log('door glass cracks',EX.door.cracks,'sci alive',n0);
+const n0=EX.sci.filter(s=>s.alive).length;fireAt(V(2.45,1.4,-2.55));console.log('door glass cracks',EX.door.cracks,'sci alive',n0);
 // shoot the handle twice
 const hp=EX.handleMeshes[0].getWorldPosition(V(0,0,0));fireAt(hp);console.log('handle hits',EX.door.hits,'locked',EX.door.locked);fireAt(EX.handleMeshes[0].getWorldPosition(V(0,0,0)));step(120);console.log(' after 2nd: locked',EX.door.locked,'open',EX.door.open.toFixed(2),'leaf rot',EX.doorLeaf.rotation.y.toFixed(2),'sci panic',EX.sci.map(s=>s.panic));
+{const sx=EX.P.x,sz=EX.P.z;for(const [x0,yaw] of [[2.1,0.15],[2.8,-0.2],[2.0,0.35]]){EX.P.x=x0;EX.P.z=-1.6;EX.P.vx=0;EX.P.vz=0;EX.aimYaw=yaw;G.keys.KeyW=true;step(90);G.keys.KeyW=false;console.log('angled walk from x',x0,'yaw',yaw,'-> z',EX.P.z.toFixed(2),'x',EX.P.x.toFixed(2),'door open',EX.door.open.toFixed(2),'leaf rotY',EX.doorLeaf.rotation.y.toFixed(2));}EX.P.x=sx;EX.P.z=sz;}
 // walk through into the control room
 EX.P.x=2.6;EX.P.z=-2.2;EX.aimYaw=0;G.keys.KeyW=true;step(120);G.keys.KeyW=false;console.log('in control room z',EX.P.z.toFixed(2),'entered',EX.entered);step(240);console.log(' sci acts',EX.sci.map(s=>s.act+(s.cower?'(cower)':'')).join(','),'cap',EX.cap.text);
 // use the cover + button

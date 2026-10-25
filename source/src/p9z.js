@@ -75,7 +75,7 @@ function villaClutter(){const pz=new THREE.MeshStandardMaterial({map:mkTex(texPi
   /* dining table: the paper, the bills, salt and pepper */vClut(7.2,1.7,1.2,0.42,0.012,0.3,0xe8e4d8,'newspaper (THE WEST-ISH)',{mat:'fabric'});vClut(7.9,2.2,1.2,0.22,0.03,0.3,0xf2efe2,'bills (UNOPENED)',{mat:'fabric'});vClut(7.55,2.05,1.2,0.04,0.09,0.04,0xf2f2f2,'salt',{mat:'ceramic'});vClut(7.62,2.05,1.2,0.04,0.09,0.04,0x2a2a2a,'pepper',{mat:'ceramic'});
   /* hallway runner + three frames *//* v7.0: 14 mm, its own mesh and no shadow (in a batch it cast one onto itself and shimmered), pulled toward the camera in depth */vClut(9.0,4.5,0.5,6.0,0.014,0.75,0,'hallway runner',{mat:'fabric',mass:4,hp:60,yaw:0,mat3:vRugMat(0x6a2a2a),extra:{damp:0.9,adamp:0.95,shadow:false,noBatch:true}});
   for(const [x,c] of[[6.6,0x8aa0b8],[8.3,0xb8a080],[13.6,0x7a9a6a]]){const cv=mkCanvas(48,64),g=cv.getContext('2d');g.fillStyle='#3a2a1c';g.fillRect(0,0,48,64);g.fillStyle='#'+c.toString(16).padStart(6,'0');g.fillRect(5,5,38,54);g.fillStyle='rgba(0,0,0,.25)';g.fillRect(10,26,28,26);vWallPic(vFr(x,4.0,0,1),0,1.55,0.3,0.4,cv,0.008);}
-  /* bedroom 2: the floor */pizza(16.1,3.45,0.6,1.1);vCan(15.4,3.6,0.5,'SWILL can (ashtray)');vCan(15.7,0.6,0.5,'SWILL can (empty)',true);vCan(16.9,0.9,0.6);
+  /* bedroom 2: the floor */pizza(16.1,3.45,0.6,1.1);vCan(16.3,3.65,0.5,'SWILL can (ashtray)');vCan(15.7,0.6,0.5,'SWILL can (empty)',true);vCan(16.9,0.9,0.6);
   vClut(15.2,1.4,0.5,0.25,0.03,0.2,0xe8e8e8,'sock (one)',{mat:'fabric'});
   /* bathroom: a towel on the floor */vClut(10.1,1.9,0.5,0.6,0.02,0.45,0x3a8aa0,'wet towel',{mat:'fabric',mass:0.6,extra:{damp:0.9}});
   /* outside the back door: the empties */for(let i=0;i<6;i++)vCan(5.2+i*0.09,-0.4-(i%2)*0.08,0.3,'SWILL can (empty)',i%3===0);}
@@ -105,7 +105,7 @@ function vcLinks(cam){const L=[];for(const p of VP.open)L.push([p[0],p[1],0,null
   for(const w of VW.walls){const a=w.rooms.front,b=w.rooms.back;if(!VROOM[a]&&a!=='out'||!VROOM[b]&&b!=='out')continue;let pt=null,hw=0.5;
     for(const o of w.openings){if(o.kind==='manhole')continue;let open=false;if(o.kind==='arch'||o.kind==='window'||o.kind==='slider')open=true;else if(o.kind==='door'||o.kind==='front'){const d=VS.doors.find(d=>d.vo&&d.vo.op===o);if(!d||!d.alive||d.dynamic||Math.abs(d.kin.ang)>0.04)open=true;}else if(o.kind==='roller'){if(!VS.roller||VS.roller.k>0.03||!VS.roller.e.alive)open=true;}
       if(open){const c=wallPoint(w,(o.u0+o.u1)/2,1.2,0);if((a==='out'||b==='out')&&c.distanceTo(cam)>18)continue;pt=c;hw=(o.u1-o.u0)/2;break;}}
-    if(!pt&&!w.dormant){for(const f of w.faces){if(f.chunks.some(c=>!c.alive||!c.attached)){pt=wallPoint(w,w.L/2,1.2,0);hw=w.L/2;break;}}}if(pt)L.push([a,b,1,pt,hw]);}return L;}
+    if(!pt&&w._brickHole)pt=wallPoint(w,w.L/2,1.2,0);if(!pt&&!w.dormant){for(const f of w.faces){if(f.chunks.some(c=>!c.alive||!c.attached)){pt=wallPoint(w,w.L/2,1.2,0);hw=w.L/2;break;}}}if(pt)L.push([a,b,1,pt,hw]);}return L;}
 /* two steps away only if the second opening lines up with the first, as seen from here, and is ahead of you */
 function vcVisible(start,cam){const L=vcLinks(cam);const fwd=camera.getWorldDirection(V3());const best={[start]:{c:0,via:null}};const dir=p=>p.clone().sub(cam).normalize();
   const ahead=p=>{const d=dir(p);return d.dot(fwd)>0.3||p.distanceTo(cam)<2.5;};let ch=true,guard=0;

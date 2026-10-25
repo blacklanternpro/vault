@@ -10,7 +10,7 @@
 
 const VS={doors:[],slides:[],strips:[],roller:null};
 /* ---------- which way a door opens: into the room off the hall, or the smaller of two rooms; outside doors open in */
-function vDoorRoom(a,b){if(a==='out')return b;if(b==='out')return a;if(a==='hall'||a==='entry')return b;if(b==='hall'||b==='entry')return a;const ar=r=>{const R=VROOM[r];return R?(R.x1-R.x0)*(R.z1-R.z0):99;};return ar(a)<=ar(b)?a:b;}
+function vDoorRoom(a,b){/* v7.2: the WC is 1.4 m deep with the pan facing the door: its door swings out into the hall, like a real one */if(a==='wc'||b==='wc')return a==='wc'?b:a;if(a==='out')return b;if(b==='out')return a;if(a==='hall'||a==='entry')return b;if(b==='hall'||b==='entry')return a;const ar=r=>{const R=VROOM[r];return R?(R.x1-R.x0)*(R.z1-R.z0):99;};return ar(a)<=ar(b)?a:b;}
 /* doors that start closed; the rest stand open */
 const VDOOR_SHUT=new Set(['entry|out','laundry|out','wc|hall','bathx|hall','master|ensuite']);
 function vDoorKey(w){return [w.rooms.front,w.rooms.back].sort().join('|');}
