@@ -1,4 +1,4 @@
-# BEDSIT — handover brief (25 Oct 2026, v6.9: the house is furnished, WS1–WS7, on `?villa`)
+# BEDSIT — handover brief (25 Oct 2026, v7.0: polish on Jake's first play of the furnished house)
 
 Read this first, then `src/`. This bundle holds the full source. The public vault repo only holds the minified build.
 
@@ -59,6 +59,15 @@ Read this first, then `src/`. This bundle holds the full source. The public vaul
 - Beat-by-beat scripts are in the doc. When moving HHPP off the PC, delete the `ad` state from EXECUTIONER (p8c). The `drawHound`, `drawCarer`, `drawCouch` and `drawLogo` drawing code moves into a shared ad engine.
 
 **Ship each workstream on its own,** the same three ways as always (below).
+
+## v7.0 polish (plan: https://claude.ai/artifact/7NQ1G61xApb9LoCFMMgpEf, approved; EXECUTIONER stays walk-only)
+- **Bricks:** villa skins face the other way from the bedsit's (`depthZ` points outward, bricks span depth 0.14–0.25); the mortar sheet sat at 0.25 on the brick faces and z-fought (the shimmer) → now 0.232. `castRay`'s analytic brick test only walked `WALLS` (empty in the villa) → villa skins are in `VBSKINS` (each with `grid` (row*cols+col → instance), `U0/U1/H`, `out`, `rec:-1`), tested at the outer face from outside and the inner face (0.14) from the cavity. `chipBrick(w,id,p,dir,whole)`: first hit chips the face, the next (or any lever: `whole`) knocks the brick out as a dynamic 2.6 kg `boxEnt`; a gone brick lets the ray through.
+- **Hammer:** tap = `impact(hit,1.0,…,'tap')` after the resonance message, except stud/truss/batt/brick/brickwall/floor/slab/roofslab/screw/tile/pipe; three taps punch a sheet (backed sheets take 0.6×). Power hit = 2.0–5.0, full charge 0.6 s. `damageProp`: furniture/fixtures ≥25 kg (or `powerOnly`) only dent under 2.0; `e.acc` accumulates for cans (2.4) and the keyboard (2.6); a hit wakes a prop only if `min(dmg*3, m*4) > max(1.2, 0.6m)` (or its hp runs out).
+- **Toughness (p2 `onCollide`):** the held object (not ramming) returns early: no wakes, dents or shatters; wakes need momentum `> max(1.2, 0.6·mass)` (or `wakeImpulse`); collision dents need m·v > 5; `COLLIDE_SPEED` glass 3.4, china 3.6, ceramic/terra 4.0, tile 4.2; carried objects cap at 4.5 m/s (gain 12).
+- **Runner + living rug:** 14 mm, own mesh (`noBatch`), no shadow, `vRugMat` with polygon offset (in a batch they self-shadowed and shimmered; walking never woke them).
+- **EXECUTIONER:** walk 3.2 m/s, `k=22` acceleration, bob scaled, radius 0.18 in the doorway; mop + bucket moved to the cell's far corner (−2.62, 4.1). Ragdolls: limb inertia floored at 0.006·m (an upper arm spun at 100 rad/s on its own axis), spin clamped to 18 rad/s, cuff pin maxForce 2000 → 140, `exRagSettle` sleeps a body whose trunk has been still 1.2 s (0.6 s after the first time) or that's been awake 2.5 s and isn't falling.
+- **Also:** ceiling fittings glow only for their own bulb (`veCeilLit`), so 2 AM is dark.
+- **New tests:** `harness_bricks`, `harness_tough`, `harness_hammer`, `harness_runner`, `harness_exrag` (all in `runall.sh`, which runs every harness and writes `runall.log`); `pw_v7.py` browser shots `v7_*.png`.
 
 ## What it is
 BEDSIT is a single-file, first-person demolition sandbox that runs in the browser. It is a 6.5 × 8.5 m studio bedsit with a bathroom, galley kitchen, two skylights and one door. Everything is demolishable, and the feel is Half-Life 2 / Source.

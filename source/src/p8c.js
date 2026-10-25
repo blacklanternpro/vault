@@ -151,7 +151,7 @@ function exUpdate3D(dt){if(EX.menu){if(EX.hudDirty)exDrawHUD();return;}const liv
   const ph=Math.floor(EX.st*2)%2;if(ph!==EX.blink){EX.blink=ph;EX.hudDirty=true;}
   for(const H of EX.humans){exBrain(H,dt,live);exAnimate(H,dt);exFaceUpdate(H,dt);}exUpdateGuts(dt);exUpdateSoaks(dt);exUpdateSmears();
   if(EX.state==='play'&&live)exScript(dt);
-  let dyn=EX.gibs.length>0;for(const H of EX.humans)if(H.rag){dyn=true;break;}if(dyn)EX.world.step(1/60,dt,3);for(const H of EX.humans)exSyncRag(H);for(const g of EX.gibs){g.m.position.copy(g.b.position);g.m.quaternion.copy(g.b.quaternion);}
+  let dyn=EX.gibs.length>0;for(const H of EX.humans)if(H.rag){dyn=true;break;}if(dyn)EX.world.step(1/60,dt,3);for(const H of EX.humans){exRagSettle(H,dt);exSyncRag(H);}for(const g of EX.gibs){g.m.position.copy(g.b.position);g.m.quaternion.copy(g.b.quaternion);}
   if(EX.poolQ)for(let i=EX.poolQ.length-1;i>=0;i--){const q=EX.poolQ[i];q.t-=dt;if(q.t<=0){exPool(q.H);EX.poolQ.splice(i,1);}}
   exUpdateBleeds(dt);exUpdateParticles(dt);exUpdatePools(dt);exUpdateShells(dt);exGunUpdate(dt);exFlushSurfs();
   /* the tube flickers; the camera's red light blinks */const fl=Math.random()<0.02?0.25:(Math.random()<0.05?0.75:1);EX.tubeLight.intensity=lerp(EX.tubeLight.intensity,EX.lights?9*fl:0,0.6);EX.tube.material.color.setScalar(EX.lights?0.6+0.4*fl:0.12);EX.recLed.visible=ph===0;
