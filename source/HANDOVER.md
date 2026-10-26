@@ -8,7 +8,7 @@ Read this first, then `src/`. The vault repo (`blacklanternpro/vault`, branch `b
 
 **Next: the v9 plan** (Claude Docs doc: https://claude.ai/artifact/LGjvPAgbX65UcSh8i9ioTg). WS1 darts mini-game, WS2 the .357 revolver in a gun safe in the master bedroom (realism, waits on Jake's FAL GLB), WS3 the liminal night outside. **Nine decisions are waiting on Jake** at the end of the doc; build nothing until he answers. Order: darts → outside → revolver.
 
-**Live:** https://bedsit-sandbox.vercel.app (shell pinned to the vault release commit, see `src/shell/vercel-shell.html`) · artifact https://claude.ai/artifact/DytGBQdZUodMQxNiateJqt · project doc `claude/bedsit-status.md` in the claude.ai project "Apartment game demo" (keep it current after each release).
+**Live:** https://bedsit-sandbox.vercel.app (**still v8.0 on 26 Oct**: the v8.1 production deploy was blocked pending Jake's OK; `src/shell/vercel-shell.html` is pinned to `e0b38ad` and ready, deploy it as-is per Deploy pipeline step 5) · artifact https://claude.ai/artifact/DytGBQdZUodMQxNiateJqt · project doc `claude/bedsit-status.md` in the claude.ai project "Apartment game demo" (keep it current after each release).
 
 **Jake's numbers:** work Optiplex 7020 on v8.0: 40–50 fps standard, 60 on performance (60 = his monitor's refresh; the loop is plain requestAnimationFrame, no cap). Still no RTX 4060 number. Jake ruled out the roof-joist foot-through ("too easy to cause destruction").
 
