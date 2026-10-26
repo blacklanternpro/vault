@@ -4,7 +4,7 @@ set -e
 B=/tmp/build2; V=/home/claude/vault; VS=$V/source
 cd $B && python3 build.py >/dev/null && node --check all.mjs
 npx terser deploy/game.src.mjs --module --compress passes=2 --mangle -o deploy/game.min.mjs && node --check deploy/game.min.mjs
-cp deploy/game.min.mjs $V/; cp p*.js build.py package.json release.sh $VS/src/; cp -r shell $VS/src/; cp harness*.mjs boot81.mjs runall.sh pw*.py tvart.mjs tvperf.mjs sofawake.mjs $VS/test/  # HANDOVER.md is edited in place at $VS/HANDOVER.md
+cp deploy/game.min.mjs hammer.glb saw.glb revolver.glb $V/; cp tools_prep_revolver.py $VS/src/ 2>/dev/null || true; cp p*.js build.py package.json release.sh $VS/src/; cp -r shell $VS/src/; cp harness*.mjs boot81.mjs runall.sh pw*.py tvart.mjs tvperf.mjs sofawake.mjs $VS/test/  # HANDOVER.md is edited in place at $VS/HANDOVER.md
 cd $V; git add -A; git -c user.name="Claude" -c user.email="noreply@anthropic.com" commit -q -m "$1
 
 $2

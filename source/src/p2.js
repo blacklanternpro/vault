@@ -129,7 +129,7 @@ function makeDynamic(e,mass){if(!e.alive||e.dynamic)return;if(e.parked){e.parked
   if(e.castsShadow===undefined)e.castsShadow=e.kind!=='frag'&&meshCasts(e.mesh);if(e.mesh&&!e.castsShadow)e.mesh.traverse(o=>{if(o.isMesh)o.castShadow=false;});if(e.castsShadow)SHADOW.dirty=true;
   if(e.restsOn){const r=e.restsOn;const i=r.dependents.indexOf(e);if(i>=0)r.dependents.splice(i,1);e.restsOn=null;}
   for(const d of e.dependents.slice())wakeEnt(d);e.dependents.length=0;}
-function wakeEnt(e){if(!e.alive||e.dynamic)return;if(e.asm){wakeAsm(e.asm);return;}makeDynamic(e);}
+function wakeEnt(e){if(!e.alive||e.dynamic||e.bolted)return;if(e.asm){wakeAsm(e.asm);return;}makeDynamic(e);}
 function onSleep(){const e=this.ent;if(!e||!e.alive)return;if(e.mat==='gypsum'&&this.position.y<0.4){floorDust(this.position.x,this.position.z,0.09+Math.random()*0.1,0.35);}}
 function removeEnt(e){if(!e.alive)return;e.alive=false;unbatchEnt(e);entById.delete(e.id);if(e.body){world.removeBody(e.body);}if(e.mesh){hitRoot.remove(e.mesh);if(e.mesh.parent)e.mesh.parent.remove(e.mesh);}const i=ents.indexOf(e);if(i>=0)ents.splice(i,1);const j=dynamics.indexOf(e);if(j>=0)dynamics.splice(j,1);if(e.kerf){if(e.kerf.parent)e.kerf.parent.remove(e.kerf);e.kerf.geometry.dispose();e.kerf=null;}if(e.flexMesh&&e.flexMesh!==e.mesh&&e.flexMesh.parent)e.flexMesh.parent.remove(e.flexMesh);if(e.castsShadow)SHADOW.dirty=true;if(e.light){e.light.intensity=0;}if(e.onRemove)e.onRemove();for(const n of e.bonds){n.bonds.delete(e);}e.bonds.clear();for(const d of e.dependents.slice())wakeEnt(d);}
 function applyImpulse(e,imp,p){if(!e.body||!e.alive)return;const b=e.body;b.wakeUp();const rel=p?toC(p).vsub(b.position):new CANNON.Vec3(0,0,0);if(rel.length()>1.5)rel.set(0,0,0);b.applyImpulse(toC(imp),rel);}

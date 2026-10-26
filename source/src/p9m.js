@@ -8,7 +8,7 @@
    phone quality tier: 1024 shadow map, one shadow-casting light, minor lamps off, pixel ratio ≤ 1.5, big paint canvases
    capped, CH 7 at 640×360. iPhones can't lock orientation, so portrait shows a rotate card. */
 const MOB={on:false,el:{},sens:1.6,stick:null,look:null,act:false,alt:false,ctx:'',toolHold:null};
-const TOOL_ACT=[['SWING','PRY'],['WEDGE','LEVER'],['CUT',''],['GRAB','THROW'],['DRAW','']];
+const TOOL_ACT=[['SWING','PRY'],['WEDGE','LEVER'],['CUT',''],['GRAB','THROW'],['DRAW',''],['FIRE','SIGHTS']];const TOOL_SHORT=['HAMMER','BAR','SAWZALL','HANDS','TEXTA','REVOLVER'];
 function qualityCycle(){const order=['phone','full','perf'];const i=order.indexOf(perfMode?'perf':QTIER);const nx=order[(i+1)%3];perfMode=nx==='perf';phoneTier(nx==='phone');applyQuality();HUD.msg(nx==='phone'?'[PHONE QUALITY: 1 shadow · lighter lamps]':nx==='full'?'[FULL QUALITY: every shadow, every lamp]':'[PERFORMANCE MODE: shadows off · 75% res]',1.6);}
 function phoneTier(on){QTIER=on?'phone':'full';SHADOW.lights.forEach((l,i)=>{const sz=on?1024:2048;l.castShadow=on?i===0:true;if(l.shadow.mapSize.x!==sz){if(l.shadow.map){l.shadow.map.dispose();l.shadow.map=null;}l.shadow.mapSize.set(sz,sz);}});SHADOW.dirty=true;}
 function mobileCSS(){const st=document.createElement('style');st.textContent=`
@@ -28,6 +28,7 @@ body.touch.playing #mob{display:block}
 #mAlt{width:64px;height:64px;right:calc(134px + env(safe-area-inset-right));bottom:calc(30px + env(safe-area-inset-bottom))}
 #mUse{right:calc(26px + env(safe-area-inset-right));bottom:calc(132px + env(safe-area-inset-bottom));border-radius:8px;height:34px;width:auto;padding:0 12px;background:rgba(232,224,200,.9);color:#111;white-space:nowrap}
 #mR{width:52px;height:52px;right:calc(150px + env(safe-area-inset-right));bottom:calc(108px + env(safe-area-inset-bottom))}
+#mQ{width:52px;height:52px;right:calc(210px + env(safe-area-inset-right));bottom:calc(60px + env(safe-area-inset-bottom));font-size:9px}
 #mStand{width:52px;height:52px;right:calc(206px + env(safe-area-inset-right));bottom:calc(32px + env(safe-area-inset-bottom))}
 #mKick,#mJump,#mCrouch{width:50px;height:50px;bottom:calc(178px + env(safe-area-inset-bottom))}
 #mKick{left:calc(18px + env(safe-area-inset-left))}#mJump{left:calc(76px + env(safe-area-inset-left))}#mCrouch{left:calc(134px + env(safe-area-inset-left))}
@@ -51,18 +52,18 @@ function mobileInit(){MOB.on=false;document.body.classList.add('touch');phoneTie
   const rot=document.createElement('div');rot.id='rotate';rot.innerHTML='<b>⟳</b>TURN YOUR PHONE SIDEWAYS<br><br><span style="font-size:11px;color:#8d877a">BEDSIT IS A LANDSCAPE BEDSIT</span>';document.body.appendChild(rot);
   const mob=document.createElement('div');mob.id='mob';document.body.appendChild(mob);const B=(id,txt)=>{const b=document.createElement('div');b.id=id;b.className='mb';b.textContent=txt;mob.appendChild(b);MOB.el[id]=b;return b;};
   const base=document.createElement('div');base.id='mBase';base.innerHTML='<div id="mKnob"></div>';mob.appendChild(base);MOB.el.base=base;MOB.el.knob=base.firstChild;
-  B('mAct','ACTION');B('mAlt','ALT');B('mUse','USE');B('mR','RELOAD');B('mStand','STAND');B('mKick','KICK');B('mJump','JUMP');B('mCrouch','DUCK');B('mTool','HAMMER');B('mMenu','≡');B('mChDn','CH ▼');B('mPwr','PWR');B('mVol','VOL');
+  B('mAct','ACTION');B('mAlt','ALT');B('mUse','USE');B('mR','RELOAD');B('mQ','HAMMER');B('mStand','STAND');B('mKick','KICK');B('mJump','JUMP');B('mCrouch','DUCK');B('mTool','HAMMER');B('mMenu','≡');B('mChDn','CH ▼');B('mPwr','PWR');B('mVol','VOL');
   const pan=document.createElement('div');pan.id='mPanel';mob.appendChild(pan);MOB.el.panel=pan;const PB=(t,fn)=>{const b=document.createElement('button');b.textContent=t;b.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();fn(b);});pan.appendChild(b);return b;};
   PB('WORK LIGHT',()=>inKey('KeyL'));PB('QUALITY',()=>inKey('KeyP'));MOB.el.pause=PB('PAUSE GAME',()=>{inKey('Tab');pan.style.display='none';});MOB.el.mute=PB('MUTE TV',()=>remoteCmd('mute'));MOB.el.sens=PB('LOOK SPEED: 1.6',b=>{MOB.sens=MOB.sens>=2.6?0.8:+(MOB.sens+0.3).toFixed(1);b.textContent='LOOK SPEED: '+MOB.sens;});PB('EXIT TO TITLE',()=>mobileExit());
-  const rad=document.createElement('div');rad.id='mRadial';mob.appendChild(rad);MOB.el.radial=rad;['HAMMER','BAR','SAWZALL','HANDS','TEXTA'].forEach((t,i)=>{const b=document.createElement('div');b.className='mb';b.textContent=t;b.dataset.tool=i;rad.appendChild(b);});
+  const rad=document.createElement('div');rad.id='mRadial';mob.appendChild(rad);MOB.el.radial=rad;TOOL_SHORT.forEach((t,i)=>{const b=document.createElement('div');b.className='mb';b.textContent=t;b.dataset.tool=i;if(i===5&&!GUN.have)b.style.display='none';rad.appendChild(b);});
   /* button behaviour */const hold=(id,down,up)=>{const b=MOB.el[id];b.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();try{b.setPointerCapture(e.pointerId);}catch(_){}b.classList.add('on');S.resume();down();});const end=e=>{if(!b.classList.contains('on'))return;b.classList.remove('on');up&&up();};b.addEventListener('pointerup',end);b.addEventListener('pointercancel',end);};
   const vk=(code)=>[()=>{keys[code]=true;inKey(code,false);},()=>{keys[code]=false;}];
   hold('mAct',()=>{MOB.act=true;inDown(0);},()=>{MOB.act=false;inUp(0);});hold('mAlt',()=>{MOB.alt=true;inDown(2);},()=>{MOB.alt=false;inUp(2);});
   hold('mUse',...(()=>{const [d,u]=vk('KeyE'),[fd,fu]=vk('KeyF');return[()=>{if(SEAT.at==='desk'||SEAT.at==='oche')fd();else d();},()=>{u();fu();}];})());
-  hold('mR',...vk('KeyR'));hold('mStand',...vk('KeyE'));hold('mKick',...vk('KeyF'));hold('mJump',...vk('Space'));hold('mCrouch',...vk('ShiftLeft'));hold('mChDn',()=>inWheel(100));hold('mPwr',()=>remoteCmd('power'));hold('mVol',()=>remoteCmd('vol'));
+  hold('mR',...vk('KeyR'));hold('mQ',...vk('KeyQ'));hold('mStand',...vk('KeyE'));hold('mKick',...vk('KeyF'));hold('mJump',...vk('Space'));hold('mCrouch',...vk('ShiftLeft'));hold('mChDn',()=>inWheel(100));hold('mPwr',()=>remoteCmd('power'));hold('mVol',()=>remoteCmd('vol'));
   hold('mMenu',()=>{pan.style.display=pan.style.display==='flex'?'none':'flex';});
   const tb=MOB.el.mTool;tb.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();MOB.toolHold=setTimeout(()=>{MOB.toolHold=null;rad.style.display='block';const r=tb.getBoundingClientRect();[...rad.children].forEach((b,i)=>{const a=-0.2+i*0.42;b.style.left=(r.left+r.width/2+Math.cos(a)*120-33)+'px';b.style.top=(r.top+r.height/2+Math.sin(a)*120-33)+'px';b.classList.toggle('on',i===tool);});},380);});
-  tb.addEventListener('pointerup',e=>{if(MOB.toolHold){clearTimeout(MOB.toolHold);MOB.toolHold=null;setTool((tool+1)%5);}});
+  tb.addEventListener('pointerup',e=>{if(MOB.toolHold){clearTimeout(MOB.toolHold);MOB.toolHold=null;setTool(tool+1);}});
   rad.addEventListener('pointerup',e=>{const t=e.target.closest&&e.target.closest('[data-tool]');if(t)setTool(+t.dataset.tool);rad.style.display='none';});rad.addEventListener('pointerdown',e=>{e.preventDefault();const t=e.target.closest&&e.target.closest('[data-tool]');if(t){setTool(+t.dataset.tool);rad.style.display='none';}});
   /* stick + look: any touch that doesn't start on a button */
   mob.addEventListener('pointerdown',e=>{if(e.target!==mob)return;e.preventDefault();S.resume();pan.style.display='none';const left=e.clientX<innerWidth*0.42;if(left&&!MOB.stick&&MOB.ctx!=='couch'){MOB.stick={id:e.pointerId,x:e.clientX,y:e.clientY};base.style.display='block';base.style.left=e.clientX+'px';base.style.top=e.clientY+'px';MOB.el.knob.style.transform='';}else if(!MOB.look){MOB.look={id:e.pointerId,x:e.clientX,y:e.clientY};}try{mob.setPointerCapture(e.pointerId);}catch(_){}});
@@ -76,9 +77,9 @@ function mobileEnter(){MOB.on=true;locked=true;overlay.style.display='none';docu
 function mobileExit(){MOB.on=false;locked=false;document.body.classList.remove('playing');overlay.style.display='flex';MOB.el.panel.style.display='none';for(const k in keys)keys[k]=false;if(MOB.act){MOB.act=false;inUp(0);}if(MOB.alt){MOB.alt=false;inUp(2);}resetTool();if(document.fullscreenElement&&document.exitFullscreen)document.exitFullscreen().catch(()=>{});}
 function mobileRelabel(){if(!MOB.on)return;const E=MOB.el;const ctx=SEAT.at||'foot';const show=(id,on)=>E[id].classList.toggle('hide',!on);
   if(ctx!==MOB.ctx){MOB.ctx=ctx;if(MOB.stick&&ctx==='couch'){MOB.stick=null;E.base.style.display='none';keys.KeyW=keys.KeyS=keys.KeyA=keys.KeyD=false;}}
-  const foot=ctx==='foot',desk=ctx==='desk',couch=ctx==='couch',oche=ctx==='oche';show('mKick',foot);show('mJump',foot);show('mCrouch',foot);show('mTool',foot);show('mR',desk);show('mStand',desk||couch||oche);show('mChDn',couch);show('mPwr',couch);show('mVol',couch);
+  const foot=ctx==='foot',desk=ctx==='desk',couch=ctx==='couch',oche=ctx==='oche';show('mKick',foot);show('mJump',foot);show('mCrouch',foot);show('mTool',foot);show('mR',desk||(foot&&tool===5));show('mQ',foot&&tool===5);show('mStand',desk||couch||oche);show('mChDn',couch);show('mPwr',couch);show('mVol',couch);
   E.pause.style.display=desk?'block':'none';E.mute.style.display=couch?'block':'none';
-  if(foot){const a=TOOL_ACT[tool]||['ACTION',''];E.mAct.textContent=a[0];E.mAlt.textContent=a[1]||'—';show('mAlt',!!a[1]);E.mTool.textContent=['HAMMER','BAR','SAWZALL','HANDS','TEXTA'][tool];const u=(HUD.el.use&&HUD.el.use.textContent||'').replace(/^\[E\]\s*/,'');const h=held?'DROP':u;E.mUse.textContent=h;show('mUse',!!h);}
+  if(foot){const a=TOOL_ACT[tool]||['ACTION',''];E.mAct.textContent=a[0];E.mAlt.textContent=a[1]||'—';show('mAlt',!!a[1]);E.mTool.textContent=TOOL_SHORT[tool];if(tool===5)E.mR.textContent=GUN.open?'LOAD':'CYL';const u=(HUD.el.use&&HUD.el.use.textContent||'').replace(/^\[E\]\s*/,'');const h=held?'DROP':u;E.mUse.textContent=h;show('mUse',!!h);}
   else if(desk){E.mAct.textContent=EX.menu?'SELECT':'FIRE';E.mAlt.textContent='SIGHTS';show('mAlt',!EX.menu);E.mUse.textContent=EX.prompt?'F · '+EX.prompt:'F · USE';show('mUse',!!EX.prompt||!!EX.menu);}
   else if(oche){E.mAct.textContent=DART.game.state==='pull'||DART.game.state==='won'?'PULL DARTS':'HOLD · THROW';show('mAlt',false);E.mUse.textContent='NEXT GAME';show('mUse',true);}
   else if(couch){E.mAct.textContent='CH ▲';E.mAlt.textContent='SQUINT';show('mAlt',true);show('mUse',false);}}

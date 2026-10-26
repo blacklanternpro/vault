@@ -118,7 +118,7 @@ function villa81(){V81.kin=v81Kin();
   if(VR6.beer)V81.beerCord=add(VR6.beer.e,{h:0.3,label:'bar fridge cord',isOn:()=>true,off:()=>{}});
   /* the kitchen fridge runs off its cord */if(V81.fridgeCord){const fp=fridgePowered;fridgePowered=()=>fp()&&lcOK(V81.fridgeCord);}
   V81.cords=LC.list.length;}
-function updateV81(dt){spkUpdate(dt);if(VILLA){updateDarts(dt);updateStreet(dt);}if(VILLA)lcUpdate(dt);if(VILLA&&typeof vBeerUpdate==='function')vBeerUpdate(dt);}
+function updateV81(dt){spkUpdate(dt);if(VILLA){updateDarts(dt);updateStreet(dt);}if(VILLA)lcUpdate(dt);if(VILLA&&typeof vBeerUpdate==='function')vBeerUpdate(dt);if(VILLA)updateGun(dt);}
 
 /* ---------- v8.1 the garage bar fridge: a real carcass, a hinged door with a shelf, six cans you can see, a hum and a light */
 function vBeerFridge(F){const W=0.5,H=0.84,D=0.52,cy=H/2+0.012,dc=0.03+D/2;const at=(x,y,z)=>F.at(x,cy+y,dc+z);

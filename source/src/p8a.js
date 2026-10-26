@@ -87,7 +87,7 @@ function standUp(why){if(!SEAT.active)return;const def=SEAT.def;SEAT.active=fals
 function seatHold(){const b=player.body;b.velocity.x=0;b.velocity.z=0;}
 const _sp=V3();
 function updateSeat(dt){if(SEAT.active){const why=SEAT.def.keep();if(why)standUp(why);else{SEAT.def.target();const v=SEAT.def.view();SEAT.vy=v.yaw;SEAT.vp=v.pitch;SEAT.vf=v.fov;}}
-  SEAT.blend=clamp(SEAT.blend+(SEAT.active?dt/0.55:-dt/0.4),0,1);if(SEAT.blend<=0.0001){if(Math.abs(camera.fov-78)>0.01){camera.fov=78;camera.updateProjectionMatrix();}return;}
+  SEAT.blend=clamp(SEAT.blend+(SEAT.active?dt/0.55:-dt/0.4),0,1);if(SEAT.blend<=0.0001){const bf=gunFov();if(Math.abs(camera.fov-bf)>0.01){camera.fov=bf;camera.updateProjectionMatrix();}return;}
   const e=SEAT.blend*SEAT.blend*(3-2*SEAT.blend);_sp.copy(yawObj.position).lerp(SEAT.eye,e);yawObj.position.copy(_sp);
   let dy=SEAT.vy-player.yaw;dy=Math.atan2(Math.sin(dy),Math.cos(dy));yawObj.rotation.y=player.yaw+dy*e;pitchObj.rotation.x=lerp(player.pitch,SEAT.vp,e);pitchObj.rotation.z*=1-e;camera.position.x*=1-e;
-  const f=lerp(78,SEAT.active?SEAT.vf:SEAT.vf,e);if(Math.abs(camera.fov-f)>0.01){camera.fov=f;camera.updateProjectionMatrix();}}
+  const f=lerp(gunFov(),SEAT.active?SEAT.vf:SEAT.vf,e);if(Math.abs(camera.fov-f)>0.01){camera.fov=f;camera.updateProjectionMatrix();}}
