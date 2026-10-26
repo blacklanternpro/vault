@@ -211,7 +211,7 @@ function villaOutside(){/* the lawn has a hole where the house sits (v6.2: you c
   const front=[[fx1-fx0-6.2,0.7,0.23,V3((fx0+fx1)/2+3.1,0.2,fz1)]].map(a=>[...a,new THREE.Quaternion()]);vMerge(front,M.brick);for(const [w,h,d,p] of front)registerBody(boxBody(w/2,h/2,d/2,p));
   /* the letterbox, stuffed */const lb=vMerge([[0.3,0.36,0.4,V3(X(5.2),0.75,fz1),new THREE.Quaternion()],[0.08,0.6,0.08,V3(X(5.2),0.3,fz1),new THREE.Quaternion()]],M.brick);
   /* streetlight */const pole=new THREE.Mesh(new THREE.CylinderGeometry(0.06,0.09,6,8),M.darkMetal);pole.position.set(X(8),2.85,fz1+3);scene.add(pole);const head=new THREE.Mesh(new THREE.BoxGeometry(0.5,0.12,0.25),new THREE.MeshStandardMaterial({color:0x222222,emissive:0xffb86a,emissiveIntensity:2.5}));head.position.set(X(8),5.8,fz1+2.7);scene.add(head);
-  const sl=new THREE.PointLight(0xffb070,14,22,1.4);sl.position.set(X(8),5.6,fz1+2.6);scene.add(sl);VL.street=sl;}
+  const sl=new THREE.PointLight(0xffb070,14,22,1.4);sl.position.set(X(8),5.6,fz1+2.6);scene.add(sl);VL.street=sl;VL.streetHead=head;}
 
 
 /* ---------- the roof space: what you see once you're up through a manhole */
@@ -298,7 +298,7 @@ function villaLightPick(){const p=camera.getWorldPosition(_tvp);const lvl=p.y<-0
   /* the shadow-casting light always sits in your room */const sh=VL.pool[0];const mine=pick[0];if(mine&&sh.fix!==mine){const other=VL.pool.find(s=>s.fix===mine);if(other){const t=other.fix;other.fix=sh.fix;other.k=0;if(other.fix)other.l.position.set(other.fix.x,other.fix.y,other.fix.z),other.l.color.setHex(other.fix.col);sh.fix=t;sh.k=0;sh.l.position.set(t.x,t.y,t.z);sh.l.color.setHex(t.col);SHADOW.dirty=true;}}}
 function updateVilla(dt){vSlides(dt);vParkUpdate();updateWS8(dt);updateWS5(dt);updateWS6(dt);updateWS7(dt);veUpdate(dt);updateWS3(dt);updateWS4(dt);VL.t-=dt;if(VL.t<=0){VL.t=0.15;villaLightPick();}const on=VE.lights;
   /* in the roof space the house goes dark: only the shadow-casting light (in the room under the hole) gets up there, through the hole */VL.rk=lerp(VL.rk||0,VCL.inRoof?1:0,1-Math.exp(-dt*4));const rk=VL.rk,shadows=renderer.shadowMap&&renderer.shadowMap.enabled;
-  for(const s of VL.pool){const tgt=s.fix&&!s.fix.dead&&(s.fix.lvl==='b'?vbPowered()&&s.fix.on:(s.fix.circuit==='power'?power:on)&&s.fix.on!==false)?s.fix.i:0;s.k=lerp(s.k,tgt,1-Math.exp(-dt*10));const keep=s===VL.pool[0]?(shadows?1:0.18):0;s.l.intensity=s.k*(1-rk*(1-keep));}
+  for(const s of VL.pool){const tgt=s.fix&&!s.fix.dead&&(s.fix.lvl==='b'?vbPowered()&&s.fix.on:(s.fix.circuit==='power'?power:s.fix.circuit==='street'?true:on)&&s.fix.on!==false)?s.fix.i:0;s.k=lerp(s.k,tgt,1-Math.exp(-dt*10));const keep=s===VL.pool[0]?(shadows?1:0.18):0;s.l.intensity=s.k*(1-rk*(1-keep));}
   const below=VB.built&&vbUnderground();const lit=below?VB.fix.filter(f=>f.on&&vbPowered()&&f.room===VL.room).length+(VL.flare&&VL.flare.intensity>0?1:0):1;VL.bk=lerp(VL.bk===undefined?0:VL.bk,below?(lit?0.45:0.04):1,1-Math.exp(-dt*5));
   /* v6.5: a dark room is dark: the bounce fill follows whether your room's lights are on */const hr=!below&&VL.room&&VL.room.id?(veRoomLit(VL.room.id)?1:0.2):1;VL.hk=lerp(VL.hk===undefined?1:VL.hk,hr,1-Math.exp(-dt*6));
   if(VL.hemi){VL.hemi.intensity=1.8*(1-0.88*rk)*VL.bk*VL.hk*VIBE.k;VL.amb.intensity=0.28*(1-0.7*rk)*Math.max(0.15,VL.bk)*(0.4+0.6*VIBE.k);}vbUpdate(dt);}
@@ -306,7 +306,7 @@ function updateVilla(dt){vSlides(dt);vParkUpdate();updateWS8(dt);updateWS5(dt);u
 /* ---------- build + boot */
 function buildVilla(){/* the bedsit's walls exist as objects but are never framed here; transplanted builders look up their studs */for(const w of[WN,WS,WE,WW,WBN,WBW,WNN,WNE])if(w&&!w.studU)w.studU=[];villaWalls();for(const w of VW.walls)buildWallFrame(w);
   for(const w of VW.walls){const sides=w.kind==='ext'?[1]:[1,-1];for(const side of sides){const room=VROOM[side>0?w.rooms.front:w.rooms.back];if(!room)continue;const kind=room.wet?'tile':'paper';const f=mkFace(w,side,kind,vFaceCanvas(w.L,w.H,room.wet?(room.id==='ensuite'?'tilePeach':'tile'):'plaster'));f.room=room;VW.faces.push(f);buildSheet(f,vFaceCols(f),vFaceRows(f));if(kind==='tile')for(const c of f.chunks){c.mat='tile';c.hp=4.2;c.label='wall tile';}}}
-  villaCeiling();for(const L of villaBrickLines())villaBricks(L);buildBatts(VW.ext);villaFloor();villaRoof();villaRoofSpace();villaOpenings();villaEndCaps();villaManholes();vbEntries();villaProps();villaShell();villaLights();villaServices();villaKitchenWS3();villaWS4();villaWS5();villaWS6();villaWS7();villaOutside();villa81();
+  villaCeiling();for(const L of villaBrickLines())villaBricks(L);buildBatts(VW.ext);villaFloor();villaRoof();villaRoofSpace();villaOpenings();villaEndCaps();villaManholes();vbEntries();villaProps();villaShell();villaLights();villaServices();villaKitchenWS3();villaWS4();villaWS5();villaWS6();villaWS7();villaOutside();villaStreet();villa81();
   for(const f of FACES)for(const c of f.chunks)chunkById.set(c.id,c);recomputeTimber();recomputeSupport();flushBatches();BATCH_LIVE=true;vParkProps();}
 /* small things resting on other things (mugs in cupboards, books on shelves, tins in the pantry) keep their body but leave
    the physics world until something wakes them: makeDynamic puts them back. Nothing can bump them while they sit there. */

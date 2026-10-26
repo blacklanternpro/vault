@@ -29,7 +29,7 @@ function bondHooks(){const wrap=(fn,pre)=>function(...a){try{pre(...a);}catch(e)
 /* ---------- the vibe: 2 AM, the neon, the night */
 const VIBE={am2:false,k:1,saved:null,neon:null,bag:null,am:null,amb:0,dogT:30};
 function vibeKey(code){if(!VILLA)return;if(code==='KeyB')bondToggle();if(code==='KeyN')vibe2am();}
-function vibe2am(){VIBE.am2=!VIBE.am2;if(VIBE.am2){VIBE.saved=VL.fix.map(f=>f.on);for(const f of VL.fix){if(f.lvl==='b')continue;if(f.circuit==='power')f.on=true;else f.on=false;}if(VIBE.neon)VIBE.neon.fix.on=true;HUD.msg('[2:07 AM]',1.6);}
+function vibe2am(){VIBE.am2=!VIBE.am2;if(VIBE.am2){VIBE.saved=VL.fix.map(f=>f.on);for(const f of VL.fix){if(f.lvl==='b'||f.street)continue;if(f.circuit==='power')f.on=true;else f.on=false;}if(VIBE.neon)VIBE.neon.fix.on=true;HUD.msg('[2:07 AM]',1.6);}
   else{if(VIBE.saved)VL.fix.forEach((f,i)=>{if(i<VIBE.saved.length)f.on=VIBE.saved[i];});VIBE.saved=null;HUD.msg('[LIGHTS ON. WHO TURNED THE LIGHTS OFF.]',1.2);}
   if(typeof veSync==='function')veSync();}
 function texNeon(on){const c=mkCanvas(256,96),x=c.getContext('2d');x.clearRect(0,0,256,96);x.font='italic bold 58px Georgia, serif';x.textAlign='center';x.textBaseline='middle';x.lineJoin='round';
@@ -42,7 +42,7 @@ function villaNeon(){const F=vFr(3.2,5.0,-1,0);const p=F.at(0,1.85,0.03);const o
   const fix={x:p.x+F.n.x*0.3,y:p.y,z:p.z+F.n.z*0.3,i:2.6,col:0xff4a9a,room:VROOM.garage,circuit:'power',on:true};VL.fix.push(fix);VIBE.neon={e,fix,glow,onT,offT,flick:0,lit:true,p};
   e.onShatter=((o)=>(...a)=>{fix.dead=true;VIBE.neon.dead=true;sparks(p,20,[1,0.5,0.8]);S.zap(p);if(o)o(...a);})(e.onShatter);
   e.useLabel=()=>fix.on?'NEON OFF':'NEON ON';e.use=()=>{fix.on=!fix.on;S.click(p,1200);};}
-function villaBag(){/* a boxing bag on a chain from the garage ceiling: a real pendulum */const x=vX(1.55),z=vZ(6.9),top=PH-0.04;const anchor=new CANNON.Body({mass:0});anchor.position.set(x,top,z);world.addBody(anchor);
+function villaBag(){/* a boxing bag on a chain from the garage ceiling: a real pendulum */const x=vX(1.6),z=vZ(6.05)/* v9.1: out of the darts' line */,top=PH-0.04;const anchor=new CANNON.Body({mass:0});anchor.position.set(x,top,z);world.addBody(anchor);
   const red=new THREE.MeshStandardMaterial({color:0x8a1a1a,roughness:0.55});const bag=compoundEnt([{geo:new THREE.CylinderGeometry(0.17,0.17,0.95,16),x:0,y:0,z:0,mat:red,cyl:[0.17,0.17,0.95]},{geo:new THREE.CylinderGeometry(0.175,0.175,0.05,16),x:0,y:0.45,z:0,mat:M.black,noCollide:true},{geo:new THREE.CylinderGeometry(0.175,0.175,0.05,16),x:0,y:-0.45,z:0,mat:M.black,noCollide:true}],V3(x,top-0.9-0.475,z),{kind:'prop',mat:'fabric',mass:22,hp:9999,label:'boxing bag (EVERLAST? EVERLASTED.)',noBatch:true,damp:0.08,adamp:0.4});
   makeDynamic(bag);bag.body.allowSleep=true;/* v8.1: hanging things meet the player's chest sphere */for(const sh of bag.body.shapes)sh.collisionFilterGroup=1|64;const c=new CANNON.PointToPointConstraint(bag.body,new CANNON.Vec3(0,0.9+0.475,0),anchor,new CANNON.Vec3(0,0,0));world.addConstraint(c);
   const lg=new THREE.BufferGeometry().setFromPoints([V3(x,top,z),V3(x,top-0.9,z)]);const chain=new THREE.Line(lg,new THREE.LineBasicMaterial({color:0x8a8e90}));scene.add(chain);VIBE.bag={e:bag,c,chain,anchor};
@@ -83,9 +83,9 @@ function villaClutter(){const pz=new THREE.MeshStandardMaterial({map:mkTex(texPi
 /* ---------- the night outside */
 function vibeAmbience(dt){if(!S.ctx)return;const cp=camera.getWorldPosition(_tvp);const inside=!!vRoomAtWorld(cp.x,cp.z)&&cp.y>-0.3&&cp.y<PH+0.3;const under=cp.y<-0.35;
   let leak=0;for(const s of VS.slides||[])leak+=s.slide&&s.slide.k>0.3?0.1:0;if(VS.roller&&VS.roller.k>0.2)leak+=0.2;const k=under?0.03:inside?Math.min(0.5,0.18+leak):1;VIBE.amb=lerp(VIBE.amb,k*(VIBE.am2?1.4:1),1-Math.exp(-dt*3));
-  if(!S.loops.vnight){S.drone('vnight',{noise:1,flt:'bandpass',ff:4300,q:4,base:0.02});S.drone('vtraffic',{noise:1,flt:'lowpass',ff:220,q:0.5,base:0.02});}S.droneGain('vnight',VIBE.amb);S.droneGain('vtraffic',VIBE.amb*(VIBE.am2?0.4:1));
+  if(!S.loops.vnight){S.drone('vnight',{noise:1,flt:'bandpass',ff:4300,q:4,base:0.02});S.drone('vtraffic',{noise:1,flt:'lowpass',ff:220,q:0.5,base:0.02});}S.droneGain('vnight',VIBE.amb*(NS.hush===undefined?1:NS.hush));S.droneGain('vtraffic',VIBE.amb*(VIBE.am2?0.4:1));
   if(Math.random()<dt*1.2*VIBE.amb){const f=4100+Math.random()*500,n=2+Math.random()*3|0;for(let i=0;i<n;i++)S.tone({f,dur:0.04,type:'sine',gain:0.018*VIBE.amb,delay:i*0.07});}
-  VIBE.dogT-=dt;if(VIBE.dogT<=0){VIBE.dogT=40+Math.random()*70;const p=V3(vX(-3)-12,0,vZ(-8)-6);for(let i=0;i<2+Math.random()*3;i++){S.tone({f:420,f1:260,dur:0.16,type:'sawtooth',gain:0.25*Math.max(0.15,VIBE.amb),delay:i*0.38});S.noise({dur:0.14,gain:0.12*Math.max(0.15,VIBE.amb),type:'bandpass',f:700,delay:i*0.38});}}}
+  VIBE.dogT-=dt*(VIBE.am2?1.6:1);if(VIBE.dogT<=0&&NS.built&&NS.dogQuiet>0){VIBE.dogT=6;}else if(VIBE.dogT<=0){VIBE.dogT=40+Math.random()*70;const p=V3(vX(-3)-12,0,vZ(-8)-6);for(let i=0;i<2+Math.random()*3;i++){S.tone({f:420,f1:260,dur:0.16,type:'sawtooth',gain:0.25*Math.max(0.15,VIBE.amb),delay:i*0.38});S.noise({dur:0.14,gain:0.12*Math.max(0.15,VIBE.amb),type:'bandpass',f:700,delay:i*0.38});}}}
 
 function villaWS7(){bondUI();villaNeon();villaBag();villaHallTable();villaClutter();bondHooks();}
 function updateWS7(dt){if(!BOND.live){BOND.t+=dt;if(BOND.t>1.5){BOND.live=true;}}if(BOND.flash>0&&BOND.el){BOND.flash=Math.max(0,BOND.flash-dt*3);BOND.el.style.transform=`scale(${1+BOND.flash*0.12})`;}
@@ -118,7 +118,7 @@ function vcBig(e){if(e._vcBig!==undefined)return e._vcBig;let big=false;try{cons
 function vcRestore(){for(const o of VCULL.hid)o.visible=true;if(VCULL.hid.size)SHADOW.dirty=true;VCULL.hid.clear();VCULL.key='';}
 function vcUpdate(dt){VCULL.t-=dt;if(VCULL.t>0)return;VCULL.t=0.1;const cam=camera.getWorldPosition(V3());const skip=!VCULL.on||cam.y<-0.35||VCL.inRoof||cam.y>PH+0.1||(VB.built&&vbUnderground());if(skip){vcRestore();return;}
   const r=vRoomAtWorld(cam.x,cam.z);const vis=vcVisible(r?r.id:'out',cam);VCULL.vis=vis;const want=new Set();
-  for(const e of ents){if(!e.alive||!e.mesh||e.batched||e.dormant||!e.mesh.parent)continue;if(e.dynamic||!e._vr)e._vr=vcRoomsOf(e);const rs=e._vr;if(!rs||rs[0]==='roof')continue;if(rs.some(x=>vis.has(x)))continue;if(vcBig(e))continue;want.add(e.mesh);}
+  for(const e of ents){if(!e.alive||!e.mesh||e.batched||e.dormant||!e.mesh.parent)continue;if(e.dynamic||!e._vr){if(!e._vr)e.mesh.updateMatrixWorld(true);/* v9.1: a mesh never rendered yet still has an identity matrix */e._vr=vcRoomsOf(e);}const rs=e._vr;if(!rs||rs[0]==='roof')continue;if(rs.some(x=>vis.has(x)))continue;if(vcBig(e))continue;want.add(e.mesh);}
   /* WS8 proxies go with their rooms */for(const X of VPX.clusters){if(X.never)continue;if(!X.rooms.some(x=>vis.has(x)))want.add(X.node);}for(const C of VPXF.cells.values()){if(!vis.has(C.room))want.add(C.node);}
   for(const f of VW.faces){if(!f.mesh||!f.room||VROOM[f.room.id]!==f.room)continue;if(!vis.has(f.room.id)){want.add(f.mesh);continue;}
     /* a face you're behind can't be seen, unless the wall's been opened (then you might be looking at its back through a hole) */if(f.wall.dormant){if(!f._n){const c=facePoint(f,f.L/2,f.H/2,0),c2=facePoint(f,f.L/2,f.H/2,0.05);const n=c2.sub(c).normalize();const rc=V3(vX((f.room.x0+f.room.x1)/2),c.y,vZ((f.room.z0+f.room.z1)/2));if(n.dot(rc.clone().sub(c))<0)n.negate();f._c=c;f._n=n;}if(cam.clone().sub(f._c).dot(f._n)<-0.02)want.add(f.mesh);}}

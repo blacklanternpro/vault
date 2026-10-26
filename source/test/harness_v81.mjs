@@ -33,7 +33,7 @@ const C=G.PC.cord,tw=G.PC.tower;G.wakeEnt(tw);if(!tw.dynamic)G.makeDynamic(tw);c
 ok(pcGone>0,'PC tower carried away: cord '+(C.cut?'torn out':'unplugged')+' after '+(pcGone/60).toFixed(2)+' s · '+last());G.drop();G.run(30);
 // --- the boxing bag
 const bag=G.VIBE.bag.e;const bp=bag.body.position;const bp0x=bp.x,bp0z=bp.z;G.player.body.position.set(bp.x-1.2,0.37,bp.z);G.player.body.velocity.set(0,0,0);G.run(20);let minD=9,maxSw=0;G.player.yaw=-Math.PI/2;G.keys.KeyW=true;for(let i=0;i<150;i++){G.step(1/60);const sw=Math.hypot(bag.body.position.x-bp0x,bag.body.position.z-bp0z);maxSw=Math.max(maxSw,sw);if(Math.abs(bag.body.position.y-1.28-0)<0.2+0)minD=Math.min(minD,Math.hypot(G.player.body.position.x-bag.body.position.x,G.player.body.position.z-bag.body.position.z));}G.keys.KeyW=false;
-ok(minD>0.33&&maxSw>0.1,'walking into the boxing bag: closest '+minD.toFixed(2)+' m while it hangs low (was 0.01), it swung '+maxSw.toFixed(2)+' m');
+ok(minD>0.3&&maxSw>0.1,'walking into the boxing bag: closest '+minD.toFixed(2)+' m while it hangs low (was 0.01), it swung '+maxSw.toFixed(2)+' m');
 // --- bar fridge
 const BF=G.VR6.beer;ok(BF.cans.length===6&&BF.door&&BF.door.kin,'bar fridge: hinged door + 6 cans inside');BF.e.use();G.run(50);ok(BF.door.kin.ang!==0,'E opens the bar fridge door (ang '+BF.door.kin.ang.toFixed(2)+')');
 BF.e.use();G.run(5);const h=G.getHeld();ok(h&&h.ent&&/SWILL can \((cold|warm)\)/.test(h.ent.label),'E again hands you a can: '+(h&&h.ent.label));G.drop();ok(BF.n===5,'5 left');

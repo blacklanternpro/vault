@@ -58,7 +58,7 @@ function mobileInit(){MOB.on=false;document.body.classList.add('touch');phoneTie
   /* button behaviour */const hold=(id,down,up)=>{const b=MOB.el[id];b.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();try{b.setPointerCapture(e.pointerId);}catch(_){}b.classList.add('on');S.resume();down();});const end=e=>{if(!b.classList.contains('on'))return;b.classList.remove('on');up&&up();};b.addEventListener('pointerup',end);b.addEventListener('pointercancel',end);};
   const vk=(code)=>[()=>{keys[code]=true;inKey(code,false);},()=>{keys[code]=false;}];
   hold('mAct',()=>{MOB.act=true;inDown(0);},()=>{MOB.act=false;inUp(0);});hold('mAlt',()=>{MOB.alt=true;inDown(2);},()=>{MOB.alt=false;inUp(2);});
-  hold('mUse',...(()=>{const [d,u]=vk('KeyE'),[fd,fu]=vk('KeyF');return[()=>{if(SEAT.at==='desk')fd();else d();},()=>{u();fu();}];})());
+  hold('mUse',...(()=>{const [d,u]=vk('KeyE'),[fd,fu]=vk('KeyF');return[()=>{if(SEAT.at==='desk'||SEAT.at==='oche')fd();else d();},()=>{u();fu();}];})());
   hold('mR',...vk('KeyR'));hold('mStand',...vk('KeyE'));hold('mKick',...vk('KeyF'));hold('mJump',...vk('Space'));hold('mCrouch',...vk('ShiftLeft'));hold('mChDn',()=>inWheel(100));hold('mPwr',()=>remoteCmd('power'));hold('mVol',()=>remoteCmd('vol'));
   hold('mMenu',()=>{pan.style.display=pan.style.display==='flex'?'none':'flex';});
   const tb=MOB.el.mTool;tb.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();MOB.toolHold=setTimeout(()=>{MOB.toolHold=null;rad.style.display='block';const r=tb.getBoundingClientRect();[...rad.children].forEach((b,i)=>{const a=-0.2+i*0.42;b.style.left=(r.left+r.width/2+Math.cos(a)*120-33)+'px';b.style.top=(r.top+r.height/2+Math.sin(a)*120-33)+'px';b.classList.toggle('on',i===tool);});},380);});
@@ -76,8 +76,9 @@ function mobileEnter(){MOB.on=true;locked=true;overlay.style.display='none';docu
 function mobileExit(){MOB.on=false;locked=false;document.body.classList.remove('playing');overlay.style.display='flex';MOB.el.panel.style.display='none';for(const k in keys)keys[k]=false;if(MOB.act){MOB.act=false;inUp(0);}if(MOB.alt){MOB.alt=false;inUp(2);}resetTool();if(document.fullscreenElement&&document.exitFullscreen)document.exitFullscreen().catch(()=>{});}
 function mobileRelabel(){if(!MOB.on)return;const E=MOB.el;const ctx=SEAT.at||'foot';const show=(id,on)=>E[id].classList.toggle('hide',!on);
   if(ctx!==MOB.ctx){MOB.ctx=ctx;if(MOB.stick&&ctx==='couch'){MOB.stick=null;E.base.style.display='none';keys.KeyW=keys.KeyS=keys.KeyA=keys.KeyD=false;}}
-  const foot=ctx==='foot',desk=ctx==='desk',couch=ctx==='couch';show('mKick',foot);show('mJump',foot);show('mCrouch',foot);show('mTool',foot);show('mR',desk);show('mStand',desk||couch);show('mChDn',couch);show('mPwr',couch);show('mVol',couch);
+  const foot=ctx==='foot',desk=ctx==='desk',couch=ctx==='couch',oche=ctx==='oche';show('mKick',foot);show('mJump',foot);show('mCrouch',foot);show('mTool',foot);show('mR',desk);show('mStand',desk||couch||oche);show('mChDn',couch);show('mPwr',couch);show('mVol',couch);
   E.pause.style.display=desk?'block':'none';E.mute.style.display=couch?'block':'none';
   if(foot){const a=TOOL_ACT[tool]||['ACTION',''];E.mAct.textContent=a[0];E.mAlt.textContent=a[1]||'—';show('mAlt',!!a[1]);E.mTool.textContent=['HAMMER','BAR','SAWZALL','HANDS','TEXTA'][tool];const u=(HUD.el.use&&HUD.el.use.textContent||'').replace(/^\[E\]\s*/,'');const h=held?'DROP':u;E.mUse.textContent=h;show('mUse',!!h);}
   else if(desk){E.mAct.textContent=EX.menu?'SELECT':'FIRE';E.mAlt.textContent='SIGHTS';show('mAlt',!EX.menu);E.mUse.textContent=EX.prompt?'F · '+EX.prompt:'F · USE';show('mUse',!!EX.prompt||!!EX.menu);}
+  else if(oche){E.mAct.textContent=DART.game.state==='pull'||DART.game.state==='won'?'PULL DARTS':'HOLD · THROW';show('mAlt',false);E.mUse.textContent='NEXT GAME';show('mUse',true);}
   else if(couch){E.mAct.textContent='CH ▲';E.mAlt.textContent='SQUINT';show('mAlt',true);show('mUse',false);}}

@@ -25,7 +25,7 @@ function vpxEligible(e){if(!e.alive||!e.mesh||e.batched||e.dormant||!e.mesh.pare
   if(e.dynamic&&!(e.parked&&e.body))return false;if(e._pxT&&now-e._pxT<3)return false;
   if(e._pxN===undefined||now-(e._pxNt||0)>10){e._pxN=vpxCount(e);e._pxNt=now;}return e._pxN>=1;}
 /* loose scenery (posters, notices, ceiling roses, vents: meshes straight on the scene, no ent) joins its cell too, as a stand-in */
-function vpxLoose(){const L=[];for(const o of scene.children){if(!o.isMesh||o.isInstancedMesh||o.userData.batch||o.userData.faceMesh||o.userData.vpxNode||o.userData.ent||o.layers.mask!==1)continue;
+function vpxLoose(){const L=[];for(const o of scene.children){if(!o.isMesh||o.isInstancedMesh||o.userData.noProxy||o.userData.batch||o.userData.faceMesh||o.userData.vpxNode||o.userData.ent||o.layers.mask!==1)continue;
     const g=o.geometry;if(!g||!g.attributes.position)continue;if(!g.boundingSphere)g.computeBoundingSphere();o.updateMatrixWorld(true);if(o.userData.villaMortar)continue;const sc=o.getWorldScale(V3());const big=g.boundingSphere.radius*Math.max(sc.x,sc.y,sc.z)>1.5;
     let P=o.userData.vpxP;if(!P){P={id:1e9+o.id,label:'(scenery)',mesh:o,loose:true,alive:true};o.userData.vpxP=P;}P.big=big;L.push(P);}VPX.loose=L;VPX.looseT=now;}
 function vpxCentre(e){if(e.loose){const g=e.mesh.geometry;return g.boundingSphere.center.clone().applyMatrix4(e.mesh.matrixWorld);}const m=e.mesh.matrixWorld.elements;return V3(m[12],m[13],m[14]);}
