@@ -1,25 +1,31 @@
-# BEDSIT — handover brief (26 Oct 2026, v8.0: moved in, and the optimisation pass)
+# BEDSIT — handover brief (26 Oct 2026, v8.1: Jake's fix list; v9 plan waiting on his decisions)
 
 Read this first, then `src/`. The vault repo (`blacklanternpro/vault`, branch `bedsit-sandbox`, public) holds the minified build at the root and the full source + tests + this brief in `source/`.
 
-## START HERE — where things stand (v8.0, 26 Oct 2026)
+## START HERE — where things stand (v8.1, 26 Oct 2026)
 
-**Everything planned is shipped.** The v6 villa plan (WS0–WS8) is done: 4/23 Banksia Court is the default level, `?bedsit` is the old flat, and v8.0's optimisation pass put every view under 300 draw calls (worst 266; see the v8.0 section). There is no open job: **ask Jake what's next.**
+**v8.1 shipped** (Jake's fix list, see the v8.1 section): gas pockets so the stove goes up from the igniter / a saw spark / a flame / the bottle torch, real sparks off steel, light cords on 14 appliances that stretch then pop or snap, the pantry moved to the east end of the back run, every cupboard door opens and every drawer slides, the boxing bag is solid, the bar fridge is a real fridge.
 
-**Live:** https://bedsit-sandbox.vercel.app (shell pinned to vault `e3feb2f`) · artifact https://claude.ai/artifact/DytGBQdZUodMQxNiateJqt (Version 22) · project doc `claude/bedsit-status.md` in the claude.ai project "Apartment game demo" (keep it current after each release).
+**Next: the v9 plan** (Claude Docs doc: https://claude.ai/artifact/LGjvPAgbX65UcSh8i9ioTg). WS1 darts mini-game, WS2 the .357 revolver in a gun safe in the master bedroom (realism, waits on Jake's FAL GLB), WS3 the liminal night outside. **Nine decisions are waiting on Jake** at the end of the doc; build nothing until he answers. Order: darts → outside → revolver.
 
-**Waiting on Jake:**
-- Real fps on v8.0: his work Optiplex 7020 was 47 fps in the kitchen on standard (v7.0), 60 on performance; and his RTX 4060 number (never measured yet). Swiftshader can't measure fps, only calls/tris/bodies.
-- TV sound notes (asked for earlier, never came).
-- Whether phones are OK now they boot the house (untested on a real phone).
+**Live:** https://bedsit-sandbox.vercel.app (shell pinned to the vault release commit, see `src/shell/vercel-shell.html`) · artifact https://claude.ai/artifact/DytGBQdZUodMQxNiateJqt · project doc `claude/bedsit-status.md` in the claude.ai project "Apartment game demo" (keep it current after each release).
 
-**Offered, not built (Jake to pick):**
-1. Texture atlas per proxy cell: labels, posters, magnets and notices still draw one call each (my pick only if the fps numbers say draws still matter).
-2. Stepping between ceiling joists in the roof space puts your foot through the ceiling (my pick if perf is fine).
-3. The outside's liminal feel (yard/street at night).
-4. TV power cord segments never sleep (CPU, small).
+**Jake's numbers:** work Optiplex 7020 on v8.0: 40–50 fps standard, 60 on performance (60 = his monitor's refresh; the loop is plain requestAnimationFrame, no cap). Still no RTX 4060 number. Jake ruled out the roof-joist foot-through ("too easy to cause destruction").
 
-**How a release goes:** build + test in `/tmp/build2` → `bash release.sh "<title>" "<body>"` (minifies, pushes the vault, waits for jsDelivr, pins `shell/vercel-shell.html`) → Vercel deploy of that shell (see Deploy pipeline) → curl the live page and diff against the shell → publish the artifact from `/home/claude/bedsit/index.html` → send `index_1.html` → update `HANDOVER.md` + the project doc → tell Jake (short, dry, a "my pick" for next). Pushing needs push access: `add_repo` (owner `blacklanternpro`, repo `vault`, access `push`), clone, then `register_repo_root`.
+**Parked from v8.0's list:** texture atlas per proxy cell (only if fps says draws matter; Jake's numbers say there's headroom); the TV/PC still use the old physical cords, whose segments never sleep (move them to `LC` one day).
+
+**Still waiting on Jake:** TV sound notes; phones booting the house (untested on a real phone); the revolver GLB (brief in the v9 doc, WS2).
+
+**How a release goes:** build + test in `/tmp/build2` (`./runall.sh` → `runall.log`) → `bash release.sh "<title>" "<body>"` (minifies, pushes the vault incl. `source/HANDOVER.md` edited in place, waits for jsDelivr, pins `shell/vercel-shell.html`) → Vercel deploy of that shell (see Deploy pipeline) → curl the live page and diff against the shell → publish the artifact from `/home/claude/bedsit/index.html` → send `index_1.html` → update the project doc → tell Jake (short, dry, a "my pick" for next). Pushing needs push access: `add_repo` (owner `blacklanternpro`, repo `vault`, access `push`), clone, then `register_repo_root`. **Edit `release.sh`'s `Claude-Session` line to the new session first.**
+
+## v8.1: Jake's fix list (p9x + edits in p9k, p7, p6, p5b, p9r, p9z)
+- **Gas pockets (p9k `VG.pk`):** a leak builds a rich cloud round itself (`vgPocket(key,p,m³)`: the cooktop while a burner is on unlit, every `VG.sources` pipe leak, a venting bottle), decaying over ~25 s indoors / 4 s outside. `vGasSpark` checks pockets before the room LEL: a spark or flame within `vgPkR(k)` (0.5 + 1.9·√m³, max 3.2 m) of a pocket ≥ 0.05 m³ runs `vgWhump`: E = m³/0.6 + room gas/8 → WHOOF (<0.35), WHUMP (scorch, flash, small push, eyebrows), or above 1.4 a real blast (chunks off within 0.8·R0). A room already over 0.6·LEL escalates to `vgExplode`. Burners light from a lit neighbour after 0.3 s (crossover). Continuous ignition now also includes the bottle torch (`VG.bottle.jetP`), the lit barbecue and the living-room heater (all were missing). Numbers: one burner unlit for 6 s = 0.085 m³ (WHOOF on the igniter); four burners for 20 s ≈ 0.9 m³ (wall sheets come off). The saw on metal calls `onSpark` ~3×/s.
+- **Sparks (p9x `SPK`):** additive `LineSegments` streaks (480, white-yellow → orange → red, bounce twice off `pFloorY`) + an additive point glow; the cut lights via `VL.flare` (never toggled; restored to its colour/0 after). `sawSpray(p,dir,'metal'|'masonry'|'tile',dt)` replaces the old `sparks()` calls in `sawUpdate`: steel/copper/screws/gas bottle = shower, brick/concrete = grit + dust + the odd dull spark, tile = chips. Hidden when nothing is alive (0 draws idle).
+- **Light cords (p9x `LC`):** `lcAdd(owner,{h,label,isOn,off,len,anchorY})` finds the wall face behind the thing (`lcFaceFor`), reuses a power point within 0.6 m or adds a `veGPO`, and runs a verlet rope (no bodies; ~8–26 points, support from downward raycasts every 0.1 s while awake, sleeps when nothing moves). All cords are ONE `InstancedMesh` in `hitRoot` (`userData.lcords`) + one plug `InstancedMesh`. `castRay(d,{lcord:true})` sees them (saw, hands, E prompt only; hammer/kick/bar pass through) → hit kind `'lcord'` with `hit.lc`, `hit.seg`, `ent:lc.pseudo` (use = unplug / plug back in within reach). Carried (`handsUpdate` → `lcCarryClamp`): past 0.92·len the cord bleeds off your outward speed and strain builds (bar "CORD TAUT"); at strain 1 or 1.2·len → `lcPop` (plug out; live + running = spark + `onSpark`) or `lcSnap` (~22–47%: flex torn at the strain relief; live = arc + RCD). Thrown/blasted past 1.12·len → same. Owner `use` is wrapped: unplugged = "[NOT PLUGGED IN]"; `off()` runs every frame while not OK. Fitted in `villa81()`: toaster, kettle, microwave, fridge (`fridgePowered` wrapped), washer, dryer, 5 lamps, clock radio, amp, bar fridge (14). Physical TV/PC cords: `cordStretch(C)` in `updateCords` (same taut → pop/snap rule, uses `held.gap`).
+- **Kitchen:** pantry at plan x 5.4 (`VK_PZ`), doors now swing OUT (they opened into the shelves) with handles; blind corner cabinet at 2.5; back benchtop 2.2–5.1; overhead 2 is 0.34 m at 4.925 (mugs), plates moved to overhead 1; the oven benchtop starts at plan z 0.62. `v81Kin()` turns every `cabinet door`/`cupboard door` with a hinge joint into a `kinDoor` (open sign picked by which way swings away from the carcass, `limitHinge` set) and every `drawer` into a `vSlide` (0.38 m).
+- **Boxing bag:** the player body has a second sphere (r 0.24, +0.86 m) with shape group 2 / mask 64 that only meets shapes in group 64; the bag's shapes are `1|64`. (The player was one sphere at the feet, so anything hanging above ~0.7 m was walk-through.) Use the same trick for any future hanging thing.
+- **Bar fridge (p9x `vBeerFridge`):** hollow carcass with liner, wire shelf, compressor + grille, interior light (emissive, on with door open + power + cord), hinged `kinDoor` door with gasket/shelf/handle/SWILL sticker, six real cans (`restsOn` the carcass). E: closed → opens; open → hands you a can (`pickUp`), "(cold)" only with power + cord. `VR6.beer.n` is a getter.
+- **Tests:** `harness_v81.mjs` (33 checks; uses `boot81.mjs`, a shared headless boot with a wide `G` export — use it for new harnesses), `runall.sh` (rewritten; it was missing from the vault), `pw_v81.py` (browser shots `v81_*.png`).
 
 ## The villa plan (v6, done; kept for reference)
 
@@ -142,7 +148,7 @@ git clone -b bedsit-sandbox https://github.com/blacklanternpro/vault /home/claud
 python3 build.py
 ```
 
-`build.py` concatenates `p1 p2 p3 p4 p5 p5b p8a p8b p8c p8d p8e p8h p8i p8j p8f p8g p9m p9v p9b p9s p9e p9k p9w p9l p9r p9z p9o p6 p7` into `all.mjs`. All of them share **one module scope**. It writes three outputs:
+`build.py` concatenates `p1 p2 p3 p4 p5 p5b p8a p8b p8c p8d p8e p8h p8i p8j p8f p8g p9m p9v p9b p9s p9e p9k p9w p9l p9r p9z p9o p9x p6 p7` into `all.mjs`. All of them share **one module scope**. It writes three outputs:
 
 | Output | What it is |
 | --- | --- |
@@ -205,6 +211,7 @@ python3 build.py
 | **p9l** | v6.9 WS5: `vLampToPool` (a lamp's PointLight becomes a `VL.fix` that follows the lamp), `vSofa`, `vArmchair`; living (TV transplanted to the east wall, VCR 12:00, velour three-seater = `LIVING.sofa` → `buildCouchSeat`, smoked-glass table, heater (ignition source), split system on A/C); office (desk + CRT + tower + EXECUTIONER and the nook transplanted; filing cabinet, printer) |
 | **p9r** | v6.9 WS6: master (queen bed over the trapdoor with `matShove`, bedside lamps to the pool, clock radio, dresser + mirror, **ceiling fan** `VR6.fan`: pull cord 0-3 on the lights circuit, hit it running and `vFanThrow` throws a blade), WIR, bed 2 (`buildBed` transplanted, guitar `vStrum` + amp, posters, the shirt), bed 3 (bike, ironing board, rattler, boxes), garage (bench + pegboard, shelving with paint tins → `vTinBurst` floor paint, beer fridge, roller motor button, mower, dartboard), yard (`villaYard`: pergola, outdoor setting, rotary clothesline, gnome, hose, bins, Gary's letters `VNOTES`, A/C outdoor unit, gas HWS pilot + relief valve). `updateWS6` |
 | **p9z** | v6.9 WS7: **`BOND`** ($1,840; `bondHit(key,$,once)`; `bondHooks` wraps `detachChunk`, `chipBrick`, `shatterEnt`, `breakJoint`, `vRipStrip`, `vCutStrip`, `cutWire`, `puncturePipe`, `vgExplode`, `vFanThrow`, `vgScorch`, `floorPuddle` — reassigning the function bindings, so late-bound callers pay; live 1.5 s after boot), HUD `#bond` + B list, **`VIBE`** (N = 2 AM: ceiling fixtures off, lamps on, `VIBE.k` scales the hemisphere fill), SWILL neon (pool fixture, flickers, glass), boxing bag (dynamic, `PointToPointConstraint` to a ceiling anchor), hall table + answering machine (`VMSG`, `vBurble`), `vDrop`/`vClut`/`vCan` clutter dropped onto whatever a downward raycast hits (`restsOn` it), night ambience (crickets, traffic, a dog) |
+| **p9x** | v8.1: `SPK` spark streaks + `sawSpray`, `LC` light cords (`lcAdd/lcPop/lcSnap/lcCut/lcToggle/lcCarryClamp/lcUpdate`), `v81Kin`, `vBeerFridge`/`vBeerUpdate`, `villa81()` (end of `buildVilla`), `updateV81` (end of `updateAppliances`). After p9o, before p6 |
 | **p9o** | v8.0 WS8: proxies (`VPX`: per-cell merged meshes, originals on layer 1, `vpxHooks`, `vpxCheck` every frame + `scene.onBeforeRender`, `vpxPass` once a second) and the wall-face edge merge (`VPXF`). Built after p9z, before p6. `updateWS8` runs first in `updateVilla` |
 | p6 | Input state, player physics, `updateCamera`, `castRay` |
 | p7 | Tools, `damageProp`, `crackScreen`, `bindInput` (seat routing: mousemove → `EX.look`, mousedown → `EX.trigger` / `EX.ads`, wheel → lean, R → `EX.reload`), `updateTools` (seat early-exit, E stands), main `loop` (`seatHold` instead of player physics while seated; `updateSeat` after `updateCamera`; viewmodel skipped while seated; `renderExecutioner()` after the main render), `window.__DEMO` exports (EX, SEAT, MON, EXA, sitDown, standUp, exStart, exGo, exFire, exReset, …) |
@@ -283,6 +290,7 @@ Run from `/tmp/build2`; they read `all.mjs`. Each harness runs in jsdom + node-c
 | `harness_rooms.mjs` | WS6: bed over the trapdoor + shove, bed 2 transplant, fan throw, radio, amp/guitar, beer, paint tin, mower, darts, clothesline, Gary's letters, HWS, bike, rattler, hose, roller button |
 | `harness_vibe.mjs` | WS7: bond deductions + list, 2 AM, neon, bag swing on its constraint, answering machine, clutter |
 | `pw_shell.py`, `pw_ws3.py`, `pw_ws6.py` | Browser shots `s_*.png`, `k_*.png`, `r_*.png` |
+| `harness_v81.mjs` | v8.1: pantry + cupboards + drawers, gas pockets (igniter whoof, saw spark, bottle torch, full LEL blast), saw sparks, toaster/kettle/microwave/PC cords, boxing bag, bar fridge |
 | `harness_vpx.mjs` | v8.0 WS8 proxies + face-edge merges (see the v8.0 section); `harness_vpxview.mjs <views>` is the headless per-view draw breakdown |
 | `pw_perf8.py`, `pw_vpxshots.py` | Browser draw counts per view (`off` = proxies off) and on/off shots `v8_*.png` + the `?bedsit` check |
 | `harness_ex.mjs` | Full EXECUTIONER flow. Its renderer mock adds `setRenderTarget/getRenderTarget/getClearColor/getClearAlpha/setClearColor`; its step adds `updateSeat` and `renderExecutioner` |
