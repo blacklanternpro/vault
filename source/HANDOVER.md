@@ -8,13 +8,13 @@ Read this first, then `src/`. The vault repo (`blacklanternpro/vault`, branch `b
 
 **Next: Jake's call.** Candidates: the parked texture atlas, moving the TV/PC cords to `LC`, a real-phone pass, whatever Jake finds playing v9.x.
 
-**Live:** https://bedsit-sandbox.vercel.app (v9.2, shell pinned to vault `2293e5b`; v9.3 is built, in the vault (`4a91e24`, shell pinned) and on the artifact, and its Vercel deploy waits on Jake's OK; each production deploy needs Jake's OK in the chat, the sandbox blocks it otherwise) · artifact https://claude.ai/artifact/DytGBQdZUodMQxNiateJqt · project doc `claude/bedsit-status.md` in the claude.ai project "Apartment game demo" (keep it current after each release).
+**Live:** https://bedsit-sandbox.vercel.app (v9.3, shell pinned to vault `4a91e24`, deployed 27 Oct with Jake's OK; each production deploy needs Jake's OK in the chat, the sandbox blocks it otherwise) · artifact https://claude.ai/artifact/DytGBQdZUodMQxNiateJqt · project doc `claude/bedsit-status.md` in the claude.ai project "Apartment game demo" (keep it current after each release).
 
 **Jake's numbers:** work Optiplex 7020 on v8.0: 40–50 fps standard, 60 on performance (60 = his monitor's refresh; the loop is plain requestAnimationFrame, no cap). Still no RTX 4060 number. Roof-joist foot-through: ruled out by Jake ("too easy to cause destruction").
 
 **Parked:** texture atlas per proxy cell (Jake's numbers say there's headroom); the TV/PC still use the old physical cords whose segments never sleep (move them to `LC` one day).
 
-**Still waiting on Jake:** TV sound notes; phones booting the house (untested on a real phone); his verdict on the revolver.
+**Still waiting on Jake:** his RTX 4060 laptop fps numbers (coming after his shift); TV sound notes; phones booting the house (untested on a real phone); his verdict on the revolver.
 
 **How a release goes:** build + test in `/tmp/build2` (`./runall.sh` → `runall.log`) → `bash release.sh "<title>" "<body>"` (minifies, pushes the vault incl. `source/HANDOVER.md` edited in place, waits for jsDelivr, pins `shell/vercel-shell.html`) → Vercel deploy of that shell (see Deploy pipeline) → curl the live page and `cmp` it against the shell → publish the artifact from `/home/claude/bedsit/index.html` → send `index_1.html` → update the project doc → tell Jake (short, dry, a "my pick" for next). Pushing needs push access: `add_repo` (owner `blacklanternpro`, repo `vault`, access `push`), clone, then `register_repo_root`. **Edit `release.sh`'s `Claude-Session` line to the new session first.**
 
