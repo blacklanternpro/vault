@@ -8,7 +8,7 @@ Read this first, then `src/`. The vault repo (`blacklanternpro/vault`, branch `b
 
 **Next: v9.3 the revolver (WS2 of the plan)**, waiting on Jake's FAL GLB (brief in the plan: real scale, barrel −Z, origin at the grip, named nodes frame/cylinder/crane/hammer/trigger/ejector rod/cylinder release/grips, plus a cartridge and a spent case, no brand marks). The safe, ballistics and hearing can start against a placeholder if he says so. Order he asked for: revolver last.
 
-**Live:** https://bedsit-sandbox.vercel.app (**still v8.1**: Jake OK'd the v8.1 production deploy, but the v9.2 one was blocked pending his OK again; `src/shell/vercel-shell.html` is pinned to `2293e5b` and ready to deploy as-is per Deploy pipeline step 5) · artifact https://claude.ai/artifact/DytGBQdZUodMQxNiateJqt · project doc `claude/bedsit-status.md` in the claude.ai project "Apartment game demo" (keep it current after each release).
+**Live:** https://bedsit-sandbox.vercel.app (v9.2, shell pinned to vault `2293e5b`; each production deploy needs Jake's OK in the chat, the sandbox blocks it otherwise) · artifact https://claude.ai/artifact/DytGBQdZUodMQxNiateJqt · project doc `claude/bedsit-status.md` in the claude.ai project "Apartment game demo" (keep it current after each release).
 
 **Jake's numbers:** work Optiplex 7020 on v8.0: 40–50 fps standard, 60 on performance (60 = his monitor's refresh; the loop is plain requestAnimationFrame, no cap). Still no RTX 4060 number. Roof-joist foot-through: ruled out by Jake ("too easy to cause destruction").
 
