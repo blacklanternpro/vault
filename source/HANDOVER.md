@@ -8,7 +8,7 @@ Read this first, then `src/`. The vault repo (`blacklanternpro/vault`, branch `b
 
 **Next: Jake's call.** Candidates: the parked texture atlas, moving the TV/PC cords to `LC`, a real-phone pass, whatever Jake finds playing v9.x.
 
-**Live:** https://bedsit-sandbox.vercel.app (v9.2, shell pinned to vault `2293e5b`; each production deploy needs Jake's OK in the chat, the sandbox blocks it otherwise) · artifact https://claude.ai/artifact/DytGBQdZUodMQxNiateJqt · project doc `claude/bedsit-status.md` in the claude.ai project "Apartment game demo" (keep it current after each release).
+**Live:** https://bedsit-sandbox.vercel.app (v9.2, shell pinned to vault `2293e5b`; v9.3 is built, in the vault (`4a91e24`, shell pinned) and on the artifact, and its Vercel deploy waits on Jake's OK; each production deploy needs Jake's OK in the chat, the sandbox blocks it otherwise) · artifact https://claude.ai/artifact/DytGBQdZUodMQxNiateJqt · project doc `claude/bedsit-status.md` in the claude.ai project "Apartment game demo" (keep it current after each release).
 
 **Jake's numbers:** work Optiplex 7020 on v8.0: 40–50 fps standard, 60 on performance (60 = his monitor's refresh; the loop is plain requestAnimationFrame, no cap). Still no RTX 4060 number. Roof-joist foot-through: ruled out by Jake ("too easy to cause destruction").
 
