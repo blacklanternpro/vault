@@ -9,7 +9,7 @@ const VW4={taps:[],bath:null,exhaust:[]};
 /* a wall frame: plan point on a wall face, interior normal; at(u,y,d) = along the wall, up, out from it */
 /* v6.9: d = 0 is the wall's finished face (it was the stud centreline: anything against a wall sat 6 cm inside it, and jammed the moment it woke) */
 function vFaceOff(px,pz,nx,nz){const o=Math.abs(nx)>0.5?'v':'h';const t=vWallAt(px,pz,o);if(!t)return 0;const r=vRoomAt(px+nx*0.3,pz+nz*0.3);const f=r&&vFaceOf(t.w,r.id);if(!f)return 0.065;const p=facePoint(f,vFaceU(f,t.u),1.0,0);const d=(p.x-vX(px))*nx+(p.z-vZ(pz))*nz;return d>-0.02&&d<0.3?d+0.004:0.065;}
-function vFr(px,pz,nx,nz,raw){if(!raw){const k=vFaceOff(px,pz,nx,nz);px+=nx*k;pz+=nz*k;}const o=V3(vX(px),0,vZ(pz)),n=V3(nx,0,nz),t=V3(nz,0,-nx);const q=new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(t,V3(0,1,0),n));return{o,n,t,q,at:(u,y,d)=>o.clone().addScaledVector(t,u).add(V3(0,y,0)).addScaledVector(n,d)};}
+function vFr(px,pz,nx,nz,raw){const k=raw?0:vFaceOff(px,pz,nx,nz);/* k is metres (the finished face off the wall line) */const o=V3(vX(px)+nx*k,0,vZ(pz)+nz*k),n=V3(nx,0,nz),t=V3(nz,0,-nx);const q=new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(t,V3(0,1,0),n));return{o,n,t,q,at:(u,y,d)=>o.clone().addScaledVector(t,u).add(V3(0,y,0)).addScaledVector(n,d)};}
 function vMirrorMat(){return M.mirror||new THREE.MeshStandardMaterial({color:0xcfd8de,roughness:0.05,metalness:0.95});}
 /* a tap that runs: stream from a spout point, gated by the water meter */
 function vRunTap(e,spoutLocal,o={}){const T={e,spout:spoutLocal,on:false,flow:o.flow||1,fills:o.fills||null,label:o.label||'TAP',dir:o.dir||V3(0,-1,0),spray:!!o.spray,hot:!!o.hot};VW4.taps.push(T);

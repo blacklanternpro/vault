@@ -53,16 +53,16 @@ function villaTrim(){const cove=[];for(const f of VW.faces){if(!f.room||f.room.i
 const VCARPET=['bed3','bed2','office','living','master','wir'];
 function texUnderlay(x,w,h){/* rebond: shredded foam offcuts glued into a slab, every colour at once */x.fillStyle='#8a8a72';x.fillRect(0,0,w,h);const cols=['#b0b050','#5a8a6a','#c27a5a','#d8c070','#7a6aa0','#9aa0a8','#5a7a9a','#c0a0a0'];for(let i=0;i<w*h/10;i++){x.fillStyle=cols[(srand()*cols.length)|0];const s=1+srand()*3;x.fillRect(srand()*w,srand()*h,s,s*(0.5+srand()));}}
 function villaCarpetCanvas(){/* called from villaFloor: copy the painted floor for the carpet, then paint bare slab, underlay and gripper under it */const src=floorDrawable.canvas;const c=mkCanvas(src.width,src.height);c.getContext('2d').drawImage(src,0,0);VF.carpet=mkDrawable(c);
-  const x=src.getContext('2d');const k=src.width/(VF.w*VF.px);const P=(px,pz)=>[(px+0.3)*VF.px*k,(VP.D+0.3-pz)*VF.px*k];
+  const x=src.getContext('2d');const k=src.width/(VF.w*VF.px);const P=(px,pz)=>[(pM(px)+0.3)*VF.px*k,(pM(VP.D-pz)+0.3)*VF.px*k];
   for(const id of VCARPET){const r=VROOM[id];const [a,b]=P(r.x0,r.z1),[c2,d]=P(r.x1,r.z0);const w=c2-a,h=d-b;x.save();x.translate(a,b);x.beginPath();x.rect(0,0,w,h);x.clip();texUnderlay(x,w,h);
     /* smooth-edge gripper 30 mm off every wall, pins up */const g=VF.px*k*0.03,gw=Math.max(2,VF.px*k*0.025);x.fillStyle='#5a4028';x.fillRect(g,g,w-2*g,gw);x.fillRect(g,h-g-gw,w-2*g,gw);x.fillRect(g,g,gw,h-2*g);x.fillRect(w-g-gw,g,gw,h-2*g);x.fillStyle='rgba(200,200,190,0.7)';for(let t=g;t<w-g;t+=4){x.fillRect(t,g+1,1,1);x.fillRect(t,h-g-gw+1,1,1);}for(let t=g;t<h-g;t+=4){x.fillRect(g+1,t,1,1);x.fillRect(w-g-gw+1,t,1,1);}
     for(let i=0;i<4;i++)stain(x,srand()*w,srand()*h,8+srand()*20,'40,30,20',0.25);x.restore();}
   floorDrawable.tex.needsUpdate=true;}
 function vStripRects(){/* strips about a metre wide, running the room's long way; the master's line up with the trapdoor panel */const out=[];
   for(const id of VCARPET){const r=VROOM[id];const W=r.x1-r.x0,D=r.z1-r.z0;
-    if(id==='master'){const t=VB.holes[1],cx=(t.x0+t.x1)/2,cz=(t.z0+t.z1)/2,h=0.65;const xa=cx-h,xb=cx+h,za=cz-h,zb=cz+h;out.push({room:id,x0:r.x0,x1:xa,z0:r.z0,z1:r.z1},{room:id,x0:xb,x1:r.x1,z0:r.z0,z1:r.z1},{room:id,x0:xa,x1:xb,z0:r.z0,z1:za},{room:id,x0:xa,x1:xb,z0:zb,z1:r.z1});continue;}
-    if(D>=W){const n=Math.max(1,Math.round(W/1.1));for(let i=0;i<n;i++)out.push({room:id,x0:r.x0+W*i/n,x1:r.x0+W*(i+1)/n,z0:r.z0,z1:r.z1});}
-    else{const n=Math.max(1,Math.round(D/1.1));for(let i=0;i<n;i++)out.push({room:id,x0:r.x0,x1:r.x1,z0:r.z0+D*i/n,z1:r.z0+D*(i+1)/n});}}
+    if(id==='master'){const t=VB.holes[1],cx=(t.x0+t.x1)/2,cz=(t.z0+t.z1)/2,h=0.65/PSC;const xa=cx-h,xb=cx+h,za=cz-h,zb=cz+h;out.push({room:id,x0:r.x0,x1:xa,z0:r.z0,z1:r.z1},{room:id,x0:xb,x1:r.x1,z0:r.z0,z1:r.z1},{room:id,x0:xa,x1:xb,z0:r.z0,z1:za},{room:id,x0:xa,x1:xb,z0:zb,z1:r.z1});continue;}
+    if(D>=W){const n=Math.max(1,Math.round(pM(W)/1.1));for(let i=0;i<n;i++)out.push({room:id,x0:r.x0+W*i/n,x1:r.x0+W*(i+1)/n,z0:r.z0,z1:r.z1});}
+    else{const n=Math.max(1,Math.round(pM(D)/1.1));for(let i=0;i<n;i++)out.push({room:id,x0:r.x0,x1:r.x1,z0:r.z0+D*i/n,z1:r.z0+D*(i+1)/n});}}
   return out;}
 function vStripGeo(x0,z0,x1,z1,th){/* a thin slab in world coords whose uvs are the floor's, so the strip shows the carpet canvas where it lies */const g=new THREE.BoxGeometry(x1-x0,th,z1-z0);const P=g.attributes.position,uv=g.attributes.uv;const cx=(x0+x1)/2,cz=(z0+z1)/2;
   for(let i=0;i<P.count;i++){const wx=P.getX(i)+cx,wz=P.getZ(i)+cz;uv.setXY(i,(wx-VF.x0)/VF.w,1-(VF.z1-wz)/VF.d);}return g;}
@@ -72,7 +72,7 @@ function vMakeStrip(r){const x0=vX(r.x0),x1=vX(r.x1),z0=vZ(r.z0),z1=vZ(r.z1);if(
   e.onSawn=(p)=>vCutStrip(e,p);e.onHit=(p,dmg)=>{S.thud(p,0.4);if(dmg>2)P.emit(p,{count:8,color:[0.5,0.42,0.33],size:0.01,life:0.8,spread:1,grav:4,kind:1});};VS.strips.push(e);return e;}
 function vCarpetAt(x,z){for(const e of VS.strips){if(!e.alive)continue;const s=e.strip;if(x>=s.x0w&&x<=s.x1w&&z>=s.z0w&&z<=s.z1w)return e;}return null;}
 function vCutStrip(e,p){if(!e.alive)return;const s=e.strip;const long=(s.x1w-s.x0w)>(s.z1w-s.z0w);removeEnt(e);S.tear(p);
-  if(long){const cx=clamp(p.x-VP.ox,s.x0+0.1,s.x1-0.1);vMakeStrip({...s,x1:cx});vMakeStrip({...s,x0:cx});}else{const cz=clamp(p.z-VP.oz,s.z0+0.1,s.z1-0.1);vMakeStrip({...s,z1:cz});vMakeStrip({...s,z0:cz});}
+  if(long){const cx=clamp(vPlanX(p.x),s.x0+0.1,s.x1-0.1);vMakeStrip({...s,x1:cx});vMakeStrip({...s,x0:cx});}else{const cz=clamp(vPlanZ(p.z),s.z0+0.1,s.z1-0.1);vMakeStrip({...s,z1:cz});vMakeStrip({...s,z0:cz});}
   flushBatchesNow();HUD.msg('[CARPET CUT · E TO PULL A PIECE UP]',1.2);}
 function flushBatchesNow(){const bl=BATCH_LIVE;BATCH_LIVE=false;flushBatches();BATCH_LIVE=bl;}
 function vRipStrip(e){if(!e.alive)return;const s=e.strip;const W=s.x1w-s.x0w,D=s.z1w-s.z0w;const alongX=W>D;const L=alongX?D:W,len=alongX?W:D;removeEnt(e);

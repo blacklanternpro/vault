@@ -33,8 +33,8 @@ const VP={ox:-8.8,oz:-4.9,W:17.6,D:9.8,
   open:[['kitchen','dining'],['kitchen','hall'],['entry','hall'],['bath','bathx']],
   /* an opening: the two sides it joins, where along that line (plan metres), width, kind, sill and head heights */
   ops:[
-    ['laundry','kitchen',2.0,0.82,'door'],['laundry','garage',1.1,0.82,'door'],['laundry','out',1.1,0.82,'door'],
-    ['kitchen','out',4.0,1.5,'window',1.0,2.1],['dining','out',7.5,2.4,'slider'],['dining','hall',7.5,2.0,'arch'],
+    ['laundry','kitchen',1.63,0.82,'door'],['laundry','garage',1.1,0.82,'door'],['laundry','out',1.1,0.82,'door'],
+    ['kitchen','out',3.55,1.125,'window',1.0,2.1],['dining','out',7.5,2.4,'slider'],['dining','hall',7.5,2.0,'arch'],
     ['wc','hall',9.8,0.72,'door'],['bathx','hall',11.0,0.72,'door'],['bath','out',10.4,0.9,'window',1.4,2.1],
     ['bed3','hall',12.2,0.82,'door'],['bed3','out',13.4,1.5,'window',0.9,2.1],['bed2','hall',15.2,0.82,'door'],['bed2','out',16.4,1.5,'window',0.9,2.1],
     ['garage','out',1.6,2.6,'roller'],['entry','out',3.8,0.82,'front'],
@@ -45,9 +45,12 @@ const VP={ox:-8.8,oz:-4.9,W:17.6,D:9.8,
   /* ceiling manholes: x = roughly where (snapped to the joist bay), z0 = the hole's north edge; rows of ceiling sheet already break at 4.9 */
   manholes:[{id:'hall',x:10.05,z0:4.3,room:'hall'},{id:'garage',x:2.25,z0:4.9,room:'garage'}],
   spawn:[3.8,9.0]};
-const vX=x=>x+VP.ox,vZ=z=>z+VP.oz;
+/* v9.4: plan units → metres. The plan stays in its old numbers; the house is built 4/3 bigger (rooms, halls, doorways, the street's plots).
+   Furniture and fittings keep their real sizes in metres: only where things sit scales. pM() is a plan length in metres. */
+const PSC=4/3;const vX=x=>x*PSC+VP.ox,vZ=z=>z*PSC+VP.oz,pM=d=>d*PSC;
 function vRoomAt(px,pz){for(const r of VP.rooms)if(px>r.x0-1e-6&&px<r.x1+1e-6&&pz>r.z0-1e-6&&pz<r.z1+1e-6)return r;return null;}
-function vRoomAtWorld(x,z){return vRoomAt(x-VP.ox,z-VP.oz);}
+function vRoomAtWorld(x,z){return vRoomAt((x-VP.ox)/PSC,(z-VP.oz)/PSC);}
+function vPlanX(x){return(x-VP.ox)/PSC;}function vPlanZ(z){return(z-VP.oz)/PSC;}
 const VROOM={};for(const r of VP.rooms)VROOM[r.id]=r;
 const VW={walls:[],ext:[],faces:[],ceiling:null,woken:0,floor:null,roomAt:vRoomAtWorld};
 
@@ -61,7 +64,7 @@ function villaSegments(){const lines=new Map();const add=(k,a,b)=>{if(!lines.has
       const wall=a!==b&&!(a==='out'&&b==='out')&&!isOpen(a,b);if(wall&&cur&&cur.a===a&&cur.b===b&&Math.abs(cur.t1-pts[i])<1e-6)cur.t1=pts[i+1];else{if(cur)segs.push(cur);cur=wall?{o,c,t0:pts[i],t1:pts[i+1],a,b}:null;}}
     if(cur)segs.push(cur);}
   return segs;}
-const VT=0.11;
+const VT=0.11/PSC;/* wall thickness in plan units (0.11 m) */
 function vRect(s){return s.o==='h'?{x0:s.t0,x1:s.t1,z0:s.c,z1:s.c+VT}:{x0:s.c,x1:s.c+VT,z0:s.t0,z1:s.t1};}
 function vOverlap(a,b,e=1e-6){return a.x0<b.x1-e&&b.x0<a.x1-e&&a.z0<b.z1-e&&b.z0<a.z1-e;}
 function vFreeEnds(list,set){/* wall ends that butt into nothing: no wall beyond them and not on the outside line */const out=[];const ext=(x,z)=>x<=1e-6||x>=VP.W-1e-6||z<=1e-6||z>=VP.D-1e-6;
@@ -75,7 +78,7 @@ function vTrimWalls(segs){const ints=segs.filter(s=>s.kind==='int');const span=(
     cutBy(cut,cut===s?q:s);changed=true;}}
   VW.freeEnds=vFreeEnds(ints,ints);}
 function villaEndCaps(){/* a wall that stops at an open doorway is wrapped in plasterboard, not left open to the cavity */const caps=[];const q=new THREE.Quaternion();
-  for(const [s,end] of VW.freeEnds){const t=end?s.t1:s.t0,o=end?0.005:-0.005;if(s.o==='h')caps.push([0.01,PH,VT+0.006,V3(vX(t+o),PH/2,vZ(s.c+VT/2)),q]);else caps.push([VT+0.006,PH,0.01,V3(vX(s.c+VT/2),PH/2,vZ(t+o)),q]);}
+  for(const [s,end] of VW.freeEnds){const t=end?s.t1:s.t0,o=end?0.005:-0.005;if(s.o==='h')caps.push([0.01,PH,pM(VT)+0.006,V3(vX(t)+o,PH/2,vZ(s.c+VT/2)),q]);else caps.push([pM(VT)+0.006,PH,0.01,V3(vX(s.c+VT/2),PH/2,vZ(t)+o),q]);}
   if(caps.length)VOPEN.caps=vMerge(caps,M.trim);}
 function villaWalls(){const segs=villaSegments();let n=0;
   for(const s of segs){s.kind=(s.a==='out'||s.b==='out')?'ext':'int';s.front=s.kind==='ext'?(s.a==='out'?'b':'a'):'a';}
@@ -88,11 +91,11 @@ function villaWalls(){const segs=villaSegments();let n=0;
     const w=mkWall('V'+(n++),vX(ax),vZ(az),vX(bx),vZ(bz),s.kind);w.villa=true;w.dormant=true;w.seg=s;w.rooms={front:s.front==='a'?s.a:s.b,back:s.front==='a'?s.b:s.a};VW.walls.push(w);if(s.kind==='ext')VW.ext.push(w);}
   /* openings: on the wall between the two named sides, at that point along the line */
   for(const [p,q,at,wd,kind,v0,v1] of VP.ops){const w=VW.walls.find(w=>{const r=w.rooms;return((r.front===p&&r.back===q)||(r.front===q&&r.back===p))&&w.seg.t0-1e-6<=at-wd/2&&w.seg.t1+1e-6>=at+wd/2;});
-    if(!w){console.warn('villa: no wall for opening',p,q,at);continue;}const s=w.seg;const dirPos=(s.o==='h'?w.b.x>w.a.x:w.b.z>w.a.z);const t0=s.o==='h'?w.a.x-VP.ox:w.a.z-VP.oz;const u=dirPos?at-t0:t0-at;
-    const lo=kind==='window'?v0:0,hi=kind==='window'?v1:(kind==='arch'||kind==='slider'||kind==='roller'?2.1:2.06);w.openings.push({u0:u-wd/2,u1:u+wd/2,v0:lo,v1:hi,kind,label:kind==='front'?'front door':kind});}}
+    if(!w){console.warn('villa: no wall for opening',p,q,at);continue;}const s=w.seg;const dirPos=(s.o==='h'?w.b.x>w.a.x:w.b.z>w.a.z);const t0=s.o==='h'?w.a.x-VP.ox:w.a.z-VP.oz;const u=dirPos?pM(at)-t0:t0-pM(at);const wm=pM(wd);
+    /* v9.4: 3 m ceilings: doors 2.3 high, arches/sliders/the roller 2.4, window heads up 0.3 */const lo=kind==='window'?v0:0,hi=kind==='window'?v1+0.3:(kind==='arch'||kind==='slider'||kind==='roller'?2.4:2.3);w.openings.push({u0:u-wm/2,u1:u+wm/2,v0:lo,v1:hi,kind,label:kind==='front'?'front door':kind});}}
 
 /* ---------- textures: painted once from shared tiles, at half the bedsit's resolution */
-const VTEX={};const VPXM=128;
+const VTEX={};const VPXM=110;/* v9.4: 3 m walls, 4/3 longer: keep the paint canvases near their old total */
 function vBase(kind){if(VTEX[kind])return VTEX[kind];const S=256,c=mkCanvas(S,S),x=c.getContext('2d');
   if(kind==='plaster'){x.fillStyle='#e2dccb';x.fillRect(0,0,S,S);speckle(x,S,S,2200,[226,220,203],18,0.45);noiseOverlay(x,S,S,14,4);}
   else if(kind==='tile'){x.fillStyle='#b9b6ae';x.fillRect(0,0,S,S);for(let ty=0;ty<S;ty+=32)for(let tx=0;tx<S;tx+=32){const l=90+srand()*4;x.fillStyle=`hsl(45,10%,${l}%)`;x.fillRect(tx+1.5,ty+1.5,29,29);}speckle(x,S,S,300,[240,238,232],10,0.3,1);}
@@ -146,8 +149,8 @@ function villaWake(w){if(!w||!w.dormant)return;w.dormant=false;VW.woken++;const 
 
 /* ---------- floor: one slab, one painted floor for the whole house (dust, puddles and scorch marks land on it) */
 const VF={x0:0,z1:0,w:0,d:0,px:48};
-function villaFloor(){VF.x0=vX(-0.3);VF.z1=vZ(VP.D+0.3);VF.w=VP.W+0.6;VF.d=VP.D+0.6;const W=Math.round(VF.w*VF.px),H=Math.round(VF.d*VF.px);const c=mkCanvas(W,H),x=c.getContext('2d');x.fillStyle='#6f6a62';x.fillRect(0,0,W,H);
-  const P=(px,pz)=>[(px+0.3)*VF.px,(VP.D+0.3-pz)*VF.px];
+function villaFloor(){VF.x0=vX(0)-0.3;VF.z1=vZ(VP.D)+0.3;VF.w=pM(VP.W)+0.6;VF.d=pM(VP.D)+0.6;const W=Math.round(VF.w*VF.px),H=Math.round(VF.d*VF.px);const c=mkCanvas(W,H),x=c.getContext('2d');x.fillStyle='#6f6a62';x.fillRect(0,0,W,H);
+  const P=(px,pz)=>[(pM(px)+0.3)*VF.px,(pM(VP.D-pz)+0.3)*VF.px];
   for(const r of VP.rooms){const [a,b]=P(r.x0,r.z1),[c2,d]=P(r.x1,r.z0);const w=c2-a,h=d-b;x.save();x.translate(a,b);x.beginPath();x.rect(0,0,w,h);x.clip();const s=0.3*VF.px;
     if(r.floor==='carpet'){x.fillStyle=r.id==='master'||r.id==='wir'?'#7c6a58':'#8a7258';x.fillRect(0,0,w,h);speckle(x,w,h,w*h/3,[138,114,88],28,0.55,1.5);}
     else if(r.floor==='vinyl'){x.fillStyle='#cfc4a8';x.fillRect(0,0,w,h);for(let yy=0;yy<h;yy+=s)for(let xx=0;xx<w;xx+=s){x.fillStyle=((Math.round(xx/s)+Math.round(yy/s))%2)?'#c3b694':'#d8ceb4';x.fillRect(xx,yy,s-1,s-1);}speckle(x,w,h,w*h/12,[200,190,165],20,0.3,1);}
@@ -162,13 +165,13 @@ function villaFloor(){VF.x0=vX(-0.3);VF.z1=vZ(VP.D+0.3);VF.w=VP.W+0.6;VF.d=VP.D+
   const body=vbFloorBody(fx0,fz0,fx1,fz1,-0.3,0);VW.floor=mkEnt({mesh:m,body,kind:'slab',mat:'concrete',mass:0,hp:9999,wakeThreshold:1e9,label:'floor',noBatch:true,drawable:d});villaCarpetCanvas();}
 
 /* ---------- ceiling: one sheet over the whole house on joists at 600 centres */
-function villaCeiling(){const X1=vX(VP.W),Z0=vZ(0);const w={name:'VC',kind:'ceiling',L:VP.W,H:VP.D,origin:V3(X1,PH,Z0),right:V3(-1,0,0),up:V3(0,0,1),normal:V3(0,-1,0),depthZ:V3(0,1,0),studs:[],noggins:[],plates:[],openings:[],wires:[],faces:[],thick:0.1,frameDepth:0.055,a:V3(X1,0,Z0),b:V3(vX(0),0,Z0),dir:V3(-1,0,0),n:V3(0,-1,0),villa:true,dormant:true,endOK:()=>true};
+function villaCeiling(){const X1=vX(VP.W),Z0=vZ(0);const w={name:'VC',kind:'ceiling',L:pM(VP.W),H:pM(VP.D),origin:V3(X1,PH,Z0),right:V3(-1,0,0),up:V3(0,0,1),normal:V3(0,-1,0),depthZ:V3(0,1,0),studs:[],noggins:[],plates:[],openings:[],wires:[],faces:[],thick:0.1,frameDepth:0.055,a:V3(X1,0,Z0),b:V3(vX(0),0,Z0),dir:V3(-1,0,0),n:V3(0,-1,0),villa:true,dormant:true,endOK:()=>true};
   w.q=new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(w.right,w.up,w.depthZ));WALLS.push(w);VW.ceiling=w;
   const us=[];for(let u=0.045;u<=w.L-0.045+1e-6;u+=0.6)us.push(+u.toFixed(3));if(w.L-0.045-us[us.length-1]>0.2)us.push(+(w.L-0.045).toFixed(3));w.studU=us;
-  const bear=[...new Set(VP.rooms.flatMap(r=>[r.z0,r.z1]))].filter(z=>z>0.05&&z<VP.D-0.05);
+  const bear=[...new Set(VP.rooms.flatMap(r=>[r.z0,r.z1]))].filter(z=>z>0.05&&z<VP.D-0.05).map(pM);
   for(const u of us){const j=timberEnt(w,'v',-0.1,w.H+0.1,u,0.055,{anchors:[-0.1,w.H+0.1,...bear],label:'ceiling joist',joist:true});w.studs.push(j);}
   /* manholes: 600 square, between two joists (hole edges on the joist centrelines so no sheet joint lands in a sliver), trimmers either end */
-  for(const m of VP.manholes){const k=Math.round((VP.W-m.x-0.345)/0.6);const u0=us[k],u1=us[k+1];m.u0=u0;m.u1=u1;m.v0=m.z0;m.v1=m.z0+0.6;w.openings.push({u0,u1,v0:m.v0,v1:m.v1,kind:'manhole'});
+  for(const m of VP.manholes){const k=Math.round((pM(VP.W-m.x)-0.345)/0.6);const u0=us[k],u1=us[k+1];m.u0=u0;m.u1=u1;m.v0=pM(m.z0);m.v1=m.v0+0.6;w.openings.push({u0,u1,v0:m.v0,v1:m.v1,kind:'manhole'});
     for(const vc of[m.v0-0.0225,m.v1+0.0225]){const t=timberEnt(w,'u',u0+0.0225,u1-0.0225,vc,0.055,{noggin:true,label:'trimmer',studU:[u0,u1]});w.noggins.push(t);}}
   const f=mkFace(w,1,'paper',(()=>{const c=mkCanvas(Math.round(w.L*72),Math.round(w.H*72)),x=c.getContext('2d');const b=vBase('plaster');for(let yy=0;yy<c.height;yy+=256)for(let xx=0;xx<c.width;xx+=256)x.drawImage(b,xx,yy);for(let i=0;i<30;i++)stain(x,srand()*c.width,srand()*c.height,20+srand()*60,'120,100,60',0.06+srand()*0.08);return mkDrawable(c);})());
   const cols=[0,...us.filter(u=>u>0.3&&u<w.L-0.3),w.L];const nr=Math.round(w.H/1.2),rows=[];for(let i=0;i<=nr;i++)rows.push(+(w.H*i/nr).toFixed(3));for(const m of VP.manholes)rows.push(m.v0,m.v1);buildSheet(f,uniqSorted(cols,0.04),uniqSorted(rows,0.04));}
@@ -205,10 +208,10 @@ function villaOpenings(){const jamb=[],frame=[],bronze=new THREE.MeshStandardMat
 function texGrass(){const c=mkCanvas(256,256),x=c.getContext('2d');x.fillStyle='#3f4a2a';x.fillRect(0,0,256,256);speckle(x,256,256,9000,[70,84,44],40,0.6,2);for(let i=0;i<14;i++)stain(x,srand()*256,srand()*256,10+srand()*40,'110,96,60',0.3);return c;}
 function villaOutside(){/* the lawn has a hole where the house sits (v6.2: you can look down through the floor now) */const lsh=new THREE.Shape();lsh.moveTo(-30,-30);lsh.lineTo(30,-30);lsh.lineTo(30,30);lsh.lineTo(-30,30);lsh.closePath();{const hp=new THREE.Path(),a=vX(0)-0.1,b=vX(VP.W)+0.1,c=-(vZ(0)-0.1),d=-(vZ(VP.D)+0.1);hp.moveTo(a,c);hp.lineTo(a,d);hp.lineTo(b,d);hp.lineTo(b,c);hp.closePath();lsh.holes.push(hp);}
   const g=new THREE.ShapeGeometry(lsh);g.rotateX(-Math.PI/2);{const P=g.attributes.position,uv=g.attributes.uv;for(let i=0;i<P.count;i++)uv.setXY(i,P.getX(i)/3,P.getZ(i)/3);}const gm=new THREE.MeshStandardMaterial({map:mkTex(texGrass(),1,1),roughness:1});const lawn=new THREE.Mesh(g,gm);lawn.position.y=-0.15;lawn.receiveShadow=true;scene.add(lawn);/* the yard's ground: four slabs round the house, so the basement under the house has room */{const hx0=vX(0)-0.3,hx1=vX(VP.W)+0.3,hz0=vZ(0)-0.3,hz1=vZ(VP.D)+0.3,E=30;const box=(x0,x1,z0,z1)=>registerBody(boxBody((x1-x0)/2,0.25,(z1-z0)/2,V3((x0+x1)/2,-0.4,(z0+z1)/2)));box(-E,E,-E,hz0);box(-E,E,hz1,E);box(-E,hx0,hz0,hz1);box(hx1,E,hz0,hz1);}
-  const pave=[],X=vX,Z=vZ;pave.push([3.2,0.12,4.6,V3(X(1.6),-0.09,Z(VP.D)+2.3),new THREE.Quaternion()]);pave.push([1.8,0.12,1.4,V3(X(3.8),-0.07,Z(VP.D)+0.7),new THREE.Quaternion()]);pave.push([7.0,0.1,3.2,V3(X(5.7),-0.08,Z(0)-1.6),new THREE.Quaternion()]);pave.push([1.0,0.1,6.0,V3(X(3.8),-0.09,Z(VP.D)+3.6),new THREE.Quaternion()]);
+  const pave=[],X=vX,Z=vZ,k=PSC;pave.push([3.2*k,0.12,4.6*k,V3(X(1.6),-0.09,Z(VP.D)+2.3*k),new THREE.Quaternion()]);pave.push([1.8*k,0.12,1.4*k,V3(X(3.8),-0.07,Z(VP.D)+0.7*k),new THREE.Quaternion()]);pave.push([7.0*k,0.1,3.2*k,V3(X(5.7),-0.08,Z(0)-1.6*k),new THREE.Quaternion()]);pave.push([1.0*k,0.1,6.0*k,V3(X(3.8),-0.09,Z(VP.D)+3.6*k),new THREE.Quaternion()]);
   vMerge(pave,M.cement);for(const [w,h,d,p] of pave){registerBody(boxBody(w/2,h/2,d/2,p));}
   /* sheet-metal fence: back and sides, a low brick front fence */const fm=new THREE.MeshStandardMaterial({color:0x6e746a,roughness:0.6,metalness:0.4});const fx0=X(-3),fx1=X(VP.W+3),fz0=Z(-7),fz1=Z(VP.D+5);const fence=[[fx1-fx0,1.8,0.04,V3((fx0+fx1)/2,0.75,fz0)],[0.04,1.8,fz1-fz0,V3(fx0,0.75,(fz0+fz1)/2)],[0.04,1.8,fz1-fz0,V3(fx1,0.75,(fz0+fz1)/2)]].map(a=>[...a,new THREE.Quaternion()]);vMerge(fence,fm);for(const [w,h,d,p] of fence)registerBody(boxBody(w/2+0.02,h/2,d/2+0.02,p));
-  const front=[[fx1-fx0-6.2,0.7,0.23,V3((fx0+fx1)/2+3.1,0.2,fz1)]].map(a=>[...a,new THREE.Quaternion()]);vMerge(front,M.brick);for(const [w,h,d,p] of front)registerBody(boxBody(w/2,h/2,d/2,p));
+  const front=[[fx1-fx0-6.2*PSC,0.7,0.23,V3((fx0+fx1)/2+3.1*PSC,0.2,fz1)]].map(a=>[...a,new THREE.Quaternion()]);vMerge(front,M.brick);for(const [w,h,d,p] of front)registerBody(boxBody(w/2,h/2,d/2,p));
   /* the letterbox, stuffed */const lb=vMerge([[0.3,0.36,0.4,V3(X(5.2),0.75,fz1),new THREE.Quaternion()],[0.08,0.6,0.08,V3(X(5.2),0.3,fz1),new THREE.Quaternion()]],M.brick);
   /* streetlight */const pole=new THREE.Mesh(new THREE.CylinderGeometry(0.06,0.09,6,8),M.darkMetal);pole.position.set(X(8),2.85,fz1+3);scene.add(pole);const head=new THREE.Mesh(new THREE.BoxGeometry(0.5,0.12,0.25),new THREE.MeshStandardMaterial({color:0x222222,emissive:0xffb86a,emissiveIntensity:2.5}));head.position.set(X(8),5.8,fz1+2.7);scene.add(head);
   const sl=new THREE.PointLight(0xffb070,14,22,1.4);sl.position.set(X(8),5.6,fz1+2.6);scene.add(sl);VL.street=sl;VL.streetHead=head;}
@@ -243,7 +246,7 @@ function villaRoofUnder(roofGeo){/* the tiles from inside: undersides, battens, 
 /* ---------- manholes: hinged covers you open with E or smash out, and a way up */
 const VMH=[];
 function villaManholes(){const ring=[];const q0=new THREE.Quaternion();const paint=new THREE.MeshStandardMaterial({color:0xe2dccb,roughness:0.95});const mats=paint;
-  for(const m of VP.manholes){const x0=vX(VP.W-m.u1),x1=vX(VP.W-m.u0),z0=vZ(m.v0),z1=vZ(m.v1);const cx=(x0+x1)/2,cz=(z0+z1)/2,W=x1-x0,D=z1-z0,t=0.06,y=PH-0.009;
+  for(const m of VP.manholes){const x0=vX(VP.W)-m.u1,x1=vX(VP.W)-m.u0,z0=vZ(0)+m.v0,z1=vZ(0)+m.v1;const cx=(x0+x1)/2,cz=(z0+z1)/2,W=x1-x0,D=z1-z0,t=0.06,y=PH-0.009;
     /* the trim ring: 60 mm moulding around the hole with a 20 mm lip the cover rests on */ring.push([W+2*t-0.04,0.024,t,V3(cx,y,z0-t/2+0.02),q0],[W+2*t-0.04,0.024,t,V3(cx,y,z1+t/2-0.02),q0],[t,0.024,D-0.04,V3(x0-t/2+0.02,y,cz),q0],[t,0.024,D-0.04,V3(x1+t/2-0.02,y,cz),q0]);
     const mesh=new THREE.Mesh(new THREE.BoxGeometry(W-0.004,0.012,D-0.004),mats);const pos=V3(cx,PH+0.006,cz);mesh.position.copy(pos);mesh.castShadow=true;mesh.receiveShadow=true;
     const body=boxBody((W-0.004)/2,0.006,(D-0.004)/2,pos);const e=mkEnt({mesh,body,kind:'fixture',mat:'gypsum',mass:3,hp:999,wakeThreshold:1e9,noBatch:true,label:'manhole cover'});
@@ -288,12 +291,12 @@ function villaProps(){const al=new THREE.MeshStandardMaterial({color:0xc4c8cc,ro
 const VL={pool:[],fix:[],t:0,room:null,street:null};
 function villaLights(){/* the ground colour stands in for light bouncing off floors and walls: without it every ceiling away from a lamp goes black */VL.hemi=new THREE.HemisphereLight(0x666c78,0xd8c8b0,1.8);scene.add(VL.hemi);VL.amb=new THREE.AmbientLight(0x3a3f4a,0.28);scene.add(VL.amb);const moon=new THREE.DirectionalLight(0x8fa6d8,0.35);moon.position.set(-20,30,12);scene.add(moon);
   /* v6.3: one more light for the basement flares, added now so no material recompiles when one is struck */VL.flare=new THREE.PointLight(0xff4a28,0,7,1.6);scene.add(VL.flare);
-  for(let i=0;i<4;i++){const l=new THREE.PointLight(0xffe2b8,0,8,1.5);if(i===0){l.castShadow=true;l.shadow.mapSize.set(1024,1024);l.shadow.bias=-0.003;l.shadow.normalBias=0.02;l.shadow.radius=3;l.shadow.camera.near=0.1;l.shadow.camera.far=8;SHADOW.lights.push(l);}scene.add(l);VL.pool.push({l,fix:null,k:0});}
+  for(let i=0;i<4;i++){const l=new THREE.PointLight(0xffe2b8,0,10.5,1.5);if(i===0){l.castShadow=true;l.shadow.mapSize.set(1024,1024);l.shadow.bias=-0.003;l.shadow.normalBias=0.02;l.shadow.radius=3;l.shadow.camera.near=0.1;l.shadow.camera.far=8;SHADOW.lights.push(l);}scene.add(l);VL.pool.push({l,fix:null,k:0});}
   const disc=[],tube=[];for(const r of VP.rooms){if(r.id==='bathx')continue;const cx=vX((r.x0+r.x1)/2),cz=vZ((r.z0+r.z1)/2);const fluoro=r.id==='garage'||r.id==='laundry'||r.id==='kitchen';const big=r.id==='hall';
-    if(big){for(const px of[5,9.5,14]){VL.fix.push({x:vX(px),z:cz,y:PH-0.32,i:5.5,col:0xffe6c4,room:r});disc.push([0.3,0.05,0.3,V3(vX(px),PH-0.03,cz),new THREE.Quaternion()]);}continue;}
-    VL.fix.push({x:cx,z:cz,y:PH-0.32,i:fluoro?9:(r.wet?6.5:8),col:fluoro?0xe8f2ff:(r.id==='kitchen'||r.id==='living'?0xfff0d8:0xffe2b8),room:r});(fluoro?tube:disc).push(fluoro?[1.2,0.05,0.12,V3(cx,PH-0.03,cz),new THREE.Quaternion()]:[0.36,0.06,0.36,V3(cx,PH-0.035,cz),new THREE.Quaternion()]);}
+    if(big){for(const px of[5,9.5,14]){VL.fix.push({x:vX(px),z:cz,y:PH-0.32,i:5.5*1.3,col:0xffe6c4,room:r});disc.push([0.3,0.05,0.3,V3(vX(px),PH-0.03,cz),new THREE.Quaternion()]);}continue;}
+    VL.fix.push({x:cx,z:cz,y:PH-0.32,i:(fluoro?9:(r.wet?6.5:8))*1.35,col:fluoro?0xe8f2ff:(r.id==='kitchen'||r.id==='living'?0xfff0d8:0xffe2b8),room:r});(fluoro?tube:disc).push(fluoro?[1.2,0.05,0.12,V3(cx,PH-0.03,cz),new THREE.Quaternion()]:[0.36,0.06,0.36,V3(cx,PH-0.035,cz),new THREE.Quaternion()]);}
   /* v6.5: the fittings are ents now, one glow material per room (veFittings) */LIGHT.tubesAlive=0;}
-function villaLightPick(){const p=camera.getWorldPosition(_tvp);const lvl=p.y<-0.35?'b':'h';const r=lvl==='b'?vbRoomAt(p.x-VP.ox,p.z-VP.oz):vRoomAtWorld(p.x,p.z);VL.room=r;const sc=f=>Math.hypot(f.x-p.x,f.z-p.z)-(r&&f.room===r?100:0);const pick=VL.fix.filter(f=>(f.lvl||'h')===lvl).sort((a,b)=>sc(a)-sc(b)).slice(0,VL.pool.length);
+function villaLightPick(){const p=camera.getWorldPosition(_tvp);const lvl=p.y<-0.35?'b':'h';const r=lvl==='b'?vbRoomAt(vPlanX(p.x),vPlanZ(p.z)):vRoomAtWorld(p.x,p.z);VL.room=r;const sc=f=>Math.hypot(f.x-p.x,f.z-p.z)-(r&&f.room===r?100:0);const pick=VL.fix.filter(f=>(f.lvl||'h')===lvl).sort((a,b)=>sc(a)-sc(b)).slice(0,VL.pool.length);
   /* keep lights already on a picked fixture where they are; move the others */const free=VL.pool.filter(s=>!pick.includes(s.fix));for(const f of pick){if(VL.pool.some(s=>s.fix===f))continue;const s=free.shift();if(!s)break;s.fix=f;s.k=0;s.l.position.set(f.x,f.y,f.z);s.l.color.setHex(f.col);if(s.l.castShadow)SHADOW.dirty=true;}
   /* the shadow-casting light always sits in your room */const sh=VL.pool[0];const mine=pick[0];if(mine&&sh.fix!==mine){const other=VL.pool.find(s=>s.fix===mine);if(other){const t=other.fix;other.fix=sh.fix;other.k=0;if(other.fix)other.l.position.set(other.fix.x,other.fix.y,other.fix.z),other.l.color.setHex(other.fix.col);sh.fix=t;sh.k=0;sh.l.position.set(t.x,t.y,t.z);sh.l.color.setHex(t.col);SHADOW.dirty=true;}}}
 function updateVilla(dt){vSlides(dt);vParkUpdate();updateWS8(dt);updateWS5(dt);updateWS6(dt);updateWS7(dt);veUpdate(dt);updateWS3(dt);updateWS4(dt);VL.t-=dt;if(VL.t<=0){VL.t=0.15;villaLightPick();}const on=VE.lights;

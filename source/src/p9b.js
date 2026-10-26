@@ -75,7 +75,7 @@ function vbEntriesBuild(){const H=VB.holes;const hz=H[0],tp=H[1];
     const tog=e.use;e.use=h=>{if(vbCarpetDown()){vbTrapBlocked();return;}tog(h);};e.useLabel=()=>vbCarpetDown()?'PUSH':(e.kin.target!==0?'CLOSE TRAPDOOR':'LIFT THE TRAPDOOR');
     e.onHit=(p,dmg)=>{if(!vbCarpetDown())return;if(camera.getWorldPosition(_tvp).y<-0.1){e.hits+=dmg;S.thud(p,0.8);if(e.hits>=2){vbCarpetGone(p,'SLIT FROM BELOW');HUD.msg('[YOU SLIT THE CARPET THROUGH THE GAP]',1.6);}else HUD.msg('[SOMETHING ON TOP · KEEP AT IT]',1);}};
     /* the carpet panel: top = the floor canvas there, underside = hessian; a faint seam if you look for it */
-    const S_=1.3,px=VF.px,cc=mkCanvas(64,64),x=cc.getContext('2d');const sx=(tp.x0+tp.x1)/2-S_/2,sz=(tp.z0+tp.z1)/2+S_/2;const fsrc=(VF.carpet||floorDrawable).canvas;const fk=fsrc.width/(VF.w*px);/* the phone tier may have shrunk the floor canvas */x.drawImage(fsrc,(sx+0.3)*px*fk,(VP.D+0.3-sz)*px*fk,S_*px*fk,S_*px*fk,0,0,64,64);x.strokeStyle='rgba(0,0,0,0.05)';x.lineWidth=1;x.strokeRect(0.5,0.5,63,63);/* a seam you'd only see if you were looking for it */
+    const S_=1.3,px=VF.px,cc=mkCanvas(64,64),x=cc.getContext('2d');const sxm=pM((tp.x0+tp.x1)/2)-S_/2,szm=pM(VP.D-(tp.z0+tp.z1)/2)-S_/2;const fsrc=(VF.carpet||floorDrawable).canvas;const fk=fsrc.width/(VF.w*px);/* the phone tier may have shrunk the floor canvas */x.drawImage(fsrc,(sxm+0.3)*px*fk,(szm+0.3)*px*fk,S_*px*fk,S_*px*fk,0,0,64,64);x.strokeStyle='rgba(0,0,0,0.05)';x.lineWidth=1;x.strokeRect(0.5,0.5,63,63);/* a seam you'd only see if you were looking for it */
     const cg=new THREE.Group();const top=new THREE.PlaneGeometry(S_,S_);top.rotateX(-Math.PI/2);{const uv=top.attributes.uv;for(let i=0;i<uv.count;i++)uv.setY(i,1-uv.getY(i));}const ct=new THREE.CanvasTexture(cc);ct.colorSpace=(VF.carpet||floorDrawable).tex.colorSpace;ct.anisotropy=8;const tm=new THREE.Mesh(top,new THREE.MeshStandardMaterial({map:ct,roughness:0.92}));/* same texture settings and roughness as the floor it was cut from */tm.position.y=0.003;tm.receiveShadow=true;cg.add(tm);
     const bot=new THREE.PlaneGeometry(S_,S_);bot.rotateX(Math.PI/2);cg.add(new THREE.Mesh(bot,new THREE.MeshStandardMaterial({color:0x8a7a5c,roughness:1})));const cpos=V3(cx,0.006,cz);cg.position.copy(cpos);
     const c=mkEnt({mesh:cg,body:boxBody(S_/2,0.004,S_/2,cpos),kind:'fixture',mat:'fabric',mass:3,hp:999,wakeThreshold:1e9,noBatch:true,label:'carpet'});VB.carpet=c;c.found=false;
@@ -107,7 +107,7 @@ function vbSegments(){const lines=new Map();const add=(k,a,b)=>{if(!lines.has(k)
 function vbWallFor(s,name,kind){const front=s.front==='a'?-1:1;let ax,az,bx,bz;if(s.o==='h'){if(front<0){ax=s.t0;bx=s.t1;}else{ax=s.t1;bx=s.t0;}az=bz=s.c;}else{if(front<0){az=s.t1;bz=s.t0;}else{az=s.t0;bz=s.t1;}ax=bx=s.c;}
   const w=mkWall(name,vX(ax),vZ(az),vX(bx),vZ(bz),kind);for(const p of[w.a,w.b,w.origin])p.y=BF;w.H=BHT;w.villa=true;w.basement=true;w.seg=s;w.rooms={front:s.front==='a'?s.a:s.b,back:s.front==='a'?s.b:s.a};return w;}
 function vbOpenings(w){const s=w.seg;for(const [p,q,at,wd,kind,head] of VB.ops){const r=w.rooms;if(!((r.front===p&&r.back===q)||(r.front===q&&r.back===p)))continue;if(!(s.t0-1e-6<=at-wd/2&&s.t1+1e-6>=at+wd/2))continue;
-  const dirPos=(s.o==='h'?w.b.x>w.a.x:w.b.z>w.a.z);const t0=s.o==='h'?w.a.x-VP.ox:w.a.z-VP.oz;const u=dirPos?at-t0:t0-at;w.openings.push({u0:u-wd/2,u1:u+wd/2,v0:0,v1:head,kind,label:kind});}}
+  const dirPos=(s.o==='h'?w.b.x>w.a.x:w.b.z>w.a.z);const t0=s.o==='h'?w.a.x-VP.ox:w.a.z-VP.oz;const u=dirPos?pM(at)-t0:t0-pM(at);const wm=pM(wd);w.openings.push({u0:u-wm/2,u1:u+wm/2,v0:0,v1:head,kind,label:kind});}}
 const blockGeo=new THREE.BoxGeometry(0.385,0.185,0.19);
 function vbBlocks(ws){/* concrete block retaining walls: one instanced mesh for the lot, a mortar backing, colliders, and an invisible face per wall so hits land somewhere */
   let n=0;for(const w of ws)n+=Math.ceil((w.L+0.4)/0.4)*Math.ceil(BHT/0.2+1);const im=new THREE.InstancedMesh(blockGeo,new THREE.MeshStandardMaterial({color:0xd8d4cc,roughness:0.97}),n);im.receiveShadow=true;im.castShadow=false;
@@ -128,9 +128,9 @@ function vbChipBlock(e,p,dmg,dir){if(dmg<2.3){S.thud(p,1.6);P.emit(p,{count:6,co
 function vbLagging(ws){/* the tunnel's sides: rough sawn boards behind posts; the ceiling boards come with the tunnel */const boards=[],posts=[];const TH=VBR.tunnel.h;
   for(const w of ws){const pn=(w.seg.o==='h'&&Math.abs(w.seg.c-6.3)<1e-6)?VB.panel:null;if(pn)VB.panelWall=w;for(let v=0.12;v<TH;v+=0.2){if(pn&&v>pn.v0&&v<pn.v1){boards.push([pn.u0,0.18,0.025,wallPoint(w,pn.u0/2,v,0.03),w.q],[w.L-pn.u1,0.18,0.025,wallPoint(w,(pn.u1+w.L)/2,v,0.03),w.q]);continue;}boards.push([w.L,0.18,0.025,wallPoint(w,w.L/2,v,0.03),w.q]);}VB.lagWalls.push(w);
     const body=boxBody(w.L/2,TH/2,0.04,wallPoint(w,w.L/2,TH/2,0.04),qC(w.q));registerBody(body);}
-  const r=VBR.tunnel,y=BF+TH;for(let x=r.x0;x<r.x1;x+=0.21)boards.push([0.19,0.025,r.z1-r.z0+0.12,V3(vX(x+0.1),y+0.013,vZ((r.z0+r.z1)/2)),new THREE.Quaternion()]);
-  for(let x=r.x0+0.3;x<r.x1;x+=1.2)posts.push([0.1,0.1,r.z1-r.z0,V3(vX(x),y-0.05,vZ((r.z0+r.z1)/2)),new THREE.Quaternion()]);
-  registerBody(boxBody((r.x1-r.x0)/2,0.05,(r.z1-r.z0)/2+0.1,V3(vX((r.x0+r.x1)/2),y+0.05,vZ((r.z0+r.z1)/2))));
+  const r=VBR.tunnel,y=BF+TH;for(let x=r.x0;x<r.x1;x+=0.21/PSC)boards.push([0.19,0.025,pM(r.z1-r.z0)+0.12,V3(vX(x)+0.1,y+0.013,vZ((r.z0+r.z1)/2)),new THREE.Quaternion()]);
+  for(let x=r.x0+0.3;x<r.x1;x+=1.2/PSC)posts.push([0.1,0.1,pM(r.z1-r.z0),V3(vX(x),y-0.05,vZ((r.z0+r.z1)/2)),new THREE.Quaternion()]);
+  registerBody(boxBody(pM(r.x1-r.x0)/2,0.05,pM(r.z1-r.z0)/2+0.1,V3(vX((r.x0+r.x1)/2),y+0.05,vZ((r.z0+r.z1)/2))));
   /* the earth between the tunnel's boards and the slab: a dark face where the tunnel meets the bigger rooms */
   const rough=new THREE.MeshStandardMaterial({color:0x6b5640,roughness:1});VB.lagMesh=vMerge(boards,rough);VB.postMesh=vMerge(posts,M.timber);}
 
@@ -144,17 +144,17 @@ function villaBasement(){if(VB.built)return;VB.built=true;const t0=performance.n
     else{const w=vbWallFor(s,'VBB'+(n++),'ext');WALLS.splice(WALLS.indexOf(w),1);vbOpenings(w);if(s.kind==='lag')lags.push(w);else blocks.push(w);}}
   vbBlocks(blocks);vbLagging(lags);
   /* floor: one painted concrete drawable for the whole level */const bx0=0,bx1=14.8,bz0=4.0,bz1=9.3;const px=40;const W=Math.round((bx1-bx0)*px),H=Math.round((bz1-bz0)*px);const d=mkDrawable(texBunkFloor(W,H));
-  VB.floorD=d;VB.fx0=vX(bx0);VB.fz1=vZ(bz1);VB.fw=bx1-bx0;VB.fd=bz1-bz0;const fq=[],cq=[];
+  VB.floorD=d;VB.fx0=vX(bx0);VB.fz1=vZ(bz1);VB.fw=pM(bx1-bx0);VB.fd=pM(bz1-bz0);const fq=[],cq=[];
   for(const r of VB.rooms){fq.push([vX(r.x0),vZ(r.z0),vX(r.x1),vZ(r.z1)]);}
   const quad=(rects,y,up,uvf)=>{const pos=[],uv=[];for(const [x0,z0,x1,z1] of rects){const P_=up?[[x0,z1],[x1,z1],[x1,z0],[x0,z1],[x1,z0],[x0,z0]]:[[x0,z0],[x1,z0],[x1,z1],[x0,z0],[x1,z1],[x0,z1]];for(const [x,z] of P_){pos.push(x,y,z);uv.push(...uvf(x,z));}}const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));g.computeVertexNormals();return g;};
   const fg=quad(fq,BF+0.003,true,(x,z)=>[(x-VB.fx0)/VB.fw,1-(VB.fz1-z)/VB.fd]);const fm=new THREE.Mesh(fg,new THREE.MeshStandardMaterial({map:d.tex,roughness:0.95}));fm.receiveShadow=true;
-  VB.floor=mkEnt({mesh:fm,body:boxBody((bx1-bx0)/2,0.15,(bz1-bz0)/2,V3(vX((bx0+bx1)/2),BF-0.15,vZ((bz0+bz1)/2))),kind:'slab',mat:'concrete',mass:0,hp:9999,label:'basement floor',noBatch:true,drawable:d});
+  VB.floor=mkEnt({mesh:fm,body:boxBody(pM(bx1-bx0)/2,0.15,pM(bz1-bz0)/2,V3(vX((bx0+bx1)/2),BF-0.15,vZ((bz0+bz1)/2))),kind:'slab',mat:'concrete',mass:0,hp:9999,label:'basement floor',noBatch:true,drawable:d});
   /* ceiling: the underside of the house slab (minus the two holes), the tunnel's own boards are lower */
   const cm=new THREE.MeshStandardMaterial({map:mkTex(texSlabUnder(),1,1),roughness:0.95});cm.map.wrapS=cm.map.wrapT=THREE.RepeatWrapping;
   const cRects=[];for(const r of VB.rooms){if(r.h)continue;const xs=[r.x0,r.x1],zs=[r.z0,r.z1];for(const h of VB.holes){if(h.x1>r.x0&&h.x0<r.x1&&h.z1>r.z0&&h.z0<r.z1){xs.push(h.x0,h.x1);zs.push(h.z0,h.z1);}}xs.sort((a,b)=>a-b);zs.sort((a,b)=>a-b);
     for(let i=0;i<xs.length-1;i++)for(let j=0;j<zs.length-1;j++){const mx=(xs[i]+xs[i+1])/2,mz=(zs[j]+zs[j+1])/2;if(xs[i+1]-xs[i]<1e-4||zs[j+1]-zs[j]<1e-4)continue;if(VB.holes.some(h=>mx>h.x0&&mx<h.x1&&mz>h.z0&&mz<h.z1))continue;if(mx<r.x0||mx>r.x1||mz<r.z0||mz>r.z1)continue;cRects.push([vX(xs[i]),vZ(zs[j]),vX(xs[i+1]),vZ(zs[j+1])]);}}
   const cg=quad(cRects,BC,false,(x,z)=>[x/2.4,z/2.4]);const ceil=new THREE.Mesh(cg,cm);ceil.receiveShadow=true;scene.add(ceil);VB.ceil=ceil;
-  /* steel beams across the bunk room, and the adjustable props under them */const beams=[];const br=VBR.bunk;for(const bx of[3.0,4.6]){const x=vX(bx),zc=vZ((br.z0+br.z1)/2),L=br.z1-br.z0;beams.push([0.1,0.012,L,V3(x,BC-0.006,zc),new THREE.Quaternion()],[0.008,0.2,L,V3(x,BC-0.1,zc),new THREE.Quaternion()],[0.1,0.012,L,V3(x,BC-0.194,zc),new THREE.Quaternion()]);}
+  /* steel beams across the bunk room, and the adjustable props under them */const beams=[];const br=VBR.bunk;for(const bx of[3.0,4.6]){const x=vX(bx),zc=vZ((br.z0+br.z1)/2),L=pM(br.z1-br.z0);beams.push([0.1,0.012,L,V3(x,BC-0.006,zc),new THREE.Quaternion()],[0.008,0.2,L,V3(x,BC-0.1,zc),new THREE.Quaternion()],[0.1,0.012,L,V3(x,BC-0.194,zc),new THREE.Quaternion()]);}
   VB.beams=vMerge(beams,new THREE.MeshStandardMaterial({color:0x5e3b2a,roughness:0.6,metalness:0.5}));
   VB.props=[];const orange=new THREE.MeshStandardMaterial({color:0xc06a20,roughness:0.6,metalness:0.4});for(const [bx,bz] of[[3.0,5.6],[3.0,8.0],[4.6,5.6],[4.6,8.0]]){const h=BHT-0.2,hy=h/2;const pr=compoundEnt([{w:0.15,h:0.012,d:0.15,x:0,y:-hy+0.006,z:0,mat:M.darkMetal},{w:0.15,h:0.012,d:0.15,x:0,y:hy-0.006,z:0,mat:M.darkMetal},{w:0.05,h:h*0.62,d:0.05,x:0,y:-hy+h*0.31,z:0,mat:orange},{w:0.04,h:h*0.42,d:0.04,x:0,y:hy-h*0.21,z:0,mat:orange}],V3(vX(bx),BF+hy,vZ(bz)),{kind:'furniture',mat:'metal',mass:14,hp:30,wakeThreshold:1.6,label:'adjustable steel prop'});
     pr.onHit=(p,dmg)=>{if(dmg<1.6){S.clink(p);return;}S.groan(p,1);setTimeout(()=>{dust(V3(p.x,BC-0.05,p.z),40,1.4);S.crumble(p,0.8);HUD.msg('[THE SLAB GROANS · DUST RAINS · IT HOLDS]',1.8);},250);};VB.props.push(pr);}
@@ -174,12 +174,12 @@ function villaBasement(){if(VB.built)return;VB.built=true;const t0=performance.n
   SHADOW.dirty=true;console.log('villa: basement built in',(performance.now()-t0).toFixed(0),'ms');}
 
 /* ---------- the stairs: steep timber treads, stringers, a pipe rail; a ramp under them for things that fall down them */
-function vbStairs(){const s=VB.stair,n=11,rise=2.6/n,go=(s.zBot-s.zTop)/n;const tr=[],st=[],q0=new THREE.Quaternion();
-  for(let i=0;i<n;i++){const z=s.zTop+go*(i+0.5),y=-rise*(i+1)+0.015;tr.push([s.x1-s.x0,0.035,go+0.06,V3(vX((s.x0+s.x1)/2),y,vZ(z)),q0]);}
-  const ang=Math.atan(s.tan),L=Math.hypot(2.6,s.zBot-s.zTop)+0.2,qs=new THREE.Quaternion().setFromEuler(new THREE.Euler(ang,0,0));for(const x of[s.x0-0.02,s.x1+0.02])st.push([0.045,0.24,L,V3(vX(x),-1.35,vZ((s.zTop+s.zBot)/2)),qs]);
-  /* a landing at the top, flush with the garage floor: you step onto it from the side, then go down */tr.push([s.x1-s.x0,0.05,s.zTop-4.3,V3(vX((s.x0+s.x1)/2),-0.025,vZ((4.3+s.zTop)/2)),q0]);registerBody(boxBody((s.x1-s.x0)/2,0.06,(s.zTop-4.3)/2,V3(vX((s.x0+s.x1)/2),-0.06,vZ((4.3+s.zTop)/2))));
-  vMerge(tr,M.timber);vMerge(st,M.timber);const rail=[];const rq=new THREE.Quaternion().setFromEuler(new THREE.Euler(ang,0,0));rail.push([0.035,0.035,L,V3(vX(s.x1+0.12),-1.35+0.9,vZ((s.zTop+s.zBot)/2)),rq]);for(const z of[s.zTop+0.3,s.zBot-0.2])rail.push([0.03,0.9,0.03,V3(vX(s.x1+0.12),vbStairY(z)+0.45,vZ(z)),q0]);vMerge(rail,M.chrome);
-  /* the ramp is for things that fall down the stairs; the player rides the treads in vbOnStairs and never touches it */const ramp=boxBody((s.x1-s.x0)/2,0.04,L/2,V3(vX((s.x0+s.x1)/2),-1.36,vZ((s.zTop+s.zBot)/2)),qC(qs));ramp.collisionFilterMask=~2;registerBody(ramp);}
+function vbStairs(){const s=VB.stair,n=11,rise=2.6/n,go=(s.zBot-s.zTop)/n,gm=pM(go),sw=pM(s.x1-s.x0);const tr=[],st=[],q0=new THREE.Quaternion();
+  for(let i=0;i<n;i++){const z=s.zTop+go*(i+0.5),y=-rise*(i+1)+0.015;tr.push([sw,0.035,gm+0.06,V3(vX((s.x0+s.x1)/2),y,vZ(z)),q0]);}
+  const ang=Math.atan2(2.6,pM(s.zBot-s.zTop)),L=Math.hypot(2.6,pM(s.zBot-s.zTop))+0.2,qs=new THREE.Quaternion().setFromEuler(new THREE.Euler(ang,0,0));for(const x of[vX(s.x0)-0.02,vX(s.x1)+0.02])st.push([0.045,0.24,L,V3(x,-1.35,vZ((s.zTop+s.zBot)/2)),qs]);
+  /* a landing at the top, flush with the garage floor: you step onto it from the side, then go down */tr.push([sw,0.05,pM(s.zTop-4.3),V3(vX((s.x0+s.x1)/2),-0.025,vZ((4.3+s.zTop)/2)),q0]);registerBody(boxBody(sw/2,0.06,pM(s.zTop-4.3)/2,V3(vX((s.x0+s.x1)/2),-0.06,vZ((4.3+s.zTop)/2))));
+  vMerge(tr,M.timber);vMerge(st,M.timber);const rail=[];const rq=new THREE.Quaternion().setFromEuler(new THREE.Euler(ang,0,0));rail.push([0.035,0.035,L,V3(vX(s.x1)+0.12,-1.35+0.9,vZ((s.zTop+s.zBot)/2)),rq]);for(const z of[s.zTop+0.3,s.zBot-0.2])rail.push([0.03,0.9,0.03,V3(vX(s.x1)+0.12,vbStairY(z)+0.45,vZ(z)),q0]);vMerge(rail,M.chrome);
+  /* the ramp is for things that fall down the stairs; the player rides the treads in vbOnStairs and never touches it */const ramp=boxBody(sw/2,0.04,L/2,V3(vX((s.x0+s.x1)/2),-1.36,vZ((s.zTop+s.zBot)/2)),qC(qs));ramp.collisionFilterMask=~2;registerBody(ramp);}
 /* ---------- the steel ladder up to the trapdoor */
 function vbLadder(){const t=VB.holes[1];const x=vX(t.x0)+0.08,z0=vZ((t.z0+t.z1)/2);const parts=[],q0=new THREE.Quaternion();for(const dz of[-0.2,0.2])parts.push([0.03,2.52,0.03,V3(x,BF+1.26,z0+dz),q0]);/* stops under the slab so it never pokes through the carpet */for(let y=BF+0.3;y<0;y+=0.3)parts.push([0.02,0.02,0.4,V3(x,y,z0),q0]);
   vMerge(parts,M.darkMetal);const e=mkEnt({mesh:new THREE.Mesh(new THREE.BoxGeometry(0.1,2.6,0.45),new THREE.MeshBasicMaterial({visible:false})),body:null,kind:'fixture',mat:'metal',mass:0,hp:999,wakeThreshold:1e9,noBatch:true,label:'steel ladder'});e.mesh.position.set(x+0.02,BF+1.3,z0);VB.ladder=e;
@@ -198,7 +198,7 @@ function vbLights(){const add=(px,pz,kind,room,len)=>{const x=vX(px),z=vZ(pz),y=
 /* ---------- per frame: stairs, visibility, light level */
 function vbUnderground(){return camera.getWorldPosition(_tvp).y<-0.35;}
 function vbOnStairs(dt){/* the player is a ball: on a 55° stair it would slide; inside the stairwell it rides the treads instead */const b=player.body,s=VB.stair;if(!VB.built)return false;
-  const px=b.position.x-VP.ox,pz=b.position.z-VP.oz;if(px<s.x0-0.05||px>s.x1+0.05||pz<s.zTop-0.05||pz>s.zBot-0.12)return false;const hatchOpen=VB.hatch.kin.ang>0.9;if(!hatchOpen&&b.position.y>0.2)return false;
+  const px=vPlanX(b.position.x),pz=vPlanZ(b.position.z);if(px<s.x0-0.05||px>s.x1+0.05||pz<s.zTop-0.05||pz>s.zBot-0.12)return false;const hatchOpen=VB.hatch.kin.ang>0.9;if(!hatchOpen&&b.position.y>0.2)return false;
   let ty=vbStairY(pz)+0.63;if(!hatchOpen)ty=Math.min(ty,-0.42);/* shut hatch: you bump your head on it */if(Math.abs(b.position.y-ty)>0.7)return false;
   const f=V3(-Math.sin(player.yaw),0,-Math.cos(player.yaw)),r=V3(Math.cos(player.yaw),0,-Math.sin(player.yaw));const wish=V3();if(keys.KeyW)wish.add(f);if(keys.KeyS)wish.sub(f);if(keys.KeyD)wish.add(r);if(keys.KeyA)wish.sub(r);if(wish.lengthSq()>0)wish.normalize();
   player.crouch=!!keys.ShiftLeft||!!keys.ShiftRight||!!keys.ControlLeft;const sp=player.crouch?1.4:2.6;const k=1-Math.exp(-dt*16);b.velocity.x=lerp(b.velocity.x,wish.x*sp,k);b.velocity.z=lerp(b.velocity.z,wish.z*sp,k);
@@ -214,7 +214,7 @@ function vbUpdate(dt){if(!VB.built)return;vbUpdateContents(dt);vbUpdateCreepy(dt
    a valve radio stuck on a numbers station, flares that light up and burn red for a minute. Built with the rest of the
    basement (villaBasement → vbContents). */
 const VBJ=[];/* jets: water or fuel squirting out of a punctured drum or jerry can */
-function pFloorY(x,y,z){/* the floor a particle lands on: the basement's when it's under the slab inside the basement */return (VILLA&&VB.built&&y<-0.25&&vbRoomAt(x-VP.ox,z-VP.oz))?BF:FLOOR_Y;}
+function pFloorY(x,y,z){/* the floor a particle lands on: the basement's when it's under the slab inside the basement */return (VILLA&&VB.built&&y<-0.25&&vbRoomAt(vPlanX(x),vPlanZ(z)))?BF:FLOOR_Y;}
 function vbPowered(){return (power&&VB.subOn&&!VB.subDead)||(VB.gen&&VB.gen.running);}
 function vbPuncture(e,p,dir,col,label){if(!e.alive||e.empty)return;wakeEnt(e);const lp=e.mesh.worldToLocal(p.clone());const ld=(dir?dir.clone().negate():V3(0,0,1)).transformDirection(new THREE.Matrix4().copy(e.mesh.matrixWorld).invert()).normalize();
   VBJ.push({e,lp,ld,t:e.liquid||20,col});S.noise({dur:0.3,gain:0.3,type:'bandpass',f:1800,pos:p});HUD.msg(`[${label}]`,1.4);e.punctured=true;}

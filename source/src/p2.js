@@ -150,7 +150,7 @@ function dust(p,n=18,s=1){P.emit(p,{count:n,color:[0.92,0.9,0.86],cvar:0.06,size
 function sparks(p,n,col,vel){P.emit(p,{count:n,color:col||[1,0.6,0.15],cvar:0.2,size:0.018,svar:0.01,life:0.5,lvar:0.3,vel:vel||null,speed:1,spread:3.5,grav:9,drag:0.3,kind:2});}
 function shards(p,n,col){P.emit(p,{count:n,color:col,cvar:0.1,size:0.02,svar:0.012,life:1.2,lvar:0.5,spread:3,grav:9.8,drag:0.3,kind:0});}
 /* plan extents */
-const PX=3.25,PZ=4.25,PH=2.7;
+const PX=3.25,PZ=4.25,PH=VILLA?3.0:2.7;/* v9.4: the house has 3 m ceilings; the bedsit keeps 2.7 */
 let floorDrawable=null,floorSlabCanvas=null,bathFloorDrawable=null;
 function floorUV(x,z,d){if(VILLA){if(d&&d===VB.floorD)return[(x-VB.fx0)/VB.fw,(VB.fz1-z)/VB.fd];return[(x-VF.x0)/VF.w,(VF.z1-z)/VF.d];}if(d&&d===bathFloorDrawable)return[(x-BATH.x0)/(BATH.x1-BATH.x0),(BATH.z1-z)/(BATH.z1-BATH.z0)];return[(x+PX)/(2*PX),(PZ-z)/(2*PZ)];}
 function floorDrawableAt(x,z,y){return VILLA?((y!==undefined&&y<-1&&VB.floorD)?VB.floorD:(VS.strips.length&&vCarpetAt(x,z)?VF.carpet:floorDrawable)):inBath(x,z)?bathFloorDrawable:floorDrawable;}

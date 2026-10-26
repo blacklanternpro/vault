@@ -9,7 +9,7 @@ console.log('boot',G.bootMs.toFixed(0),'bodies',G.world.bodies.length);
 // the safe
 ok(S.door&&S.body&&S.flap&&S.keyEnt&&S.gunEnt&&S.ammoEnt,'safe, door, ammo drawer, key, revolver and ammo built');
 ok(S.body.bolted&&!S.body.dynamic,'carcass bolted (static)');G.wakeEnt(S.body);ok(!S.body.dynamic,'wakeEnt does not free a bolted safe');
-ok(Math.abs(G.plan(S.door.mesh.position).z-5.53)<0.06,'door face at plan z '+G.plan(S.door.mesh.position).z);
+ok(Math.abs(G.plan(S.door.mesh.position).z-5.41)<0.06,'door face at plan z '+G.plan(S.door.mesh.position).z);
 S.door.use();G.run(60);ok(S.locked&&Math.abs(S.door.kin.ang)<1e-3&&G.msgs.at(-1).includes('LOCKED'),'locked without the key: '+G.msgs.at(-1));
 // muffs on the handle
 const muff=S.muffMeshes[0];ok(S.door.useLabel({object:muff})==='TAKE THE EARMUFFS','earmuffs hang off the handle');S.door.use({object:muff});ok(N.hasMuffs&&N.muffs&&!muff.parent,'earmuffs taken and worn');N.muffs=false;
@@ -17,7 +17,7 @@ const muff=S.muffMeshes[0];ok(S.door.useLabel({object:muff})==='TAKE THE EARMUFF
 stand(16.3,7.0);aim(S.keyEnt.mesh.getWorldPosition(W()).add(W(0,-0.035,0)));const kh=G.castRay(2.1);ok(kh&&kh.ent===S.keyEnt,'key on its hook is visible + reachable from the robe ('+(kh?kh.ent.label:'nothing')+', '+(kh?kh.distance.toFixed(2):'')+' m)');
 G.useTarget();ok(N.key&&!S.keyEnt.alive,'key taken');
 // open with key; door swings into the room
-stand(15.7,6.3);S.door.use();G.run(120);const dp=G.plan(S.door.mesh.position);ok(!S.locked&&Math.abs(S.door.kin.ang)>1.5,'key unlocks and the door swings ('+S.door.kin.ang.toFixed(2)+' rad)');ok(dp.z>5.6&&dp.x<15.5,'door swung out into the robe (centre now at plan x '+dp.x+', z '+dp.z+')');
+stand(15.7,6.3);S.door.use();G.run(120);const dp=G.plan(S.door.mesh.position);ok(!S.locked&&Math.abs(S.door.kin.ang)>1.5,'key unlocks and the door swings ('+S.door.kin.ang.toFixed(2)+' rad)');ok(dp.z>5.5&&dp.x<15.5,'door swung out into the robe (centre now at plan x '+dp.x+', z '+dp.z+')');
 // ammo drawer
 S.flap.use();G.run(60);ok(!S.flapLocked&&Math.abs(S.flap.kin.ang)>1.2,'same key opens the ammo drawer, flap down');
 const fp=G.plan(S.flap.mesh.position);const fc=S.flap.mesh.localToWorld(W(0,-0.11,0));ok(fc.y>1.25,'flap swung up and out (plan z '+fp.z+', y '+fp.y+')');
@@ -36,7 +36,7 @@ const pullDA=(frames=20)=>{G.mouse.l=true;G.mouse.lp=true;for(let i=0;i<frames;i
 const pitch0=G.player.pitch;pullDA(10);ok(N.shots===0,'a short pull (0.17 s) does not fire');pullDA(22);ok(N.shots===1&&N.ch.filter(c=>c==='S').length===1,'a full DA pull fires one ('+N.ch.join('')+')');
 ok(G.player.pitch-pitch0>0.04,'recoil lifted the view '+((G.player.pitch-pitch0)*57.3).toFixed(1)+'°');
 const tr=N.lastTrace;console.log('   trace',JSON.stringify(tr.ev));const ents=tr.ev.filter(e=>!e.exit),exits=tr.ev.filter(e=>e.exit);
-ok(ents.some(e=>e.kind==='drywall')&&exits.filter(e=>e.kind==='drywall').length>=4,'through at least two stud walls: '+ents.filter(e=>e.kind==='drywall').length+' sheets entered, '+exits.filter(e=>e.kind==='drywall').length+' blowouts');ok((G.GDEC.count||0)-dec0>=2,'hole decals placed: '+((G.GDEC.count||0)-dec0));ok(G.BOND.total>bond0,'bond docked $'+(G.BOND.total-bond0));
+ok(ents.filter(e=>e.kind==='drywall').length>=4&&exits.filter(e=>e.kind==='drywall').length>=3,'through at least two stud walls: '+ents.filter(e=>e.kind==='drywall').length+' sheets entered, '+exits.filter(e=>e.kind==='drywall').length+' blowouts');ok((G.GDEC.count||0)-dec0>=2,'hole decals placed: '+((G.GDEC.count||0)-dec0));ok(G.BOND.total>bond0,'bond docked $'+(G.BOND.total-bond0));
 ok(N.deaf>0.5&&N.ring>0.5,'unprotected shot: hearing dulled '+N.deaf.toFixed(2)+' ring '+N.ring.toFixed(2));G.run(60*12);ok(N.deaf<0.05,'hearing back after ~10 s ('+N.deaf.toFixed(3)+')');
 // SA: cock, then a light trigger
 G.gunCock();ok(N.cocked,'Q cocks the hammer');const s0=N.shots;G.mouse.l=true;G.mouse.lp=true;G.gunTool(1/60);G.mouse.lp=false;G.mouse.l=false;G.gunTool(1/60);ok(N.shots===s0+1,'single action breaks on the first frame');

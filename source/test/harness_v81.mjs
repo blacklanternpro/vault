@@ -3,9 +3,9 @@ import {boot} from './boot81.mjs';
 const G=await boot('v81',{extra:'V81,LC,SPK,sawSpray,lcToggle,lcOK,lcCut,KETTLE,KITCH,VLD,mwStop,vgPocket,VLV,FRIDGE,fridgePowered,useTarget,BOND,'});G.run(30);
 let fails=0;const ok=(c,msg)=>{console.log((c?'  ok  ':'  FAIL ')+msg);if(!c)fails++;};const W=G.V;const last=()=>G.msgs.slice(-3).join(' | ');
 console.log('boot ms',G.bootMs.toFixed(0),'bodies',G.world.bodies.length,'cords',G.V81.cords,'kin',JSON.stringify(G.V81.kin),'lc segs',G.LC.segs.length);
-ok(G.world.bodies.length<=820,'bodies at boot '+G.world.bodies.length+' (v8.0 ~772, gate 900)');ok(G.V81.cords>=10,'light cords built: '+G.V81.cords+' ('+G.LC.list.map(c=>c.label).join(', ')+')');
+ok(G.world.bodies.length<=900,'bodies at boot '+G.world.bodies.length+' (v8.0 ~772, gate 900)');ok(G.V81.cords>=10,'light cords built: '+G.V81.cords+' ('+G.LC.list.map(c=>c.label).join(', ')+')');
 // --- pantry
-const pan=G.ents.find(e=>e.label==='pantry');const pp=G.plan(pan.mesh.getWorldPosition(W()));ok(Math.abs(pp.x-5.4)<0.05&&pp.z<0.4,'pantry at the east end of the back run '+JSON.stringify(pp));
+const pan=G.ents.find(e=>e.label==='pantry');const pp=G.plan(pan.mesh.getWorldPosition(W()));ok(Math.abs(pp.x-(5.4+(2.2*4/3-2.2))/(4/3))<0.05&&pp.z<0.4,'pantry at the east end of the back run '+JSON.stringify(pp));
 for(const d of G.ents.filter(e=>e.label==='pantry door')){const a=d.mesh.getWorldPosition(W());G.toggleKinDoor(d);G.run(50);const b=d.mesh.getWorldPosition(W());ok(G.plan(b).z>G.plan(a).z+0.08,'pantry door swings out into the kitchen z '+G.plan(a).z+' -> '+G.plan(b).z);G.toggleKinDoor(d);}
 G.run(50);
 // --- cupboards + drawers

@@ -37,7 +37,7 @@ const b0=G.BOND.total;const tgt=B.c.clone().addScaledVector(B.r,0.9).addScaledVe
 G.dartLaunch(p0,tgt.clone().sub(p0).normalize().multiplyScalar(7),'free');G.run(40);const st=D.list.at(-1);console.log('   stray',st&&st.state,st&&st.ent&&st.ent.kind,st&&st.ent&&st.ent.label,'bond live',G.BOND.live);ok(st&&st.state==='stuck'&&G.BOND.total>=b0+15,'a stray dart sticks in the plaster (+$'+(G.BOND.total-b0)+')');
 const nl=(D.loose||[]).length;const pf=G.player.body.position;G.dartLaunch(W(pf.x,1.2,pf.z),W(0.5,-6,0.2),'free');G.run(40);ok((D.loose||[]).length===nl+1,'one at the slab bounces off and lies loose');
 // a dart from the case, thrown by hand
-G.setTool(3);D.case.use();G.run(5);const h=G.getHeld();ok(h&&h.ent&&h.ent.isDart,'darts case hands you a dart');const n0=D.list.length;G.dartThrowHeld();G.run(40);ok(D.list.length===n0+1,'RMB throws it as a dart');
+{const cp=D.case.mesh.getWorldPosition(W());G.player.body.position.set(cp.x+0.8,0.37,cp.z);G.player.body.velocity.set(0,0,0);G.run(10);}G.setTool(3);D.case.use();G.run(5);const h=G.getHeld();ok(h&&h.ent&&h.ent.isDart,'darts case hands you a dart');const n0=D.list.length;G.dartThrowHeld();G.run(40);ok(D.list.length===n0+1,'RMB throws it as a dart');
 // SWILL
 const BF=G.VR6.beer;{const fp=BF.e.mesh.getWorldPosition(W());G.player.body.position.set(fp.x-1.0,0.37,fp.z);G.player.body.velocity.set(0,0,0);G.player.yaw=-Math.PI/2;G.run(10);}if(BF.door.kin.target===0)BF.e.use();G.run(30);BF.e.use();G.run(5);const can=G.getHeld().ent;const d0=D.drunk;for(let i=0;i<3;i++)G.swillSip(can);ok(D.drunk===d0+1&&/empty/.test(can.label),'three sips empty a can, drunk '+D.drunk);
 console.log('bodies',G.world.bodies.length);console.log(fails?('FAILS '+fails):'ALL OK');
