@@ -19,9 +19,11 @@ Read this first, then `src/`. The vault repo (`blacklanternpro/vault`, branch `b
 - **Also:** the player is two 0.25 m balls (0.5 m wide, feet and eye height unchanged; the bedsit keeps its 0.36 ball). Pool lights reach 10.5 m and fixtures are ×1.35 brighter. Wall paint is 110 px/m (was 128) so the canvases stay near their old total. Gas room volumes are in m³. The phone look speed defaults to 3.0 (was 1.6) with flick acceleration up to 2.2×; ≡ cycles 1.8–5.4 and the setting is remembered.
 - **Tools:** `pw_plan.py` renders an orthographic top-down plan of the whole house (roof, ceiling and lights hidden): the fastest way to see anything that didn't follow the scale. `pw_rooms.py` takes one shot per room. `pw_extra.py` covers the basement and the roof space. `harness_scale.mjs` checks the rescale.
 
+**Known flake:** `harness_gun` "through at least two stud walls" misses about 1 run in 14 (the revolver's aim spread can put a round into a stud; ballistics untouched since v9.3). Re-run it before chasing it.
+
 **Next: Jake's call.** Waiting on his verdict on the v9.5 sounds and his PHYS ms after a big smash (the readout bottom right), and the RTX 4060 laptop's fps.
 
-**Live:** https://bedsit-sandbox.vercel.app (v9.4, shell pinned to vault `8e3d025`, deployed 27 Oct with Jake's OK, deployment `dpl_FC2JxrJ5oQL7Ao9pfnDkiHfKPecf`; each production deploy needs Jake's OK in the chat, the sandbox blocks it otherwise) · artifact https://claude.ai/artifact/DytGBQdZUodMQxNiateJqt · project doc `claude/bedsit-status.md` in the claude.ai project "Apartment game demo" (keep it current after each release).
+**Live:** https://bedsit-sandbox.vercel.app (v9.4, shell pinned to vault `8e3d025`, deployed 27 Oct with Jake's OK, deployment `dpl_FC2JxrJ5oQL7Ao9pfnDkiHfKPecf`; **v9.5 is in the vault (`637e26e`, shell pinned) and on the artifact, and its Vercel deploy waits on Jake's OK**; each production deploy needs Jake's OK in the chat, the sandbox blocks it otherwise) · artifact https://claude.ai/artifact/DytGBQdZUodMQxNiateJqt · project doc `claude/bedsit-status.md` in the claude.ai project "Apartment game demo" (keep it current after each release).
 
 **Jake's numbers:** work Optiplex 7020 on v8.0: 40–50 fps standard, 60 on performance (60 = his monitor's refresh; the loop is plain requestAnimationFrame, no cap). Still no RTX 4060 number. Roof-joist foot-through: ruled out by Jake ("too easy to cause destruction").
 
