@@ -1048,8 +1048,14 @@
  * rather than sit on a grid, so a short folder does not hold a row open.
  */
 .forest {
-  columns: 400px;
+  /*
+   * A grid, not CSS columns: multi-column layout re-flows the whole listing on
+   * every selection change, which on a thousand-row board costs a frame and more.
+   */
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(400px, 100%), 1fr));
   column-gap: 28px;
+  align-items: start;
   padding: 0 10px 14px;
 }
 

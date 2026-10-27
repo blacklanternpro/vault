@@ -11,15 +11,56 @@ function clone(doc: Doc): Doc {
   return { nodes: doc.nodes.map((n) => ({ ...n })), notes: doc.notes.map((n) => ({ ...n })) }
 }
 
+/** Ids stay small whole numbers, whatever an import claims. */
+export const MAX_ID = 1_000_000_000
+/** No tree goes deeper than this; an import that does is cut at this depth. */
+export const MAX_DEPTH = 64
+
+/*
+ * A finished Doc is frozen (its arrays), so it can never change under a cached
+ * index. Docs still being built inside an operation are not frozen, and are
+ * read the slow way.
+ */
+function freeze(doc: Doc): Doc {
+  Object.freeze(doc.nodes)
+  Object.freeze(doc.notes)
+  return Object.freeze(doc)
+}
+
+type Index = { ids: Map<number, Node>; kids?: Map<number | null, Node[]> }
+const indexes = new WeakMap<Doc, Index>()
+
+function indexOf(doc: Doc): Index | null {
+  if (!Object.isFrozen(doc.nodes)) return null
+  let ix = indexes.get(doc)
+  if (!ix) {
+    ix = { ids: new Map(doc.nodes.map((n) => [n.id, n])) }
+    indexes.set(doc, ix)
+  }
+  return ix
+}
+
 /* ----------------------------------------------------------------- reading */
 
 export function byId(doc: Doc, id: number | null | undefined): Node | undefined {
   if (id == null) return undefined
-  return doc.nodes.find((n) => n.id === id)
+  const ix = indexOf(doc)
+  return ix ? ix.ids.get(id) : doc.nodes.find((n) => n.id === id)
 }
 
 export function childrenOf(doc: Doc, parent: number | null): Node[] {
-  return doc.nodes.filter((n) => n.parent === parent)
+  const ix = indexOf(doc)
+  if (!ix) return doc.nodes.filter((n) => n.parent === parent)
+  if (!ix.kids) {
+    const kids = new Map<number | null, Node[]>()
+    for (const n of doc.nodes) {
+      const list = kids.get(n.parent)
+      if (list) list.push(n)
+      else kids.set(n.parent, [n])
+    }
+    ix.kids = kids
+  }
+  return ix.kids.get(parent) ?? []
 }
 
 export function projectsOf(doc: Doc): Node[] {
@@ -93,9 +134,24 @@ export function subtasksOf(doc: Doc, id: number): Node[] {
   return childrenOf(doc, id).filter((n) => !n.loose)
 }
 
+export type Line = { node: Node; depth: number }
+
+/** Every line inside a card, nested lines included, in tree order. A pulled-out (loose) line and what is under it belong to its own card. */
+export function linesOf(doc: Doc, id: number): Line[] {
+  const out: Line[] = []
+  const walk = (at: number, depth: number) => {
+    for (const child of subtasksOf(doc, at)) {
+      out.push({ node: child, depth })
+      walk(child.id, depth + 1)
+    }
+  }
+  walk(id, 1)
+  return out
+}
+
 export function progressOf(doc: Doc, id: number): { done: number; total: number } {
-  const lines = subtasksOf(doc, id)
-  return { done: lines.filter((n) => n.status === 'done').length, total: lines.length }
+  const lines = linesOf(doc, id)
+  return { done: lines.filter((l) => l.node.status === 'done').length, total: lines.length }
 }
 
 export function laneOf(status: Status): Lane {
@@ -155,15 +211,15 @@ export function nextId(doc: Doc): number {
 }
 
 /**
- * Makes a node's flags agree with where it sits: a project has no lane, a task
- * or subtask always has one, and only a subtask can be loose (a task is already
- * a card). Runs after every structural change.
+ * Makes a node's flags agree with where it sits: a task or subtask always has a
+ * lane, and only a subtask can be loose (a task is already a card). A project's
+ * lane is simply not shown — it is kept, so a task outdented to a project and
+ * back comes back in the lane it left. Runs after every structural change.
  */
 export function normalize(doc: Doc): Doc {
   for (const node of doc.nodes) {
     const depth = depthOf(doc, node.id)
     if (depth === 0) {
-      node.status = 'none'
       delete node.loose
     } else {
       if (node.status === 'none') node.status = 'pending'
@@ -206,7 +262,7 @@ export function addNode(doc: Doc, spec: NewNode): { doc: Doc; id: number } {
   if (spec.urgent) node.urgent = true
   next.nodes.push(node)
   if (spec.before != null) placeBefore(next, id, spec.before)
-  return { doc: normalize(next), id }
+  return { doc: freeze(normalize(next)), id }
 }
 
 export function updateNode(doc: Doc, id: number, patch: { title?: string; body?: string; urgent?: boolean }): Doc {
@@ -222,7 +278,7 @@ export function updateNode(doc: Doc, id: number, patch: { title?: string; body?:
     if (patch.urgent) node.urgent = true
     else delete node.urgent
   }
-  return next
+  return freeze(next)
 }
 
 /** Sets one node's status. Nothing else changes: subtasks keep their own ticks. */
@@ -231,7 +287,7 @@ export function setStatus(doc: Doc, id: number, status: Lane): Doc {
   const node = byId(next, id)
   if (!node || node.parent == null) return doc
   node.status = status
-  return next
+  return freeze(next)
 }
 
 export function toggleDone(doc: Doc, id: number): Doc {
@@ -247,16 +303,16 @@ export function moveCard(doc: Doc, id: number, lane: Lane, beforeId?: number | n
   if (!node || node.parent == null) return doc
   node.status = lane
   if (beforeId !== id) placeBefore(next, id, beforeId)
-  return next
+  return freeze(next)
 }
 
 /** A subtask pulled out of its card onto a lane: it stays in the tree but gets a card of its own. */
 export function pullCard(doc: Doc, id: number, lane: Lane, beforeId?: number | null): Doc {
   if (depthOf(doc, id) < 2) return moveCard(doc, id, lane, beforeId)
-  const next = moveCard(doc, id, lane, beforeId)
+  const next = clone(moveCard(doc, id, lane, beforeId))
   const node = byId(next, id)
   if (node) node.loose = true
-  return next
+  return freeze(next)
 }
 
 /** A card (or line) dropped onto another card becomes one of its subtasks. */
@@ -269,7 +325,7 @@ export function dockCard(doc: Doc, id: number, parentId: number): Doc {
   const n = byId(next, id)!
   n.parent = parentId
   delete n.loose
-  return normalize(next)
+  return freeze(normalize(next))
 }
 
 /** Removes a node and everything under it. Notes hitched to any of it come loose. */
@@ -278,7 +334,7 @@ export function removeNode(doc: Doc, id: number): Doc {
   const gone = new Set(subtreeIds(doc, id))
   const next = clone(doc)
   next.nodes = next.nodes.filter((n) => !gone.has(n.id))
-  return normalize(next)
+  return freeze(normalize(next))
 }
 
 /** Under the sibling above, as its last child. Returns the same Doc when there is no sibling above. */
@@ -293,7 +349,7 @@ export function indentNode(doc: Doc, id: number): Doc {
   n.parent = siblings[at - 1].id
   // Last child of its new parent, which in a flat list means after everything already there.
   placeBefore(next, id, null)
-  return normalize(next)
+  return freeze(normalize(next))
 }
 
 /** Out to sit right after its old parent. Returns the same Doc for a project. */
@@ -311,7 +367,7 @@ export function outdentNode(doc: Doc, id: number): Doc {
   const tail = subtreeIds(next, parent.id)
   const lastAt = Math.max(...tail.map((t) => next.nodes.findIndex((x) => x.id === t)))
   next.nodes.splice(lastAt + 1, 0, n)
-  return normalize(next)
+  return freeze(normalize(next))
 }
 
 /** Moves a node one place up or down among its siblings. */
@@ -328,7 +384,7 @@ export function shiftNode(doc: Doc, id: number, dir: -1 | 1): Doc {
     const after = siblings[at + 2]
     placeBefore(next, id, after ? after.id : null)
   }
-  return next
+  return freeze(next)
 }
 
 /* ------------------------------------------------------------------- notes */
@@ -346,7 +402,7 @@ export function addNote(doc: Doc, text = '', date = tapeDate()): { doc: Doc; id:
   const next = clone(doc)
   const note: Note = { id: noteId(), date, text }
   next.notes.push(note)
-  return { doc: next, id: note.id }
+  return { doc: freeze(next), id: note.id }
 }
 
 export function setNoteText(doc: Doc, id: string, text: string): Doc {
@@ -354,14 +410,14 @@ export function setNoteText(doc: Doc, id: string, text: string): Doc {
   const note = next.notes.find((n) => n.id === id)
   if (!note) return doc
   note.text = text
-  return next
+  return freeze(next)
 }
 
 export function removeNote(doc: Doc, id: string): Doc {
   if (!doc.notes.some((n) => n.id === id)) return doc
   const next = clone(doc)
   next.notes = next.notes.filter((n) => n.id !== id)
-  return next
+  return freeze(next)
 }
 
 export function moveNote(doc: Doc, from: number, to: number): Doc {
@@ -371,7 +427,7 @@ export function moveNote(doc: Doc, from: number, to: number): Doc {
   const next = clone(doc)
   const [note] = next.notes.splice(from, 1)
   next.notes.splice(clamped, 0, note)
-  return next
+  return freeze(next)
 }
 
 export function hitchNote(doc: Doc, id: string, nodeId: number | null): Doc {
@@ -380,7 +436,7 @@ export function hitchNote(doc: Doc, id: string, nodeId: number | null): Doc {
   if (!note) return doc
   if (nodeId == null || !byId(next, nodeId)) delete note.node
   else note.node = nodeId
-  return next
+  return freeze(next)
 }
 
 /* ------------------------------------------------------------- validation */
@@ -400,19 +456,21 @@ export function sanitizeDoc(raw: unknown): Doc {
   const seen = new Set<number>()
   let maxId = 0
   for (const item of src.nodes) {
-    if (item && typeof item === 'object' && typeof (item as Node).id === 'number') maxId = Math.max(maxId, (item as Node).id)
+    const raw = item && typeof item === 'object' ? (item as Node).id : undefined
+    if (isSafeId(raw)) maxId = Math.max(maxId, raw)
   }
   for (const item of src.nodes) {
     if (!item || typeof item !== 'object') continue
     const n = item as Record<string, unknown>
-    let id = typeof n.id === 'number' && Number.isInteger(n.id) && n.id > 0 ? n.id : 0
+    let id = isSafeId(n.id) ? n.id : 0
     if (!id || seen.has(id)) id = ++maxId
+    if (id > MAX_ID) throw new Error('document has too many items')
     seen.add(id)
     const node: Node = {
       id,
       title: typeof n.title === 'string' ? n.title : String(n.title ?? ''),
       status: n.status === 'none' || isLane(n.status) ? (n.status as Status) : 'pending',
-      parent: typeof n.parent === 'number' ? n.parent : null,
+      parent: isSafeId(n.parent) ? n.parent : null,
     }
     if (typeof n.body === 'string' && n.body.trim()) node.body = n.body
     if (n.urgent === true) node.urgent = true
@@ -439,6 +497,18 @@ export function sanitizeDoc(raw: unknown): Doc {
     }
   }
 
+  // Cut anything nested deeper than MAX_DEPTH loose at that depth, so no walk can run away.
+  const byKey = new Map(nodes.map((n) => [n.id, n]))
+  for (const node of nodes) {
+    let steps = 0
+    let at = node.parent
+    while (at != null && steps <= MAX_DEPTH) {
+      steps += 1
+      at = byKey.get(at)?.parent ?? null
+    }
+    if (steps > MAX_DEPTH) node.parent = null
+  }
+
   const notes: Note[] = []
   const noteIds = new Set<string>()
   if (Array.isArray(src.notes)) {
@@ -449,9 +519,50 @@ export function sanitizeDoc(raw: unknown): Doc {
       if (noteIds.has(id)) id = noteId()
       noteIds.add(id)
       const note: Note = { id, date: typeof n.date === 'string' ? n.date : '', text: typeof n.text === 'string' ? n.text : '' }
-      if (typeof n.node === 'number' && ids.has(n.node)) note.node = n.node
+      if (isSafeId(n.node) && ids.has(n.node)) note.node = n.node
       notes.push(note)
     }
   }
-  return normalize({ nodes, notes })
+  return freeze(normalize({ nodes, notes }))
+}
+
+function isSafeId(value: unknown): value is number {
+  return typeof value === 'number' && Number.isInteger(value) && value > 0 && value <= MAX_ID
+}
+
+/* ---------------------------------------------------------------- restoring */
+
+/**
+ * Puts back nodes that a delete removed, into whatever the doc is now — so
+ * "Undo" on a delete brings that back without also undoing anything done since.
+ * Each comes back after the node it followed; one whose parent has since gone
+ * comes back as a project. Notes that were hitched to them are hitched again.
+ */
+export function restoreRemoved(current: Doc, before: Doc, removedIds: readonly number[]): Doc {
+  const wanted = new Set(removedIds)
+  const next = clone(current)
+  const have = new Set(next.nodes.map((n) => n.id))
+  before.nodes.forEach((node, at) => {
+    if (!wanted.has(node.id) || have.has(node.id)) return
+    const prevId = before.nodes[at - 1]?.id
+    const prevAt = prevId == null ? -1 : next.nodes.findIndex((n) => n.id === prevId)
+    next.nodes.splice(prevId == null ? 0 : prevAt < 0 ? next.nodes.length : prevAt + 1, 0, { ...node })
+    have.add(node.id)
+  })
+  for (const node of next.nodes) if (node.parent != null && !have.has(node.parent)) node.parent = null
+  for (const note of next.notes) {
+    const old = before.notes.find((x) => x.id === note.id)
+    if (note.node == null && old?.node != null && wanted.has(old.node)) note.node = old.node
+  }
+  return freeze(normalize(next))
+}
+
+/** Puts back a note that was removed, where it was. */
+export function restoreNote(current: Doc, before: Doc, id: string): Doc {
+  if (current.notes.some((n) => n.id === id)) return current
+  const at = before.notes.findIndex((n) => n.id === id)
+  if (at < 0) return current
+  const next = clone(current)
+  next.notes.splice(Math.min(at, next.notes.length), 0, { ...before.notes[at] })
+  return freeze(next)
 }

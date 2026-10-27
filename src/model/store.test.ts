@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { addNode, byId, setNoteText, addNote } from './doc'
 import { parseLegacy } from './legacy'
 import { BACKUP_KEY, DOC_KEY, exportText, importText, listBackups, load, save, snapshot } from './store'
@@ -105,5 +105,50 @@ describe('import', () => {
 
   it('reads a legacy note that ran to the end of the line with no closing quote', () => {
     expect(parseLegacy('DUMP\n  NOTE 01.01.26 "unclosed').notes[0].text).toBe('unclosed')
+  })
+})
+
+describe('when storage is full', () => {
+  let quota = Infinity
+  beforeEach(() => {
+    localStorage.clear()
+    quota = Infinity
+    const real = Storage.prototype.setItem
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(function (this: Storage, key: string, value: string) {
+      let used = 0
+      for (let i = 0; i < this.length; i++) {
+        const k = this.key(i)!
+        if (k !== key) used += k.length + (this.getItem(k)?.length ?? 0)
+      }
+      if (used + key.length + value.length > quota) throw new DOMException('full', 'QuotaExceededError')
+      real.call(this, key, value)
+    })
+  })
+  afterEach(() => vi.restoreAllMocks())
+
+  it('drops old snapshots to make room for the board, and keeps saving', () => {
+    let doc = seedDoc()
+    for (let i = 0; i < 8; i++) {
+      doc = addNode(doc, { parent: 1, title: `t${i}`, body: 'x'.repeat(2000) }).doc
+      snapshot(doc, true)
+    }
+    expect(listBackups().length).toBe(8)
+    const size = JSON.stringify(localStorage).length
+    quota = size + 3000
+    const big = addNode(doc, { parent: 1, title: 'big', body: 'y'.repeat(6000) }).doc
+    expect(save(big)).toBe(true)
+    expect(load().doc).toEqual(big)
+    expect(listBackups().length).toBeLessThan(8)
+  })
+
+  it('never saves over an unreadable board it could not set aside', () => {
+    snapshot(seedDoc(), true)
+    const damaged = '{"app":"vault","doc":' + 'z'.repeat(5000)
+    localStorage.setItem(DOC_KEY, damaged)
+    quota = JSON.stringify(localStorage).length + 100
+    const r = load()
+    expect(r.holdSave).toBe(true)
+    expect(r.notice).toMatch(/won't save over it/)
+    expect(localStorage.getItem(DOC_KEY)).toBe(damaged)
   })
 })

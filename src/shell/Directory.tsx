@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type PointerEvent } from 'react'
+import { memo, useEffect, useMemo, useRef, useState, type ChangeEvent, type KeyboardEvent, type MouseEvent, type PointerEvent } from 'react'
 import { byId, childrenOf, depthOf, indentNode, kindOf, laneOf, outdentNode, projectsOf, searchPaths, shiftNode } from '../model/doc'
 import { treeRows, type TreeRow } from '../model/tree'
-import { LANES, LANE_LABEL, isLane, type Doc, type Lane } from '../model/types'
+import { LANES, LANE_LABEL, isLane, type Doc, type Lane, type Node } from '../model/types'
 import { Caret, Chevron, Cross, Plus } from './Glyph'
 import { InlineEdit } from './InlineEdit'
 import { Mark } from './Mark'
@@ -35,7 +35,8 @@ type DirectoryProps = {
 
 const THRESH = 6
 
-type RowDrag = { id: number; startX: number; startY: number; live: boolean }
+/** A press on a row: a tap (select, or rename if it lands on the name of the selected row) or the start of a drag. */
+type RowDrag = { id: number; el: HTMLElement; startX: number; startY: number; live: boolean; onName: boolean }
 
 export function Directory(props: DirectoryProps) {
   const { doc, query, selectedId, editing, draft, filterId, collapsed } = props
@@ -48,14 +49,20 @@ export function Directory(props: DirectoryProps) {
 
   const keep = useMemo(() => (query.trim() ? searchPaths(doc, query) : undefined), [doc, query])
   const roots = projectsOf(doc).filter((p) => (filterId == null || p.id === filterId) && (!keep || keep.has(p.id)))
-  const columns = roots.map((root) => treeRows(doc, root.id, collapsed, keep))
-  const flat = columns.flat()
+  // Rows only change with the doc, the folds or the search, so moving the selection re-renders two rows, not all of them.
+  const columns = useMemo(() => roots.map((root) => treeRows(doc, root.id, collapsed, keep)), [doc, collapsed, keep, filterId]) // eslint-disable-line react-hooks/exhaustive-deps
+  const flat = useMemo(() => columns.flat(), [columns])
   const taskCount = doc.nodes.filter((n) => n.parent != null && kindOf(doc, n.id) === 'task').length
 
   // Keep the selected row in view as the keyboard moves it.
+  // (scrollIntoView is slow on a long multi-column tree, so measure and scroll only when it is actually off screen.)
   useEffect(() => {
     if (selectedId == null) return
-    document.getElementById(`tree-${selectedId}`)?.scrollIntoView({ block: 'nearest' })
+    const r = document.getElementById(`tree-${selectedId}`)?.getBoundingClientRect()
+    if (!r) return
+    const top = 80
+    if (r.top < top) window.scrollBy(0, r.top - top)
+    else if (r.bottom > window.innerHeight - 16) window.scrollBy(0, r.bottom - window.innerHeight + 16)
   }, [selectedId])
 
   function refocus() {
@@ -124,9 +131,11 @@ export function Directory(props: DirectoryProps) {
       return
     }
     if (key === 'Tab') {
-      handled()
+      // Only taken when it does something, so Tab still leaves the tree from a row that cannot move.
       const next = e.shiftKey ? outdentNode(doc, id) : indentNode(doc, id)
-      if (next !== doc) props.onCommit(next)
+      if (next === doc) return
+      handled()
+      props.onCommit(next)
       return
     }
     if (key.toLowerCase() === 'x' && !e.metaKey && !e.ctrlKey && depthOf(doc, id) >= 2) {
@@ -143,23 +152,56 @@ export function Directory(props: DirectoryProps) {
     return isLane(lane) ? lane : null
   }
 
-  function beginRow(e: PointerEvent<HTMLElement>, id: number) {
-    if (e.button !== 0 || depthOf(doc, id) === 0) return
-    if ((e.target as HTMLElement).closest('button, input, select')) return
-    e.currentTarget.setPointerCapture(e.pointerId)
-    dragRef.current = { id, startX: e.clientX, startY: e.clientY, live: false }
+  /*
+   * Pointer, click and change events are handled once, on the tree, and find
+   * their row by `data-node-id` — so rows carry no handlers of their own and
+   * can skip re-rendering when nothing about them changed.
+   */
+  function rowOf(target: EventTarget | null): { el: HTMLElement; id: number } | null {
+    const el = target instanceof Element ? target.closest<HTMLElement>('[data-node-id]') : null
+    const id = Number(el?.dataset.nodeId)
+    return el && Number.isFinite(id) ? { el, id } : null
+  }
+
+  function beginRow(e: PointerEvent<HTMLElement>) {
+    pointing.current = true
+    if (e.button !== 0) return
+    const target = e.target as HTMLElement
+    if (target.closest('button, input, select')) return
+    const hit = rowOf(target)
+    if (!hit) return
+    // Projects do not drag onto the board, so they are never captured; everything is still a tap.
+    if (depthOf(doc, hit.id) > 0) hit.el.setPointerCapture(e.pointerId)
+    dragRef.current = { id: hit.id, el: hit.el, startX: e.clientX, startY: e.clientY, live: false, onName: Boolean(target.closest('.stem-name')) }
+  }
+
+  function onAction(e: MouseEvent<HTMLElement>) {
+    const button = (e.target as Element).closest<HTMLElement>('[data-action]')
+    const hit = rowOf(button)
+    if (!button || !hit) return
+    const action = button.dataset.action
+    if (action === 'fold') props.onToggle(hit.id)
+    else if (action === 'done') props.onToggleDone(hit.id)
+    else if (action === 'add') props.onStartDraft(hit.id)
+    else if (action === 'delete') props.onDelete(hit.id)
+  }
+
+  function onLane(e: ChangeEvent<HTMLElement>) {
+    const select = e.target as HTMLSelectElement
+    const hit = rowOf(select)
+    if (hit && select.dataset.lane != null && isLane(select.value)) props.onSetLane(hit.id, select.value)
   }
 
   function moveRow(e: PointerEvent<HTMLElement>) {
     const drag = dragRef.current
-    if (!drag) return
+    if (!drag || depthOf(doc, drag.id) === 0) return
     const dx = e.clientX - drag.startX
     const dy = e.clientY - drag.startY
     if (!drag.live && dx * dx + dy * dy < THRESH * THRESH) return
     drag.live = true
     if (!ghostRef.current) {
-      const r = e.currentTarget.getBoundingClientRect()
-      const ghost = stripIds(e.currentTarget.cloneNode(true) as HTMLElement)
+      const r = drag.el.getBoundingClientRect()
+      const ghost = stripIds(drag.el.cloneNode(true) as HTMLElement)
       Object.assign(ghost.style, { position: 'fixed', left: `${r.left}px`, top: `${r.top}px`, width: `${r.width}px`, pointerEvents: 'none', zIndex: '80' })
       ghost.classList.add('is-ghost')
       document.body.appendChild(ghost)
@@ -172,11 +214,17 @@ export function Directory(props: DirectoryProps) {
   }
 
   function endRow(e: PointerEvent<HTMLElement>) {
+    pointing.current = false
     const drag = dragRef.current
     dragRef.current = null
     ghostRef.current?.remove()
     ghostRef.current = null
-    if (!drag?.live) return
+    if (!drag) return
+    if (!drag.live) {
+      if (drag.onName && selectedId === drag.id) props.onEdit(drag.id)
+      else props.onSelect(drag.id)
+      return
+    }
     const lane = dropLane(e.clientX, e.clientY)
     if (!lane) return
     if (depthOf(doc, drag.id) >= 2) props.onPull(drag.id, lane)
@@ -186,114 +234,25 @@ export function Directory(props: DirectoryProps) {
   /* ------------------------------------------------------------------ render */
 
   function renderRow(row: TreeRow) {
-    const { node, depth } = row
-    const id = node.id
-    const kind = depth === 0 ? 'project' : depth === 1 ? 'task' : 'subtask'
+    const id = row.node.id
     const isEditing = editing?.id === id && editing.where === 'tree'
-    const selected = selectedId === id
-    const hit = keep && query.trim() ? matches(node.title, node.body, query) : false
-    const lane = laneOf(node.status)
-    const done = node.status === 'done'
-
     return (
-      <div
+      <Row
         key={id}
-        id={`tree-${id}`}
-        role="treeitem"
-        aria-level={depth + 1}
-        aria-selected={selected}
-        aria-expanded={row.hasChildren ? row.open : undefined}
-        className={`stem is-${kind}${selected ? ' is-live' : ''}${hit ? ' is-found' : ''}${done && kind === 'subtask' ? ' is-done' : ''}${node.loose ? ' is-loose' : ''}`}
-        data-node-id={id}
-        data-testid={`tree-row-${id}`}
-        onPointerDown={(e) => beginRow(e, id)}
-        onPointerMove={moveRow}
-        onPointerUp={endRow}
-        onPointerCancel={endRow}
-        onClick={(e) => {
-          if ((e.target as HTMLElement).closest('button, input, select')) return
-          if (selected && (e.target as HTMLElement).closest('.stem-name')) props.onEdit(id)
-          else props.onSelect(id)
-        }}
-        onDoubleClick={(e) => {
-          if ((e.target as HTMLElement).closest('button, input, select')) return
-          props.onEdit(id)
-        }}
-      >
-        <span className="stem-rule" aria-hidden="true">
-          {row.stem.trimEnd()}
-        </span>
-        {row.hasChildren ? (
-          <button
-            type="button"
-            tabIndex={-1}
-            className="stem-fold"
-            aria-label={row.open ? `Collapse ${node.title}` : `Expand ${node.title}`}
-            onClick={() => props.onToggle(id)}
-          >
-            {row.open ? <Caret /> : <Chevron />}
-          </button>
-        ) : (
-          <span className="stem-fold" aria-hidden="true" />
-        )}
-        {kind === 'subtask' ? (
-          <button
-            type="button"
-            tabIndex={-1}
-            className="stem-check"
-            aria-label={done ? `Reopen ${node.title}` : `Complete ${node.title}`}
-            aria-pressed={done}
-            onClick={() => props.onToggleDone(id)}
-          >
-            {done ? '[x]' : '[ ]'}
-          </button>
-        ) : null}
-        {isEditing ? (
-          <InlineEdit
-            className="stem-input"
-            value={node.title}
-            ariaLabel={`Rename ${kind}`}
-            selectAll
-            testId={`tree-input-${id}`}
-            onCommit={(v, how) => {
-              props.onRename(id, v)
-              if (how !== 'blur') refocus()
-            }}
-          />
-        ) : (
-          <span className="stem-name">
-            <Mark text={node.title.trim() || '_'} query={query} />
-            {kind === 'project' ? '/' : ''}
-          </span>
-        )}
-        {node.urgent ? (
-          <span className="stem-urgent" title="Urgent">
-            !
-          </span>
-        ) : null}
-        <span className="stem-tools">
-          <button type="button" tabIndex={-1} className="stem-tool" aria-label={`Add inside ${node.title}`} title="Add inside (+)" onClick={() => props.onStartDraft(id)}>
-            <Plus />
-          </button>
-          <button type="button" tabIndex={-1} className="stem-tool is-danger" aria-label={`Delete ${node.title}`} title="Delete (Del)" onClick={() => props.onDelete(id)}>
-            <Cross />
-          </button>
-        </span>
-        {kind === 'task' || node.loose ? (
-          <label className="stem-status">
-            <span>{LANE_LABEL[lane]}</span>
-            <select tabIndex={-1} aria-label={`Status of ${node.title}`} value={lane} onChange={(e) => props.onSetLane(id, e.target.value as Lane)}>
-              {LANES.map((l) => (
-                <option key={l} value={l}>
-                  {LANE_LABEL[l]}
-                </option>
-              ))}
-            </select>
-          </label>
-        ) : kind === 'project' ? (
-          <span className="stem-count">{childrenOf(doc, id).length}</span>
-        ) : null}
-      </div>
+        row={row}
+        selected={selectedId === id}
+        hit={Boolean(keep && matches(row.node.title, row.node.body, query))}
+        query={keep ? query : ''}
+        count={row.depth === 0 ? childrenOf(doc, id).length : 0}
+        onRename={
+          isEditing
+            ? (v, how) => {
+                props.onRename(id, v)
+                if (how !== 'blur') refocus()
+              }
+            : undefined
+        }
+      />
     )
   }
 
@@ -354,12 +313,12 @@ export function Directory(props: DirectoryProps) {
         data-testid="tree"
         aria-activedescendant={selectedId != null && flat.some((r) => r.node.id === selectedId) ? `tree-${selectedId}` : undefined}
         onKeyDown={onKeyDown}
-        onPointerDownCapture={() => {
-          pointing.current = true
-        }}
-        onPointerUpCapture={() => {
-          pointing.current = false
-        }}
+        onPointerDown={beginRow}
+        onPointerMove={moveRow}
+        onPointerUp={endRow}
+        onPointerCancel={endRow}
+        onClick={onAction}
+        onChange={onLane}
         onFocus={(e) => {
           if (pointing.current) return
           if (e.target === e.currentTarget && selectedId == null && flat[0]) props.onFocusRow(flat[0].node.id)
@@ -417,4 +376,94 @@ function stripIds(el: HTMLElement): HTMLElement {
     for (const attr of ['id', 'data-testid', 'data-card-id', 'data-nested-id', 'data-node-id', 'data-jack']) node.removeAttribute(attr)
   }
   return el
+}
+
+type RowProps = {
+  row: TreeRow
+  selected: boolean
+  hit: boolean
+  query: string
+  count: number
+  /** Present only while this row is being renamed. */
+  onRename?: (value: string, how: 'enter' | 'blur' | 'escape') => void
+}
+
+/** One line of the listing. No handlers: the tree handles every event for it (see `rowOf`). */
+const Row = memo(function Row({ row, selected, hit, query, count, onRename }: RowProps) {
+  const { node, depth } = row
+  const kind = depth === 0 ? 'project' : depth === 1 ? 'task' : 'subtask'
+  const lane = laneOf(node.status)
+  const done = node.status === 'done'
+  return (
+    <div
+      id={`tree-${node.id}`}
+      role="treeitem"
+      aria-level={depth + 1}
+      aria-selected={selected}
+      aria-expanded={row.hasChildren ? row.open : undefined}
+      className={`stem is-${kind}${selected ? ' is-live' : ''}${hit ? ' is-found' : ''}${done && kind === 'subtask' ? ' is-done' : ''}${node.loose ? ' is-loose' : ''}`}
+      data-node-id={node.id}
+      data-testid={`tree-row-${node.id}`}
+    >
+      <span className="stem-rule" aria-hidden="true">
+        {row.stem.trimEnd()}
+      </span>
+      {row.hasChildren ? (
+        <button type="button" tabIndex={-1} className="stem-fold" data-action="fold" aria-label={row.open ? `Collapse ${node.title}` : `Expand ${node.title}`}>
+          {row.open ? <Caret /> : <Chevron />}
+        </button>
+      ) : (
+        <span className="stem-fold" aria-hidden="true" />
+      )}
+      {kind === 'subtask' ? (
+        <button
+          type="button"
+          tabIndex={-1}
+          className="stem-check"
+          data-action="done"
+          aria-label={done ? `Reopen ${node.title}` : `Complete ${node.title}`}
+          aria-pressed={done}
+        >
+          {done ? '[x]' : '[ ]'}
+        </button>
+      ) : null}
+      {onRename ? (
+        <InlineEdit className="stem-input" value={node.title} ariaLabel={`Rename ${kind}`} selectAll testId={`tree-input-${node.id}`} onCommit={onRename} />
+      ) : (
+        <span className="stem-name">
+          <Mark text={node.title.trim() || '_'} query={query} />
+          {kind === 'project' ? '/' : ''}
+        </span>
+      )}
+      {node.urgent ? (
+        <span className="stem-urgent" title="Urgent">
+          !
+        </span>
+      ) : null}
+      <span className="stem-tools">
+        <button type="button" tabIndex={-1} className="stem-tool" data-action="add" aria-label={`Add inside ${node.title}`} title="Add inside (+)">
+          <Plus />
+        </button>
+        <button type="button" tabIndex={-1} className="stem-tool is-danger" data-action="delete" aria-label={`Delete ${node.title}`} title="Delete (Del)">
+          <Cross />
+        </button>
+      </span>
+      {kind === 'task' || node.loose ? <LaneSelect node={node} lane={lane} /> : kind === 'project' ? <span className="stem-count">{count}</span> : null}
+    </div>
+  )
+})
+
+function LaneSelect({ node, lane }: { node: Node; lane: Lane }) {
+  return (
+    <label className="stem-status">
+      <span>{LANE_LABEL[lane]}</span>
+      <select tabIndex={-1} data-lane="" aria-label={`Status of ${node.title}`} value={lane} onChange={() => undefined}>
+        {LANES.map((l) => (
+          <option key={l} value={l}>
+            {LANE_LABEL[l]}
+          </option>
+        ))}
+      </select>
+    </label>
+  )
 }

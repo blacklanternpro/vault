@@ -35,14 +35,17 @@ export function TopBar(p: TopBarProps) {
     const close = (e: PointerEvent) => {
       if (!menuRef.current?.contains(e.target as globalThis.Node)) setMenu(false)
     }
+    // Caught on the way down, so Esc closes the menu and nothing else (not the drawer behind it).
     const esc = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setMenu(false)
+      if (e.key !== 'Escape') return
+      e.stopPropagation()
+      setMenu(false)
     }
     window.addEventListener('pointerdown', close)
-    window.addEventListener('keydown', esc)
+    window.addEventListener('keydown', esc, true)
     return () => {
       window.removeEventListener('pointerdown', close)
-      window.removeEventListener('keydown', esc)
+      window.removeEventListener('keydown', esc, true)
     }
   }, [menu])
 

@@ -16,6 +16,8 @@ import {
   pullCard,
   removeNode,
   removeNote,
+  restoreNote,
+  restoreRemoved,
   setNoteText,
   setStatus,
   subtreeIds,
@@ -23,7 +25,7 @@ import {
   updateNode,
 } from '../model/doc'
 import { exportFileName, exportText, importText, listBackups, load, save, snapshot, subscribe } from '../model/store'
-import type { Lane } from '../model/types'
+import type { Doc, Lane } from '../model/types'
 import { Board } from './Board'
 import { Directory } from './Directory'
 import { Drawer } from './Drawer'
@@ -59,7 +61,27 @@ export function Studio() {
   const [query, setQuery] = useState('')
   const [focusNote, setFocusNote] = useState<string | null>(null)
   const [dragging, setDragging] = useState(false)
-  const [toasts, setToasts] = useState<Toast[]>(() => (boot.notice ? [{ id: 1, text: boot.notice, sticky: true }] : []))
+  const [holdSave, setHoldSave] = useState(Boolean(boot.holdSave))
+  const [toasts, setToasts] = useState<Toast[]>(() =>
+    boot.notice
+      ? [
+          {
+            id: 1,
+            text: boot.notice,
+            sticky: true,
+            action: boot.holdSave
+              ? {
+                  label: 'Save over it',
+                  run: () => {
+                    setHoldSave(false)
+                    setToasts((list) => list.filter((t) => t.id !== 1))
+                  },
+                }
+              : undefined,
+          },
+        ]
+      : [],
+  )
   const [saveFailed, setSaveFailed] = useState(false)
 
   const liveRef = useRef<LiveLeash | null>(null)
@@ -72,21 +94,23 @@ export function Studio() {
   /* ------------------------------------------------------------ persistence */
 
   useEffect(() => {
+    if (holdSave) return
     const json = JSON.stringify(doc)
     if (json === lastSaved.current) return
     const ok = save(doc)
     if (ok) lastSaved.current = json
     setSaveFailed(!ok)
-  }, [doc])
+  }, [doc, holdSave])
 
-  const { replace } = history
+  const { replace, adopt } = history
   useEffect(
     () =>
       subscribe((remote) => {
         lastSaved.current = JSON.stringify(remote)
-        replace(remote)
+        // Another tab's change is not this tab's to undo, so it does not go on this tab's undo stack.
+        adopt(remote)
       }),
-    [replace],
+    [adopt],
   )
 
   /* ---------------------------------------------------------------- derived */
@@ -101,9 +125,9 @@ export function Studio() {
 
   /* ---------------------------------------------------------------- notices */
 
-  const toast = useCallback((text: string, undo = false) => {
+  const toast = useCallback((text: string, action?: Toast['action']) => {
     const id = ++toastSeq.current
-    setToasts((list) => [...list.filter((t) => t.sticky), { id, text, undo }])
+    setToasts((list) => [...list.filter((t) => t.sticky), { id, text, action }])
   }, [])
 
   const dismiss = useCallback((id: number) => setToasts((list) => list.filter((t) => t.id !== id)), [])
@@ -112,14 +136,56 @@ export function Studio() {
 
   const { commit } = history
 
+  /**
+   * The Undo on a toast takes back that change and only that one: a plain undo
+   * while nothing has happened since, otherwise a targeted restore into the doc as it now is.
+   */
+  function undoOf(after: Doc, restore: (current: Doc) => Doc): Toast['action'] {
+    return {
+      label: 'Undo',
+      run: () => {
+        if (history.ref.current === after) history.undo()
+        else commit(restore(history.ref.current))
+      },
+    }
+  }
+
   function deleteNode(id: number) {
-    const node = byId(history.ref.current, id)
+    const before = history.ref.current
+    const node = byId(before, id)
     if (!node) return
-    const inside = subtreeIds(history.ref.current, id).length - 1
-    commit(removeNode(history.ref.current, id))
+    const ids = subtreeIds(before, id)
+    const after = removeNode(before, id)
+    commit(after)
     setEditing(null)
     const name = node.title.trim() || 'untitled'
-    toast(`Deleted “${name}”${inside ? ` and ${inside} inside` : ''}`, true)
+    const inside = ids.length - 1
+    toast(
+      `Deleted “${name}”${inside ? ` and ${inside} inside` : ''}`,
+      undoOf(after, (cur) => restoreRemoved(cur, before, ids)),
+    )
+  }
+
+  /** A new task hidden by a filter is a task you cannot see you made: clear whatever hides it, and say so. */
+  function reveal(next: Doc, id: number, lane: Lane) {
+    const cleared: string[] = []
+    if (filterId != null && projectOf(next, id)?.id !== filterId) {
+      setProjectFilter(null)
+      cleared.push('project')
+    }
+    if (laneFilter && laneFilter !== lane) {
+      setLaneFilter(null)
+      cleared.push('status')
+    }
+    if (urgentOnly) {
+      setUrgentOnly(false)
+      cleared.push('urgent')
+    }
+    if (query.trim() && !cardHits(next, query).has(id)) {
+      setQuery('')
+      cleared.push('search')
+    }
+    if (cleared.length) toast(`Cleared the ${cleared.join(' and ')} filter so you can see the new task`)
   }
 
   /** Which project a new task belongs in: the filter, else wherever you are, else the first one. */
@@ -146,6 +212,7 @@ export function Studio() {
     const made = addNode(next, { parent: pid, title, status: lane })
     commit(made.doc)
     setSelected(made.id)
+    reveal(made.doc, made.id, lane)
   }
 
   function rename(id: number, title: string) {
@@ -245,11 +312,12 @@ export function Studio() {
   async function importFile(file: File) {
     try {
       const next = importText(await file.text())
-      snapshot(history.ref.current, true)
+      const before = history.ref.current
+      snapshot(before, true)
       replace(next)
       setOpenId(null)
       setSelected(null)
-      toast(`Imported ${next.nodes.length} items from ${file.name}`, true)
+      toast(`Imported ${next.nodes.length} items from ${file.name}`, undoOf(next, () => before))
     } catch (err) {
       toast(err instanceof Error ? err.message : "Couldn't read that file.")
     }
@@ -258,9 +326,10 @@ export function Studio() {
   function restore(at: number) {
     const found = listBackups().find((b) => b.at === at)
     if (!found) return
-    snapshot(history.ref.current, true)
+    const before = history.ref.current
+    snapshot(before, true)
     replace(found.doc)
-    toast(`Restored the snapshot from ${new Date(at).toLocaleString()}`, true)
+    toast(`Restored the snapshot from ${new Date(at).toLocaleString()}`, undoOf(found.doc, () => before))
   }
 
   /* ---------------------------------------------------------------- render */
@@ -294,9 +363,9 @@ export function Studio() {
       <Notices
         toasts={toasts}
         saveFailed={saveFailed}
-        onUndo={() => {
-          undo()
-          setToasts((list) => list.filter((t) => t.sticky))
+        onAction={(t) => {
+          t.action?.run()
+          if (!t.sticky) setToasts((list) => list.filter((x) => x.sticky))
         }}
         onDismiss={dismiss}
         onExport={exportFile}
@@ -354,6 +423,8 @@ export function Studio() {
             }}
             onStartDraft={(parent) => {
               setEditing(null)
+              // A new row has to be seen to be typed: a search would hide it.
+              if (query.trim()) setQuery('')
               setDraft({ where: 'tree', parent })
               if (parent != null) setCollapsed((set) => (set.has(parent) ? new Set([...set].filter((x) => x !== parent)) : set))
             }}
@@ -362,6 +433,10 @@ export function Studio() {
                 const made = addNode(history.ref.current, { parent, title: title.trim() })
                 commit(made.doc)
                 if (!keepGoing) setSelected(made.id)
+                if (parent == null && filterId != null) {
+                  setProjectFilter(null)
+                  toast('Cleared the project filter so you can see the new project')
+                }
               }
               if (!keepGoing || !title.trim()) setDraft(null)
             }}
@@ -382,10 +457,14 @@ export function Studio() {
               setFocusNote(made.id)
             }}
             onEdit={(id, text, session) => commit(setNoteText(history.ref.current, id, text), `note:${session}`, Infinity)}
-            onRemove={(id, hadText, session) => {
+            onRemove={(id, original, session) => {
+              const before = history.ref.current
+              const after = removeNote(before, id)
               // Same step as the typing that emptied it, so Undo brings the note back with its words.
-              commit(removeNote(history.ref.current, id), `note:${session}`, Infinity)
-              if (hadText) toast('Note removed', true)
+              commit(after, `note:${session}`, Infinity)
+              if (original.trim()) {
+                toast('Note removed', undoOf(after, (cur) => setNoteText(restoreNote(cur, before, id), id, original)))
+              }
             }}
             onReorder={(from, to) => commit(moveNote(history.ref.current, from, to))}
             onHitch={(id, nodeId) => commit(hitchNote(history.ref.current, id, nodeId))}

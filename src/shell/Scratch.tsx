@@ -13,8 +13,8 @@ type ScratchProps = {
   onAdd: () => void
   /** `session` names one stay in a note, so everything typed in it undoes as one step. */
   onEdit: (id: string, text: string, session: string) => void
-  /** `hadText` is false for a note that was opened and left empty, which goes quietly. */
-  onRemove: (id: string, hadText: boolean, session: string) => void
+  /** `original` is what the note said before this edit; empty for a note opened and left empty, which goes quietly. */
+  onRemove: (id: string, original: string, session: string) => void
   onReorder: (from: number, to: number) => void
   onHitch: (id: string, nodeId: number | null) => void
 }
@@ -146,7 +146,7 @@ export function Scratch({ doc, focusNote, onFocused, onAdd, onEdit, onRemove, on
               onChange={(e) => onEdit(note.id, e.target.value, sessionOf(note.id))}
               onBlur={(e) => {
                 if (e.target.value.trim()) return
-                onRemove(note.id, Boolean(startText.current.get(note.id)?.trim()), sessionOf(note.id))
+                onRemove(note.id, startText.current.get(note.id) ?? '', sessionOf(note.id))
               }}
               onKeyDown={(e) => {
                 if (e.key === 'Escape') (e.target as HTMLTextAreaElement).blur()

@@ -214,7 +214,8 @@ test.describe('directory', () => {
     expect(kids).toEqual(['pick a typeface', 'pick colours'])
 
     const colours = doc.nodes.find((n) => n.title === 'pick colours')!.id as number
-    await row(page, colours).click()
+    // The row just made is already selected and the tree has focus again.
+    await expect(row(page, colours)).toHaveAttribute('aria-selected', 'true')
     await page.keyboard.press('Tab')
     doc = await saved(page)
     expect(doc.nodes.find((n) => n.id === colours)?.parent).toBe(doc.nodes.find((n) => n.title === 'pick a typeface')!.id)
@@ -310,5 +311,103 @@ test.describe('persistence', () => {
     await card(b, 8).focus()
     await b.keyboard.press('Delete')
     await expect(card(a, 8)).toHaveCount(0)
+  })
+})
+
+test.describe('second review', () => {
+  test("the toast's Undo brings back the delete it reports, not whatever happened since", async ({ page }) => {
+    await card(page, 8).focus()
+    await page.keyboard.press('Delete')
+    await card(page, 13).hover()
+    await page.getByTestId('advance-13').click()
+    await page.getByRole('button', { name: 'Undo' }).click()
+    await expect(card(page, 8)).toBeVisible()
+    expect(await laneOfCard(page, 13)).toBe('active')
+  })
+
+  test("Ctrl+Z in one tab does not undo the other tab's work", async ({ context }) => {
+    const a = await context.newPage()
+    const b = await context.newPage()
+    await a.goto('/')
+    await b.goto('/')
+    await card(a, 8).focus()
+    await a.keyboard.press('Delete')
+    await expect(card(b, 8)).toHaveCount(0)
+    await b.locator('body').click({ position: { x: 2, y: 2 } })
+    await b.keyboard.press('Control+z')
+    await expect(card(b, 8)).toHaveCount(0)
+    await expect(card(a, 8)).toHaveCount(0)
+  })
+
+  for (const setup of ['urgent', 'status', 'search'] as const) {
+    test(`a new task made under the ${setup} filter is visible`, async ({ page }) => {
+      if (setup === 'urgent') await page.getByTestId('urgent-filter').click()
+      if (setup === 'status') await page.getByTestId('status-filter').selectOption('active')
+      if (setup === 'search') await page.getByTestId('search').fill('wire')
+      await page.getByTestId('new-task').click()
+      await page.getByRole('textbox', { name: 'New task name' }).fill('MADE UNDER FILTER')
+      await page.getByRole('textbox', { name: 'New task name' }).press('Enter')
+      await expect(page.locator('[data-card-id]', { hasText: 'MADE UNDER FILTER' })).toBeVisible()
+      // A status filter puts the new task in that lane, so nothing needs clearing.
+      if (setup !== 'status') await expect(page.getByTestId('toast')).toContainText('Cleared the')
+    })
+  }
+
+  test('+ in the tree during a search shows the new row', async ({ page }) => {
+    await page.getByTestId('search').fill('wire')
+    await row(page, 5).click()
+    await page.getByTestId('tree').press('+')
+    await expect(page.getByTestId('tree-draft-input')).toBeVisible()
+    await page.getByTestId('tree-draft-input').fill('rough sketches')
+    await page.getByTestId('tree-draft-input').press('Escape')
+    await expect(page.getByTestId('directory')).toContainText('rough sketches')
+  })
+
+  test('outdent then indent keeps the lane', async ({ page }) => {
+    await row(page, 2).click()
+    await page.getByTestId('tree').press('Shift+Tab')
+    await page.getByTestId('tree').press('Tab')
+    expect(await laneOfCard(page, 2)).toBe('active')
+  })
+
+  test("a click on the selected row's name renames it", async ({ page }) => {
+    await row(page, 13).click()
+    await row(page, 13).locator('.stem-name').click()
+    await expect(page.getByTestId('tree-input-13')).toBeVisible()
+  })
+
+  test('a nested subtask shows in the drawer and counts', async ({ page }) => {
+    await row(page, 5).click()
+    await page.getByTestId('tree').press('+')
+    await page.getByTestId('tree-draft-input').fill('low-fi first')
+    await page.getByTestId('tree-draft-input').press('Escape')
+    await card(page, 2).click()
+    await expect(page.getByTestId('drawer')).toContainText('low-fi first')
+    await expect(card(page, 2)).toContainText('2/6')
+  })
+
+  test('Esc on the menu leaves the drawer open', async ({ page }) => {
+    await card(page, 2).click()
+    await page.getByTestId('menu').click()
+    await page.keyboard.press('Escape')
+    await expect(page.getByRole('menu')).toHaveCount(0)
+    await expect(page.getByTestId('drawer')).toBeVisible()
+  })
+
+  test('a hostile import loads safely and the board keeps working', async ({ page }, info) => {
+    test.setTimeout(60_000)
+    const chain = Array.from({ length: 3000 }, (_, i) => ({ id: i + 1, title: `n${i}`, status: 'pending', parent: i === 0 ? null : i }))
+    const nodes = [{ id: 9007199254740992, title: 'HUGE', status: 'none', parent: null }, ...chain]
+    const file = info.outputPath('hostile.json')
+    await import('node:fs').then((fs) => fs.writeFileSync(file, JSON.stringify({ nodes, notes: [] })))
+    const errors: string[] = []
+    page.on('pageerror', (e) => errors.push(e.message))
+    await page.getByTestId('import-file').setInputFiles(file)
+    await expect(page.getByTestId('toast')).toContainText('Imported', { timeout: 20_000 })
+    await page.getByTestId('new-task').click()
+    await page.getByRole('textbox', { name: 'New task name' }).fill('STILL WORKS')
+    await page.getByRole('textbox', { name: 'New task name' }).press('Enter')
+    await expect(page.locator('[data-card-id]', { hasText: 'STILL WORKS' })).toBeVisible()
+    expect(errors).toEqual([])
   })
 })

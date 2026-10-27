@@ -1,4 +1,4 @@
-import { normalize } from './doc'
+import { sanitizeDoc } from './doc'
 import type { Doc, Lane, Node } from './types'
 
 /** First-run content, so an empty install shows what the board and directory are for. */
@@ -54,5 +54,5 @@ export function seedDoc(): Doc {
       }
     }
   }
-  return normalize({ nodes, notes: [{ id: 'seed-note', date: '09.09.26', text: 'ask about the analytics export' }] })
+  return sanitizeDoc({ nodes, notes: [{ id: 'seed-note', date: '09.09.26', text: 'ask about the analytics export' }] })
 }

@@ -29,6 +29,12 @@ export type LoadResult = {
   origin: 'saved' | 'migrated' | 'backup' | 'seed'
   /** Something the person should be told on load, or nothing. */
   notice?: string
+  /**
+   * The saved board could not be read and there was no room to set it aside,
+   * so it is still sitting under its own key: the shell must not save over it
+   * until the person says so.
+   */
+  holdSave?: boolean
 }
 
 function storage(): Storage | null {
@@ -81,15 +87,52 @@ export function listBackups(): Backup[] {
   }
 }
 
+/** Newest snapshot time, kept under its own tiny key so the every-save check never parses the snapshots. */
+const BACKUP_AT_KEY = 'vault:backups:at'
+
+function latestSnapshotAt(s: Storage): number | null {
+  const at = Number(s.getItem(BACKUP_AT_KEY))
+  if (at > 0) return at
+  try {
+    const raw = s.getItem(BACKUP_KEY)
+    const list: unknown = raw ? JSON.parse(raw) : []
+    return Array.isArray(list) && typeof list[0]?.at === 'number' ? list[0].at : null
+  } catch {
+    return null
+  }
+}
+
 function writeBackups(s: Storage, list: Backup[]): void {
   let keep = list.slice(0, BACKUP_KEEP)
   while (keep.length) {
     try {
       s.setItem(BACKUP_KEY, JSON.stringify(keep))
+      s.setItem(BACKUP_AT_KEY, String(keep[0].at))
       return
     } catch {
       // Out of room: drop the oldest half of the snapshots and try again.
       keep = keep.slice(0, Math.floor(keep.length / 2))
+    }
+  }
+  s.removeItem(BACKUP_KEY)
+  s.removeItem(BACKUP_AT_KEY)
+}
+
+/**
+ * Snapshots are the one thing of ours that can give way when storage is full.
+ * Drops the oldest half (then half again) until `attempt` succeeds. False if
+ * even with no snapshots left it does not.
+ */
+function makeRoom(s: Storage, attempt: () => void): boolean {
+  let list = listBackups()
+  for (;;) {
+    try {
+      attempt()
+      return true
+    } catch {
+      if (!list.length) return false
+      list = list.slice(0, Math.floor(list.length / 2))
+      writeBackups(s, list)
     }
   }
 }
@@ -98,9 +141,10 @@ function writeBackups(s: Storage, list: Backup[]): void {
 export function snapshot(doc: Doc, force = false): void {
   const s = storage()
   if (!s || doc.nodes.length + doc.notes.length === 0) return
+  const at = latestSnapshotAt(s)
+  if (!force && at != null && Date.now() - at < BACKUP_EVERY_MS) return
   const list = listBackups()
   const latest = list[0]
-  if (!force && latest && Date.now() - latest.at < BACKUP_EVERY_MS) return
   if (latest && JSON.stringify(latest.doc) === JSON.stringify(doc)) return
   writeBackups(s, [{ at: Date.now(), doc }, ...list])
 }
@@ -124,24 +168,25 @@ export function load(): LoadResult {
       snapshot(doc)
       return { doc, origin: 'saved' }
     } catch {
-      // Never overwrite what we could not read: park it, then fall back to the newest snapshot.
-      try {
-        s.setItem(`vault:unreadable:${Date.now()}`, raw)
-      } catch {
-        /* no room to park it; it stays under its own key until the next save */
-      }
+      // Never overwrite what we could not read: park it (making room if we must), then fall back to the newest snapshot.
       const latest = listBackups()[0]
+      const parked = makeRoom(s, () => s.setItem(`vault:unreadable:${Date.now()}`, raw))
+      const kept = parked
+        ? 'The unreadable copy has been kept aside.'
+        : "Browser storage is too full to set the unreadable copy aside, so VAULT won't save over it until you say so. Export a copy of this board first."
       if (latest) {
         return {
           doc: latest.doc,
           origin: 'backup',
-          notice: `Your saved board couldn't be read, so the snapshot from ${stamp(latest.at)} was loaded. The unreadable copy has been kept aside.`,
+          notice: `Your saved board couldn't be read, so the snapshot from ${stamp(latest.at)} was loaded. ${kept}`,
+          holdSave: !parked,
         }
       }
       return {
         doc: seedDoc(),
         origin: 'seed',
-        notice: "Your saved board couldn't be read and there was no snapshot to fall back on. The unreadable copy has been kept aside.",
+        notice: `Your saved board couldn't be read and there was no snapshot to fall back on. ${kept}`,
+        holdSave: !parked,
       }
     }
   }
@@ -166,12 +211,14 @@ export function load(): LoadResult {
 export function save(doc: Doc): boolean {
   const s = storage()
   if (!s) return false
+  const body = envelope(doc)
+  // The board always wins over old snapshots for space.
+  if (!makeRoom(s, () => s.setItem(DOC_KEY, body))) return false
   try {
-    s.setItem(DOC_KEY, envelope(doc))
+    snapshot(doc)
   } catch {
-    return false
+    /* a snapshot that does not fit is not worth failing a save over */
   }
-  snapshot(doc)
   return true
 }
 

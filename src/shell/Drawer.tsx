@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { laneOf, projectOf, subtasksOf } from '../model/doc'
+import { laneOf, linesOf, projectOf } from '../model/doc'
 import { LANES, LANE_LABEL, type Doc, type Lane, type Node } from '../model/types'
 import { Caret, Check, Cross, Flag, Folder, Plus, Trash } from './Glyph'
 import { InlineEdit } from './InlineEdit'
@@ -52,7 +52,8 @@ export function Drawer({
 }: DrawerProps) {
   const lane = laneOf(node.status)
   const project = projectOf(doc, node.id)
-  const lines = subtasksOf(doc, node.id)
+  // Nested lines show indented under their parent line, so nothing in the card is out of sight.
+  const lines = linesOf(doc, node.id)
   const editingTitle = editing?.id === node.id && editing.field === 'title' && editing.where === 'drawer'
   const editingBody = editing?.id === node.id && editing.field === 'body'
   const drafting = draft?.where === 'drawer' && draft.parent === node.id
@@ -139,18 +140,19 @@ export function Drawer({
         Subtasks
         {lines.length ? (
           <span className="drawer-label-count">
-            {lines.filter((l) => l.status === 'done').length}/{lines.length}
+            {lines.filter((l) => l.node.status === 'done').length}/{lines.length}
           </span>
         ) : null}
       </h2>
       <ul className="subtasks">
-        {lines.map((child) => {
+        {lines.map(({ node: child, depth }) => {
           const done = child.status === 'done'
           const editingLine = editing?.id === child.id && editing.where === 'drawer'
           return (
             <li
               key={child.id}
               className={`subtask${done ? ' is-done' : ''}`}
+              style={depth > 1 ? { paddingLeft: `${(depth - 1) * 22}px` } : undefined}
               data-nested-id={child.id}
               onPointerDown={(e) => drag.beginDrag(e, child.id, 'nested', '[data-nested-id]')}
               onPointerMove={drag.onMove}

@@ -179,6 +179,7 @@ export function Board(props: BoardProps) {
                 <DraftCard doc={doc} lane={lane} project={drafting.project} onCommit={props.onDraftCommit} />
               ) : null}
               {items.length === 0 && !drafting ? <div className="lane-void">{hits ? 'no matches' : ''}</div> : null}
+              {laneFilter && laneFilter !== lane ? null : (
               <button
                 type="button"
                 className="lane-add"
@@ -189,6 +190,7 @@ export function Board(props: BoardProps) {
                 <Plus className="lane-add-glyph" />
                 New task
               </button>
+              )}
             </div>
           </section>
         )

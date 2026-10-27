@@ -13,8 +13,10 @@ export type DocHistory = {
   ref: { readonly current: Doc }
   /** Commits with the same key inside `windowMs` undo as one step. */
   commit: (next: Doc, coalesceKey?: string, windowMs?: number) => void
-  /** A doc that arrived from elsewhere (another tab, an import). Undo goes back to what was here. */
+  /** A doc this tab chose to load (an import, a snapshot). Undo goes back to what was here. */
   replace: (next: Doc) => void
+  /** A doc another tab saved. Taken as is, and the undo history is cleared: those changes are not this tab's to undo. */
+  adopt: (next: Doc) => void
   undo: () => boolean
   redo: () => boolean
   canUndo: boolean
@@ -60,6 +62,14 @@ export function useHistory(initial: Doc): DocHistory {
     [set],
   )
 
+  const adopt = useCallback(
+    (next: Doc) => {
+      last.current = null
+      set({ past: [], present: next, future: [] })
+    },
+    [set],
+  )
+
   const undo = useCallback(() => {
     const cur = stateRef.current
     const prev = cur.past[cur.past.length - 1]
@@ -83,6 +93,7 @@ export function useHistory(initial: Doc): DocHistory {
     ref: docRef,
     commit,
     replace,
+    adopt,
     undo,
     redo,
     canUndo: state.past.length > 0,
