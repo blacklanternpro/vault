@@ -180,7 +180,7 @@ function gunFire(){const G=GUN;G.ch[G.idx]='S';G.chDirty=true;G.shots++;G.recent
   /* recoil: a real flip; you bring it back down yourself */player.pitch=clamp(player.pitch+0.05+Math.random()*0.02,-1.52,1.52);player.yaw+=rnd(-0.012,0.012);camPunch(3.2,rnd(-0.6,0.6),rnd(-1.2,1.2));shakeCam(0.32);
   vmImpulse(V3(0,0.25,1.3),V3(24+rnd(-2,2),rnd(-2,2),rnd(-3,3)));
   G.lastTrace={o:B.o.clone(),d:d.clone(),ev:[]};G.shotWalls=new Set();gunTrace(B.o,d,1.0,0);gunNeighbours(!inside);gunHudDraw(true);}
-function gunBang(inside,muff){S.init();if(!S.ctx)return;const k=muff?0.3:1;
+function gunBang(inside,muff){S.init();if(!S.ctx)return;const k=muff?0.3:1;/* v9.5: the bank's shot (crack, blast, a sub boom) under the old layers, into the room */S.play('gunshot',null,1.15*k,{wet:inside?1.5:0.7});
   S.noise({dur:0.05,gain:1.5*k,type:'highpass',f:muff?600:1300,att:0.001});S.noise({dur:0.38,gain:1.15*k,type:'lowpass',f:muff?900:3400,f1:240,att:0.001});S.tone({f:96,f1:30,dur:0.45,gain:1.3*k,att:0.001});
   if(inside){for(let i=0;i<5;i++)S.noise({dur:0.12,gain:0.55*k*Math.pow(0.62,i),type:'lowpass',f:2300-i*320,att:0.002,delay:0.016+i*0.021});}
   else{S.noise({dur:0.5,gain:0.38*k,type:'lowpass',f:900,f1:300,delay:0.34,att:0.02});S.noise({dur:0.7,gain:0.22*k,type:'lowpass',f:620,f1:200,delay:0.88,att:0.04});S.noise({dur:1.3,gain:0.13*k,type:'lowpass',f:420,f1:150,delay:1.7,att:0.08});}}
