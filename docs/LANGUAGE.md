@@ -2,8 +2,9 @@
 
 **Canon.** Copy this file into another repo and the language still holds.
 Short law for agents lives in `.cursorrules`. This file is the full tongue.
+The built visual system — measured tokens, as shipped — lives in `DESIGN.md`.
 
-Maker: BAD FORM. First instance: **VAULT WORLDWIDE** — BAD FORM’s in-house OS for project and task management, run as a program on a desktop, not a website you visit, not a phone PWA.
+Maker: **BAD FORM**. BLACK LANTERN is dead. First instance: **VAULT WORLDWIDE** — a local-first personal OS you run at a desk.
 
 If a thing cannot be said in this language, it is not in the work.
 
@@ -11,12 +12,13 @@ If a thing cannot be said in this language, it is not in the work.
 
 ## 0. The test
 
-Before you add a feature, a color, a font, a panel, a motion, a word:
+Before you add a feature, a colour, a font, a panel, a motion, a word:
 
-1. Can it be said in **SPECK**? (see §7)
-2. Does it live on **paper / black / power red** — and nowhere else?
-3. Is it **utility** wearing attitude, or attitude wearing a fake tool?
-4. Would Jake almost throw up? (DateBlocks, cards, SaaS stacks, boxed amber terminals)
+1. Can it be said in **SPECK source**? (see §7)
+2. Does it live on **the light field, one ink ramp, one blue accent, one danger red** — and nowhere else?
+3. Is it the **category standard played straight**, or is it a costume smuggled in as personality?
+4. Would Jake almost throw up? (DateBlocks, month-as-OS, a verb codebook, a dump-parser REPL, a second input, assignees and teams)
+5. Do the two languages stay split? **A job is a card and a drawer. The catalogue is a plain tree.** Mixing their chrome is failure.
 
 Fail any one: do not ship it.
 
@@ -24,89 +26,102 @@ Fail any one: do not ship it.
 
 ## 1. World
 
-The program lives in **cassette futurism** — a 1970s–late-80s analog future. CRT readouts. Tape. Membrane keys. Industrial labels. Beige plastic. Worn metal. Phosphor. Red warning LEDs. You plug in. There is no wifi as a personality. The computer is a **machine**.
+The program lives on a **light field** — white chrome, one blue accent, hairline rules, quiet UI sans, uppercase plaques on names. It is the **category standard, played straight**, at the craft level of **Linear, Things, and Height**.
 
-Canon board: [cassette futurism ui](https://au.pinterest.com/search/pins/?q=cassette%20futurism%20ui&rs=typed)
+This was chosen deliberately, in an attended decision round, over four costumed worlds: a cassette-deck theatre, a paste-up mechanical, a film trim bin, a type galley. The user took the plain door on purpose. **The lack of costume is the position.** Conventions are embraced without irony and without smuggled quirk.
 
-That board is the *room*. It is not a license to build a toy cockpit.
+Read that as a licence for craft, not for blandness. Playing the standard straight means the standard has to be played *well*: geometry measured rather than estimated, contrast that holds, type that fits its box, motion that explains what moved. Every value in this world came off a pixel scan of an approved comp. That is the bar, and it is a harder bar than costume ever was — a costume hides a loose 4px, a white field does not.
 
-**VAULT’s cut of that world:**
+Attitude survives in the **work**, not the chrome: terse machine voice, `_` for empty, uppercase job names, no dashboard welcome. The field is quiet so the graph is loud.
 
-- More **minimal**. More **refined rawness**.
-- A **little** sleaze. An **echo** of hacker grime.
-- Power red on a **paper sheet**, black windows — not amber, not terminal green, not cyan-on-black, not cobalt.
-
-This instance is a **desktop field**. Phone lists, TimeTree, and paper diaries already exist. Do not design for a thumb. Packaging later is a boring native envelope (Tauri / WebView). The envelope is not the aesthetic.
+This instance is a **desktop** surface (~1440), rebuilt to one column below 900px. Phone chores live elsewhere — lists, a paper diary, TimeTree. It is not a PWA and not designed for a thumb. Packaging later is a boring native envelope (Tauri / WebView); the envelope is not the aesthetic.
 
 ---
 
 ## 2. Taste stack (locked)
 
-Four layers. Do not flatten them into one costume.
+Four layers. Do not flatten them into one costume — and do not add a fifth to make the field "interesting".
 
 | Layer | Role | If you overdo it |
 | --- | --- | --- |
-| Cassette futurism | The plate. Analog-future machine. | Alien Isolation cosplay, chunky 3D knobs, aviation switches |
-| Refined rawness | The cut. Xerox, dot-matrix, label-maker, hairline rules | CGI bezels, screws, vents, skeuomorphic tape decks |
-| A little sleaze | Salt. 90s/indie sleaze, WORLDWIDE ®, overlapping chips, fried grain | Rave flyer, Fidèle-maximal, slogan-tee graphics |
-| Echo of hacker grime | Salt. Unix nest, uppercase logs, `[X]`, INV, ops/lab/field dirt | Matrix rain, Kali wallpaper, hoodie-hacker stock, `1337` |
+| Light field | The plate. Near-white ground, white panels, hairline rules, 8px radius | Grey soup, nested boxes, card-in-card, drop shadows doing a border's job |
+| Quiet type | The cut. One UI sans on work, one condensed face on plaques | Billboard headings, letterspaced body, four weights in one row |
+| One accent | The signal. Blue for live, selected, found, primary | Rainbow status chips, a second brand colour, coloured backgrounds as decoration |
+| Terse machine voice | The attitude. Uppercase names, `_` empty, counts not prose | Slogans, emoji, "Welcome back", apologetic empty states |
 
-Sleaze and grime are **salt**. If the field looks like a title card, there is too much salt.
-
-Attitude: slightly illegal, slightly glamorous, still a tool.
+Attitude is **salt** and it belongs in the words. If the field itself is trying to be memorable, there is too much salt.
 
 ---
 
 ## 3. Tokens
 
-### Color
+`DESIGN.md` carries the shipped values. This section is what each token is *for*, which is the part that ports.
 
-| Token | Hex | Job |
-| --- | --- | --- |
-| Paper | `#F4F4F0` | The sheet. Ground when `INV` is live (this instance’s default). |
-| Field | `#000000` | Ink. Organ plates. Dock slab. Ground when `INV` is off. |
-| Power red | `#E10600` | Oval, caret, live ticks, `[+]` / shovel, strike / URGENT. |
-| White | `#FFFFFF` | Type on power-red invert. |
+### Colour
 
-One accent. Strike and URGENT use the same red. Cobalt has left. Harvest amber is forbidden.
+| Token | Job |
+| --- | --- |
+| Ground | The field behind the panels |
+| Surface | Panels, cards, drawer, top bar |
+| Ink | Primary text and drawn marks that must read as text |
+| Ink-2 | Secondary text: counts, parents, placeholders, ghost adds |
+| Ink-3 | **The tint, and never text.** Glyph strokes, tree stems, disclosure marks |
+| Line / Line-2 | Hairline separators, at two strengths |
+| Accent | Live, selected, found, primary action |
+| Accent wash / line | The accent at panel strength, for a found or selected plate |
+| Urgent | URGENT, strike, destructive |
 
-`INV` is a SPECK line, not CSS `filter: invert(1)`. Organs stay black windows on the sheet.
+**The ink/tint law.** There are three inks and they are not interchangeable. Ink-2 is the floor for a **word** (4.5:1). Ink-3 is the floor for a **mark that carries meaning** (3:1) and is below what a word may be set in. A stem, a chevron, a magnifier strokes in ink-3; the moment a token carries a word, it moves to ink-2. This rule exists because it was broken once: the tint was carrying text at 3.1:1 and the review caught it.
+
+**One accent.** Blue is live. Danger red is URGENT and strike. That is two signals and there is no third. If you need another colour, you are already lost.
+
+**Status has colour only where a job is entered.** The board stays monochrome, so the lane a card sits in is what says its state. The status tokens exist and the drawer's plaque is where they are spent, naming the state in ink. Do not paint the board with them; that is a different composition, and composition is not yours to change.
 
 ### Type
 
-- **Oswald 700** — plaques, shouts, free `GLYPH` stamps. Self-hosted. 32–40px on organ titles.
-- **Helvetica Neue / Helvetica / Arial** — binder, nest, dump, dock, `[x] ···`. Work rows 16–18px, row 26.
-- No JetBrains. No Space Grotesk. No Inter. No VT323. No Orbitron. No pixel-display novelty fonts on titles.
+Two faces, and the split is a rule, not a preference.
 
-Tracking is tight on chrome. Uppercase for legends and shouts.
+- **UI sans** (Inter-class; Public Sans on this instance) — all work: titles, body, subtasks, counts, the FIND line, the tree.
+- **Condensed caps** (Sofia Sans Semi Condensed on this instance) — **plaques only**: lane names, job names on cards, drawer section labels. Nothing else shouts.
+- No display faces. No monospace except the box-drawing stems, where the glyphs must join.
+
+Size plaques and labels by **measured ink width**, not by a derived cap height: blur inflates the ink row of small caps by roughly 2px, which reads as a 20%-too-large font. Width is the honest signal.
 
 ### Surface
 
-- Border radius: **0**. Everywhere. Including native controls.
-- No soft shadows. No gradients. No blur. No glass.
-- Grain / scan: live SPECK (`GRAIN` `SCAN`) plus one material overlay. Deterministic. No hot RAF.
-- Selection: inverted CHIP (power red, white type) **inside** a power-red `OVAL`. Same row height. HIT expands in place; rows below move down. No overlay covering neighbors.
+- 8px radius on cards, controls, and panels. One radius, used everywhere, or it is not a system.
+- **Hairlines do the separating.** A 1px rule, not a shadow and not a heavy border.
+- **Elevation is declared once, and only for something in the air.** A dragged copy gets a shadow because it is airborne. A resting card never does.
+- **Nested work on a job is a boxed line.** Never `│ ├── └──`. Stems are the catalogue's alphabet and putting them on a job collapses the two languages into one.
+- **Rows in the catalogue are plain.** Stems and a name. No boxes, no cards, no drawer chrome in the tree.
+- No gradients, no glass, no blur, no grain, no scan overlay, no texture. The field is flat on purpose.
+
+### Icons
+
+Drawn inline SVG at one stroke weight, from one set. **No icon font, no emoji, no Unicode glyph characters as icons.** A `▸` next to `├──` reads as one more length of stem and the tree stops being legible — this is why the disclosure marks are drawn chevrons.
 
 ---
 
 ## 4. Composition
 
-One continuous personal OS field. Not a dashboard. Not stacked sections. Not three apps in a trenchcoat. Not a PWA. Not mobile-first.
+One field. Not a dashboard, not stacked billboards, not three apps in a trenchcoat, not a PWA, not mobile-first.
 
-The dock is locked to the viewport bottom. A **legend rail** sits above the operator (read-only). Never a second `<input>`. Never three forms.
+The board is the home. It does not become a month, a calendar, a canvas, or a REPL.
 
-**VAULT instance (SPECK machine — composed desktop field):**
+**VAULT instance (DOM field + SPECK save format):**
 
-1. **One graph.** Every node: `id`, `title`, `body?`, `status` (`backlog|active|staging|done|none`), `parent`, ordered children, `urgent?`. Projects are nodes with children. Tasks appear on PIPE when status is a binder column.
-2. **PIPE** — a *view* of binder-status nodes, grouped under project plaques. Left page FOCUS (`backlog` / `active`). Right page GATEWAY (`staging` / `done`). ASCII spine, scanline meter, ring hits. Empty ledger rows stay and **create**. HIT expands in place (body, subtasks, status ticks); everything below **moves down**. Shovel (`->` or `SHOVEL`) advances status. Nest project selection filters the binder to that subtree. Not kanban cards. Not overlay chips.
-3. **NEST** — the same graph as a unix tree. Expand/collapse. Click name to rename. `[+]` or empty child slot adds. Indent/outdent. `SHOVEL` puts a node on the binder. CLIP-copy is dead.
-4. **DUMP** — scratch tape. `NOTE MM.DD.YY "…"`. Not the work graph.
-5. **PLACE / GLYPH** — organs sit where source says. Window chrome: title bar, Oswald plaque, `[x] ···`, tick ruler, octagon counts. Drag the plaque to rewrite `PLACE`. Dither is salt.
-6. **Salt organs** — `SEAL` (wireframe globe), `SKULL` (pixel skull), `CAL` (month digits in a window, 7-across, no weekday offset). PLACE-able, `[x]`-collapsible. None is identity. Home remains PIPE / NEST. CAL underlines days that have DUMP notes. HIT a day lists those notes in the window.
-7. **Dock** — legend rail + ONE one-line **operator**. Legend HIT toggles `GRAIN` / `SCAN` / `INV`. Operator: commands or a dump line. Never three forms. Never CTX chips in a header.
-8. **Field editor** — one native `<input>` over the active cell. Click a title, type. TAB / Shift-TAB: `title → body → new subtask → status`. Enter commits. Esc collapses. Space on `[ ]` shovels / checks. Two writers on purpose (cell + operator).
+SPECK stores the graph (`NODE`, `NOTE`, status, indent). It is not a Forth/DOS taskmaster, not a paint engine, and not the product personality.
 
-A later agent may refine density **inside this field**. It may not bring back DateBlocks cards, month-as-OS as home, beige cassette as the OS identity, a Tailwind binder, harvest amber, cobalt, CLIP-copy, overlay dossiers, or a second input.
+1. **One graph.** Every node: `id`, `title`, `body?`, `status` (`pending|rnd|active|done|dusted|none`), `parent`, ordered children, `urgent?`, `loose?`. Projects are roots (`parent` null). IDs live in source, not on the card.
+2. **Top bar** — wordmark, one FIND field, filter chips, one primary action. FIND **searches only**. The chips filter; they do not create. The action creates a job. There is no second input anywhere in the product.
+3. **Board** — five lanes divided by nothing but their own gaps: PENDING · R&D · ACTIVE · DONE · DUSTED. Lane head carries a plaque, a count, and a ghost add. A job is a card: uppercase plaque name, hairline, 8px radius. The lane a card sits in **is** its status. A card's one quick action is a hover chevron that puts it in the next lane along; at rest the board shows nothing but cards.
+4. **Drawer** — selecting a job opens a panel at the right edge, over the board, so the lanes never reshuffle and the board never leaves the screen. It holds the status plaque, the title, the parent, `DESCRIPTION`, and `SUBTASKS` with ticks. Nested work here is **boxed lines**; `[+]` adds one.
+5. **Pull and dock.** Drag a subtask out of the drawer onto a lane to make a `LOOSE` satellite card (the parent is unchanged). Drag a satellite — or a boxed line — onto a parent card to **dock it back**: it drops `LOOSE` and is a boxed line again. Physics A: moving a card takes its nested children; loose satellites stay put.
+6. **Catalogue** — below the board, the same graph as a plain tree of everything: stems `│ ├── └──`, a drawn disclosure chevron, a block behind the live name. First click selects; second click / Enter renames. Trailing `_` adds a child. Indent/outdent. Drag a stem onto a lane to set status. Roots stay stems. No boxes, no cards, no board chrome.
+7. **Dump tape** — txt notes as blocks beside the catalogue. Vertical snap-reorder, persisted. Pointer `_` adds a note. Drop a block on a card to hitch it (`→ TITLE`; `[x]` unhitches).
+8. **The fold is cued.** A sliver of the catalogue stays on screen at every desktop height, so a field that carries on does not look like a field that ends. Pay the sliver out of dead ground, never out of a measured region.
+
+A later agent may refine density **inside this world**. It may not bring back a costume, a second input, a month as home, a canvas field, assignees, teams, or the graveyard in §8.
 
 ---
 
@@ -114,45 +129,55 @@ A later agent may refine density **inside this field**. It may not bring back Da
 
 These are the letters of the language. Use them. Do not invent a parallel alphabet.
 
-- **Inverted chip** — power-red field, canvas text, zero radius, padding to the glyph. Selection invert, painted `CHIP`. White-on-red; never a rounded pill; never an overlay stack covering the next row.
-- **Slash structure** — `///` and `//` as dividers and legends (`PIPE // vault`, `FOCUS // GATEWAY`). Not CSS `border-bottom` pretending to be a TUI.
-- **Dashed hairline** — thin rules, sometimes dashed. Not 3px neo-brutal drop shadows.
-- **ASCII stems** — `│ ├── └──` for the nest tree. Prefixes computed from `parent` / children, not nested DOM indent.
-- **Leader dots** — `label ........ value` when a readout must span. Stolen from 3270 / CICS. Use sparingly.
-- **Asterisk rules** — `**********` as a tape splice, not a card edge.
-- **`[X]`** — destroy / strike chrome if a program paints it. Urgent red. Character chrome, not an icon font.
-- **`[ ]` brackets** — status. `[1]`, `STATUS: READY`.
-- **Strike** — red mid-line through a mark. Not `text-decoration` grey.
-- **Caret** — stepped blink `>`. The dock is the **operator**. The cell input is the writer.
-- **Shovel** — margin `->`. Advances a node through the spine (or from `none` onto `backlog`). Not a drag handle for cards.
-- **Oval** — power-red ellipse around the live CHIP. The shout. CHIP stays rectangular inside it.
-- **Window chrome** — 1px hairline, filled title bar, Oswald plaque, `[x] ···`, registration ticks, octagon counters. Recess via double hairline, not 3D knobs.
-- **Legend rail** — live ticks for `GRAIN SCAN INV OVAL` above the operator. Not a second input.
+- **Plaque** — uppercase condensed caps. Lane names, job names, drawer section labels. Nothing else.
+- **Card** — white plate, hairline, 8px radius, plaque name. Its lane is its status. Not a deal card: no avatar, no assignee, no progress bar, no due pill.
+- **Boxed line** — nested work on a job. Title on the line. Drawer and job only.
+- **Stem** — `│ ├── └──`, computed from `parent`/children. Catalogue only. Set in the tint, at the row's own line-height so the verticals actually join.
+- **Hairline** — the separator. One pixel. Not a shadow.
+- **Accent wash** — the plate under a found or selected thing. Spread under the whole plate; never a wash *and* a stripe.
+- **Shadow** — airborne only. A dragged copy, and nothing at rest.
+- **Leash** — a slack filament from a dragged thing to where it came from. Sag at rest, tension on drag, settle after the drop. Never perfectly taut.
+- **Tick** — the subtask's done mark. The filled tick is the whole signal; a done line keeps full-strength text, because greying the sentence too reads as cancelled rather than finished.
+- **`_` empty** — ghost add rows, empty titles, inert slots. Not an apologetic empty state.
+- **Strike** — mid-line on a killed row. Not grey `text-decoration`.
+- **Dock** — drop a satellite or a boxed line onto a parent card. Inverse of pull. Drops `LOOSE`.
+- **FIND** — the one search field. Not a codebook, not an operator bar.
+
+### Motion
+
+Motion exists to say **what moved**, and for nothing else.
+
+- A card that changes lane by a verb **slides** there. Cutting to the result loses which card went where, and the cards that closed up behind it are part of the sentence.
+- Something already flying its own landing must not also slide there. One thing arrives once.
+- A drawer for a different job **arrives**; it does not cut.
+- Every duration is answered by `prefers-reduced-motion`, which holds them to zero. The same code arrives instantly there.
+- No entrance animations, no parallax, no attention-seeking loops.
 
 ---
 
 ## 6. What already works (do not throw away)
 
-The VAULT field is a **SPECK machine**. React is the host envelope (canvas, native dock input). The live program is source. Do not restyle a component tree and call that the OS.
+The VAULT field is a **React/DOM shell** over a **SPECK graph**. The live program is source. Do not restyle a dashboard kit and call that the OS.
 
-- One dock as operator. The cell editor is the other writer.
-- Canvas display list. Hit-test. Overlap is legal.
-- Persistence is the SPECK source string (`speck-os-v1` in localStorage).
-- One graph; PIPE and NEST are lenses. DUMP tape. PLACE / GLYPH.
+- One FIND field (search).
+- Persistence is the SPECK source string (`speck-os-v2` in `localStorage`).
+- One graph; a job is a card plus a drawer; the catalogue is the plain tree; the dump tape is notes.
+- SPECK lex / parse / serialize / machine in `src/speck`. Shell in `src/shell`. **`src/speck/machine.ts` behaviour is settled** — a visual pass does not change it.
+- Tokens, geometry, and type in `src/index.css`, every value commented with why.
 
-What failed: DateBlocks, the beige UN seal as the OS shell, Yjs CRDT as the database, month-as-OS as the destination, HTML/Tailwind kanban, overlay CHIP dossiers, CLIP-as-copy, cobalt lash. Dead. Do not revive them. Sections want cards. Cards are DateBlocks. Globe/skull/CAL as **PLACE-able salt organs** are live; they are not identity.
+**What failed, and stays failed:** DateBlocks; the beige UN seal as the shell; Yjs CRDT as the database; month-as-OS as home; overlay CHIP dossiers; CLIP-as-copy; the cobalt lash; the dump-parser dock; the paper sheet with power-red oval and PLACE-able salt organs; the sit-down verb codebook; unix stems on job cards; the charcoal cassette theatre with VU/CRT costume and orange `#FF5C1A`. Every one of these was shipped once and rejected. Do not revive them, and do not revive them wearing a new name.
 
 ---
 
-## 7. SPECK — the machine tongue
+## 7. SPECK — the save format
 
 SPECK is a real domain-specific language. It is not a metaphor. It is not a design-token rename.
 
 It is **not** a general-purpose language (no Python-from-scratch, no LLVM, no stdlib). Cousins: PostScript, Forth, Logo, teletext, 3270.
 
-HTML/CSS/React nouns are boxes, cards, flow. SPECK nouns are the field.
+On this instance SPECK is the **save format** for the work graph and dump. The field reads and writes source. The user never types SPECK to sit down.
 
-The runtime lives in `src/speck`. It lexes, parses, compiles a display list, paints pixels, and interprets dock lines + hits. The live program is the source string.
+The runtime lives in `src/speck`. It lexes, parses, serializes, and interprets graph edits. The live program is the source string.
 
 ### Feature dream rule
 
@@ -163,166 +188,133 @@ A new feature must be **sayable in SPECK**. If you cannot write it as source, it
 Line-oriented. Indent (2 spaces) groups a body. Words are Forth-like. Case-insensitive opcodes; payloads keep their case. Comments: `//` or Forth `\` to end of line.
 
 ```
-INV
-GRAIN 0.14
-SCAN 0.1
 PIPE vault
-  COL backlog
+  COL pending
+  COL rnd
   COL active
-  COL staging
   COL done
+  COL dusted
 NEST
-  NODE 1 "ops" status none
-    NODE 10 "lab" status none
-      NODE 11 "scout_ridge_a" status none URGENT
-    NODE 20 "net" status none
-      NODE 102 "telemetry ui" status active
-        BODY "spec leftover"
-    NODE 104 "ingress routing" status backlog
+  NODE 1 "site" status none
+    NODE 10 "HOME PAGE" status active
+      NODE 11 "lock type ramp" status active URGENT
+      NODE 13 "still loop" status rnd LOOSE
+        BODY "8s loop, no sting"
+    NODE 30 "REPO" status pending
+  NODE 2 "print" status none
+    NODE 60 "RUN SHEET" status pending
 DUMP
-  NOTE 09.07.26 "ridge"
-PLACE PIPE 24 48
-PLACE NEST 24 540
-PLACE DUMP 560 540
-PLACE SEAL 900 48
-PLACE SKULL 900 280
-PLACE CAL 560 48
-GLYPH 16 16 56 "VAULT"
+  NOTE 09.09.26 "type ramp 700 / 400"
 ```
 
 **Tokens**
 
 | Form | Example | Meaning |
 | --- | --- | --- |
-| word | `PIPE` `TASK` `SHOVEL` | opcode |
-| string | `"ridge"` | payload |
-| tape date | `09.07.26` | `MM.DD.YY` on DUMP notes |
-| number | `104` `24` | id, PLACE, GLYPH size |
+| word | `PIPE` `NODE` `SHOVEL` | opcode |
+| string | `"type ramp 700 / 400"` | payload |
+| tape date | `09.09.26` | `MM.DD.YY` on DUMP notes |
+| number | `10` | id |
 
-Empty storage loads the seed program. `CLEAR` restores seed.
+Empty storage loads the seed program. `CLEAR` restores seed. Seed does **not** include `PLACE`, `GLYPH`, `INV`, `GRAIN`, or `SCAN`.
 
 ### 7.2 Nouns (source)
 
-These name the field. They compile to paint ops. Do not add a noun unless the field grew a new organ.
-
 | Noun | Says |
 | --- | --- |
-| `PIPE` | split-page binder (a *view* of the graph) |
-| `COL` | `backlog` `active` `staging` `done` |
-| `NEST` | tree lens of the same graph |
-| `NODE` | a graph node: `id`, title, `status`, indent = parent |
+| `PIPE` | the lane rack (a *view* of the graph) |
+| `COL` | `pending` `rnd` `active` `done` `dusted` |
+| `NEST` | the catalogue tree of the same graph |
+| `NODE` | a graph node: `id`, title, `status`, indent = parent, optional `LOOSE` / `URGENT` |
 | `BODY` | optional body on the current node |
-| `DUMP` | scratch tape |
-| `NOTE` | a dump line |
-| `PLACE` | organ origin `x y` |
-| `GLYPH` | free field ink `x y px "text"` |
-| `DOCK` | the operator (always compiled) plus a read-only legend rail |
-| `INV` | paper ground. Off restores black field |
-| `GRAIN` | film salt amount |
-| `SCAN` | scanline amount |
-| `SEAL` | wireframe globe organ |
-| `SKULL` | pixel skull organ |
-| `CAL` | month digits in a window. Not home |
+| `DUMP` | the note tape |
+| `NOTE` | a dump txt line |
 
-Dead as field chrome: `TASK` `STEM` `CLIP` as live nouns. Legacy `TASK` / `STEM` lines still parse into `NODE`s. Typed at the dock they are dumps if they are not commands.
+Dead as product chrome: `PLACE`, `GLYPH`, `INV`, `GRAIN`, `SCAN`, `SEAL`, `SKULL`, `CAL`, the `DOCK` legend. Legacy `TASK` / `STEM` lines still parse into `NODE`s, and `PLACE` / `GLYPH` / `INV` lines may still parse for old source; none of them are the product.
 
-`SEE` echoes source. `WORDS` echoes the live opcode list. `CLEAR` restores seed. `SHOVEL` advances a node (or lifts `none` onto `backlog`). `FOCUS` filters PIPE to a nest subtree. Dump lines create projects and child tasks. Legend HIT toggles `GRAIN` / `SCAN` / `INV`.
+Lane-drop sets that card's status (nested follow; `LOOSE` stays). Shovel advances a card one lane. Dock-back drops `LOOSE` and reparents onto the target card. In the catalogue, `ON` / Space advances a node, or lifts `none` onto `pending`. FIND highlights matching titles in-session and **does not insert `NODE`s**.
 
-### 7.3 Opcodes / IR
+### 7.3 Events
 
-The painter executes a **stateless display list**. Source `INK` is baked into each op at compile. Live public ops:
-
-`FILL` `GLYPH` `LINE` `CHIP` `STRIKE` `STEM` `GRAIN` `SCAN` `INV` `OVAL`
-
-| Op | Paints |
-| --- | --- |
-| `GLYPH` | Type (Helvetica work, Oswald plaques). |
-| `CHIP` | power-red fill, white text. Selection invert. Radius 0. Same row height. |
-| `LINE` | ledger hairline. Spine. Organ edge. Tick ruler. |
-| `STRIKE` | power-red mid-line on done / `[X]`. |
-| `STEM` | ascii tree prefix + label. |
-| `FILL` | paper sheet or black plate. Dither salt (1×1). |
-| `GRAIN` | film salt. Deterministic. |
-| `SCAN` | IMP scanlines on black fills / PIPE meter. |
-| `INV` | marker; compile uses paper ground. |
-| `OVAL` | power-red ellipse around the live CHIP. |
-
-Overlap is legal. Expanded rows **reflow** — they do not cover later ink.
-
-Do not advertise `CLIP`.
-
-### 7.4 Events
-
-Pointer and keys are SPECK. The host does not own behavior; it forwards.
+Pointer and keys belong to the shell. The host forwards into the machine.
 
 ```
-HIT NODE 102
-HIT ADD 20
-HIT SHOVEL 102
-HIT FIELD
-SHOVEL
-FOCUS
-TYPE …
-COMMIT
-CLEAR
-SEE
-WORDS
+HIT NODE 13
+HIT ADD 10
+HIT SHOVEL 13
+FIND loop
 ```
 
-HIT a binder node to expand it in place and edit. HIT empty field / Esc to collapse. HIT a CAL day to list DUMP notes for that date. Never three forms. Never CTX chips in a header.
+HIT a card to open its drawer. HIT a title to type in it. HIT `[+]` to nest a boxed line. HIT a lane's ghost add to create a job. Drop a satellite on a parent card to dock. Never three forms. Never a verb bar.
 
-### 7.5 Dock operator
+### 7.4 Command field
 
-The Prompt Dock is the **operator**. One line. Titles are typed in the field editor.
+FIND is **search**. One line, in the top bar. Titles are typed on the card, the drawer, or the row. Work is created by the lane's ghost add and the catalogue's `_`, not here.
 
-- If the line **parses as a command** (`SEE`, `WORDS`, `CLEAR`, `HIT`, `COMMIT`, `SHOVEL`, `FOCUS`, `MOVE`, `STRIKE`): execute it.
-- Else it is a **dump**. Cue `new … project` / `create project` → project node; next clause is the title (do not auto-abbreviate); remaining clauses (commas / `need to` / `and`) → child tasks at `backlog`. Bare dumps → tasks under the focused project, or inbox. Ambiguous parse echoes `?` plus the guessed tree; empty Enter confirms.
-- Empty commit is a no-op unless a pending dump is waiting.
+- A bare line (or `/query`) highlights matching titles in-session.
+- Pointer `_` on the tape appends a txt note. Hitch is a drop.
+- `CLEAR` may remain source recovery in the machine; FIND submit does not run a codebook.
+- Empty commit is a no-op.
 
-Examples: `SEE` · `WORDS` · `SHOVEL` · `FOCUS` · `new website project, site redesign of homepage, need to assess aesthetic, create repo`
+### 7.5 Runtime contract
 
-### 7.6 Runtime contract
+1. **The program is source.** `localStorage` key `speck-os-v2`. Ignore `speck-os-v1` and `speck-month-v1`.
+2. **The shell is DOM** over parsed source + session. Session: selected node, tree expand, tree focus, `pipeOpen` (the open job), field slot, buffer, echo, find query, dump focus.
+3. **Commits mutate source.** Stage, shovel, and lane-drop rewrite a status. Dock drops `LOOSE`. Editors rewrite title/body/notes. Lane adds and catalogue `_` insert nodes. The tape appends txt. Tape reorder rewrites note order. `CLEAR` restores seed. No worker. No CRDT. No JSON sidecar.
+4. **Filters are session, not source.** A chip narrows what the board shows; it never edits the graph.
 
-1. **The program is source.** `localStorage` key `speck-os-v1`. Ignore `speck-month-v1`.
-2. **The field is compiled** from source + session → display list → pixels. Session: selected node, nest/pipe expand, nest focus, field slot, collapsed organs, dock buffer, echo, pending dump, calDay. Redraw on dirty + caret interval. No hot RAF. One material overlay (WebGL or 2D fallback) for grain+scan together.
-3. **Paint pixels.** Canvas (later Skia). Not DOM flow. The host keeps a native `<input>` over the dock glyph line **and** over the active cell. Envelope, not aesthetic.
-4. **Hit test the display list.** Highest-z box wins. Expanded rows occupy their own hits. Organs above empty field.
-5. **Commits mutate source.** `SHOVEL` rewrites a node status. Dump inserts nodes. Field editor rewrites title/body. `CLEAR` restores seed. Legend HIT rewrites `INV`/`GRAIN`/`SCAN`. No worker. No CRDT. No JSON sidecar.
-6. **No CLIP, overlay dossier, DateBlocks cards, cobalt theme, or month-as-OS home** on this instance. Grain, scan, INV, oval, seal, skull, and CAL are live letters.
+### 7.6 What SPECK is not
 
-Packaging (when asked): SPECK runtime in a boring envelope (Tauri / WebView). Desktop. Seal as icon only. No browser chrome. The envelope is not the aesthetic.
-
-### 7.7 What SPECK is not
-
-- Not CSS.
-- Not a React component tree with cute names.
-- Not a general-purpose language.
+- Not CSS. Not a general-purpose language.
+- Not a Forth/DOS REPL identity (`SEE` / `WORDS` / `#104` / dump-parser as the product).
+- Not a reason to costume the field as a taskmaster or a canvas OS.
 - Not a reason to add a settings app.
-- Not a second palette, a HUD, a card system, or a Tailwind binder.
+- Not a second palette, a HUD, or DateBlocks.
+- Not a codebook the user types to sit down.
 
 ---
 
 ## 8. Hard vetoes
 
-Never. Not as a joke. Not as a “just for desktop.” Not as a dark-mode variant.
+Never. Not as a joke. Not as a "just for desktop." Not as a dark-mode variant.
 
-- DateBlocks, jagged day cards, stacked day modules
-- SaaS stacks, cards, rounded corners, soft shadows, glass, gradients
-- Kanban card boards, harvest amber, charcoal leather, HTML notebook skins
-- Acid watermarks, giant boxed logos, section billboards (`CALENDAR` / `TO-DO` as Helvetica monuments)
-- Header CTX chips, PROJECTS / ROSTER / FLEET / LOGS as a mode bar
-- Inter, VT323, Orbitron, “sci-fi display” fonts
-- Green-on-black notes, amber boxed terminals, phosphor takeover (amber / green / cyan as the OS)
-- Three input forms
-- Demo fluff (`BUY MILK`, lorem, fake dashboards, cost-burn theatre)
-- Alien Isolation cosplay, chunky 3D knobs, screws, vents, tape-deck skeuomorphism
-- Vaporwave, synthwave, neon alley, Y2K chrome media-player skins
-- Heavy modular console of adjacent hardware bays
-- Matrix rain, Anonymous masks, hoodie-hacker stock, `1337`, Kali wallpaper
-- Rave-flyer / Fidèle-maximal sleaze as the brand system
+**Product**
+
+- Assignees, avatars, teams, mentions, presence, "shared with"
+- Estimates, story points, velocity, burndown, funnel money, KPI rows
+- A second command input, a verb bar, three forms, an operator slab, a dump-parser dock
+- FIND that creates work; a codebook typed to sit down
+- Month-as-OS as home; DateBlocks; jagged day cards; stacked day modules
+- CRDT, cloud personality, accounts, a settings app, JSON-as-database
+- Demo fluff: `BUY MILK`, lorem, fake dashboards, cost-burn theatre
+
+**Surface**
+
+- Unix stems on a job card; boxes or cards in the catalogue tree; drawer chrome in the tree
+- Card-in-card, rounded inside square, more than one radius
+- Soft shadows or hard offset shadows doing a border's job; elevation on anything at rest
+- Gradients, glass, blur, grain, scan overlays, texture, watermarks
+- A second accent; rainbow status chips; coloured backgrounds as decoration; harvest amber; cobalt; power red `#E10600`; live orange `#FF5C1A`
+- The tint carrying words; any text below 4.5:1; any meaningful mark below 3:1
+- Icon fonts, emoji, Unicode glyph characters as icons
+- Section billboards, giant boxed logos, kickers and eyebrows, letterspaced body copy
+- Inter-as-plaque-face is fine; Oswald-as-work-type is not — plaques are plaques
+- VT323, Orbitron, "sci-fi display" faces, green-on-black notes, amber boxed terminals
+
+**Whole dead worlds** — each of these shipped once and was rejected. They are not directions to re-explore:
+
+- Paper sheet + 1px organ windows + power-red oval + salt organs (CAL / SEAL / SKULL) + PLACE-drag + GRAIN/SCAN/INV legend rail
+- Charcoal cassette theatre: black housing, chrome hairlines, jack holes, RECORD, transport plaques, VU meters, CRT wells, Oswald caps, orange `#FF5C1A`
+- Beige/cream hi-fi faceplate as the shell; the beige UN seal identity
 - NEXUS-HUD chrome: GRADE D panels, waveforms, tabs-as-apps, cyan-on-black tactical orchestrator
-- 2×3 card dashboards in a terminal skin
-- l33t CLI costume (gradient ASCII wordmarks, emojis, “cyber king”)
+- Paper/black IMP canvas with a coincident-PLACE fold
+- Matrix rain, Kali wallpaper, hoodie-hacker stock, `1337`, gradient ASCII wordmarks
+- Vaporwave, synthwave, neon alley, Y2K chrome media-player skins
+- Alien Isolation cosplay, chunky 3D knobs, heavy modular console bays
+- Rave-flyer / Fidèle-maximal sleaze as the brand system
+- Tailwind / v0 "editorial binder" templates; 2×3 card dashboards in a terminal skin
+
+**Note the reversal.** Older canon vetoed "SaaS kanban chrome" as a look. That veto is **lifted for the look and only the look**: lanes, cards, filter chips and a detail drawer are the world now. It is not lifted for the product — the SaaS *stack* above (assignees, estimates, avatars, progress bars, "+ New Deal") stays vetoed, and that is the whole distinction. Take the composition; refuse the org chart.
 
 ---
 
@@ -330,45 +322,43 @@ Never. Not as a joke. Not as a “just for desktop.” Not as a dark-mode varian
 
 Mood is canon. Palette of the ref is usually not.
 
-**Rule:** if a reference is dark + green/cyan/amber phosphor, steal *structure* (density, leaders, brackets, ticks) and restamp it onto field / paper / power red.
+**Rule:** steal mechanics and craft, not costumes. On this world the refs are unusually literal — the point of the door is that it looks like the leaders — so the discipline moves from *how much to take* to *how well it is executed*.
 
 ### TAKE
 
-- **Office sheet** — registration ticks, hairline rules, circle counters, stencil weight on plaques, one oval/invert for live selection. Skull as a **salt organ**, not chrome on every frame.
-- **Pixel GUI** — 1px window chrome, title bar with `[x]` and `···`, overlap legal, dither as salt. Leave Win95 gray and pixel novelty fonts.
-- **IMP** — labeled blocks, dense legends, scanline bars for meters, industrial caps, recessed *feeling* via double hairline. Leave rotary 3D knobs. Globe as a **SEAL organ**, not the beige UN app icon.
-- **Lotus Organizer split-page** — two pages, spine, shovel through the gutter, ledger rows that **reflow**. Leave leather, amber, and card chrome.
-- **Linear / Things / OmniFocus / Todoist (stolen, not cloned)** — project + issue + sub-issue; click empty row to add; outline is the document; dump parser. Leave cloud, Apple UI, karma, board cards.
-- **ranger / nnn** — arrows, enter expand, `n` new node. Leave two-pane file-manager costume.
-- **CICS / z/OS / btop** — density, `Command ==>`, leader dots, `[bracket]` pane labels. Leave phosphor rainbows.
+- **Linear** — the whole composition: lane board, card, filter chips, right detail drawer, hairline density, one accent, the restraint of a monochrome board. Leave cloud, teams, cycles, assignees, estimates, triage.
+- **Things 3** — first click selects; click empty to add; the tick as the whole signal; how little chrome a list needs. Leave Apple UI, areas, tags-as-taxonomy.
+- **Height** — the graph as one thing seen through lenses; how a board and a list can be the same nodes. Leave chat, AI copilot theatre, the org surface.
+- **Plain unix listing (ranger / nnn)** — the catalogue's alphabet: stems, a block behind the live name, nothing else. ranger/nnn density. Leave two-pane file-manager costume.
+- **Scrivener** — the binder is the tree; the document is the work. Leave the compile pipeline.
+- **iA Writer** — entering a job is writing. Chrome is the frame around it.
+- **Muse / HyperCard** — go *into* the thing.
 
 ### LEAVE
 
-- `IMAGE NOT FOUND` theatre, rotary 3D, Win95 gray, pixel novelty fonts on titles
-- Harvest amber, cobalt as the lash, DateBlocks/cards
-- Month-as-OS as home (CAL is an organ)
-- Beige UN seal as the OS identity (SEAL is an organ)
-- Green-on-black Matrix Android launcher
-- Arch ricing (mauve/teal/mustard, anime fetch, glass hover)
-- AMMAR-style l33t IP-tracker CLI
-- Lo-fi sci-fi montage (amber/magenta overlays, radar, chromatic aberration as style)
-- ServerHub 2×3 card dashboard
-- Any `NEXUS_OS v5.0 tactical orchestrator` chrome
-- Tailwind / v0 “editorial binder” templates
+- Assignees, teams, cycles, estimates, triage, inbox-zero theatre — every ref above has them and none of them are ours
+- Any dark-studio, cassette, paper-sheet, or terminal costume (§8)
+- Harvest amber, cobalt, power red, live orange — one blue is the accent
+- Month-as-OS as home; DateBlocks
+- CRM deal boards, ServerHub card dashboards, `NEXUS_OS` tactical chrome
+- Tailwind / v0 template chrome
+- Unix stems on job cards; boxed rows in the catalogue
 
-Older canon still in force: Gemini neo-brutal TUI blueprint (engineering DNA, not the boxed-shadow look), Pinterest sleaze board, fried TUI / burn-the-box trail (PRs #8–#11). DateBlocks from PR #7 are a warning, not a direction. Month-as-OS (PR #14) was a recovery, not the destination.
+Older canon still in force as **warning, not direction**: the Gemini neo-brutal TUI blueprint (engineering DNA, not the boxed-shadow look), the fried-TUI trail (PRs #8–#11), DateBlocks (PR #7), month-as-OS (PR #14, a recovery, not a destination), the paper IMP canvas, the cassette theatre. Each was a pass. None is home.
 
 ---
 
 ## 10. How to apply this to another project
 
-1. Copy **this file**. Keep tokens, vetoes, grammar, SPECK, taste stack.
-2. Change **world content** only: what the field paints, what the dock commits.
-3. Do not change the substrate into cards because “this product is a marketing site.” If it cannot live on one field with one dock, it is a different language — do not pretend it is this one.
-4. Point `.cursorrules` at this file. Keep `.cursorrules` short. Agents read the short law; humans and long agents read this.
-5. If you need a second color, you are already lost. Use power red. Strike is the same red.
+1. Copy **this file**. Keep the test, the taste stack, the token *jobs*, the grammar, SPECK, the vetoes.
+2. Copy the ink/tint law, the one-accent law, the two-face type split, and the elevation-once law verbatim. Those are the portable craft rules and they are the reason this world holds up.
+3. Change **world content** only: what the field shows, what FIND searches.
+4. Do not change the substrate into a CRM because "this product is a dashboard." If it cannot live as one graph seen through a board and a tree, with one search field, it is a different language — do not pretend it is this one.
+5. Point `.cursorrules` at this file. Keep `.cursorrules` short. Agents read the short law; humans and long agents read this. `DESIGN.md` carries the measured values and is written *after* a build, from the build.
+6. If you need a third colour, you are already lost. One blue and one danger red are the two signals.
+7. **Playing the standard straight is not permission to be careless.** Measure the geometry, hold the contrast floors, size type by ink width, and make motion explain what moved. A quiet world shows every loose value.
 
-**VAULT-specific content (this repo):** composed desktop field on a paper sheet; one graph; PIPE binder view; NEST tree; DUMP tape; salt organs SEAL/SKULL/CAL; operator dock + legend rail; persistence `speck-os-v1`. No DateBlocks. No month-as-OS home. No amber binder. No cobalt.
+**VAULT-specific content (this repo):** light DOM field; SPECK as save format; one graph; top bar with one FIND and one primary action; five-lane board of cards; right detail drawer with boxed nest; plain-stem catalogue below the fold; dump tape; pull / dock / shovel; persistence `speck-os-v2`. Maker BAD FORM. No assignees. No teams. No second input. No costume.
 
 ---
 
@@ -377,10 +367,13 @@ Older canon still in force: Gemini neo-brutal TUI blueprint (engineering DNA, no
 Write like a terminal that went to art school for one semester and dropped out.
 
 - Terse. Uppercase where the machine would shout.
-- No “welcome to your dashboard.”
-- No empty states that apologize. Empty is `_` or `empty/`.
-- Filenames as mythos: `flush_stale_resolvers.sh`, `cnc_toolpath_night_run`, `scout_ridge_a`.
+- No "welcome to your dashboard."
+- No empty states that apologize. Empty is `_` or a ghost add.
+- Counts, not prose. `4` beats "You have 4 tasks."
+- Work files as nouns: `type_ramp.md`, `hero_still.tif`, `still_loop.mov`.
 - Maker mark: BAD FORM. Product mark: VAULT WORLDWIDE.
+
+The voice is where the attitude lives now that the chrome is quiet. Do not sand it down to match the field.
 
 ---
 
@@ -388,7 +381,11 @@ Write like a terminal that went to art school for one semester and dropped out.
 
 Further from the norm. Firmly in utility. Order from chaos.
 
-Propose bold changes inside this language. Do not propose a new language because CSS was easier.
+On this world, *further from the norm* is spent on **craft**, not on costume. The composition is settled and approved; the ambition goes into how well it is executed.
 
-Full short law: `.cursorrules`  
+Propose bold changes inside this language. Do not propose a new language because a canvas painter was easier, a CRM kit was closer, or a costume seemed more expressive than a white field.
+
+Full short law: `.cursorrules`
+Built values: `DESIGN.md`
+Product truth: `PRODUCT.md`
 This file: the canon.

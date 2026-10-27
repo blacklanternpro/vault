@@ -9,11 +9,13 @@ export type GraphNode = {
   status: NodeStatus
   parent: number | null
   urgent?: boolean
+  loose?: boolean
 }
 
 export type Note = {
   date: string
   text: string
+  node?: number
 }
 
 export type Place = {
@@ -43,41 +45,50 @@ export type Doc = {
 
 export const DEFAULT_PLACES: Place[] = [
   { organ: 'PIPE', x: 24, y: 48 },
-  { organ: 'NEST', x: 24, y: 540 },
+  { organ: 'NEST', x: 24, y: 660 },
   { organ: 'DUMP', x: 560, y: 540 },
-  { organ: 'SEAL', x: 900, y: 48 },
-  { organ: 'SKULL', x: 900, y: 280 },
-  { organ: 'CAL', x: 560, y: 48 },
 ]
 
-export const SEED_SOURCE = `INV
-GRAIN 0.14
-SCAN 0.1
-PIPE vault
-  COL backlog
+export const SEED_SOURCE = `PIPE vault
+  COL pending
+  COL rnd
   COL active
-  COL staging
   COL done
+  COL dusted
 NEST
-  NODE 1 "ops" status none
-    NODE 10 "lab" status none
-      NODE 11 "scout_ridge_a" status none URGENT
-    NODE 20 "net" status none
-      NODE 21 "flush_stale_resolvers.sh" status none
-      NODE 102 "telemetry ui" status active
-        BODY "overlay leftover"
-    NODE 104 "ingress routing" status backlog
-    NODE 101 "supabase link" status staging
-    NODE 99 "baseline" status done
+  NODE 1 "homepage" status none
+    NODE 10 "SITE REDESIGN" status active
+      BODY "Redesign the homepage to better communicate our value prop and improve conversion."
+      BODY "Focus on clarity, modern aesthetics, and strong CTAs."
+      NODE 11 "Review current homepage analytics" status done
+      NODE 12 "Define new information hierarchy" status done
+      NODE 13 "Create wireframes" status pending
+      NODE 14 "Design high-fidelity mockups" status pending
+      NODE 15 "Add motion prototypes" status pending
+    NODE 20 "NAV RESTRUCTURE" status pending
+      BODY "Flatten the top nav to five entries and move the rest into the footer."
+  NODE 2 "brand guidelines" status none
+    NODE 30 "UPDATE BRANDING" status pending
+  NODE 3 "competitive analysis" status none
+    NODE 40 "MARKET RESEARCH" status rnd
+  NODE 4 "next-gen stack" status none
+    NODE 50 "TECH SPIKE" status rnd
+  NODE 5 "mood boards" status none
+    NODE 60 "DESIGN EXPLORATION" status rnd
+  NODE 6 "visual polish" status none
+    NODE 70 "AESTHETIC PASS" status active
+  NODE 7 "vault-worldwide" status none
+    NODE 80 "CREATE REPO" status done
+  NODE 8 "boilerplate & config" status none
+    NODE 90 "PROJECT SETUP" status done
+  NODE 9 "tokens & components" status none
+    NODE 100 "DESIGN SYSTEM INIT" status done
+  NODE 16 "page inventory" status none
+    NODE 110 "CONTENT AUDIT" status done
+  NODE 17 "deprecated" status none
+    NODE 120 "OLD LANDING PAGE" status dusted
 DUMP
-  NOTE 09.07.26 "ridge"
-PLACE PIPE 24 48
-PLACE NEST 24 540
-PLACE DUMP 560 540
-PLACE SEAL 900 48
-PLACE SKULL 900 280
-PLACE CAL 560 48
-GLYPH 16 16 56 "VAULT"`
+  NOTE 09.09.26 "ask about the analytics export"`
 
 function word(tok: Tok | undefined): string | null {
   if (!tok || tok.t !== 'WORD') return null
@@ -99,7 +110,9 @@ function quote(text: string): string {
 
 function parseStatus(raw: string): NodeStatus {
   const s = raw.toLowerCase()
-  if (s === 'backlog' || s === 'active' || s === 'staging' || s === 'done' || s === 'none') return s
+  if (s === 'backlog') return 'pending'
+  if (s === 'staging') return 'rnd'
+  if (s === 'pending' || s === 'rnd' || s === 'active' || s === 'done' || s === 'dusted' || s === 'none') return s
   return 'none'
 }
 
@@ -109,7 +122,7 @@ export function blankDoc(): Doc {
     cols: [...COL_ORDER],
     nodes: [],
     notes: [],
-    places: DEFAULT_PLACES.map((p) => ({ ...p })),
+    places: [],
     glyphs: [],
     inv: false,
     grain: 0,
@@ -129,8 +142,139 @@ export function nextNodeId(doc: Doc): number {
   return doc.nodes.reduce((m, n) => Math.max(m, n.id), 0) + 1
 }
 
-export function isProject(doc: Doc, node: GraphNode): boolean {
-  return childrenOf(doc, node.id).length > 0
+export function isProject(_doc: Doc, node: GraphNode): boolean {
+  return node.parent === null
+}
+
+export function projectsOf(doc: Doc): GraphNode[] {
+  return childrenOf(doc, null)
+}
+
+export function projectIdOf(doc: Doc, projectId: number | null): number | null {
+  if (projectId != null) {
+    const node = byId(doc, projectId)
+    if (node && node.parent === null) return projectId
+  }
+  return projectsOf(doc)[0]?.id ?? null
+}
+
+export function isManagerCard(doc: Doc, node: GraphNode, projectId: number | null): boolean {
+  const pid = projectIdOf(doc, projectId)
+  if (pid == null || node.id === pid || !inSubtree(doc, pid, node.id)) return false
+  if (node.loose) return true
+  return node.parent === pid
+}
+
+export function laneOf(status: NodeStatus): (typeof COL_ORDER)[number] {
+  return status === 'none' ? 'pending' : status
+}
+
+export function nestedOf(doc: Doc, id: number): GraphNode[] {
+  return childrenOf(doc, id).filter((n) => !n.loose)
+}
+
+export function jobsOf(doc: Doc, projectId: number | null): GraphNode[] {
+  const pid = projectIdOf(doc, projectId)
+  if (pid == null) return []
+  return childrenOf(doc, pid).filter((n) => !n.loose)
+}
+
+export function satellitesOf(doc: Doc, projectId: number | null): GraphNode[] {
+  const pid = projectIdOf(doc, projectId)
+  if (pid == null) return []
+  return doc.nodes.filter((n) => Boolean(n.loose) && n.id !== pid && inSubtree(doc, pid, n.id))
+}
+
+export function managerCards(doc: Doc, projectId: number | null = null): GraphNode[] {
+  const pid = projectIdOf(doc, projectId)
+  if (pid == null) return []
+  const jobs = jobsOf(doc, pid)
+  const sats = satellitesOf(doc, pid)
+  const ids = new Set(jobs.map((n) => n.id))
+  const extra = sats.filter((n) => !ids.has(n.id))
+  const wanted = new Set([...jobs, ...extra].map((n) => n.id))
+  return doc.nodes.filter((n) => wanted.has(n.id))
+}
+
+/**
+ * Every job the board shows. A null project means all of them, which is what
+ * the top bar's default filter asks for; a project id narrows to that folder.
+ */
+export function boardCards(doc: Doc, projectId: number | null): GraphNode[] {
+  if (projectId != null) return managerCards(doc, projectId)
+  const wanted = new Set<number>()
+  for (const project of projectsOf(doc)) {
+    for (const card of managerCards(doc, project.id)) wanted.add(card.id)
+  }
+  return doc.nodes.filter((n) => wanted.has(n.id))
+}
+
+/** Every LOOSE node the board shows, so its leash back to the parent can be drawn. */
+export function boardSatellites(doc: Doc, projectId: number | null): GraphNode[] {
+  if (projectId != null) return satellitesOf(doc, projectId)
+  return projectsOf(doc).flatMap((project) => satellitesOf(doc, project.id))
+}
+
+/** The root folder a node hangs under, which the board prints beneath its title. */
+export function folderOf(doc: Doc, id: number): GraphNode | null {
+  let node = byId(doc, id)
+  if (!node) return null
+  while (node.parent != null) {
+    const parent = byId(doc, node.parent)
+    if (!parent) break
+    node = parent
+  }
+  return node.id === id ? null : node
+}
+
+export function isBoardVisible(doc: Doc, projectId: number | null, id: number): boolean {
+  const cards = managerCards(doc, projectId)
+  if (cards.some((c) => c.id === id)) return true
+  const node = byId(doc, id)
+  if (!node || node.loose) return false
+  return cards.some((c) => inSubtree(doc, c.id, id))
+}
+
+export function moveNodeBefore(doc: Doc, id: number, beforeId: number | null): boolean {
+  const from = doc.nodes.findIndex((n) => n.id === id)
+  if (from < 0) return false
+  const [node] = doc.nodes.splice(from, 1)
+  if (beforeId == null) {
+    doc.nodes.push(node)
+    return true
+  }
+  const to = doc.nodes.findIndex((n) => n.id === beforeId)
+  if (to < 0) {
+    doc.nodes.push(node)
+    return true
+  }
+  doc.nodes.splice(to, 0, node)
+  return true
+}
+
+export function moveNote(doc: Doc, from: number, to: number): boolean {
+  if (from < 0 || from >= doc.notes.length) return false
+  const clamped = Math.max(0, Math.min(doc.notes.length - 1, to))
+  if (from === clamped) return true
+  const [note] = doc.notes.splice(from, 1)
+  doc.notes.splice(clamped, 0, note)
+  return true
+}
+
+export function setNoteText(doc: Doc, index: number, text: string): void {
+  const note = doc.notes[index]
+  if (note) note.text = text
+}
+
+export function setNoteHitch(doc: Doc, index: number, nodeId: number | null): void {
+  const note = doc.notes[index]
+  if (!note) return
+  if (nodeId == null) {
+    delete note.node
+    return
+  }
+  if (!byId(doc, nodeId)) return
+  note.node = nodeId
 }
 
 export function subtreeIds(doc: Doc, id: number): number[] {
@@ -166,7 +310,15 @@ export function openTaskCount(doc: Doc, id: number): number {
 
 export function insertNode(
   doc: Doc,
-  partial: { title: string; status?: NodeStatus; parent?: number | null; body?: string; urgent?: boolean; id?: number },
+  partial: {
+    title: string
+    status?: NodeStatus
+    parent?: number | null
+    body?: string
+    urgent?: boolean
+    loose?: boolean
+    id?: number
+  },
 ): GraphNode {
   const node: GraphNode = {
     id: partial.id ?? nextNodeId(doc),
@@ -176,6 +328,7 @@ export function insertNode(
   }
   if (partial.body) node.body = partial.body
   if (partial.urgent) node.urgent = true
+  if (partial.loose) node.loose = true
   doc.nodes.push(node)
   return node
 }
@@ -183,6 +336,9 @@ export function insertNode(
 export function removeNode(doc: Doc, id: number): void {
   const ids = new Set(subtreeIds(doc, id))
   doc.nodes = doc.nodes.filter((n) => !ids.has(n.id))
+  for (const note of doc.notes) {
+    if (note.node != null && ids.has(note.node)) delete note.node
+  }
 }
 
 function ensurePath(doc: Doc, path: string, nestRoot: string): number | null {
@@ -208,22 +364,24 @@ function parseNodeLine(toks: Tok[]): Omit<GraphNode, 'parent'> | null {
   let id = 0
   let status: NodeStatus = 'none'
   let urgent = false
+  let loose = false
   for (let i = 0; i < toks.length; i++) {
     const w = word(toks[i])
     const nxt = toks[i + 1]
     if (w === 'ID' && nxt?.t === 'NUM') id = nxt.v
     if (w === 'STATUS' && nxt) status = parseStatus(nxt.t === 'WORD' ? nxt.v : nxt.raw)
     if (w === 'URGENT') urgent = true
+    if (w === 'LOOSE') loose = true
   }
   if (!id) {
     const n = toks.find((t) => t.t === 'NUM')
     if (n) id = n.v
   }
-  return { id, title, status, urgent: urgent || undefined }
+  return { id, title, status, urgent: urgent || undefined, loose: loose || undefined }
 }
 
 function parseLegacyTask(toks: Tok[]): { col: string; title: string; id: number; nest?: string } | null {
-  const col = (word(toks[1]) || 'backlog').toLowerCase()
+  const col = parseStatus(word(toks[1]) || 'pending')
   const title = strOf(toks)
   if (!title) return null
   let id = 0
@@ -291,8 +449,8 @@ export function parseDoc(src: string): Doc {
       continue
     }
     if (head === 'COL') {
-      const col = (word(line.toks[1]) || '').toLowerCase()
-      if (col && !doc.cols.includes(col)) doc.cols.push(col)
+      const col = parseStatus((word(line.toks[1]) || '').toLowerCase())
+      if (col !== 'none' && !doc.cols.includes(col)) doc.cols.push(col)
     } else if (head === 'NODE') {
       const parsed = parseNodeLine(line.toks)
       if (!parsed) continue
@@ -306,6 +464,7 @@ export function parseDoc(src: string): Doc {
         parent,
       }
       if (parsed.urgent) node.urgent = true
+      if (parsed.loose) node.loose = true
       doc.nodes.push(node)
       stack.push({ indent: line.indent, id })
     } else if (head === 'BODY') {
@@ -313,7 +472,8 @@ export function parseDoc(src: string): Doc {
       const top = stack[stack.length - 1]
       if (text && top) {
         const node = byId(doc, top.id)
-        if (node) node.body = text
+        // One BODY line per paragraph: quoted strings cannot hold a newline.
+        if (node) node.body = node.body ? `${node.body}\n${text}` : text
       }
     } else if (head === 'TASK') {
       const task = parseLegacyTask(line.toks)
@@ -336,11 +496,15 @@ export function parseDoc(src: string): Doc {
       const dateTok = line.toks[1]
       const date = dateTok?.t === 'DATE' ? dateTok.v : ''
       const text = strOf(line.toks)
-      if (text) doc.notes.push({ date, text })
+      let node: number | undefined
+      for (let i = 0; i < line.toks.length; i++) {
+        const nxt = line.toks[i + 1]
+        if (word(line.toks[i]) === 'NODE' && nxt?.t === 'NUM') node = nxt.v
+      }
+      if (text) doc.notes.push(node != null ? { date, text, node } : { date, text })
     }
   }
-  if (doc.cols.length === 0) doc.cols = [...COL_ORDER]
-  if (doc.places.length === 0) doc.places = blankDoc().places
+  doc.cols = [...COL_ORDER]
   return doc
 }
 
@@ -348,9 +512,13 @@ function writeTree(doc: Doc, parent: number | null, indent: number, lines: strin
   const pad = '  '.repeat(indent)
   for (const n of childrenOf(doc, parent)) {
     lines.push(
-      `${pad}NODE ${n.id} ${quote(n.title)} status ${n.status}${n.urgent ? ' URGENT' : ''}`,
+      `${pad}NODE ${n.id} ${quote(n.title)} status ${n.status}${n.urgent ? ' URGENT' : ''}${n.loose ? ' LOOSE' : ''}`,
     )
-    if (n.body) lines.push(`${pad}  BODY ${quote(n.body)}`)
+    if (n.body) {
+      for (const para of n.body.split('\n')) {
+        if (para.trim()) lines.push(`${pad}  BODY ${quote(para)}`)
+      }
+    }
     writeTree(doc, n.id, indent + 1, lines)
   }
 }
@@ -361,12 +529,14 @@ export function serializeDoc(doc: Doc): string {
   if (doc.grain > 0) lines.push(`GRAIN ${doc.grain}`)
   if (doc.scan > 0) lines.push(`SCAN ${doc.scan}`)
   lines.push(`PIPE ${doc.pipeName}`)
-  const cols = doc.cols.length ? doc.cols : [...COL_ORDER]
-  for (const col of cols) lines.push(`  COL ${col}`)
+  for (const col of COL_ORDER) lines.push(`  COL ${col}`)
   lines.push('NEST')
   writeTree(doc, null, 1, lines)
   lines.push('DUMP')
-  for (const n of doc.notes) lines.push(`  NOTE ${n.date} ${quote(n.text)}`)
+  for (const n of doc.notes) {
+    const hitch = n.node != null ? ` NODE ${n.node}` : ''
+    lines.push(`  NOTE ${n.date}${hitch} ${quote(n.text)}`)
+  }
   for (const p of doc.places) lines.push(`PLACE ${p.organ} ${Math.round(p.x)} ${Math.round(p.y)}`)
   for (const g of doc.glyphs) {
     lines.push(`GLYPH ${Math.round(g.x)} ${Math.round(g.y)} ${Math.round(g.px)} ${quote(g.text)}`)
@@ -421,4 +591,27 @@ export function setNodeBody(doc: Doc, id: number, body: string): void {
 export function setNodeStatus(doc: Doc, id: number, status: NodeStatus): void {
   const node = byId(doc, id)
   if (node) node.status = status
+}
+
+export function setNodeLoose(doc: Doc, id: number, loose: boolean): void {
+  const node = byId(doc, id)
+  if (!node) return
+  if (loose) node.loose = true
+  else delete node.loose
+}
+
+export function followNested(doc: Doc, id: number, status: NodeStatus): void {
+  for (const child of childrenOf(doc, id)) {
+    if (child.loose) continue
+    child.status = status
+    followNested(doc, child.id, status)
+  }
+}
+
+export function promotePending(doc: Doc, id: number): void {
+  const node = byId(doc, id)
+  if (!node || node.status !== 'pending') return
+  if (nestedOf(doc, id).length === 0) return
+  node.status = 'active'
+  followNested(doc, id, 'active')
 }

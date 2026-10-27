@@ -121,6 +121,7 @@ export type HitKind =
   | 'DOCK'
   | 'DAY'
   | 'LEGEND'
+  | 'LENS'
   | 'CAL'
   | 'SEAL'
   | 'SKULL'
@@ -179,30 +180,27 @@ export type Selected =
   | { kind: 'SKULL' }
   | { kind: 'CAL' }
 
-export type PendingDump = {
-  kind: 'project'
-  title: string
-  children: string[]
-} | {
-  kind: 'tasks'
-  titles: string[]
-  parent: number | null
-}
-
 export type Session = {
   selected: Selected | null
   lens: Lens
   nestClosed: number[]
   pipeOpen: number | null
   nestFocus: number | null
+  projectId: number | null
   field: { id: number; slot: FieldSlot } | null
   fieldBuffer: string
   collapsed: OrganName[]
   draftId: number | null
   buffer: string
   echo: string | null
-  pendingDump: PendingDump | null
+  find: string | null
   calDay: string | null
+}
+
+export function matchesFind(session: Session, title: string): boolean {
+  const q = session.find?.trim()
+  if (!q) return false
+  return title.toLowerCase().includes(q.toLowerCase())
 }
 
 export type Now = {

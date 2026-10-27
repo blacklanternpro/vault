@@ -14,6 +14,9 @@ export type DockStmt =
   | { kind: 'MOVE'; organ?: string; x: number; y: number }
   | { kind: 'STRIKE' }
   | { kind: 'ADD' }
+  | { kind: 'FIND'; query: string }
+  | { kind: 'NOTE'; text: string }
+  | { kind: 'GLYPH'; x: number; y: number; px: number; text: string }
   | { kind: 'DATA'; text: string }
 
 function word(tok: Tok | undefined): string | null {
@@ -68,6 +71,25 @@ export function parseCommand(src: string): DockStmt {
     const organ = word(toks[1])
     const organName = organ && isOrganName(organ) ? organ : undefined
     return { kind: 'MOVE', organ: organName, x: nums[0] ?? 0, y: nums[1] ?? 0 }
+  }
+  if (head === 'FIND') {
+    const s = toks.find((t) => t.t === 'STR')
+    return { kind: 'FIND', query: s ? s.v : toks.slice(1).map((t) => t.raw).join(' ') }
+  }
+  if (head === 'NOTE') {
+    const s = toks.find((t) => t.t === 'STR')
+    return { kind: 'NOTE', text: s ? s.v : toks.slice(1).map((t) => t.raw).join(' ') }
+  }
+  if (head === 'GLYPH') {
+    const nums = toks.filter((t) => t.t === 'NUM').map((t) => t.v)
+    const s = toks.find((t) => t.t === 'STR')
+    return {
+      kind: 'GLYPH',
+      x: nums[0] ?? 80,
+      y: nums[1] ?? 80,
+      px: nums[2] ?? 32,
+      text: s ? s.v : 'MARK',
+    }
   }
   return { kind: 'DATA', text: toks.map((t) => t.raw).join(' ') }
 }

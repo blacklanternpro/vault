@@ -1,6 +1,6 @@
 import { SEED_SOURCE } from './doc'
 
-export const STORAGE_KEY = 'speck-os-v1'
+export const STORAGE_KEY = 'speck-os-v2'
 
 export function loadSource(): string {
   try {

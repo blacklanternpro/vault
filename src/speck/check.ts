@@ -1,212 +1,249 @@
-import { compile, PIPE_ROWS } from './compile'
-import { byId, childrenOf, parseDoc, SEED_SOURCE, serializeDoc } from './doc'
-import { applyHit, applyKey, commitLine, cycleField, freshSession } from './machine'
-import { parseDump } from './parse-dump'
-import { PAINT_OPS, POWER } from './tokens'
+import { byId, childrenOf, managerCards, nestedOf, parseDoc, SEED_SOURCE, serializeDoc } from './doc'
+import {
+  addNested,
+  applyHit,
+  applyKey,
+  applyNoteOrder,
+  commitFieldLine,
+  commitLine,
+  cycleField,
+  freshSession,
+  hitchNote,
+  pullCard,
+  dockCard,
+  searchFind,
+  selectNode,
+  stageCard,
+  typeField,
+} from './machine'
+import { COL_ORDER } from './tokens'
 
-function measure(text: string): number {
-  return text.length * 7
-}
+/**
+ * Behaviour fixture. Kept separate from SEED_SOURCE so the shipped seed can
+ * carry demonstration content without dragging every machine assertion with it.
+ */
+const FIXTURE = `PIPE vault
+  COL pending
+  COL rnd
+  COL active
+  COL done
+  COL dusted
+NEST
+  NODE 1 "site" status none
+    NODE 10 "HOME PAGE" status active
+      NODE 11 "lock type ramp" status active URGENT
+      NODE 12 "crop hero still" status active
+      NODE 13 "still loop" status rnd LOOSE
+        BODY "8s loop, no sting"
+    NODE 20 "TYPE SPEC" status rnd
+    NODE 30 "REPO" status pending
+    NODE 40 "CONTACT" status done
+    NODE 50 "OLD GRID" status dusted
+  NODE 2 "print" status none
+    NODE 60 "RUN SHEET" status pending
+DUMP
+  NOTE 09.09.26 "type ramp 700 / 400"`
+
+const SITE = 1
+const PRINT = 2
+const HOME = 10
+const RAMP = 11
+const LOOP = 13
+const SPEC = 20
+const REPO = 30
+const CONTACT = 40
+const RUN = 60
+const SEED_NOTE = 'type ramp 700 / 400'
 
 export function runSpeckChecks(): string[] {
   const fails: string[] = []
   const fail = (msg: string) => fails.push(msg)
 
-  const doc = parseDoc(SEED_SOURCE)
-  if (doc.pipeName !== 'vault') fail(`pipe name ${doc.pipeName}`)
-  if (doc.cols.join(' ') !== 'backlog active staging done') fail(`cols ${doc.cols.join(' ')}`)
+  if (/PLACE\s+(SEAL|SKULL|CAL)/.test(SEED_SOURCE)) fail('seed salt PLACE')
+  if (/\bINV\b/.test(SEED_SOURCE)) fail('seed INV')
+  if (/\bGRAIN\b/.test(SEED_SOURCE)) fail('seed GRAIN')
+  if (/\bSCAN\b/.test(SEED_SOURCE)) fail('seed SCAN')
+  if (/GLYPH/.test(SEED_SOURCE)) fail('seed GLYPH')
+  if (/scout ridge|INGRESS|SUPABASE|telemetry overlay|COLD STORAGE|OLD SPIKE|"ops"/.test(SEED_SOURCE)) {
+    fail('stale ops-room demo')
+  }
 
-  const n104 = byId(doc, 104)
-  if (!n104 || n104.status !== 'backlog' || n104.parent !== 1 || !n104.title.includes('ingress')) {
-    fail('node 104 backlog under ops')
+  const shipped = parseDoc(SEED_SOURCE)
+  if (shipped.pipeName !== 'vault') fail(`pipe name ${shipped.pipeName}`)
+  if (shipped.cols.join(' ') !== 'pending rnd active done dusted') fail(`cols ${shipped.cols.join(' ')}`)
+  if (shipped.inv) fail('parsed INV')
+  if (shipped.places.some((p) => p.organ === 'CAL' || p.organ === 'SEAL' || p.organ === 'SKULL')) {
+    fail('parsed salt places')
   }
-  const n102 = byId(doc, 102)
-  if (!n102 || n102.status !== 'active' || n102.parent !== 20 || n102.body !== 'overlay leftover') {
-    fail('node 102 active under net')
+  for (const col of COL_ORDER) {
+    if (!shipped.nodes.some((n) => n.status === col)) fail(`seed has no ${col} job`)
   }
-  const n11 = byId(doc, 11)
-  if (!n11 || !n11.urgent || n11.parent !== 10) fail('node 11 urgent lab')
-  if (!doc.notes.some((n) => n.text === 'ridge')) fail('dump ridge')
-  if (!doc.places.some((p) => p.organ === 'PIPE')) fail('place PIPE')
-  if (!doc.glyphs.some((g) => g.text === 'VAULT' || g.text === '07')) fail('glyph VAULT')
-  if (!doc.inv) fail('seed INV')
-  if (!(doc.grain > 0)) fail('seed GRAIN')
-  if (!doc.places.some((p) => p.organ === 'CAL')) fail('place CAL')
+  const shippedBody = shipped.nodes.find((n) => (n.body ?? '').includes('\n'))
+  if (!shippedBody) fail('seed has no multi-paragraph body')
+  else if (byId(parseDoc(serializeDoc(shipped)), shippedBody.id)?.body !== shippedBody.body) {
+    fail('multi-paragraph body round-trip')
+  }
 
-  const ops = PAINT_OPS.join(' ')
-  for (const live of ['GRAIN', 'SCAN', 'INV', 'OVAL', 'GLYPH', 'CHIP', 'STEM']) {
-    if (!ops.includes(live)) fail(`missing op ${live}`)
+  const seed = FIXTURE
+  const doc = parseDoc(seed)
+
+  const nRepo = byId(doc, REPO)
+  if (!nRepo || nRepo.status !== 'pending' || nRepo.parent !== SITE || nRepo.title !== 'REPO') {
+    fail('node 30 pending under site')
   }
-  if (ops.includes('CLIP')) fail('CLIP live')
+  const nLoop = byId(doc, LOOP)
+  if (!nLoop || nLoop.status !== 'rnd' || nLoop.parent !== HOME || !nLoop.loose || nLoop.body !== '8s loop, no sting') {
+    fail('node 13 loose rnd under home')
+  }
+  const nRamp = byId(doc, RAMP)
+  if (!nRamp || !nRamp.urgent || nRamp.parent !== HOME || nRamp.loose) fail('node 11 nested urgent home')
+  if (!doc.notes.some((n) => n.text === SEED_NOTE)) fail('dump type ramp')
+
+  const cards = managerCards(doc, SITE).map((n) => n.id)
+  if (!cards.includes(HOME) || !cards.includes(LOOP) || !cards.includes(REPO)) fail(`manager cards ${cards.join(',')}`)
+  if (cards.includes(RAMP) || cards.includes(12) || cards.includes(SITE) || cards.includes(RUN)) {
+    fail(`manager leaked nested ${cards.join(',')}`)
+  }
+  if (nestedOf(doc, HOME).map((n) => n.id).join(',') !== '11,12') fail('home nested hides loose')
+
+  const printCards = managerCards(doc, PRINT).map((n) => n.id)
+  if (printCards.join(',') !== String(RUN)) fail(`print cards ${printCards.join(',')}`)
 
   const round = parseDoc(serializeDoc(doc))
   if (round.nodes.length !== doc.nodes.length) fail('serialize nodes')
-  if (byId(round, 102)?.body !== 'overlay leftover') fail('serialize body')
-  if (byId(round, 104)?.parent !== 1) fail('serialize parent')
+  if (byId(round, LOOP)?.body !== '8s loop, no sting') fail('serialize body')
+  if (byId(round, REPO)?.parent !== SITE) fail('serialize parent')
+  if (!byId(round, LOOP)?.loose) fail('serialize LOOSE')
+  if (!serializeDoc(round).includes('LOOSE')) fail('serialize LOOSE token')
+  if (serializeDoc(round).includes('PLACE SEAL')) fail('serialize salt')
 
-  const dump = parseDump(
-    'new website project, site redesign of homepage, need to assess aesthetic, create repo',
-  )
-  if (dump.kind !== 'project') fail(`dump kind ${dump.kind}`)
-  else {
-    if (dump.title !== 'site redesign of homepage') fail(`dump title ${dump.title}`)
-    if (dump.children.join('|') !== 'assess aesthetic|create repo') fail(`dump kids ${dump.children.join('|')}`)
-  }
+  const legacy = parseDoc(`PIPE vault
+  COL backlog
+  COL staging
+NEST
+  NODE 9 "old" status backlog
+    NODE 8 "gate" status staging
+`)
+  if (byId(legacy, 9)?.status !== 'pending') fail('legacy backlog')
+  if (byId(legacy, 8)?.status !== 'rnd') fail('legacy staging')
 
-  const amb = parseDump('new website project')
-  if (amb.kind !== 'ambiguous') fail(`dump amb ${amb.kind}`)
-
-  let session = { ...freshSession(), selected: { kind: 'NODE' as const, id: 104 } }
-  let result = commitLine('SHOVEL', session, SEED_SOURCE)
-  let next = byId(parseDoc(result.source), 104)
-  if (next?.status !== 'active') fail(`shovel1 ${next?.status}`)
+  let session = { ...freshSession(), selected: { kind: 'NODE' as const, id: REPO } }
+  let result = commitLine('SHOVEL', session, seed)
+  let next = byId(parseDoc(result.source), REPO)
+  if (next?.status !== 'rnd') fail(`shovel1 ${next?.status}`)
 
   result = commitLine('SHOVEL', session, result.source)
-  next = byId(parseDoc(result.source), 104)
-  if (next?.status !== 'staging') fail(`shovel2 ${next?.status}`)
+  next = byId(parseDoc(result.source), REPO)
+  if (next?.status !== 'active') fail(`shovel2 ${next?.status}`)
 
-  result = commitLine('SHOVEL', { ...freshSession(), selected: { kind: 'NODE', id: 11 } }, SEED_SOURCE)
-  if (byId(parseDoc(result.source), 11)?.status !== 'backlog') fail('shovel none onto backlog')
+  result = commitLine('SHOVEL', { ...freshSession(), selected: { kind: 'NODE', id: CONTACT } }, seed)
+  if (byId(parseDoc(result.source), CONTACT)?.status !== 'dusted') fail('shovel done onto dusted')
 
-  result = commitLine(
-    'new website project, site redesign of homepage, need to assess aesthetic, create repo',
-    freshSession(),
-    SEED_SOURCE,
-  )
-  const dumped = parseDoc(result.source)
-  const project = dumped.nodes.find((n) => n.title === 'site redesign of homepage')
-  if (!project || project.status !== 'none') fail('dump project node')
+  const madeNone = applyHit({ kind: 'ADD', x: 0, y: 0, w: 10, h: 10, z: 20, payload: PRINT }, freshSession(), seed)
+  const scrapId = madeNone.session.draftId
+  if (scrapId == null) fail('add under print')
   else {
-    const kids = childrenOf(dumped, project.id).map((n) => n.title)
-    if (kids.join('|') !== 'assess aesthetic|create repo') fail(`dump applied ${kids.join('|')}`)
-    if (result.session.nestFocus !== project.id) fail('dump focus')
+    const scrap = byId(parseDoc(madeNone.source), scrapId)
+    if (scrap?.status !== 'pending' || scrap.parent !== PRINT) fail(`job under project ${scrap?.status} p${scrap?.parent}`)
+    const lifted = commitLine('SHOVEL', { ...freshSession(), selected: { kind: 'NODE', id: scrapId } }, madeNone.source)
+    if (byId(parseDoc(lifted.source), scrapId)?.status !== 'rnd') fail('shovel pending onto rnd')
   }
 
-  result = commitLine('WORDS', freshSession(), SEED_SOURCE)
-  if (result.session.echo?.includes('CLIP')) fail('WORDS CLIP')
-  if (!result.session.echo?.includes('GRAIN')) fail('WORDS GRAIN')
-  if (!result.session.echo?.includes('SCAN')) fail('WORDS SCAN')
-  if (!result.session.echo?.includes('INV')) fail('WORDS INV')
-  if (!result.session.echo?.includes('OVAL')) fail('WORDS OVAL')
-  if (!result.session.echo?.includes('GLYPH')) fail('WORDS GLYPH')
-  if (!result.session.echo?.includes('FOCUS')) fail('WORDS FOCUS')
+  result = commitLine(
+    'HOME PAGE, lock type ramp, crop hero still, open repo',
+    freshSession(),
+    seed,
+  )
+  const dumped = parseDoc(result.source)
+  if (dumped.nodes.length !== parseDoc(seed).nodes.length) fail('dock dump created nodes')
+  if (result.session.find !== 'HOME PAGE, lock type ramp, crop hero still, open repo') {
+    fail(`dock find ${result.session.find}`)
+  }
+  if (result.session.echo !== 'FIND _') fail(`dock dump echo ${result.session.echo}`)
+
+  result = commitLine('FIND loop', freshSession(), seed)
+  if (result.session.find !== 'loop') fail(`FIND query ${result.session.find}`)
+  if (result.session.echo !== 'FIND 1') fail(`FIND echo ${result.session.echo}`)
+  if (result.session.selected?.kind !== 'NODE' || result.session.selected.id !== LOOP) fail('FIND selects still loop')
+
+  result = commitLine('NOTE scratch line', { ...freshSession(), lens: 'pipe' }, seed)
+  if (!parseDoc(result.source).notes.some((n) => n.text === 'scratch line')) fail('NOTE append')
+
+  const dumpLive = commitLine('from dump', { ...freshSession(), lens: 'dump', selected: { kind: 'DUMP' } }, seed)
+  if (!parseDoc(dumpLive.source).notes.some((n) => n.text === 'from dump')) fail('dump lens note')
+  if (parseDoc(dumpLive.source).nodes.length !== parseDoc(seed).nodes.length) fail('dump lens created nodes')
 
   result = commitLine('CLEAR', freshSession(), result.source)
   if (parseDoc(result.source).pipeName !== 'vault') fail('CLEAR seed')
-  if (!byId(parseDoc(result.source), 104)) fail('CLEAR nodes')
+  if (parseDoc(result.source).nodes.length !== shipped.nodes.length) fail('CLEAR nodes')
+  if (/PLACE\s+CAL/.test(result.source)) fail('CLEAR restored CAL')
 
-  const world = {
-    source: SEED_SOURCE,
-    session: freshSession(),
-    width: 1200,
-    viewH: 800,
-    caretOn: true,
-  }
-  const field = compile(world, measure).field
-  const lines = field.ops.filter((op) => op.op === 'LINE')
-  if (lines.length < PIPE_ROWS * 4) fail(`ledger lines ${lines.length}`)
-  const texts = field.ops.filter((op) => op.op === 'GLYPH' || op.op === 'STEM').map((op) => op.text)
-  if (!texts.some((t) => /BACKLOG/i.test(t))) fail('BACKLOG legend')
-  if (!texts.some((t) => /STAGING/i.test(t))) fail('STAGING legend')
-  if (!texts.some((t) => t === 'VAULT' || t === '07')) fail('free glyph paints')
-  if (!texts.some((t) => /PIPE \/\//.test(t))) fail('pipe plaque')
-  if (!texts.some((t) => /CAL \/\//.test(t))) fail('cal plaque')
-  if (!texts.some((t) => t.includes('[x]'))) fail('organ close')
-  if (!texts.some((t) => t === 'SKULL')) fail('skull organ')
-  if (!texts.some((t) => t === 'SEAL' || t === 'VAULT WORLDWIDE')) fail('seal organ')
-  const monthPack = field.ops.filter(
-    (op) => op.op === 'GLYPH' && /^(?:[1-9]|[12]\d|3[01])$/.test(op.text),
-  )
-  if (monthPack.length < 28) fail(`cal days ${monthPack.length}`)
-  if (!field.ops.some((op) => op.op === 'GRAIN')) fail('grain op')
-  if (!field.ops.some((op) => op.op === 'INV')) fail('inv op')
-  const groundFill = field.ops.find((op) => op.op === 'FILL')
-  if (!groundFill || groundFill.op !== 'FILL' || groundFill.color !== '#F4F4F0') fail('paper ground')
+  const staged = stageCard(freshSession(), seed, HOME, 'done')
+  if (byId(parseDoc(staged.source), HOME)?.status !== 'done') fail('stage job status')
+  if (byId(parseDoc(staged.source), RAMP)?.status !== 'done') fail('stage nested followed')
+  if (byId(parseDoc(staged.source), LOOP)?.status !== 'rnd') fail('stage kept loose satellite')
+  if (byId(parseDoc(staged.source), LOOP)?.parent !== HOME) fail('stage kept satellite parent')
 
-  const colors = field.ops.flatMap((op) => {
-    if (op.op === 'GLYPH' || op.op === 'STEM' || op.op === 'STRIKE') return [op.color]
-    if (op.op === 'LINE') return [op.color]
-    if (op.op === 'CHIP') return [op.bg, op.fg]
-    if (op.op === 'FILL') return [op.color]
-    return []
-  })
-  if (colors.some((c) => c === '#0000FF' || c.toLowerCase() === '#0000ff')) fail('cobalt still live')
-  const dock = compile(world, measure).dock
-  const caret = dock.ops.find((op) => op.op === 'GLYPH' && op.text === '>')
-  if (!caret || caret.op !== 'GLYPH' || caret.color !== POWER) fail('dock caret not power red')
+  const reordered = stageCard(freshSession(), seed, REPO, 'pending', HOME)
+  const siteKids = childrenOf(parseDoc(reordered.source), SITE).map((n) => n.id)
+  if (siteKids[0] !== REPO) fail(`reorder siblings ${siteKids.join(',')}`)
 
-  const emptyDoc = { ...parseDoc(SEED_SOURCE), nodes: parseDoc(SEED_SOURCE).nodes.filter((n) => !['backlog', 'active', 'staging', 'done'].includes(n.status)) }
-  const emptyField = compile({ ...world, source: serializeDoc(emptyDoc) }, measure).field
-  const emptyLines = emptyField.ops.filter((op) => op.op === 'LINE').length
-  if (emptyLines < PIPE_ROWS * 4) fail(`empty rows ${emptyLines}`)
+  const nestedAdd = addNested(freshSession(), seed, REPO)
+  const nestDraft = parseDoc(nestedAdd.source)
+  const nestKids = nestedOf(nestDraft, REPO)
+  if (nestKids.length !== 1) fail('first nested insert')
+  if (byId(nestDraft, REPO)?.status !== 'pending') fail('draft nested stays pending')
+  const named = commitFieldLine({ ...nestedAdd.session, fieldBuffer: 'open git remote' }, nestedAdd.source)
+  const namedDoc = parseDoc(named.source)
+  if (byId(namedDoc, REPO)?.status !== 'active') fail('first nested commit promotes pending')
+  if (nestedOf(namedDoc, REPO)[0]?.status !== 'active') fail('nested inherits active')
 
-  const closedPipe = field.hits.find((h) => h.kind === 'PIPE')
-  const open = compile(
-    {
-      ...world,
-      session: { ...freshSession(), selected: { kind: 'NODE', id: 102 }, pipeOpen: 102, lens: 'pipe' },
-    },
-    measure,
-  )
-  const openPipe = open.field.hits.find((h) => h.kind === 'PIPE')
-  if (!closedPipe || !openPipe || openPipe.h <= closedPipe.h) {
-    fail(`reflow expand ${closedPipe?.h} -> ${openPipe?.h}`)
-  }
-  const chips = open.field.ops.filter((op) => op.op === 'CHIP')
-  if (chips.some((c) => c.h > PIPE_ROWS + 30)) fail(`overlay cover chip h ${chips.map((c) => c.h).join(',')}`)
-  if (!open.field.ops.some((op) => op.op === 'OVAL')) fail('oval select')
-  if (!open.field.ops.some((op) => op.op === 'GLYPH' && (op.text.includes('overlay leftover') || op.text.includes('body')))) {
-    fail('expand body')
-  }
-  if (!open.field.ops.some((op) => op.op === 'GLYPH' && op.text === 'ACTIVE' && op.color === POWER)) {
-    fail('status ticks')
-  }
+  const pulled = pullCard(freshSession(), seed, RAMP, 'rnd')
+  const pulledNode = byId(parseDoc(pulled.source), RAMP)
+  if (!pulledNode?.loose) fail('pull sets LOOSE')
+  if (pulledNode?.status !== 'rnd') fail(`pull status ${pulledNode?.status}`)
+  if (pulledNode?.parent !== HOME) fail(`pull parent ${pulledNode?.parent}`)
+  if (byId(parseDoc(pulled.source), HOME)?.status !== 'active') fail('pull left parent')
+  const afterPull = managerCards(parseDoc(pulled.source), SITE).map((n) => n.id)
+  if (!afterPull.includes(RAMP)) fail('pulled satellite is a card')
 
-  const tapped = applyHit(
-    { kind: 'NODE', x: 0, y: 0, w: 10, h: 10, z: 10, payload: 102 },
-    freshSession(),
-    SEED_SOURCE,
-  )
-  if (tapped.session.pipeOpen !== 102 || tapped.session.field?.slot !== 'title') fail('tap node expand field')
-
-  const dismissed = applyHit(
-    { kind: 'FIELD', x: 0, y: 0, w: 10, h: 10, z: 0 },
-    tapped.session,
-    SEED_SOURCE,
-  )
-  if (dismissed.session.pipeOpen != null || dismissed.session.field) fail('field tap collapse')
-
-  const shoveHit = applyHit(
-    { kind: 'SHOVEL', x: 0, y: 0, w: 10, h: 10, z: 20, payload: 104 },
-    freshSession(),
-    SEED_SOURCE,
-  )
-  if (byId(parseDoc(shoveHit.source), 104)?.status !== 'active') fail('hit shovel')
+  const withNote = commitLine('NOTE second', { ...freshSession(), lens: 'pipe' }, seed)
+  const moved = applyNoteOrder(freshSession(), withNote.source, 1, 0)
+  const notes = parseDoc(moved.source).notes.map((n) => n.text)
+  if (notes[0] !== 'second' || notes[1] !== SEED_NOTE) fail(`note reorder ${notes.join('|')}`)
+  if (!serializeDoc(parseDoc(moved.source)).includes('NOTE') || notes.length !== 2) fail('note reorder serialize')
 
   const addHit = applyHit(
-    { kind: 'ADD', x: 0, y: 0, w: 10, h: 10, z: 20, payload: 10 },
+    { kind: 'ADD', x: 0, y: 0, w: 10, h: 10, z: 20, payload: HOME },
     freshSession(),
-    SEED_SOURCE,
+    seed,
   )
   const added = parseDoc(addHit.source)
-  const newKids = childrenOf(added, 10)
-  if (newKids.length < 2) fail('nest add child')
+  const newKids = nestedOf(added, HOME)
+  if (newKids.length < 3) fail('nest add child')
   if (addHit.session.field?.slot !== 'title' || addHit.session.draftId == null) fail('add opens field')
+  if (newKids[newKids.length - 1]?.status !== 'active') fail('directory add inherits')
 
   const fold = applyHit(
-    { kind: 'TOGGLE', x: 0, y: 0, w: 10, h: 10, z: 20, payload: 10 },
+    { kind: 'TOGGLE', x: 0, y: 0, w: 10, h: 10, z: 20, payload: HOME },
     freshSession(),
-    SEED_SOURCE,
+    seed,
   )
-  if (!fold.session.nestClosed.includes(10)) fail('nest collapse')
+  if (!fold.session.nestClosed.includes(HOME)) fail('nest collapse')
 
   const tab0 = applyHit(
-    { kind: 'NODE', x: 0, y: 0, w: 10, h: 10, z: 10, payload: 102 },
+    { kind: 'NODE', x: 0, y: 0, w: 10, h: 10, z: 10, payload: LOOP },
     freshSession(),
-    SEED_SOURCE,
+    seed,
   )
-  if (tab0.session.field?.slot !== 'title') fail('tab0 title')
-  const tab1 = cycleField(tab0.session, tab0.source, 1)
+  if (tab0.session.pipeOpen !== LOOP || tab0.session.field) fail(`folio open ${tab0.session.pipeOpen} ${tab0.session.field?.slot}`)
+  const tabTitle = applyHit(
+    { kind: 'SLOT', x: 0, y: 0, w: 10, h: 10, z: 10, payload: `${LOOP}:title` },
+    tab0.session,
+    tab0.source,
+  )
+  if (tabTitle.session.field?.slot !== 'title') fail('tab0 title')
+  const tab1 = cycleField(tabTitle.session, tabTitle.source, 1)
   if (tab1.session.field?.slot !== 'body') fail(`tab1 ${tab1.session.field?.slot}`)
   const tab2 = cycleField(tab1.session, tab1.source, 1)
   if (tab2.session.field?.slot !== 'subtask') fail(`tab2 ${tab2.session.field?.slot}`)
@@ -216,65 +253,134 @@ export function runSpeckChecks(): string[] {
   const esc = applyKey('Escape', false, tab3.session, tab3.source)
   if (esc.session.pipeOpen != null || esc.session.field) fail('esc collapse')
 
-  const focused = commitLine('FOCUS 20', { ...freshSession(), selected: { kind: 'NODE', id: 20 } }, SEED_SOURCE)
-  if (focused.session.nestFocus !== 20) fail('FOCUS 20')
-  const filtered = compile(
-    { ...world, session: { ...freshSession(), nestFocus: 20, lens: 'nest' } },
-    measure,
-  ).field
-  if (filtered.hits.some((h) => h.kind === 'NODE' && h.payload === 104)) fail('focus filter still shows ops task')
-  if (!filtered.hits.some((h) => h.kind === 'NODE' && h.payload === 102)) fail('focus filter hides net task')
+  const focused = commitLine(`FOCUS ${HOME}`, { ...freshSession(), selected: { kind: 'NODE', id: HOME } }, seed)
+  if (focused.session.nestFocus !== HOME) fail(`FOCUS ${HOME}`)
 
   const indent = applyKey(
     'Tab',
     false,
-    { ...freshSession(), selected: { kind: 'NODE', id: 104 }, lens: 'nest' },
-    SEED_SOURCE,
+    { ...freshSession(), selected: { kind: 'NODE', id: REPO }, lens: 'nest' },
+    seed,
   )
-  if (byId(parseDoc(indent.source), 104)?.parent !== 20) fail(`indent ${byId(parseDoc(indent.source), 104)?.parent}`)
+  if (byId(parseDoc(indent.source), REPO)?.parent !== SPEC) fail(`indent ${byId(parseDoc(indent.source), REPO)?.parent}`)
 
   const emptyHit = applyHit(
-    { kind: 'EMPTY', x: 0, y: 0, w: 10, h: 10, z: 10, payload: 'backlog' },
+    { kind: 'EMPTY', x: 0, y: 0, w: 10, h: 10, z: 10, payload: 'pending' },
     freshSession(),
-    SEED_SOURCE,
+    seed,
   )
   const created = parseDoc(emptyHit.source).nodes.find((n) => n.id === emptyHit.session.draftId)
-  if (!created || created.status !== 'backlog') fail('empty row create')
+  if (!created || created.status !== 'pending' || created.parent !== SITE) fail('empty job create')
 
-  const close = applyHit(
-    { kind: 'CLOSE', x: 0, y: 0, w: 10, h: 10, z: 20, payload: 'DUMP' },
-    freshSession(),
-    SEED_SOURCE,
-  )
-  if (!close.session.collapsed.includes('DUMP')) fail('organ close')
+  const rootAdd = applyHit({ kind: 'ADD', x: 0, y: 0, w: 10, h: 10, z: 20, payload: 0 }, freshSession(), seed)
+  const newRoot = byId(parseDoc(rootAdd.source), rootAdd.session.draftId ?? -1)
+  if (!newRoot || newRoot.parent != null || newRoot.status !== 'none') fail('header add project')
+  if (rootAdd.session.projectId !== newRoot?.id) fail('header focuses new project')
 
-  const invOff = applyHit(
-    { kind: 'LEGEND', x: 0, y: 0, w: 10, h: 10, z: 20, payload: 'INV' },
+  const shoveHit = applyHit(
+    { kind: 'SHOVEL', x: 0, y: 0, w: 10, h: 10, z: 20, payload: REPO },
     freshSession(),
-    SEED_SOURCE,
+    seed,
   )
-  if (parseDoc(invOff.source).inv) fail('toggle INV off')
-  const grainOff = applyHit(
-    { kind: 'LEGEND', x: 0, y: 0, w: 10, h: 10, z: 20, payload: 'GRAIN' },
+  if (byId(parseDoc(shoveHit.source), REPO)?.status !== 'rnd') fail('hit shovel')
+
+  const hitchSrc = `${seed.replace(
+    `NOTE 09.09.26 "${SEED_NOTE}"`,
+    `NOTE 09.09.26 "${SEED_NOTE}"\n  NOTE 09.09.26 NODE ${LOOP} "hitch leftover"`,
+  )}`
+  const hitchDoc = parseDoc(hitchSrc)
+  const hitch = hitchDoc.notes.find((n) => n.text === 'hitch leftover')
+  if (!hitch || hitch.node !== LOOP || hitch.date !== '09.09.26') fail(`hitch parse ${JSON.stringify(hitch)}`)
+  const hitchRound = parseDoc(serializeDoc(hitchDoc)).notes.find((n) => n.text === 'hitch leftover')
+  if (!hitchRound || hitchRound.node !== LOOP) fail('hitch serialize')
+  if (!serializeDoc(hitchDoc).includes(`NOTE 09.09.26 NODE ${LOOP}`)) fail('hitch source NODE')
+
+  if (COL_ORDER.length !== 5) fail('lane count')
+
+  const bodyHit = applyHit(
+    { kind: 'SLOT', x: 0, y: 0, w: 10, h: 10, z: 10, payload: `${LOOP}:body` },
     freshSession(),
-    SEED_SOURCE,
+    seed,
   )
-  if (parseDoc(grainOff.source).grain !== 0) fail('toggle GRAIN')
-  const dayHit = applyHit(
-    { kind: 'DAY', x: 0, y: 0, w: 10, h: 10, z: 16, payload: '09.07.26' },
+  if (bodyHit.session.field?.slot !== 'body' || bodyHit.session.field.id !== LOOP) fail('body slot')
+  const bodySaved = commitFieldLine(typeField(bodyHit.session, 'new sting'), bodyHit.source)
+  if (byId(parseDoc(bodySaved.source), LOOP)?.body !== 'new sting') fail('body write')
+
+  const escKeep = applyKey('Escape', false, typeField(bodyHit.session, 'keep sting'), bodyHit.source)
+  if (byId(parseDoc(escKeep.source), LOOP)?.body !== 'keep sting') fail('esc commits body')
+  if (escKeep.session.pipeOpen != null || escKeep.session.field) fail('esc after body still open')
+
+  const hitchLive = hitchNote(freshSession(), seed, 0, HOME)
+  const hitchNote0 = parseDoc(hitchLive.source).notes[0]
+  if (hitchNote0?.node !== HOME || hitchNote0.text !== SEED_NOTE) fail(`hitch live ${JSON.stringify(hitchNote0)}`)
+  if (!serializeDoc(parseDoc(hitchLive.source)).includes(`NOTE 09.09.26 NODE ${HOME}`)) fail('hitch live serialize')
+  const unhitched = hitchNote(freshSession(), hitchLive.source, 0, null)
+  if (parseDoc(unhitched.source).notes[0]?.node != null) fail('unhitch')
+
+  const killed = applyKey(
+    'Backspace',
+    false,
+    { ...freshSession(), selected: { kind: 'NODE', id: RAMP } },
+    hitchLive.source,
+  )
+  if (byId(parseDoc(killed.source), RAMP)) fail('kill nested')
+  if (byId(parseDoc(killed.source), HOME)) {
+    /* parent stays */
+  } else fail('kill left parent')
+  const delRepo = applyKey(
+    'Delete',
+    false,
+    { ...freshSession(), selected: { kind: 'NODE', id: REPO } },
+    seed,
+  )
+  if (byId(parseDoc(delRepo.source), REPO)) fail('kill job')
+  const keepRoot = applyKey(
+    'Backspace',
+    false,
+    { ...freshSession(), selected: { kind: 'NODE', id: SITE } },
+    seed,
+  )
+  if (!byId(parseDoc(keepRoot.source), SITE) || !byId(parseDoc(keepRoot.source), HOME)) fail('kill skipped project')
+
+  const hitchThenKill = hitchNote(freshSession(), seed, 0, REPO)
+  const afterKillHitch = applyKey(
+    'Backspace',
+    false,
+    { ...freshSession(), selected: { kind: 'NODE', id: REPO } },
+    hitchThenKill.source,
+  )
+  if (parseDoc(afterKillHitch.source).notes[0]?.node != null) fail('kill cleared hitch')
+
+  const pulledThenDock = dockCard(freshSession(), pulled.source, RAMP, HOME)
+  const dockedRamp = byId(parseDoc(pulledThenDock.source), RAMP)
+  if (dockedRamp?.loose) fail('dock clears LOOSE')
+  if (dockedRamp?.parent !== HOME) fail(`dock parent ${dockedRamp?.parent}`)
+  if (!nestedOf(parseDoc(pulledThenDock.source), HOME).some((n) => n.id === RAMP)) fail('dock nested again')
+  if (managerCards(parseDoc(pulledThenDock.source), SITE).some((n) => n.id === RAMP)) fail('dock left the rack')
+  if (/NODE 11[^\n]*LOOSE/.test(serializeDoc(parseDoc(pulledThenDock.source)))) fail('dock serialize LOOSE')
+
+  const loopDock = dockCard(freshSession(), seed, LOOP, HOME)
+  if (byId(parseDoc(loopDock.source), LOOP)?.loose) fail('dock seed satellite')
+  if (!nestedOf(parseDoc(loopDock.source), HOME).some((n) => n.id === LOOP)) fail('dock loop boxed')
+
+  const picked = selectNode(freshSession(), seed, REPO)
+  if (picked.session.selected?.kind !== 'NODE' || picked.session.selected.id !== REPO) fail('select node')
+  if (picked.session.field) fail('select opened field')
+  if (picked.session.pipeOpen != null) fail('select opened folio')
+
+  const homeFolio = applyHit(
+    { kind: 'NODE', x: 0, y: 0, w: 10, h: 10, z: 10, payload: HOME },
     freshSession(),
-    SEED_SOURCE,
+    seed,
   )
-  if (dayHit.session.calDay !== '09.07.26') fail('cal day')
-  const closeSkull = applyHit(
-    { kind: 'CLOSE', x: 0, y: 0, w: 10, h: 10, z: 20, payload: 'SKULL' },
-    freshSession(),
-    SEED_SOURCE,
-  )
-  if (!closeSkull.session.collapsed.includes('SKULL')) fail('skull close')
-  const dockHits = compile(world, measure).dock.hits
-  if (!dockHits.some((h) => h.kind === 'LEGEND' && h.payload === 'GRAIN')) fail('legend grain')
-  if (dockHits.some((h) => h.kind === 'DOCK') === false) fail('dock hit')
+  if (homeFolio.session.pipeOpen !== HOME || homeFolio.session.field) fail('home folio')
+
+  const searched = searchFind(freshSession(), seed, 'loop')
+  if (searched.session.find !== 'loop') fail(`searchFind ${searched.session.find}`)
+  if (searched.session.selected?.kind !== 'NODE' || searched.session.selected.id !== LOOP) fail('searchFind select')
+  const noteCount = parseDoc(seed).notes.length
+  const searchNote = searchFind(freshSession(), seed, 'NOTE should not append')
+  if (parseDoc(searchNote.source).notes.length !== noteCount) fail('FIND created a note')
 
   return fails
 }

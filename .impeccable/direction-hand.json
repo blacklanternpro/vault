@@ -1,0 +1,137 @@
+{
+  "title": "Choose the visual world",
+  "question": "Round 2 after two consecutive re-rolls. Your Pinterest steer (pixel windows, grimy skins, IMAGE on the field) is on the table as IMPECCABLE’S PICK — a skinned player. THE ROLL is still City Desk, leftover from the original list and the least like the pins. Cutting-bench was dealt and dropped as a reword of Film Trim Bin (already shown). Waiting in the pool: pixel overlapping-windows, photographic contact sheet, silkscreen poster rack, hardware faceplate, graphic zigzag field. After two re-rolls I need the missing quality in one line: graphic skin on the field, IMAGE as material, overlapping windows, or something else? Lock a card, or re-roll with that quality named.",
+  "options": [
+    {
+      "id": "assigned",
+      "label": "City Desk Spike",
+      "kicker": "THE ROLL",
+      "lineage": "newsroom copy spike, torn slugs, morgue drawers",
+      "thesis": "Jobs are copy slugs on a metal spike. HIT pulls one slug onto the folio as writable paper.",
+      "palette": ["#f3efe4", "#111111", "#e10600", "#8a8680"],
+      "materials": ["newsprint", "metal spike", "torn slugs", "red stamp"],
+      "viewport": "Cream desk. Spike at left with impaled slugs. HIT opens SITE REDESIGN as a folio sheet with boxed nested lines. FIND is the morgue. Stems stay the catalogue under the desk.",
+      "risk": "Reads as a newspaper CMS, or as kanban if the gutters become card columns.",
+      "raised": [
+        {
+          "from": "challenger-crt",
+          "raise": "State is a mark on the slug — strike, stamp, fold — never a hue wash."
+        },
+        {
+          "from": "challenger-ocean",
+          "raise": "Spike order is the only ranking axis; nothing reranks by color or size."
+        },
+        {
+          "from": "challenger-storm",
+          "raise": "Copy on the spike is the only display. No icons, no pictograms."
+        }
+      ],
+      "comp": ".impeccable/mocks/decision/assigned.webp"
+    },
+    {
+      "id": "model-pick",
+      "label": "Skinned Player",
+      "kicker": "IMPECCABLE’S PICK",
+      "lineage": "Winamp TRIO grimy metal player skin, playlist as the listing",
+      "thesis": "The studio is one skinned chassis. The LCD is the folio. The playlist is the TUI catalogue.",
+      "palette": ["#c4c2b0", "#1a1a1a", "#c43b2b", "#3d4a3a"],
+      "materials": ["grease-stained metal", "recessed LCD", "stamped buttons", "red block highlight"],
+      "viewport": "Putty-metal player filling the sheet. LCD reads SITE REDESIGN. Playlist is red-on-black stems. HIT is a stamped transport key. FIND is a recessed field. Nested work sits as inset plates, never stems on the chassis.",
+      "risk": "The category default for a skin, and it collapses into a cassette or a 3D-knob deck if the chassis becomes a toy.",
+      "comp": ".impeccable/mocks/decision/model-pick.webp"
+    },
+    {
+      "id": "challenger-boarding",
+      "label": "Boarding Pass + Gate Board",
+      "verdict": "competitive",
+      "lineage": "segmented boarding pass with a live departure board",
+      "thesis": "The folio is the pass. The rack is a gate board whose rows rerank in place.",
+      "palette": ["#0a0a0a", "#f4f4f0", "#e10600", "#9a9a9a"],
+      "materials": ["segmented stubs", "barcode block", "alert red hold", "tabular rows"],
+      "viewport": "Pass across the top for SITE REDESIGN. Gate board ranks jobs as full-width rows, not cards. The live row holds alert red. FIND is a scan field. Stems never print on the pass.",
+      "case": "Holds product clarity: HIT is entering the pass, ON is a row climbing the board. Identification is airport, not a making desk.",
+      "risk": "Reads as a travel app, or as kanban if rows become cards.",
+      "comp": ".impeccable/mocks/decision/challenger-boarding.webp",
+      "hero": "https://impeccable.style/worlds/cards/vernacular-ephemera-boarding-pass-and-gate-board-hero.webp",
+      "board": "https://impeccable.style/worlds/cards/vernacular-ephemera-boarding-pass-and-gate-board.webp"
+    },
+    {
+      "id": "challenger-lineup",
+      "label": "Festival Lineup Sheet",
+      "verdict": "competitive",
+      "lineage": "one-face festival billing poster, rank by type size only",
+      "thesis": "Jobs are names on a billing sheet. HIT inverts the headliner into the writing surface.",
+      "palette": ["#000000", "#ffffff"],
+      "materials": ["one condensed face", "justified type blocks", "invert as live", "no imagery"],
+      "viewport": "Black field. SITE REDESIGN spans as the headliner. Nested work is the next size down. Status is billing blocks, not columns. FIND inverts. Stems are the smallest justified block at the foot.",
+      "case": "Holds identification: you can read rank from across the room. Clarity slips if size is the only status and the folio has no writing well.",
+      "risk": "Reads as a concert poster, or as a type specimen with no place to work.",
+      "comp": ".impeccable/mocks/decision/challenger-lineup.webp",
+      "hero": "https://impeccable.style/worlds/cards/posters-covers-sleeves-festival-lineup-poster-hero.webp",
+      "board": "https://impeccable.style/worlds/cards/posters-covers-sleeves-festival-lineup-poster.webp"
+    },
+    {
+      "id": "challenger-crt",
+      "label": "Arcade Pixel Grid",
+      "verdict": "declined",
+      "lineage": "240-line arcade cabinet, integer tiles, phosphor bloom",
+      "thesis": "The studio as a sprite stage on a tile grid.",
+      "palette": ["#0a0a0a", "#39ff14", "#ffd700", "#ffffff"],
+      "materials": ["fat pixels", "scanlines", "sprite swaps", "integer scale"],
+      "viewport": "Tile playfield. Jobs as sprites. Status as palette laws.",
+      "case": "Loses both axes: CRT clothes are vetoed, and a sprite stage hides the folio as a document.",
+      "kept": "State is a mark, not a hue.",
+      "risk": "Costume cockpit. Product veto on CRT wells.",
+      "hero": "https://impeccable.style/worlds/cards/medium-native-crt-arcade-pixel-glow-hero.webp",
+      "board": "https://impeccable.style/worlds/cards/medium-native-crt-arcade-pixel-glow.webp"
+    },
+    {
+      "id": "challenger-ocean",
+      "label": "Mesophotic Dive",
+      "verdict": "declined",
+      "lineage": "vertical wall dive, thermocline, marine snow",
+      "thesis": "Work as a descent down one depth axis.",
+      "palette": ["#021018", "#0b3a4a", "#7ec8d4", "#f2f6f7"],
+      "materials": ["abyssal ink", "marine snow", "dive-computer digits", "thermocline band"],
+      "viewport": "A vertical depth profile with jobs pinned to meters.",
+      "case": "Loses both axes: not a making desk, and depth hides HIT as entering a document.",
+      "kept": "One ranking axis owns the sheet.",
+      "risk": "Atmosphere with no folio.",
+      "hero": "https://impeccable.style/worlds/cards/rivers-tides-ocean-depths-mesophotic-deep-dive-hero.webp",
+      "board": "https://impeccable.style/worlds/cards/rivers-tides-ocean-depths-mesophotic-deep-dive.webp"
+    },
+    {
+      "id": "challenger-storm",
+      "label": "Alphabet Storm",
+      "verdict": "declined",
+      "lineage": "letters as weather that reshape the ground",
+      "thesis": "Jobs condense from weather-type and break back into weather.",
+      "palette": ["#f4f4f0", "#111111", "#c0c0c0"],
+      "materials": ["monumental grotesk as matter", "paper white", "silver flash"],
+      "viewport": "An open field of letter-weather with no desk.",
+      "case": "Loses both axes: surreal, and it cannot host a writable folio.",
+      "kept": "Type is the only display. No icons.",
+      "risk": "Art piece, not an OS.",
+      "hero": "https://impeccable.style/worlds/cards/dream-surreal-impossible-worlds-alphabet-storm-hero.webp",
+      "board": "https://impeccable.style/worlds/cards/dream-surreal-impossible-worlds-alphabet-storm.webp"
+    }
+  ],
+  "reroll": {
+    "registers": ["safer", "bolder"]
+  },
+  "buildPath": {
+    "value": "comp",
+    "toggle": true
+  },
+  "canon": true,
+  "canonCard": {
+    "label": "Linear-class board",
+    "thesis": "The category standard, played at Linear, Things, and Height craft. Status columns, cards, filters, a detail drawer.",
+    "palette": ["#ffffff", "#111827", "#2563eb", "#f3f4f6"],
+    "materials": ["clean app chrome", "rounded task cards", "status columns", "filter chips"],
+    "viewport": "Five columns PENDING · R&D · ACTIVE · DONE · DUSTED. Search in the header. Select a card, a drawer opens. No costume.",
+    "risk": "Indistinguishable from Linear by design — that is the point of this door.",
+    "comp": ".impeccable/mocks/decision/canon.webp"
+  },
+  "steer": true
+}
