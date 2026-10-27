@@ -4,7 +4,8 @@
 
 `vault` is a **frontend-only** desktop-field SPA (React 19 + Vite 8 + Tailwind CSS v4,
 TypeScript). There is **no backend, database, auth, API, or environment variables** —
-the OS persists as a SPECK source string in `localStorage` (`speck-os-v2`).
+the graph persists as versioned JSON in `localStorage` (`vault:doc`), with snapshots
+(`vault:backups`) and file Export/Import. SPECK is archived in `/speck` and unused.
 Running the Vite dev server is enough to exercise the product end to end.
 
 This is **not** a PWA and **not** a mobile month. It is a personal OS field: one work
@@ -27,9 +28,13 @@ Non-obvious notes:
   bundling error).
 - Lint is **oxlint** (`npm run lint`), configured via `.oxlintrc.json` — not ESLint.
   Pre-existing warnings come from vendored skill JS under `.agents/skills/`; ignore those.
-- `npm test` runs `tsx src/speck/run-checks.ts` — graph/source checks, not a UI runner.
-- **`src/speck/machine.ts` behaviour is settled.** A visual pass changes `src/index.css`
-  and `src/shell`, not the graph semantics.
+- `npm test` runs vitest over `src/model` (graph ops, save/load, migration, round-trips).
+- `npm run e2e` runs Playwright (`e2e/*.e2e.ts`) against a built preview on port 4174.
+  First time on a machine: `npx playwright install chromium`.
+- **`src/model` is the source of truth and is pure.** A visual pass changes `src/index.css`
+  and `src/shell`, not the model. Any model change needs a test.
+- No global single-key shortcut may change data. Keys that edit live on the focused card
+  or the focused directory tree; globally only Ctrl+K, Ctrl+Z/Shift+Z and Esc.
 - Aesthetic contract is locked in `.cursorrules`. Full portable language:
   `docs/LANGUAGE.md`. Shipped values as measured: `DESIGN.md`. Overnight brief:
   `docs/OVERNIGHT_PROMPT.md`. Product truth: `PRODUCT.md`.
@@ -37,9 +42,9 @@ Non-obvious notes:
 Smoke (all of it pointer-first, no typed commands):
 - Light field, white panels, hairline rules, 8px radius, one blue accent. Work type in a
   UI sans; lane names, job names and drawer labels in a condensed uppercase plaque face.
-- Top bar: wordmark, a `Search tasks...` field showing `⌘ K` at rest and `N found` once
-  it matches, three filter chips (`All Projects` / `Status: Any` / `Priority: Any`), and
-  a `New` button. `⌘`/`Ctrl` + `K` focuses the field. FIND **searches only** — it never
+- Top bar: wordmark, a search field showing `Ctrl K` at rest and `N tasks` once it
+  matches, filters (`All projects` / `Status: any` / `Urgent only`), a `New task` button
+  and a `⋯` menu (undo/redo, export, import, restore a snapshot). `⌘`/`Ctrl` + `K` focuses the field. FIND **searches only** — it never
   creates. Chips filter the session, never the source.
 - Board: five lanes `PENDING · R&D · ACTIVE · DONE · DUSTED`, each with a plaque, a count
   and a ghost add. A job is a card and the lane it sits in is its status. Hover a card and
@@ -47,13 +52,13 @@ Smoke (all of it pointer-first, no typed commands):
   do not jump. At rest the board shows nothing but cards.
 - Click a card: a drawer opens at the right edge **over** the board, so the lanes never
   reshuffle. It holds the status plaque, title, parent, `DESCRIPTION` and `SUBTASKS` with
-  ticks. `[+]` adds a boxed line. Click a title and type. Esc / `[x]` closes.
+  ticks, plus a status picker, urgent flag and delete. Click a title and type. Esc / `[x]` closes.
 - Drag a subtask out of the drawer onto a lane: it becomes a `LOOSE` satellite card on a
   slack leash. Drag it back onto its parent card to dock it (drops `LOOSE`).
-- Below the fold: the catalogue as a plain tree — stems `│ ├── └──`, a drawn disclosure
-  chevron, a block behind the live name, first click selects, second click renames, `_`
-  adds a child. Beside it the note tape: txt blocks, snap-reorder, drop one on a card to
-  hitch it. A sliver of the catalogue stays on screen at every desktop height.
+- Below the board: the directory as a plain tree — stems `│ ├── └──`, `[x]`/`[ ]` on
+  subtasks, lane on tasks; click selects and opens, Enter/F2/double-click renames, `+`
+  adds inside, Tab indents, Delete deletes (undoable). Beside it the dump: txt notes,
+  snap-reorder, drop one on a card to hitch it.
 - Below 900px the field restacks to one column with equal-height lanes.
 
 Do not revive: DateBlocks cards, month-as-OS as home, the paper sheet with power-red oval

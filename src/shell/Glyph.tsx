@@ -88,3 +88,29 @@ export function Ring({ className }: GlyphProps) {
     </svg>
   )
 }
+
+export function Trash({ className }: GlyphProps) {
+  return (
+    <svg className={className} viewBox="0 0 15 15" fill="none" aria-hidden="true">
+      <path d="M2.8 4h9.4M6 4V2.7h3V4m-4.9 0 .6 8.3h5.6l.6-8.3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
+export function Flag({ className }: GlyphProps) {
+  return (
+    <svg className={className} viewBox="0 0 15 15" fill="none" aria-hidden="true">
+      <path d="M3.5 13V2.5m0 .6h7.6l-1.6 2.6 1.6 2.6H3.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
+export function Dots({ className }: GlyphProps) {
+  return (
+    <svg className={className} viewBox="0 0 15 15" fill="currentColor" aria-hidden="true">
+      <circle cx="3.2" cy="7.5" r="1.3" />
+      <circle cx="7.5" cy="7.5" r="1.3" />
+      <circle cx="11.8" cy="7.5" r="1.3" />
+    </svg>
+  )
+}

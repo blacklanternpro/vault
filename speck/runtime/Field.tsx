@@ -170,10 +170,9 @@ export function Field() {
 
     const onWinKey = (e: globalThis.KeyboardEvent) => {
       if (sessionRef.current.field) return
-      if (document.activeElement === inputRef.current && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) return
-      const keys = ['Escape', 'Tab', ' ', '[', ']', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown']
+      const keys = ['Escape', 'Tab', ' ', '[', ']', 'ArrowLeft', 'ArrowRight']
       if (!keys.includes(e.key)) return
-      if (e.key === 'Tab' || e.key === ' ' || e.key === 'ArrowUp' || e.key === 'ArrowDown') e.preventDefault()
+      if (e.key === 'Tab' || e.key === ' ') e.preventDefault()
       const result = applyKey(e.key, e.shiftKey, sessionRef.current, sourceRef.current)
       setSession(result.session)
       setSource(result.source)
@@ -275,7 +274,7 @@ export function Field() {
             autoComplete="off"
             enterKeyHint="send"
             spellCheck={false}
-            aria-label="command field"
+            aria-label="operator"
           />
         </form>
       </div>

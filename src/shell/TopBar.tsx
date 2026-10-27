@@ -1,46 +1,58 @@
-import { type FormEvent, type KeyboardEvent } from 'react'
-import type { GraphNode } from '../speck/doc'
-import { COL_ORDER, LANE_PLAQUE, isBinderStatus, type ColName } from '../speck/tokens'
-import { BrandMark, Caret, Chevron, Glass, Plus } from './Glyph'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
+import { listBackups } from '../model/store'
+import { LANES, LANE_LABEL, isLane, type Lane, type Node } from '../model/types'
+import { BrandMark, Caret, Cross, Dots, Glass, Plus } from './Glyph'
 
 type TopBarProps = {
   query: string
   hits: number | null
-  projects: GraphNode[]
+  projects: Node[]
   filterId: number | null
-  laneFilter: ColName | null
+  laneFilter: Lane | null
   urgentOnly: boolean
   onQueryChange: (value: string) => void
   onQuerySubmit: () => void
-  onQueryFocus: () => void
   onFilterChange: (projectId: number | null) => void
-  onLaneFilterChange: (lane: ColName | null) => void
+  onLaneFilterChange: (lane: Lane | null) => void
   onUrgentOnlyChange: (urgentOnly: boolean) => void
-  onNewJob: () => void
+  onNewTask: () => void
+  onExport: () => void
+  onImport: (file: File) => void
+  onRestore: (at: number) => void
+  canUndo: boolean
+  canRedo: boolean
+  onUndo: () => void
+  onRedo: () => void
 }
 
-export function TopBar({
-  query,
-  hits,
-  projects,
-  filterId,
-  laneFilter,
-  urgentOnly,
-  onQueryChange,
-  onQuerySubmit,
-  onQueryFocus,
-  onFilterChange,
-  onLaneFilterChange,
-  onUrgentOnlyChange,
-  onNewJob,
-}: TopBarProps) {
+export function TopBar(p: TopBarProps) {
+  const [menu, setMenu] = useState(false)
+  const fileRef = useRef<HTMLInputElement>(null)
+  const menuRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!menu) return
+    const close = (e: PointerEvent) => {
+      if (!menuRef.current?.contains(e.target as globalThis.Node)) setMenu(false)
+    }
+    const esc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setMenu(false)
+    }
+    window.addEventListener('pointerdown', close)
+    window.addEventListener('keydown', esc)
+    return () => {
+      window.removeEventListener('pointerdown', close)
+      window.removeEventListener('keydown', esc)
+    }
+  }, [menu])
+
   function onSubmit(e: FormEvent) {
     e.preventDefault()
-    onQuerySubmit()
+    p.onQuerySubmit()
   }
 
-  const folder = filterId == null ? null : projects.find((p) => p.id === filterId)
-  const folderLabel = folder ? folder.title.trim() || '_' : 'All Projects'
+  const project = p.filterId == null ? null : p.projects.find((x) => x.id === p.filterId)
+  const backups = menu ? listBackups().slice(0, 8) : []
 
   return (
     <header className="topbar">
@@ -53,103 +65,163 @@ export function TopBar({
         <Glass className="find-glass" />
         <input
           className="find-input"
-          type="search"
-          value={query}
-          placeholder="Search tasks..."
-          aria-label="Search tasks"
-          onChange={(e) => onQueryChange(e.target.value)}
-          onFocus={onQueryFocus}
-          onKeyDown={(e: KeyboardEvent<HTMLInputElement>) => {
-            if (e.key === 'Enter') {
+          type="text"
+          value={p.query}
+          placeholder="Search tasks, subtasks, descriptions"
+          aria-label="Search"
+          data-testid="search"
+          onChange={(e) => p.onQueryChange(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Escape') {
               e.preventDefault()
-              onQuerySubmit()
+              e.stopPropagation()
+              p.onQueryChange('')
+              e.currentTarget.blur()
             }
           }}
         />
-        {hits == null ? (
+        {p.hits == null ? (
           <span className="find-keys" aria-hidden="true">
-            &#8984; K
+            Ctrl K
           </span>
         ) : (
-          <span className="find-count">{hits} found</span>
+          <>
+            <span className="find-count" data-testid="search-count">
+              {p.hits === 1 ? '1 task' : `${p.hits} tasks`}
+            </span>
+            <button type="button" className="find-clear" aria-label="Clear search" onClick={() => p.onQueryChange('')}>
+              <Cross />
+            </button>
+          </>
         )}
       </form>
 
       <div className="topbar-filters">
-        {/*
-          The select carries the interaction and stays the focusable control; the
-          span carries the width. Left to itself a select sizes to its longest
-          option, which would let one long folder name stretch the whole bar.
-        */}
         <label className="chip">
-          <span className="chip-label">{folderLabel}</span>
+          <span className="chip-label">{project ? project.title.trim() || '_' : 'All projects'}</span>
           <Caret className="chip-caret" />
           <select
             className="chip-select"
-            aria-label="Folder"
-            data-testid="project-select"
-            value={filterId ?? 'all'}
-            onChange={(e) => onFilterChange(e.target.value === 'all' ? null : Number(e.target.value))}
+            aria-label="Project"
+            data-testid="project-filter"
+            value={p.filterId ?? 'all'}
+            onChange={(e) => p.onFilterChange(e.target.value === 'all' ? null : Number(e.target.value))}
           >
-            <option value="all">All Projects</option>
-            {projects.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.title.trim() || '_'}
+            <option value="all">All projects</option>
+            {p.projects.map((x) => (
+              <option key={x.id} value={x.id}>
+                {x.title.trim() || '_'}
               </option>
             ))}
           </select>
         </label>
 
         <label className="chip">
-          <span className="chip-label">
-            {laneFilter ? `Status: ${LANE_PLAQUE[laneFilter]}` : 'Status: Any'}
-          </span>
+          <span className="chip-label">{p.laneFilter ? `Status: ${LANE_LABEL[p.laneFilter]}` : 'Status: any'}</span>
           <Caret className="chip-caret" />
           <select
             className="chip-select"
             aria-label="Status"
-            data-testid="status-select"
-            value={laneFilter ?? 'any'}
-            onChange={(e) => {
-              const next = e.target.value
-              onLaneFilterChange(isBinderStatus(next) ? next : null)
-            }}
+            data-testid="status-filter"
+            value={p.laneFilter ?? 'any'}
+            onChange={(e) => p.onLaneFilterChange(isLane(e.target.value) ? e.target.value : null)}
           >
-            <option value="any">Status: Any</option>
-            {COL_ORDER.map((col) => (
-              <option key={col} value={col}>
-                {LANE_PLAQUE[col]}
+            <option value="any">Status: any</option>
+            {LANES.map((l) => (
+              <option key={l} value={l}>
+                {LANE_LABEL[l]}
               </option>
             ))}
           </select>
         </label>
 
-        <label className="chip">
-          <span className="chip-label">{urgentOnly ? 'Priority: Urgent' : 'Priority: Any'}</span>
-          <Caret className="chip-caret" />
-          <select
-            className="chip-select"
-            aria-label="Priority"
-            data-testid="priority-select"
-            value={urgentOnly ? 'urgent' : 'any'}
-            onChange={(e) => onUrgentOnlyChange(e.target.value === 'urgent')}
-          >
-            <option value="any">Priority: Any</option>
-            <option value="urgent">Priority: Urgent</option>
-          </select>
-        </label>
+        <button
+          type="button"
+          className={`chip chip-toggle${p.urgentOnly ? ' is-on' : ''}`}
+          aria-pressed={p.urgentOnly}
+          data-testid="urgent-filter"
+          onClick={() => p.onUrgentOnlyChange(!p.urgentOnly)}
+        >
+          Urgent only
+        </button>
       </div>
 
-      {/*
-        Outside the filters, because it is not one: it keeps the bar's right
-        edge on its own, and on a narrow screen it stays on the first row while
-        the filters drop to the last.
-      */}
-      <button type="button" className="new-job" data-testid="project-add" onClick={onNewJob}>
+      <button type="button" className="new-job" data-testid="new-task" onClick={p.onNewTask}>
         <Plus className="new-job-glyph" />
-        New
-        <Chevron className="new-job-chevron" />
+        New task
       </button>
+
+      <div className="menu" ref={menuRef}>
+        <button
+          type="button"
+          className="menu-button"
+          aria-label="More"
+          aria-haspopup="menu"
+          aria-expanded={menu}
+          data-testid="menu"
+          onClick={() => setMenu((m) => !m)}
+        >
+          <Dots />
+        </button>
+        {menu ? (
+          <div className="menu-list" role="menu">
+            <button type="button" role="menuitem" disabled={!p.canUndo} onClick={() => p.onUndo()}>
+              Undo <kbd>Ctrl Z</kbd>
+            </button>
+            <button type="button" role="menuitem" disabled={!p.canRedo} onClick={() => p.onRedo()}>
+              Redo <kbd>Ctrl ⇧ Z</kbd>
+            </button>
+            <hr />
+            <button
+              type="button"
+              role="menuitem"
+              data-testid="menu-export"
+              onClick={() => {
+                setMenu(false)
+                p.onExport()
+              }}
+            >
+              Export to file…
+            </button>
+            <button type="button" role="menuitem" data-testid="menu-import" onClick={() => fileRef.current?.click()}>
+              Import from file…
+            </button>
+            {backups.length ? (
+              <>
+                <hr />
+                <p className="menu-label">Restore a snapshot</p>
+                {backups.map((b) => (
+                  <button
+                    key={b.at}
+                    type="button"
+                    role="menuitem"
+                    onClick={() => {
+                      setMenu(false)
+                      p.onRestore(b.at)
+                    }}
+                  >
+                    {new Date(b.at).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })}
+                    <span className="menu-meta">{b.doc.nodes.length} items</span>
+                  </button>
+                ))}
+              </>
+            ) : null}
+          </div>
+        ) : null}
+        <input
+          ref={fileRef}
+          type="file"
+          accept=".json,.txt,application/json,text/plain"
+          hidden
+          data-testid="import-file"
+          onChange={(e) => {
+            const file = e.target.files?.[0]
+            e.target.value = ''
+            setMenu(false)
+            if (file) p.onImport(file)
+          }}
+        />
+      </div>
     </header>
   )
 }

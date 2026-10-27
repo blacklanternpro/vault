@@ -1,105 +1,156 @@
-import { useRef, type KeyboardEvent, type MouseEvent, type PointerEvent } from 'react'
-import { childrenOf, isBoardVisible, laneOf, type Doc } from '../speck/doc'
-import { matchesFind, type Session } from '../speck/ir'
-import { LANE_PLAQUE, isBinderStatus, type ColName, type NodeStatus } from '../speck/tokens'
-import { nestRows, type NestRow } from '../speck/tree'
-import { Caret, Chevron, Plus } from './Glyph'
+import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type PointerEvent } from 'react'
+import { byId, childrenOf, depthOf, indentNode, kindOf, laneOf, outdentNode, projectsOf, searchPaths, shiftNode } from '../model/doc'
+import { treeRows, type TreeRow } from '../model/tree'
+import { LANES, LANE_LABEL, isLane, type Doc, type Lane } from '../model/types'
+import { Caret, Chevron, Cross, Plus } from './Glyph'
+import { InlineEdit } from './InlineEdit'
 import { Mark } from './Mark'
-
-const THRESH = 6
-
-/*
- * `nestRows` draws the whole graph as one tree, so every job carries a stem for
- * the folder's own position under the root. The catalogue breaks each folder out
- * into its own column, where that outermost stem descends from nothing — so the
- * column drops it and the folder becomes its own root.
- *
- * The branch's own trailing space goes too: the disclosure column that follows
- * already holds the gap, and paying for both leaves the arm reaching at nothing.
- */
-function stemOf(row: NestRow): string {
-  return row.depth === 0 ? '' : row.prefix.slice(4).trimEnd()
-}
-
-/** The indent a folder's own jobs sit at, for the rows that only offer to create. */
-const JOB_STEM = '   '
+import type { Draft, Editing } from './Studio'
 
 type DirectoryProps = {
   doc: Doc
-  session: Session
+  query: string
+  selectedId: number | null
+  editing: Editing | null
+  draft: Draft | null
+  filterId: number | null
+  collapsed: ReadonlySet<number>
+  /** A click: select the row and open its card. */
   onSelect: (id: number) => void
-  onRename: (id: number) => void
+  /** Keyboard movement: select only. */
+  onFocusRow: (id: number | null) => void
   onToggle: (id: number) => void
-  onAdd: (parent: number | null) => void
-  onStage: (id: number, status: NodeStatus) => void
-  onShovel: (id: number) => void
-  onClearFocus: () => void
-  onTitle: (value: string) => void
-  onTitleCommit: () => void
+  onEdit: (id: number) => void
+  onRename: (id: number, title: string) => void
+  onStartDraft: (parent: number | null) => void
+  onDraftCommit: (parent: number | null, title: string, keepGoing: boolean) => void
+  onDelete: (id: number) => void
+  /** Structural edits (indent, outdent, reorder) computed here and handed up whole. */
+  onCommit: (next: Doc) => void
+  onSetLane: (id: number, lane: Lane) => void
+  onToggleDone: (id: number) => void
+  onStage: (id: number, lane: Lane) => void
+  onPull: (id: number, lane: Lane) => void
 }
 
-type Drag = {
-  id: number
-  startX: number
-  startY: number
-  live: boolean
-}
+const THRESH = 6
 
-function columnsOf(rows: NestRow[]): NestRow[][] {
-  const cols: NestRow[][] = []
-  for (const row of rows) {
-    if (row.depth === 0) cols.push([row])
-    else cols[cols.length - 1]?.push(row)
-  }
-  return cols
-}
+type RowDrag = { id: number; startX: number; startY: number; live: boolean }
 
-export function Directory({
-  doc,
-  session,
-  onSelect,
-  onRename,
-  onToggle,
-  onAdd,
-  onStage,
-  onShovel,
-  onClearFocus,
-  onTitle,
-  onTitleCommit,
-}: DirectoryProps) {
-  const dragRef = useRef<Drag | null>(null)
+export function Directory(props: DirectoryProps) {
+  const { doc, query, selectedId, editing, draft, filterId, collapsed } = props
+  const treeRef = useRef<HTMLDivElement>(null)
+  const dragRef = useRef<RowDrag | null>(null)
   const ghostRef = useRef<HTMLElement | null>(null)
-  const skipClick = useRef(false)
-  const rows = nestRows(doc, session)
-  const cols = columnsOf(rows)
-  const selectedId = session.selected?.kind === 'NODE' ? session.selected.id : null
+  const [draftKey, setDraftKey] = useState(0)
+  /** Focus that arrives with a click selects the clicked row, not the first one. */
+  const pointing = useRef(false)
 
-  function dropLane(clientX: number, clientY: number): ColName | null {
-    const el = document.elementFromPoint(clientX, clientY)
-    const laneEl = el instanceof Element ? el.closest('[data-lane]') : null
-    if (!laneEl) return null
-    const lane = laneEl.getAttribute('data-lane')
-    if (!lane || !isBinderStatus(lane)) return null
-    return lane
+  const keep = useMemo(() => (query.trim() ? searchPaths(doc, query) : undefined), [doc, query])
+  const roots = projectsOf(doc).filter((p) => (filterId == null || p.id === filterId) && (!keep || keep.has(p.id)))
+  const columns = roots.map((root) => treeRows(doc, root.id, collapsed, keep))
+  const flat = columns.flat()
+  const taskCount = doc.nodes.filter((n) => n.parent != null && kindOf(doc, n.id) === 'task').length
+
+  // Keep the selected row in view as the keyboard moves it.
+  useEffect(() => {
+    if (selectedId == null) return
+    document.getElementById(`tree-${selectedId}`)?.scrollIntoView({ block: 'nearest' })
+  }, [selectedId])
+
+  function refocus() {
+    requestAnimationFrame(() => treeRef.current?.focus({ preventScroll: true }))
   }
 
-  function finishDrag(e: PointerEvent<HTMLElement>, id: number) {
-    const drag = dragRef.current
-    dragRef.current = null
-    ghostRef.current?.remove()
-    ghostRef.current = null
-    if (!drag) return
-    skipClick.current = true
-    if (!drag.live) {
-      if (selectedId === id) onRename(id)
-      else onSelect(id)
+  /* ---------------------------------------------------------------- keyboard */
+
+  function onKeyDown(e: KeyboardEvent<HTMLDivElement>) {
+    if ((e.target as HTMLElement).closest('input, textarea, select')) return
+    const at = flat.findIndex((r) => r.node.id === selectedId)
+    const row = at >= 0 ? flat[at] : undefined
+    const id = row?.node.id
+    const key = e.key
+
+    const handled = () => {
+      e.preventDefault()
+      e.stopPropagation()
+    }
+
+    if (key === 'ArrowDown' || key === 'ArrowUp') {
+      handled()
+      if (e.altKey && id != null) {
+        props.onCommit(shiftNode(doc, id, key === 'ArrowUp' ? -1 : 1))
+        return
+      }
+      const next = flat[at < 0 ? 0 : Math.max(0, Math.min(flat.length - 1, at + (key === 'ArrowDown' ? 1 : -1)))]
+      if (next) props.onFocusRow(next.node.id)
       return
     }
-    const lane = dropLane(e.clientX, e.clientY)
-    if (lane) onStage(id, lane)
+    if (key === 'Home' || key === 'End') {
+      handled()
+      const next = key === 'Home' ? flat[0] : flat[flat.length - 1]
+      if (next) props.onFocusRow(next.node.id)
+      return
+    }
+    if (key === '+' || key === '=' || key === 'Insert') {
+      handled()
+      props.onStartDraft(id ?? null)
+      return
+    }
+    if (!row || id == null) return
+
+    if (key === 'ArrowRight') {
+      handled()
+      if (row.hasChildren && !row.open) props.onToggle(id)
+      else if (row.hasChildren) props.onFocusRow(flat[at + 1].node.id)
+      return
+    }
+    if (key === 'ArrowLeft') {
+      handled()
+      if (row.hasChildren && row.open && !keep) props.onToggle(id)
+      else if (row.node.parent != null) props.onFocusRow(row.node.parent)
+      return
+    }
+    if (key === 'Enter' || key === 'F2') {
+      handled()
+      props.onEdit(id)
+      return
+    }
+    if (key === 'Delete' || key === 'Backspace') {
+      handled()
+      const after = flat[at + 1]?.node.id ?? flat[at - 1]?.node.id ?? null
+      props.onDelete(id)
+      props.onFocusRow(after != null && !isInside(doc, id, after) ? after : row.node.parent)
+      return
+    }
+    if (key === 'Tab') {
+      handled()
+      const next = e.shiftKey ? outdentNode(doc, id) : indentNode(doc, id)
+      if (next !== doc) props.onCommit(next)
+      return
+    }
+    if (key.toLowerCase() === 'x' && !e.metaKey && !e.ctrlKey && depthOf(doc, id) >= 2) {
+      handled()
+      props.onToggleDone(id)
+    }
   }
 
-  function onRowMove(e: PointerEvent<HTMLElement>) {
+  /* -------------------------------------------------------------------- drag */
+
+  function dropLane(x: number, y: number): Lane | null {
+    const el = document.elementFromPoint(x, y)
+    const lane = el instanceof Element ? el.closest('[data-lane]')?.getAttribute('data-lane') : null
+    return isLane(lane) ? lane : null
+  }
+
+  function beginRow(e: PointerEvent<HTMLElement>, id: number) {
+    if (e.button !== 0 || depthOf(doc, id) === 0) return
+    if ((e.target as HTMLElement).closest('button, input, select')) return
+    e.currentTarget.setPointerCapture(e.pointerId)
+    dragRef.current = { id, startX: e.clientX, startY: e.clientY, live: false }
+  }
+
+  function moveRow(e: PointerEvent<HTMLElement>) {
     const drag = dragRef.current
     if (!drag) return
     const dx = e.clientX - drag.startX
@@ -107,198 +158,263 @@ export function Directory({
     if (!drag.live && dx * dx + dy * dy < THRESH * THRESH) return
     drag.live = true
     if (!ghostRef.current) {
-      const origin = e.currentTarget.closest('[data-node-id]')
-      if (origin instanceof HTMLElement) {
-        const r = origin.getBoundingClientRect()
-        const ghost = origin.cloneNode(true) as HTMLElement
-        ghost.style.position = 'fixed'
-        ghost.style.left = `${r.left}px`
-        ghost.style.top = `${r.top}px`
-        ghost.style.width = `${r.width}px`
-        ghost.style.pointerEvents = 'none'
-        ghost.style.zIndex = '80'
-        ghost.classList.add('is-ghost')
-        document.body.appendChild(ghost)
-        ghostRef.current = ghost
-        drag.startX = e.clientX - r.left
-        drag.startY = e.clientY - r.top
-      }
+      const r = e.currentTarget.getBoundingClientRect()
+      const ghost = stripIds(e.currentTarget.cloneNode(true) as HTMLElement)
+      Object.assign(ghost.style, { position: 'fixed', left: `${r.left}px`, top: `${r.top}px`, width: `${r.width}px`, pointerEvents: 'none', zIndex: '80' })
+      ghost.classList.add('is-ghost')
+      document.body.appendChild(ghost)
+      ghostRef.current = ghost
+      drag.startX = e.clientX - r.left
+      drag.startY = e.clientY - r.top
     }
-    if (ghostRef.current) {
-      ghostRef.current.style.left = `${e.clientX - drag.startX}px`
-      ghostRef.current.style.top = `${e.clientY - drag.startY}px`
-    }
+    ghostRef.current.style.left = `${e.clientX - drag.startX}px`
+    ghostRef.current.style.top = `${e.clientY - drag.startY}px`
   }
 
-  function beginRow(e: PointerEvent<HTMLElement>, id: number) {
-    if (e.button !== 0) return
-    if ((e.target as HTMLElement).closest('.stem-fold, input')) return
-    e.currentTarget.setPointerCapture(e.pointerId)
-    dragRef.current = { id, startX: e.clientX, startY: e.clientY, live: false }
+  function endRow(e: PointerEvent<HTMLElement>) {
+    const drag = dragRef.current
+    dragRef.current = null
+    ghostRef.current?.remove()
+    ghostRef.current = null
+    if (!drag?.live) return
+    const lane = dropLane(e.clientX, e.clientY)
+    if (!lane) return
+    if (depthOf(doc, drag.id) >= 2) props.onPull(drag.id, lane)
+    else props.onStage(drag.id, lane)
   }
 
-  function onPane(e: MouseEvent<HTMLElement>) {
-    if (e.target === e.currentTarget) onClearFocus()
-  }
+  /* ------------------------------------------------------------------ render */
 
-  function renderRow(row: NestRow) {
-    const id = row.node.id
-    const kids = childrenOf(doc, id)
+  function renderRow(row: TreeRow) {
+    const { node, depth } = row
+    const id = node.id
+    const kind = depth === 0 ? 'project' : depth === 1 ? 'task' : 'subtask'
+    const isEditing = editing?.id === id && editing.where === 'tree'
     const selected = selectedId === id
-    const editing =
-      session.field?.id === id &&
-      session.field.slot === 'title' &&
-      !isBoardVisible(doc, session.projectId, id)
-    const found = matchesFind(session, row.node.title)
-    const closed = session.nestClosed.includes(id)
-    const project = row.node.parent == null
-    const lane = laneOf(row.node.status)
-    /*
-     * A folder's own jobs are the ones the board sets in a plaque, so those are
-     * the rows the tree plaques too. Anything deeper is a line of a job, and it
-     * keeps the sentence case the drawer writes it in.
-     */
-    const kind = project ? 'is-project' : row.depth === 1 ? 'is-job' : 'is-leaf'
+    const hit = keep && query.trim() ? matches(node.title, node.body, query) : false
+    const lane = laneOf(node.status)
+    const done = node.status === 'done'
 
     return (
       <div
         key={id}
-        className={`stem ${kind}${selected ? ' is-live' : ''}${found ? ' is-found' : ''}`}
+        id={`tree-${id}`}
+        role="treeitem"
+        aria-level={depth + 1}
+        aria-selected={selected}
+        aria-expanded={row.hasChildren ? row.open : undefined}
+        className={`stem is-${kind}${selected ? ' is-live' : ''}${hit ? ' is-found' : ''}${done && kind === 'subtask' ? ' is-done' : ''}${node.loose ? ' is-loose' : ''}`}
         data-node-id={id}
-        data-testid={`dir-row-${id}`}
+        data-testid={`tree-row-${id}`}
         onPointerDown={(e) => beginRow(e, id)}
-        onPointerMove={onRowMove}
-        onPointerUp={(e) => finishDrag(e, id)}
-        onPointerCancel={(e) => finishDrag(e, id)}
+        onPointerMove={moveRow}
+        onPointerUp={endRow}
+        onPointerCancel={endRow}
+        onClick={(e) => {
+          if ((e.target as HTMLElement).closest('button, input, select')) return
+          if (selected && (e.target as HTMLElement).closest('.stem-name')) props.onEdit(id)
+          else props.onSelect(id)
+        }}
+        onDoubleClick={(e) => {
+          if ((e.target as HTMLElement).closest('button, input, select')) return
+          props.onEdit(id)
+        }}
       >
         <span className="stem-rule" aria-hidden="true">
-          {stemOf(row)}
+          {row.stem.trimEnd()}
         </span>
-        {kids.length ? (
+        {row.hasChildren ? (
           <button
             type="button"
+            tabIndex={-1}
             className="stem-fold"
-            aria-label={closed ? `Expand ${row.node.title}` : `Collapse ${row.node.title}`}
-            aria-expanded={!closed}
-            onClick={(e) => {
-              e.stopPropagation()
-              onToggle(id)
-            }}
+            aria-label={row.open ? `Collapse ${node.title}` : `Expand ${node.title}`}
+            onClick={() => props.onToggle(id)}
           >
-            {closed ? <Chevron /> : <Caret />}
+            {row.open ? <Caret /> : <Chevron />}
           </button>
         ) : (
           <span className="stem-fold" aria-hidden="true" />
         )}
-        {editing ? (
-          <input
-            className="stem-input"
-            value={session.fieldBuffer}
-            autoFocus
-            aria-label="Task title"
-            placeholder="_"
-            onChange={(e) => onTitle(e.target.value)}
-            onBlur={onTitleCommit}
-            onKeyDown={(e: KeyboardEvent<HTMLInputElement>) => {
-              if (e.key === 'Enter') {
-                e.preventDefault()
-                onTitleCommit()
-              }
-            }}
-            onClick={(e) => e.stopPropagation()}
-          />
-        ) : (
-          <span
-            className="stem-name"
-            onClick={(e) => {
-              e.stopPropagation()
-              if (skipClick.current) {
-                skipClick.current = false
-                return
-              }
-              if (selected) onRename(id)
-              else onSelect(id)
-            }}
-          >
-            <Mark text={row.node.title.trim() || '_'} query={session.find} />
-          </span>
-        )}
-        {project ? null : (
+        {kind === 'subtask' ? (
           <button
             type="button"
-            className="stem-status"
-            data-testid={`dir-on-${id}`}
-            aria-label={`Advance ${row.node.title} from ${LANE_PLAQUE[lane]}`}
-            onClick={(e) => {
-              e.stopPropagation()
-              onShovel(id)
-            }}
+            tabIndex={-1}
+            className="stem-check"
+            aria-label={done ? `Reopen ${node.title}` : `Complete ${node.title}`}
+            aria-pressed={done}
+            onClick={() => props.onToggleDone(id)}
           >
-            {LANE_PLAQUE[lane]}
+            {done ? '[x]' : '[ ]'}
           </button>
+        ) : null}
+        {isEditing ? (
+          <InlineEdit
+            className="stem-input"
+            value={node.title}
+            ariaLabel={`Rename ${kind}`}
+            selectAll
+            testId={`tree-input-${id}`}
+            onCommit={(v, how) => {
+              props.onRename(id, v)
+              if (how !== 'blur') refocus()
+            }}
+          />
+        ) : (
+          <span className="stem-name">
+            <Mark text={node.title.trim() || '_'} query={query} />
+            {kind === 'project' ? '/' : ''}
+          </span>
         )}
+        {node.urgent ? (
+          <span className="stem-urgent" title="Urgent">
+            !
+          </span>
+        ) : null}
+        <span className="stem-tools">
+          <button type="button" tabIndex={-1} className="stem-tool" aria-label={`Add inside ${node.title}`} title="Add inside (+)" onClick={() => props.onStartDraft(id)}>
+            <Plus />
+          </button>
+          <button type="button" tabIndex={-1} className="stem-tool is-danger" aria-label={`Delete ${node.title}`} title="Delete (Del)" onClick={() => props.onDelete(id)}>
+            <Cross />
+          </button>
+        </span>
+        {kind === 'task' || node.loose ? (
+          <label className="stem-status">
+            <span>{LANE_LABEL[lane]}</span>
+            <select tabIndex={-1} aria-label={`Status of ${node.title}`} value={lane} onChange={(e) => props.onSetLane(id, e.target.value as Lane)}>
+              {LANES.map((l) => (
+                <option key={l} value={l}>
+                  {LANE_LABEL[l]}
+                </option>
+              ))}
+            </select>
+          </label>
+        ) : kind === 'project' ? (
+          <span className="stem-count">{childrenOf(doc, id).length}</span>
+        ) : null}
       </div>
     )
   }
 
+  function renderDraft(parent: number | null) {
+    const depth = parent == null ? 0 : depthOf(doc, parent) + 1
+    const stem = depth === 0 ? '' : `${'    '.repeat(depth - 1)}└──`
+    return (
+      <div key="draft" className="stem is-draft" data-testid="tree-draft">
+        <span className="stem-rule" aria-hidden="true">
+          {stem}
+        </span>
+        <span className="stem-fold" aria-hidden="true" />
+        <InlineEdit
+          key={draftKey}
+          className="stem-input"
+          value=""
+          ariaLabel={parent == null ? 'New project' : 'New item'}
+          placeholder={parent == null ? 'project name, Enter' : 'name, Enter for another'}
+          testId="tree-draft-input"
+          onCommit={(v, how) => {
+            const keepGoing = how === 'enter' && v.trim() !== ''
+            props.onDraftCommit(parent, v, keepGoing)
+            if (keepGoing) setDraftKey((k) => k + 1)
+            else if (how !== 'blur') refocus()
+          }}
+        />
+      </div>
+    )
+  }
+
+  /** The column's rows, with the draft row slotted in after its parent's last descendant. */
+  function renderColumn(rows: TreeRow[]) {
+    const out = rows.map(renderRow)
+    if (draft?.where === 'tree' && draft.parent != null && rows.some((r) => r.node.id === draft.parent)) {
+      const at = rows.findIndex((r) => r.node.id === draft.parent)
+      let end = at
+      while (end + 1 < rows.length && rows[end + 1].depth > rows[at].depth) end += 1
+      out.splice(end + 1, 0, renderDraft(draft.parent))
+    }
+    return out
+  }
+
   return (
-    <section className="directory" data-testid="directory" aria-label="Catalogue" onClick={onPane}>
+    <section className="directory" data-testid="directory" aria-label="Directory">
       <div className="section-head">
-        <h2 className="section-name">Catalogue</h2>
+        <h2 className="section-name">Directory</h2>
         <span className="section-note">
-          {cols.length === 1 ? '1 folder' : `${cols.length} folders`}
+          ~/vault · {roots.length === 1 ? '1 project' : `${roots.length} projects`} · {taskCount === 1 ? '1 task' : `${taskCount} tasks`}
         </span>
       </div>
 
-      <div className="forest">
-        {cols.map((col) => {
-          const root = col[0]?.node
-          const ids = new Set(col.map((r) => r.node.id))
-          const addParent =
-            selectedId != null && ids.has(selectedId) ? selectedId : root ? root.id : session.nestFocus
-          return (
-            <div key={root?.id ?? 'col'} className="forest-col">
-              {col.map(renderRow)}
-              {/*
-               * The folder's last line is empty and writes. It sits at its jobs'
-               * indent but draws no branch of its own, so the tree above it stays
-               * strictly true and this row reads as the next line, not a node.
-               */}
-              <button
-                type="button"
-                className="stem stem-ghost"
-                data-testid={`dir-add-job-${root?.id ?? 0}`}
-                onClick={(e) => {
-                  e.stopPropagation()
-                  onAdd(addParent ?? null)
-                }}
-              >
+      <div
+        className="forest"
+        role="tree"
+        aria-label="Projects and tasks"
+        tabIndex={0}
+        ref={treeRef}
+        data-testid="tree"
+        aria-activedescendant={selectedId != null && flat.some((r) => r.node.id === selectedId) ? `tree-${selectedId}` : undefined}
+        onKeyDown={onKeyDown}
+        onPointerDownCapture={() => {
+          pointing.current = true
+        }}
+        onPointerUpCapture={() => {
+          pointing.current = false
+        }}
+        onFocus={(e) => {
+          if (pointing.current) return
+          if (e.target === e.currentTarget && selectedId == null && flat[0]) props.onFocusRow(flat[0].node.id)
+        }}
+      >
+        {columns.map((rows) => (
+          <div key={rows[0]?.node.id} className="forest-col" role="group">
+            {renderColumn(rows)}
+            {!keep ? (
+              <button type="button" tabIndex={-1} className="stem stem-ghost" onClick={() => props.onStartDraft(rows[0].node.id)}>
                 <span className="stem-rule" aria-hidden="true">
-                  {JOB_STEM}
+                  └──
                 </span>
                 <Plus className="stem-add-glyph" />
-                <span className="stem-name">New job</span>
+                <span className="stem-name">new task</span>
               </button>
-            </div>
-          )
-        })}
-
-        {/* The tree's own last line, at the root, where a folder is what gets written. */}
-        <div className="forest-col">
-          <button
-            type="button"
-            className="stem stem-ghost"
-            data-testid="dir-add-folder"
-            onClick={(e) => {
-              e.stopPropagation()
-              onAdd(null)
-            }}
-          >
-            <Plus className="stem-add-glyph" />
-            <span className="stem-name">New folder</span>
-          </button>
-        </div>
+            ) : null}
+          </div>
+        ))}
+        {keep && roots.length === 0 ? <p className="forest-empty">no match for “{query.trim()}”</p> : null}
+        {!keep ? (
+          <div className="forest-col">
+            {draft?.where === 'tree' && draft.parent == null ? renderDraft(null) : null}
+            <button type="button" tabIndex={-1} className="stem stem-ghost" data-testid="tree-new-project" onClick={() => props.onStartDraft(null)}>
+              <Plus className="stem-add-glyph" />
+              <span className="stem-name">new project</span>
+            </button>
+          </div>
+        ) : null}
       </div>
+      <p className="forest-keys" aria-hidden="true">
+        ↑↓ move · ←→ fold · enter rename · + add inside · tab / ⇧tab indent · alt ↑↓ reorder · x done · del delete · ctrl z undo
+      </p>
     </section>
   )
+}
+
+function matches(title: string, body: string | undefined, query: string) {
+  const q = query.trim().toLowerCase()
+  return title.toLowerCase().includes(q) || (body ?? '').toLowerCase().includes(q)
+}
+
+function isInside(doc: Doc, rootId: number, id: number): boolean {
+  let node = byId(doc, id)
+  while (node) {
+    if (node.id === rootId) return true
+    node = byId(doc, node.parent)
+  }
+  return false
+}
+
+/** A drag ghost is a picture of the thing, not the thing: nothing should find it by id. */
+function stripIds(el: HTMLElement): HTMLElement {
+  for (const node of [el, ...el.querySelectorAll<HTMLElement>('*')]) {
+    for (const attr of ['id', 'data-testid', 'data-card-id', 'data-nested-id', 'data-node-id', 'data-jack']) node.removeAttribute(attr)
+  }
+  return el
 }

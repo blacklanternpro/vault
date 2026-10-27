@@ -1,26 +1,22 @@
 import type { EditBox, HitBox, Measure, Op, Session } from '../ir'
-import { matchesFind } from '../ir'
 import { byId, childrenOf, placeOf, plaqueOf, type Doc, type GraphNode } from '../doc'
 import { CHROME_PAD, liveOval, paintChrome, type Buf } from './chrome'
-import { COL_ORDER, PAPER, POWER, RULE, WHITE, fontDisplay, fontHelv, isBinderStatus } from '../tokens'
+import { COL_ORDER, PAPER, POWER, RULE, WHITE, fontHelv, isBinderStatus } from '../tokens'
 
 export const PIPE_ROWS = 6
-export const PIPE_ROW_H = 32
+export const PIPE_ROW_H = 26
 
-const FONT = fontHelv(18, 400)
+const FONT = fontHelv(16, 400)
 const FONT_SM = fontHelv(13, 400)
-const FONT_PAGE = fontDisplay(18, 700)
-const FONT_PROJECT = fontDisplay(22, 700)
 const MID = PIPE_ROW_H / 2
 
-const LEFT_COLS = ['pending', 'rnd', 'active']
-const RIGHT_COLS = ['done', 'dusted']
+const LEFT_COLS = ['backlog', 'active']
+const RIGHT_COLS = ['staging', 'done']
 const COL_LABEL: Record<string, string> = {
-  pending: 'PENDING',
-  rnd: 'R&D',
+  backlog: 'BACKLOG',
   active: 'ACTIVE',
-  done: 'DONE',
-  dusted: 'DUSTED',
+  staging: 'STAGING',
+  done: 'COMMITTED',
 }
 
 function tasksIn(doc: Doc, col: string, focus: number | null): GraphNode[] {
@@ -46,19 +42,6 @@ function grouped(doc: Doc, nodes: GraphNode[]): { plaque: GraphNode | null; node
     const last = out[out.length - 1]
     if (last && last.plaque?.id === plaque?.id) last.nodes.push(node)
     else out.push({ plaque, nodes: [node] })
-  }
-  return out
-}
-
-export function pipeFrame(doc: Doc, fieldW: number): { x: number; y: number; w: number } {
-  const origin = placeOf(doc, 'PIPE')
-  return { x: origin.x, y: origin.y, w: Math.max(560, Math.min(fieldW - origin.x - 16, 980)) }
-}
-
-export function visibleBinderIds(doc: Doc, focus: number | null): number[] {
-  const out: number[] = []
-  for (const col of COL_ORDER) {
-    for (const n of tasksIn(doc, col, focus)) out.push(n.id)
   }
   return out
 }
@@ -93,12 +76,11 @@ function compileCol(
   buf.ops.push({
     op: 'GLYPH',
     x: x + 8,
-    y: y + 14,
-    text: COL_LABEL[col] ?? col.toUpperCase(),
+    y: y + 12,
+    text: `── ${COL_LABEL[col] ?? col.toUpperCase()} ──`,
     color: POWER,
     font: FONT_SM,
     baseline: 'middle',
-    track: 1,
   })
   buf.hits.push({ kind: 'COL', x, y, w, h: 22, z: 8, payload: col })
   let rowY = y + 26
@@ -112,10 +94,11 @@ function compileCol(
         op: 'GLYPH',
         x: x + 8,
         y: rowY + MID,
-        text: group.plaque.title,
+        text: group.plaque.title.toUpperCase(),
         color: POWER,
-        font: FONT_PROJECT,
+        font: FONT_SM,
         baseline: 'middle',
+        track: 1,
       })
       buf.ops.push({
         op: 'LINE',
@@ -141,8 +124,8 @@ function compileCol(
         width: 1,
       })
       const selected = session.selected?.kind === 'NODE' && session.selected.id === task.id
-      const found = matchesFind(session, task.title)
-      const label = task.title || '_'
+      const mark = col === 'done' ? '[X]' : '[ ]'
+      const label = `${mark} #${task.id} ${task.title || '_'}`
       const tw = measure(label, FONT)
       const editingTitle = session.field?.id === task.id && session.field.slot === 'title'
       if (selected) {
@@ -166,7 +149,7 @@ function compileCol(
           x: x + 10,
           y: rowY + MID,
           text: label,
-          color: found ? POWER : PAPER,
+          color: PAPER,
           font: FONT,
           baseline: 'middle',
         })
@@ -261,9 +244,9 @@ function compileExpand(
     op: 'GLYPH',
     x: x + 18,
     y: rowY + MID,
-    text: body || '_',
+    text: body || 'body _',
     color: body ? PAPER : RULE,
-    font: FONT,
+    font: FONT_SM,
     baseline: 'middle',
   })
   buf.hits.push({
@@ -279,25 +262,16 @@ function compileExpand(
   rowY += PIPE_ROW_H
 
   for (const child of childrenOf(doc, task.id)) {
+    const mark = child.status === 'done' ? '[X]' : '[ ]'
     buf.ops.push({
       op: 'GLYPH',
       x: x + 18,
       y: rowY + MID,
-      text: child.title || '_',
+      text: `${mark} ${child.title}`,
       color: PAPER,
       font: FONT,
       baseline: 'middle',
     })
-    if (child.status === 'done') {
-      buf.ops.push({
-        op: 'STRIKE',
-        x: x + 18,
-        y: rowY + MID,
-        w: Math.min(w - 50, child.title.length * 10 + 8),
-        thick: 1,
-        color: POWER,
-      })
-    }
     buf.hits.push({
       kind: 'NODE',
       x: x + 10,
@@ -344,41 +318,25 @@ function compileExpand(
   for (const st of ['none', ...COL_ORDER]) {
     const live = task.status === st
     const label = st.toUpperCase()
-    const tw = label.length * 7 + 12
-    if (live) {
-      buf.ops.push({
-        op: 'CHIP',
-        x: sx,
-        y: rowY,
-        w: tw,
-        h: PIPE_ROW_H - 2,
-        text: label,
-        fg: WHITE,
-        bg: POWER,
-        font: FONT_SM,
-        padX: 4,
-      })
-    } else {
-      buf.ops.push({
-        op: 'GLYPH',
-        x: sx + 4,
-        y: rowY + MID,
-        text: label,
-        color: RULE,
-        font: FONT_SM,
-        baseline: 'middle',
-      })
-    }
+    buf.ops.push({
+      op: 'GLYPH',
+      x: sx,
+      y: rowY + MID,
+      text: label,
+      color: live ? POWER : RULE,
+      font: FONT_SM,
+      baseline: 'middle',
+    })
     buf.hits.push({
       kind: 'STATUS',
       x: sx - 2,
       y: rowY,
-      w: tw,
+      w: label.length * 7 + 8,
       h: PIPE_ROW_H,
       z: 16,
       payload: `${task.id}:${st}`,
     })
-    sx += tw + 8
+    sx += label.length * 7 + 12
   }
   buf.hits.push({
     kind: 'SLOT',
@@ -391,7 +349,6 @@ function compileExpand(
   })
   setEdit(edit, session, task.id, 'status', x + 10, rowY, w - 20, task.status, 'status')
   rowY += PIPE_ROW_H
-
   return rowY
 }
 
@@ -402,10 +359,10 @@ export function compilePipe(
   fieldW: number,
   edit: { box: EditBox | null },
 ): { ops: Op[]; hits: HitBox[]; x: number; y: number; w: number; h: number } {
-  const frame = pipeFrame(doc, fieldW)
-  const x = frame.x
-  const y = frame.y
-  const w = frame.w
+  const origin = placeOf(doc, 'PIPE')
+  const x = origin.x
+  const y = origin.y
+  const w = Math.max(560, Math.min(fieldW - x - 16, 980))
   const spineW = 42
   const pageW = (w - spineW) / 2
   const collapsed = session.collapsed.includes('PIPE')
@@ -446,21 +403,19 @@ export function compilePipe(
     op: 'GLYPH',
     x: x + 10,
     y: y + CHROME_PAD + 12,
-    text: 'FOCUS',
+    text: '[ FOCUS ]',
     color: POWER,
-    font: FONT_PAGE,
+    font: FONT_SM,
     baseline: 'middle',
-    track: 1,
   })
   buf.ops.push({
     op: 'GLYPH',
     x: x + pageW + spineW + 10,
     y: y + CHROME_PAD + 12,
-    text: 'GATEWAY',
+    text: '[ GATEWAY ]',
     color: POWER,
-    font: FONT_PAGE,
+    font: FONT_SM,
     baseline: 'middle',
-    track: 1,
   })
 
   const spineX = x + pageW

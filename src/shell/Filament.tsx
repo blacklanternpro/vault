@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type RefObject } from 'react'
-import { byId, type Doc, type GraphNode } from '../speck/doc'
+import { byId } from '../model/doc'
+import type { Doc, Node } from '../model/types'
 
 export type LiveLeash = {
   id: number
@@ -14,7 +15,7 @@ type Cable = { id: number; d: string; taut: boolean }
 type Props = {
   doc: Doc
   /** The LOOSE nodes on screen; each one gets a cable back to its parent. */
-  satellites: GraphNode[]
+  satellites: Node[]
   hostRef: RefObject<HTMLElement | null>
   liveRef: RefObject<LiveLeash | null>
   dragging: boolean

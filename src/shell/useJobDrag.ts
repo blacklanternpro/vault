@@ -1,6 +1,6 @@
 import { useRef, type PointerEvent, type RefObject } from 'react'
-import { byId, type Doc } from '../speck/doc'
-import { isBinderStatus, type ColName, type NodeStatus } from '../speck/tokens'
+import { byId } from '../model/doc'
+import { isLane, type Doc, type Lane } from '../model/types'
 import type { LiveLeash } from './Filament'
 import type { Settling } from './useBoardFlip'
 
@@ -25,8 +25,8 @@ type JobDragOptions = {
   /** Which card a drop is already landing, so the board does not land it twice. */
   settling: RefObject<Settling>
   setDragging: (on: boolean) => void
-  onStage: (id: number, status: NodeStatus, beforeId: number | null | undefined) => void
-  onPull: (id: number, status: NodeStatus, beforeId: number | null | undefined) => void
+  onStage: (id: number, status: Lane, beforeId: number | null | undefined) => void
+  onPull: (id: number, status: Lane, beforeId: number | null | undefined) => void
   onDock: (id: number, parentId: number) => void
   /** A press that never travelled far enough to be a drag. */
   onTap: (id: number, target: Element) => void
@@ -59,12 +59,12 @@ export function useJobDrag({
   const ghostRef = useRef<HTMLElement | null>(null)
   const originRef = useRef<HTMLElement | null>(null)
 
-  function dropAt(clientX: number, clientY: number): { lane: ColName; beforeId: number | null } | null {
+  function dropAt(clientX: number, clientY: number): { lane: Lane; beforeId: number | null } | null {
     const el = document.elementFromPoint(clientX, clientY)
     const laneEl = el instanceof Element ? el.closest('[data-lane]') : null
     if (!laneEl) return null
     const lane = laneEl.getAttribute('data-lane')
-    if (!lane || !isBinderStatus(lane)) return null
+    if (!lane || !isLane(lane)) return null
     for (const item of laneEl.querySelectorAll('[data-card-id]')) {
       const id = Number(item.getAttribute('data-card-id'))
       const r = item.getBoundingClientRect()
@@ -170,7 +170,7 @@ export function useJobDrag({
       const origin = e.currentTarget.closest(drag.origin)
       if (origin instanceof HTMLElement) {
         const r = origin.getBoundingClientRect()
-        const ghost = origin.cloneNode(true) as HTMLElement
+        const ghost = stripIds(origin.cloneNode(true) as HTMLElement)
         ghost.style.position = 'fixed'
         ghost.style.left = `${r.left}px`
         ghost.style.top = `${r.top}px`
@@ -234,4 +234,12 @@ export function useJobDrag({
   }
 
   return { beginDrag, onMove, finishDrag }
+}
+
+/** A drag ghost is a picture of the thing, not the thing: nothing should find it by id. */
+function stripIds(el: HTMLElement): HTMLElement {
+  for (const node of [el, ...el.querySelectorAll<HTMLElement>('*')]) {
+    for (const attr of ['id', 'data-testid', 'data-card-id', 'data-nested-id', 'data-node-id', 'data-jack']) node.removeAttribute(attr)
+  }
+  return el
 }

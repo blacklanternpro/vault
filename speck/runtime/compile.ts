@@ -1,6 +1,6 @@
 import type { DockInput, EditBox, HitBox, Measure, Op, Program, Session } from './ir'
-import { nowOf } from './ir'
 import { parseDoc } from './doc'
+import { nowOf } from './ir'
 import { compileCal } from './organs/cal'
 import { compileDump } from './organs/dump'
 import { compileNest } from './organs/nest'
@@ -139,9 +139,9 @@ function compileField(world: World, measure: Measure, edit: { box: EditBox | nul
 }
 
 function placeholder(session: Session): string {
+  if (session.pendingDump) return '↵ confirm · edit to reject'
   if (session.lens === 'dump') return 'note…'
-  if (session.find) return `find ${session.find}`
-  return 'find or place…'
+  return 'operator…'
 }
 
 function compileDock(world: World): { ops: Op[]; hits: HitBox[]; h: number; input: DockInput } {

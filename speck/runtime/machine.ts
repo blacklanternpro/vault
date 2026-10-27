@@ -1,32 +1,22 @@
 import { isOrganName, nextSlot, nowOf, tapeDate, type FieldSlot, type HitBox, type Now, type OrganName, type Selected, type Session } from './ir'
 import {
   byId,
-  followNested,
   indentNode,
   insertNode,
-  inSubtree,
   isProject,
-  moveNodeBefore,
-  moveNote,
   outdentNode,
   parseDoc,
-  projectIdOf,
-  promotePending,
   removeNode,
   SEED_SOURCE,
   serializeDoc,
   setNodeBody,
-  setNodeLoose,
   setNodeStatus,
-  setNoteHitch,
-  setNoteText,
   setNodeTitle,
   type Doc,
 } from './doc'
+import { formatDumpGuess, parseDump, type DumpParse } from './parse-dump'
 import { isCommandLine, parseCommand } from './parse'
 import { COL_ORDER, isBinderStatus, PAINT_OPS, type NodeStatus } from './tokens'
-import { visibleBinderIds } from './organs/pipe'
-import { visibleNestIds } from './tree'
 
 export type Result = {
   session: Session
@@ -40,14 +30,13 @@ export function freshSession(): Session {
     nestClosed: [],
     pipeOpen: null,
     nestFocus: null,
-    projectId: null,
     field: null,
     fieldBuffer: '',
     collapsed: [],
     draftId: null,
     buffer: '',
     echo: null,
-    find: null,
+    pendingDump: null,
     calDay: null,
   }
 }
@@ -90,10 +79,9 @@ function openField(session: Session, id: number, slot: FieldSlot, value: string)
 }
 
 function shovelStatus(status: NodeStatus, delta: number): NodeStatus {
-  if (status === 'none' && delta > 0) return 'pending'
+  if (status === 'none' && delta > 0) return 'backlog'
   const i = COL_ORDER.indexOf(status as (typeof COL_ORDER)[number])
-  if (i < 0) return delta > 0 ? 'pending' : 'none'
-  if (delta < 0 && i === 0) return 'none'
+  if (i < 0) return delta > 0 ? 'backlog' : 'none'
   const next = Math.max(0, Math.min(COL_ORDER.length - 1, i + delta))
   return COL_ORDER[next]
 }
@@ -109,148 +97,6 @@ function applyShovel(session: Session, source: string, id: number | null, delta:
     { ...session, selected: { kind: 'NODE', id: tid } },
     serializeDoc(doc),
     `SHOVEL #${tid} ${node.status}`,
-  )
-}
-
-export function stageCard(
-  session: Session,
-  source: string,
-  id: number,
-  status: NodeStatus,
-  beforeId?: number | null,
-): Result {
-  const doc = parseDoc(source)
-  const node = byId(doc, id)
-  if (!node) return ok(session, source, '? STAGE')
-  node.status = status
-  followNested(doc, id, status)
-  if (beforeId !== undefined) moveNodeBefore(doc, id, beforeId)
-  return ok(
-    { ...session, selected: { kind: 'NODE', id }, lens: 'pipe' },
-    serializeDoc(doc),
-    `STAGE #${id} ${status}`,
-  )
-}
-
-export function pullCard(
-  session: Session,
-  source: string,
-  id: number,
-  status: NodeStatus,
-  beforeId?: number | null,
-): Result {
-  const doc = parseDoc(source)
-  const node = byId(doc, id)
-  if (!node || node.parent == null) return ok(session, source, '? PULL')
-  setNodeLoose(doc, id, true)
-  node.status = status
-  followNested(doc, id, status)
-  if (beforeId !== undefined) moveNodeBefore(doc, id, beforeId)
-  return ok(
-    { ...session, selected: { kind: 'NODE', id }, lens: 'pipe' },
-    serializeDoc(doc),
-    `PULL #${id} ${status}`,
-  )
-}
-
-export function dockCard(session: Session, source: string, id: number, parentId: number): Result {
-  const doc = parseDoc(source)
-  const node = byId(doc, id)
-  const parent = byId(doc, parentId)
-  if (!node || !parent || node.parent == null) return ok(session, source, '? DOCK')
-  if (node.id === parentId || inSubtree(doc, id, parentId)) return ok(session, source, '? DOCK')
-  node.parent = parentId
-  setNodeLoose(doc, id, false)
-  promotePending(doc, parentId)
-  return ok(
-    { ...session, selected: { kind: 'NODE', id }, nestFocus: parentId, lens: 'pipe' },
-    serializeDoc(doc),
-    `DOCK #${id}`,
-  )
-}
-
-export function selectNode(session: Session, source: string, id: number): Result {
-  const doc = parseDoc(source)
-  if (!byId(doc, id)) return ok(session, source, '? SELECT')
-  return {
-    session: {
-      ...session,
-      selected: { kind: 'NODE', id },
-      nestFocus: id,
-      field: null,
-      fieldBuffer: '',
-      echo: null,
-    },
-    source,
-  }
-}
-
-export function setProject(session: Session, source: string, id: number): Result {
-  const doc = parseDoc(source)
-  const node = byId(doc, id)
-  if (!node || node.parent != null) return ok(session, source, '? PROJECT')
-  return ok(
-    {
-      ...session,
-      projectId: id,
-      nestFocus: id,
-      selected: { kind: 'NODE', id },
-      lens: 'pipe',
-    },
-    source,
-    `PROJECT #${id}`,
-  )
-}
-
-export function addNested(session: Session, source: string, parentId: number): Result {
-  const doc = parseDoc(source)
-  const parent = byId(doc, parentId)
-  if (!parent) return ok(session, source, '? ADD')
-  const status = parent && isBinderStatus(parent.status) ? parent.status : 'pending'
-  const node = insertNode(doc, { title: '', status, parent: parentId })
-  return {
-    session: openField(
-      {
-        ...session,
-        draftId: node.id,
-        nestFocus: parentId,
-        lens: 'nest',
-      },
-      node.id,
-      'title',
-      '',
-    ),
-    source: serializeDoc(doc),
-  }
-}
-
-export function applyNoteOrder(session: Session, source: string, from: number, to: number): Result {
-  const doc = parseDoc(source)
-  if (!moveNote(doc, from, to)) return ok(session, source)
-  return ok(session, serializeDoc(doc))
-}
-
-export function applyNoteText(session: Session, source: string, index: number, text: string): Result {
-  const doc = parseDoc(source)
-  setNoteText(doc, index, text)
-  return ok(session, serializeDoc(doc))
-}
-
-export function hitchNote(
-  session: Session,
-  source: string,
-  index: number,
-  nodeId: number | null,
-): Result {
-  const doc = parseDoc(source)
-  const note = doc.notes[index]
-  if (!note) return ok(session, source, '? HITCH')
-  if (nodeId != null && !byId(doc, nodeId)) return ok(session, source, '? HITCH')
-  setNoteHitch(doc, index, nodeId)
-  return ok(
-    { ...session, selected: { kind: 'NOTE', index }, lens: 'dump' },
-    serializeDoc(doc),
-    nodeId == null ? 'UNHITCH' : `HITCH #${nodeId}`,
   )
 }
 
@@ -323,16 +169,7 @@ function parentForNew(session: Session, doc: Doc): number | null {
     if (node && isProject(doc, node)) return sid
     if (node) return node.parent
   }
-  return projectIdOf(doc, session.projectId)
-}
-
-function inheritAddStatus(doc: Doc, parent: number | null, status: NodeStatus): NodeStatus {
-  if (parent == null) return status
-  const p = byId(doc, parent)
-  if (!p) return status
-  if (p.parent == null) return isBinderStatus(status) ? status : 'pending'
-  if (p && isBinderStatus(p.status)) return p.status
-  return isBinderStatus(status) ? status : 'pending'
+  return null
 }
 
 export function addChild(source: string, parent: number | null, title = '', status: NodeStatus = 'none'): { source: string; id: number } {
@@ -341,50 +178,67 @@ export function addChild(source: string, parent: number | null, title = '', stat
   return { source: serializeDoc(doc), id: node.id }
 }
 
-export function searchFind(session: Session, source: string, query: string): Result {
-  return applyFind(session, source, query)
+function applyDumpParse(session: Session, source: string, dump: DumpParse): Result {
+  if (dump.kind === 'ambiguous') {
+    const guess = dump.guess
+    const pending =
+      guess.kind === 'project'
+        ? { kind: 'project' as const, title: guess.title, children: guess.children }
+        : { kind: 'tasks' as const, titles: guess.titles, parent: parentForNew(session, parseDoc(source)) }
+    return {
+      session: { ...session, pendingDump: pending, echo: formatDumpGuess(dump), buffer: '' },
+      source,
+    }
+  }
+  return commitDump(session, source, dump)
 }
 
-export function addScratch(session: Session, source: string): Result {
-  return applyNote(session, source, nowOf(), '_')
-}
-
-function applyFind(session: Session, source: string, query: string): Result {
-  const q = query.trim()
-  if (!q) return ok({ ...session, find: null }, source, 'FIND _')
+function commitDump(
+  session: Session,
+  source: string,
+  dump: { kind: 'project'; title: string; children: string[] } | { kind: 'tasks'; titles: string[] },
+): Result {
   const doc = parseDoc(source)
-  const needle = q.toLowerCase()
-  const hits = doc.nodes.filter((n) => n.title.toLowerCase().includes(needle))
-  const first = hits[0]
+  if (dump.kind === 'project') {
+    const project = insertNode(doc, { title: dump.title, status: 'none', parent: null })
+    for (const title of dump.children) {
+      insertNode(doc, { title, status: 'backlog', parent: project.id })
+    }
+    return ok(
+      {
+        ...session,
+        selected: { kind: 'NODE', id: project.id },
+        lens: 'nest',
+        nestFocus: project.id,
+        pendingDump: null,
+      },
+      serializeDoc(doc),
+      `PROJECT ${dump.title}`,
+    )
+  }
+  const parent = parentForNew(session, doc)
+  let last = parent
+  for (const title of dump.titles) {
+    last = insertNode(doc, { title, status: 'backlog', parent }).id
+  }
   return ok(
     {
       ...session,
-      find: q,
-      selected: first ? { kind: 'NODE', id: first.id } : session.selected,
+      selected: last != null ? { kind: 'NODE', id: last } : session.selected,
+      pendingDump: null,
     },
-    source,
-    hits.length ? `FIND ${hits.length}` : 'FIND _',
-  )
-}
-
-function applyNote(session: Session, source: string, now: Now, text: string): Result {
-  const t = text.trim()
-  if (!t) return ok(session, source, '? NOTE')
-  const doc = parseDoc(source)
-  doc.notes.push({ date: tapeDate(now.year, now.month, now.day), text: t })
-  return ok(
-    { ...session, selected: { kind: 'DUMP' }, lens: 'dump' },
     serializeDoc(doc),
-    'NOTE',
+    dump.titles.length ? `+ ${dump.titles.length}` : null,
   )
 }
 
-function applyGlyph(session: Session, source: string, x: number, y: number, px: number, text: string): Result {
-  const t = text.trim()
-  if (!t) return ok(session, source, '? GLYPH')
+function confirmPending(session: Session, source: string): Result {
+  if (!session.pendingDump) return ok(session, source)
+  const p = session.pendingDump
+  if (p.kind === 'project') return commitDump(session, source, p)
   const doc = parseDoc(source)
-  doc.glyphs.push({ x, y, px, text: t })
-  return ok(session, serializeDoc(doc), `GLYPH ${t}`)
+  for (const title of p.titles) insertNode(doc, { title, status: 'backlog', parent: p.parent })
+  return ok({ ...session, pendingDump: null }, serializeDoc(doc), `+ ${p.titles.length}`)
 }
 
 function commitField(session: Session, source: string): Result {
@@ -399,8 +253,6 @@ function commitField(session: Session, source: string): Result {
       return ok(collapse(session), serializeDoc(doc))
     }
     setNodeTitle(doc, id, text.trim() || byId(doc, id)?.title || '_')
-    const child = byId(doc, id)
-    if (child?.parent != null && !child.loose) promotePending(doc, child.parent)
     return ok({ ...session, fieldBuffer: byId(parseDoc(serializeDoc(doc)), id)?.title ?? text, draftId: null }, serializeDoc(doc))
   }
   if (slot === 'body') {
@@ -410,11 +262,7 @@ function commitField(session: Session, source: string): Result {
   if (slot === 'subtask') {
     const title = text.trim()
     if (!title) return ok({ ...session, fieldBuffer: '' }, source)
-    promotePending(doc, id)
-    const parent = byId(doc, id)
-    const status = parent && isBinderStatus(parent.status) ? parent.status : 'pending'
-    const child = insertNode(doc, { title, status, parent: id })
-    promotePending(doc, id)
+    const child = insertNode(doc, { title, status: 'none', parent: id })
     return ok(
       { ...session, fieldBuffer: '', selected: { kind: 'NODE', id: child.id }, pipeOpen: session.pipeOpen ?? id },
       serializeDoc(doc),
@@ -430,22 +278,16 @@ function commitField(session: Session, source: string): Result {
 
 function commitOperator(session: Session, source: string, now: Now, text: string): Result {
   const trimmed = text.trim()
-  if (!trimmed) return ok(session, source)
-  if (session.lens === 'dump') return applyNote(session, source, now, trimmed)
-  const query = trimmed.startsWith('/') ? trimmed.slice(1) : trimmed
-  return applyFind(session, source, query)
-}
-
-function applyLens(session: Session, source: string, raw: string): Result {
-  const nest = raw.toUpperCase() === 'NEST'
-  return {
-    session: {
-      ...closeField(session),
-      lens: nest ? 'nest' : 'pipe',
-      selected: nest ? { kind: 'NEST' } : { kind: 'PIPE' },
-    },
-    source,
+  if (!trimmed) {
+    if (session.pendingDump) return confirmPending(session, source)
+    return ok(session, source)
   }
+  if (session.lens === 'dump') {
+    const doc = parseDoc(source)
+    doc.notes.push({ date: tapeDate(now.year, now.month, now.day), text: trimmed })
+    return ok(session, serializeDoc(doc))
+  }
+  return applyDumpParse(session, source, parseDump(trimmed))
 }
 
 function applyFocus(session: Session, source: string, id?: number, clear?: boolean): Result {
@@ -458,65 +300,30 @@ function applyFocus(session: Session, source: string, id?: number, clear?: boole
 }
 
 function applyAdd(session: Session, source: string, parent: number | null, status: NodeStatus = 'none'): Result {
-  const doc = parseDoc(source)
-  const pid = parent && parent > 0 ? parent : null
-  const next = inheritAddStatus(doc, pid, status)
-  const node = insertNode(doc, { title: '', status: next, parent: pid })
-  const isRoot = pid == null
+  const made = addChild(source, parent && parent > 0 ? parent : null, '', status)
+  const node = byId(parseDoc(made.source), made.id)
   return {
     session: openField(
       {
         ...session,
-        draftId: node.id,
-        projectId: isRoot ? node.id : session.projectId,
+        draftId: made.id,
         pipeOpen: status === 'none' ? session.pipeOpen : session.pipeOpen,
-        lens: status === 'none' && isRoot ? 'pipe' : pid == null || byId(doc, pid)?.parent == null ? 'pipe' : 'nest',
-        nestFocus: isRoot ? node.id : session.nestFocus,
+        lens: status === 'none' ? 'nest' : 'pipe',
       },
-      node.id,
+      made.id,
       'title',
-      node.title ?? '',
+      node?.title ?? '',
     ),
-    source: serializeDoc(doc),
+    source: made.source,
   }
 }
 
 function applyHitStmt(target: string, arg: string | number | undefined, session: Session, source: string): Result {
   const t = target.toUpperCase()
   if (t === 'FIELD') return { session: collapse(session), source }
-  if (t === 'PIPE') {
-    return {
-      session: {
-        ...collapse(session),
-        selected: { kind: 'PIPE' },
-        lens: 'pipe',
-        collapsed: session.collapsed.filter((o) => o !== 'PIPE'),
-      },
-      source,
-    }
-  }
-  if (t === 'NEST') {
-    return {
-      session: {
-        ...collapse(session),
-        selected: { kind: 'NEST' },
-        lens: 'nest',
-        collapsed: session.collapsed.filter((o) => o !== 'NEST'),
-      },
-      source,
-    }
-  }
-  if (t === 'DUMP') {
-    return {
-      session: {
-        ...collapse(session),
-        selected: { kind: 'DUMP' },
-        lens: 'dump',
-        collapsed: session.collapsed.filter((o) => o !== 'DUMP'),
-      },
-      source,
-    }
-  }
+  if (t === 'PIPE') return { session: { ...collapse(session), selected: { kind: 'PIPE' }, lens: 'pipe' }, source }
+  if (t === 'NEST') return { session: { ...collapse(session), selected: { kind: 'NEST' }, lens: 'nest' }, source }
+  if (t === 'DUMP') return { session: { ...collapse(session), selected: { kind: 'DUMP' }, lens: 'dump' }, source }
   if (t === 'CAL') return { session: { ...session, selected: { kind: 'CAL' } }, source }
   if (t === 'SEAL') return { session: { ...session, selected: { kind: 'SEAL' } }, source }
   if (t === 'SKULL') return { session: { ...session, selected: { kind: 'SKULL' } }, source }
@@ -539,9 +346,6 @@ function applyHitStmt(target: string, arg: string | number | undefined, session:
   }
   if (t === 'FOCUS') {
     return applyFocus(session, source, typeof arg === 'number' ? arg : undefined)
-  }
-  if (t === 'LENS') {
-    return applyLens(session, source, String(arg ?? ''))
   }
   if (t === 'CLEAR') return ok(freshSession(), SEED_SOURCE)
   if (t === 'CLOSE' && arg != null) {
@@ -582,26 +386,15 @@ function hitNode(session: Session, source: string, id: number, lens: 'pipe' | 'n
   }
 
   if (session.pipeOpen === id && session.selected?.kind === 'NODE' && session.selected.id === id) {
-    return {
-      session: {
-        ...session,
-        selected: { kind: 'NODE', id },
-        nestFocus: id,
-        field: null,
-        fieldBuffer: '',
-        echo: null,
-      },
-      source,
-    }
+    return { session: collapse(session), source }
   }
   return {
-    session: {
-      ...closeField(session),
-      lens: 'pipe',
-      pipeOpen: id,
-      selected: { kind: 'NODE', id },
-      nestFocus: id,
-    },
+    session: openField(
+      { ...session, lens: 'pipe', pipeOpen: id, selected: { kind: 'NODE', id } },
+      id,
+      'title',
+      node.title,
+    ),
     source,
   }
 }
@@ -618,12 +411,8 @@ export function applyHit(hit: HitBox, session: Session, source: string): Result 
       return applyAdd(session, source, Number(hit.payload ?? 0) || null, 'none')
     case 'TOGGLE':
       return { session: toggleNest(session, Number(hit.payload ?? 0)), source }
-    case 'CLOSE': {
-      const organ = String(hit.payload ?? 'PIPE') as OrganName
-      return { session: toggleCollapsed(session, organ), source }
-    }
-    case 'LENS':
-      return applyLens(session, source, String(hit.payload ?? 'PIPE'))
+    case 'CLOSE':
+      return { session: toggleCollapsed(session, String(hit.payload ?? 'PIPE') as OrganName), source }
     case 'STATUS': {
       const raw = String(hit.payload ?? '')
       const [idStr, col] = raw.split(':')
@@ -643,7 +432,7 @@ export function applyHit(hit: HitBox, session: Session, source: string): Result 
         slot === 'title' ? node.title : slot === 'body' ? node.body ?? '' : slot === 'status' ? node.status : ''
       return {
         session: openField(
-          { ...session, selected: { kind: 'NODE', id } },
+          { ...session, pipeOpen: session.pipeOpen ?? id, selected: { kind: 'NODE', id } },
           id,
           (slot as FieldSlot) || 'title',
           value,
@@ -652,14 +441,13 @@ export function applyHit(hit: HitBox, session: Session, source: string): Result 
       }
     }
     case 'EMPTY': {
-      const col = String(hit.payload ?? 'pending')
-      const status = isBinderStatus(col) ? col : 'pending'
-      const doc = parseDoc(source)
-      const parent = projectIdOf(doc, session.projectId)
+      const col = String(hit.payload ?? 'backlog')
+      const status = isBinderStatus(col) ? col : 'backlog'
+      const parent = parentForNew(session, parseDoc(source))
       return applyAdd({ ...session, lens: 'pipe' }, source, parent, status)
     }
     case 'COL':
-      return { session: { ...session, selected: { kind: 'COL', col: String(hit.payload ?? 'pending') }, lens: 'pipe' }, source }
+      return { session: { ...session, selected: { kind: 'COL', col: String(hit.payload ?? 'backlog') }, lens: 'pipe' }, source }
     case 'PIPE':
     case 'ORGAN': {
       const organ = String(hit.payload ?? 'PIPE')
@@ -688,7 +476,7 @@ export function applyHit(hit: HitBox, session: Session, source: string): Result 
       return ok(session, toggleMaterial(source, flag), flag)
     }
     case 'RING':
-      return ok(session, source, session.echo || 'MOVE // FIND // NOTE')
+      return ok(session, source, session.echo || 'SHOVEL // FOCUS // SEE')
     case 'FIELD':
       return { session: collapse(session), source }
     case 'COMMIT':
@@ -705,7 +493,7 @@ function applyStmt(stmt: ReturnType<typeof parseCommand>, session: Session, sour
       return ok(session, source, src.length > 160 ? `${src.slice(0, 157)}…` : src)
     }
     case 'WORDS':
-      return ok(session, source, `${PAINT_OPS.join(' ')} // MOVE FIND NOTE CLEAR HIT`)
+      return ok(session, source, `${PAINT_OPS.join(' ')} // HIT SHOVEL FOCUS SEE CLEAR`)
     case 'CLEAR':
       return ok(freshSession(), SEED_SOURCE)
     case 'SHOVEL':
@@ -716,12 +504,6 @@ function applyStmt(stmt: ReturnType<typeof parseCommand>, session: Session, sour
       return applyStrike(session, source)
     case 'ADD':
       return applyAdd(session, source, parentForNew(session, parseDoc(source)))
-    case 'FIND':
-      return applyFind(session, source, stmt.query)
-    case 'NOTE':
-      return applyNote(session, source, now, stmt.text)
-    case 'GLYPH':
-      return applyGlyph(session, source, stmt.x, stmt.y, stmt.px, stmt.text)
     case 'COMMIT':
       if (session.field) return commitField(session, source)
       return commitOperator(session, source, now, session.buffer)
@@ -740,6 +522,7 @@ export function commitLine(line: string, session: Session, source: string, now: 
   const trimmed = line.trim()
   if (!trimmed) {
     if (session.field) return commitField(session, source)
+    if (session.pendingDump) return confirmPending(session, source)
     return ok(session, source)
   }
   if (isCommandLine(trimmed)) {
@@ -768,47 +551,14 @@ export function cycleField(session: Session, source: string, dir: 1 | -1): Resul
   const value =
     slot === 'title' ? node?.title ?? '' : slot === 'body' ? node?.body ?? '' : slot === 'status' ? node?.status ?? '' : ''
   return {
-    session: openField(committed.session, id, slot, value),
+    session: openField({ ...committed.session, pipeOpen: committed.session.pipeOpen ?? id }, id, slot, value),
     source: committed.source,
   }
 }
 
-function moveSelection(session: Session, source: string, dir: 1 | -1): Result {
-  if (session.lens === 'dump') return { session, source }
-  const doc = parseDoc(source)
-  const ids = session.lens === 'nest' ? visibleNestIds(doc, session) : visibleBinderIds(doc, session.nestFocus)
-  if (ids.length === 0) return { session, source }
-  const cur = nodeIdOf(session.selected)
-  const at = cur == null ? -1 : ids.indexOf(cur)
-  const next =
-    dir > 0 ? (at < 0 ? 0 : Math.min(ids.length - 1, at + 1)) : at < 0 ? ids.length - 1 : Math.max(0, at - 1)
-  return {
-    session: { ...session, selected: { kind: 'NODE', id: ids[next] } },
-    source,
-  }
-}
-
 export function applyKey(key: string, shift: boolean, session: Session, source: string): Result {
-  if (key === 'Escape') {
-    if (session.field) {
-      const committed = commitField(session, source)
-      return { session: collapse(committed.session), source: committed.source }
-    }
-    return { session: collapse(session), source }
-  }
+  if (key === 'Escape') return { session: collapse(session), source }
   if (key === 'Tab' && session.field) return cycleField(session, source, shift ? -1 : 1)
-  if (key === 'Tab' && session.pipeOpen != null && !session.field) {
-    const doc = parseDoc(source)
-    const node = byId(doc, session.pipeOpen)
-    if (!node) return { session, source }
-    return {
-      session: openField({ ...session, selected: { kind: 'NODE', id: node.id } }, node.id, 'title', node.title),
-      source,
-    }
-  }
-  if ((key === 'ArrowUp' || key === 'ArrowDown') && !session.field) {
-    return moveSelection(session, source, key === 'ArrowDown' ? 1 : -1)
-  }
   if (key === ' ' && !session.field) {
     const id = nodeIdOf(session.selected)
     if (id == null) return { session, source }
@@ -838,30 +588,6 @@ export function applyKey(key: string, shift: boolean, session: Session, source: 
     const doc = parseDoc(source)
     removeNode(doc, session.draftId)
     return ok(collapse(session), serializeDoc(doc))
-  }
-  if ((key === 'Backspace' || key === 'Delete') && !session.field && session.selected?.kind === 'NODE') {
-    const id = session.selected.id
-    const doc = parseDoc(source)
-    const node = byId(doc, id)
-    if (!node || node.parent == null) return { session, source }
-    const parent = node.parent
-    removeNode(doc, id)
-    const nestFocus =
-      session.nestFocus == null ? null : byId(doc, session.nestFocus) ? session.nestFocus : parent
-    const pipeOpen =
-      session.pipeOpen == null ? null : byId(doc, session.pipeOpen) ? session.pipeOpen : parent
-    return ok(
-      {
-        ...session,
-        selected: { kind: 'NODE', id: parent },
-        nestFocus,
-        pipeOpen,
-        field: null,
-        draftId: session.draftId === id ? null : session.draftId,
-      },
-      serializeDoc(doc),
-      `KILL #${id}`,
-    )
   }
   return { session, source }
 }

@@ -18,12 +18,12 @@ VAULT WORLDWIDE is a local-first personal OS: four tools in one field (a board o
 
 ## Positioning
 
-SPECK is the **save format** (graph + dump source in `localStorage` key `speck-os-v2`). It is not the app and not a paint/PLACE compositor identity. React/DOM is the shell. One work graph, two languages: the catalogue is the plain-stem binder; a job is a card in the lane that is its status, opened in a drawer beside the board. FIND searches; it does not create projects or tasks. Pointer-first: no codebook of typed NOTE / SHOVEL / CLEAR / FOCUS as the way to work.
+The save format is a versioned JSON document (`localStorage` key `vault:doc`) with rolling snapshots and file Export/Import. SPECK, the language VAULT used to run on, is archived in `/speck` and not used. React/DOM is the shell; the model is `src/model`, pure functions with tests. One work graph, two languages: the catalogue is the plain-stem binder; a job is a card in the lane that is its status, opened in a drawer beside the board. FIND searches; it does not create projects or tasks. Pointer-first: no codebook of typed NOTE / SHOVEL / CLEAR / FOCUS as the way to work.
 
 ## Operating Context
 
 - Frontend-only SPA (React 19 + Vite). No backend, auth, or API.
-- Persistence: SPECK source string in `localStorage` (`speck-os-v2`).
+- Persistence: JSON in `localStorage` (`vault:doc`), snapshots in `vault:backups` (one per 10 minutes, last 30), an unreadable save is set aside rather than overwritten, the old `speck-os-v2` save migrates once on first load and is left in place. Export/Import to a `.json` file is the real backup. Two open tabs stay in step. Undo/redo for every change (Ctrl+Z / Ctrl+Shift+Z).
 - Desktop field (~1440), fixed-width chrome down to 900px, restacked to one column below that. Not a PWA, not mobile-first. Packaging later may be a boring native envelope; the envelope is not the product.
 - Dev: `npm run dev` on port 5173 (`strictPort`). Lint: oxlint. Tests: `npm test`. Build: `tsc -b` then Vite.
 
@@ -33,12 +33,12 @@ SPECK is the **save format** (graph + dump source in `localStorage` key `speck-o
 
 - Unified graph: `id`, `title`, `body?`, `status` (`pending|rnd|active|done|dusted|none`), `parent`, ordered children, `urgent?`, `loose?`. IDs stay in source, not on cards.
 - Top bar: wordmark, one FIND field (search only, `⌘`/`Ctrl` + `K` focuses it), three filter chips (project / status / priority), one primary action that creates a job. Chips narrow the session; they never rewrite source. There is no second input anywhere in the product.
-- Board: five lanes — PENDING · R&D · ACTIVE · DONE · DUSTED. Each lane head carries a plaque, a count, and a ghost add. A job is a card with an uppercase plaque name, and **the lane it sits in is its status**. All projects show by default; the project chip narrows. A card's one quick action is a hover chevron that shoves it to the next lane along; a lane change **animates**, so which card went where is legible. Backspace / Delete kills the selected non-root node (subtree). Drop a note block onto a card to hitch.
-- Drawer: selecting a job opens a panel at the right edge, **over** the board, so the lanes never reshuffle and the board never leaves the screen. It carries the status plaque, title, parent, `DESCRIPTION`, and `SUBTASKS` with ticks. `[+]` adds a boxed line (never `│ ├── └──`); boxed lines may nest boxed lines. First nested promotes PENDING → ACTIVE. Second click on the title renames. Esc / `[x]` closes. A done subtask keeps full-strength text — the filled tick is the whole signal.
+- Board: five lanes — PENDING · R&D · ACTIVE · DONE · DUSTED. Each lane head carries a plaque, a count, and a ghost add. A job is a card with an uppercase plaque name, and **the lane it sits in is its status**. All projects show by default; the project chip narrows. A card's one quick action is a hover chevron that shoves it to the next lane along; a lane change **animates**, so which card went where is legible. A focused card takes Enter (open), F2 (rename), Delete (delete, with Undo). A card shows its subtask count (`2/5`) and URGENT. Drop a note block onto a card to hitch.
+- Drawer: selecting a job opens a panel at the right edge, **over** the board, so the lanes never reshuffle and the board never leaves the screen. It carries the status plaque, title, parent, `DESCRIPTION`, and `SUBTASKS` with ticks. `[+]` adds a boxed line (never `│ ├── └──`); boxed lines may nest boxed lines. Status is a picker on the plaque; a flag marks urgent; a bin deletes (with Undo). Adding a subtask never moves the card — the lane only changes when you move it. Click the title to rename. Esc / `[x]` closes. A done subtask keeps full-strength text — the filled tick is the whole signal.
 - Pull and dock: drag a boxed line out of the drawer onto a lane to pull a `LOOSE` satellite card (parent unchanged). Drop a satellite, or a boxed line, onto a parent card to **dock back** (drops `LOOSE`, it is a boxed line again). Physics A: moving a card takes nested children; loose satellites stay; slack leashes sag, tighten on drag, settle after the drop.
-- Catalogue (below the board): plain **TUI listing** of the entire graph (ranger/nnn density). Stems `│ ├── └──` and a drawn disclosure chevron. Block highlight behind the live name. First click selects; second click / Enter renames. `ON` (or drag onto a lane) sets status. Space is a silent shortcut. Trailing `_` adds a child. Indent/outdent. Roots stay stems. No boxes, no cards, no drawer chrome in the tree. Stems never appear on a card. A sliver of the catalogue is held on screen at every desktop height.
+- Directory (below the board): plain **TUI listing** of the entire graph (ranger/nnn density), live-linked to the board. Stems `│ ├── └──`, `project/` names, `[x]`/`[ ]` on subtasks, lane on tasks. Click selects and opens the card; double-click / Enter / F2 renames; `+` adds inside (Enter for the next one); Tab / Shift+Tab indent/outdent; Alt+↑↓ reorder; `x` ticks; Delete deletes (undoable); ←→ fold. These keys act only while the tree has focus. Search narrows the tree to matching paths. Roots stay stems. No boxes, no cards, no drawer chrome in the tree. Stems never appear on a card. A sliver of the catalogue is held on screen at every desktop height.
 - Note tape (beside the catalogue): txt notes as blocks; vertical snap-reorder; persist `Doc.notes` order. Pointer `_` adds a note. Hitch stays pointer (`→ TITLE`; `[x]` unhitches). Ghost `_ LINK` / `_ PIC` / `_ FILE` inert. `CLEAR` may remain source recovery in the machine; it is not the way to work.
-- Field typing: native inputs on the live title / body / note / FIND line. TAB cycles title → body → subtask → status. Esc commits the live field then collapses (drawer writes survive Esc).
+- Field typing: native inputs on the live title / body / note / FIND line. Enter and blur save; Esc saves and leaves the field (undo takes it back). Description: Enter is a new line, Ctrl+Enter saves.
 - Responsive: chrome is fixed-width down to 900px; below that the field restacks to one column with equal-height lanes.
 
 **Out (YAGNI / veto):** assignees, teams, presence, estimates, story points, progress bars, avatars, "+ New Deal", KPI rows, CRDT, PWA, a second command **input**, dump-parser dock, DOS `>` dock, `#id` checkbox ledgers, a sit-down verb codebook (typed NOTE / SHOVEL / FOCUS as the way to work), FIND that creates, DateBlocks cards, month-as-OS as home, media blobs, a settings app, harvest amber, cobalt, power red `#E10600`, live orange `#FF5C1A`, a second accent, the tint carrying words, text under 4.5:1, icon fonts / emoji / Unicode glyphs as icons, elevation at rest, gradients / glass / blur / grain / scan, unix stems on a card, boxes in the catalogue, card-in-card, a second radius, 3D knobs, VU KPIs, CRT wells, NEXUS HUD, organ PLACE-drag, salt organs CAL/SEAL/SKULL, GRAIN/SCAN/INV as product chrome, coincident-PLACE fold.
@@ -56,7 +56,7 @@ SPECK is the **save format** (graph + dump source in `localStorage` key `speck-o
 
 ## Evidence on Hand
 
-- Graph + source: `src/speck` (lex / parse / serialize / machine).
+- Model: `src/model` (types, pure doc ops, store, legacy SPECK reader). Tests: `npm test` (model), `npm run e2e` (browser).
 - Shell: `src/shell`. Tokens, geometry and type: `src/index.css`, every value commented with why.
 - Canon: `docs/LANGUAGE.md`, `.cursorrules`, `docs/OVERNIGHT_PROMPT.md`. Shipped visual system, as measured: `DESIGN.md`.
 - The locked comp and its region spec: `.impeccable/mocks/canon-board.webp`, `.impeccable/build/spec.json`.
@@ -66,12 +66,12 @@ SPECK is the **save format** (graph + dump source in `localStorage` key `speck-o
 
 1. One graph. Two languages (the job as card + drawer, the catalogue as plain stems). No duplicate models. Do not share chrome.
 2. Pointer-first. Click-and-type on the card, the drawer, the boxed line, the stem, the note. FIND searches; it does not create work.
-3. SPECK stores the graph. If it cannot be said in SPECK source, it is not in the work — but SPECK is not a reason to ship a REPL or a canvas OS.
+3. The model stores the graph, as JSON, losslessly. Every change is undoable and nothing is written over data that could not be read.
 4. Open the job. Dock back. Shove a lane along, or drag. Create work at the lane's ghost add and the catalogue's `_`, not the FIND line.
 5. Utility with the attitude in the **words**, not the chrome — not a costume cockpit, not a month, not a dump parser.
 
 ## Accessibility & Inclusion
 
-**[inferred]** Keyboard: `⌘`/`Ctrl` + `K` focuses FIND, Esc commit-then-close, arrows move catalogue selection, `[` `]` fold, Tab indent/outdent (catalogue) and title → body → subtask → status (card/drawer), Space stages the selected stem, Enter renames the selected stem, Backspace/Delete kill selected non-root. Native inputs for typing (caret, selection, accessible name). Hit targets on cards, boxed lines, stems, notes, FIND. The card's hover chevron is reachable by keyboard and names its destination lane.
+Keyboard: `Ctrl` + `K` focuses search; `Ctrl` + `Z` / `Ctrl` + `Shift` + `Z` undo/redo anywhere outside a text field; Esc closes the draft, edit or drawer. Everything else is scoped to the focused card or the focused directory tree — no global single-key shortcut changes data. Native inputs for typing. The card's hover chevron is reachable by keyboard and names its destination lane.
 
 Contrast is a floor, not a preference: **a word holds 4.5:1 and a meaningful mark holds 3:1**, on both the ground and the surface. The marks-only tint is never allowed to carry text. Motion respects `prefers-reduced-motion` by holding every duration to zero, so a lane change arrives instantly rather than not at all.

@@ -14,7 +14,7 @@ If a thing cannot be said in this language, it is not in the work.
 
 Before you add a feature, a colour, a font, a panel, a motion, a word:
 
-1. Can it be said in **SPECK source**? (see §7)
+1. Can it be stored in **the model** without loss, and undone? (see §7)
 2. Does it live on **the light field, one ink ramp, one blue accent, one danger red** — and nowhere else?
 3. Is it the **category standard played straight**, or is it a costume smuggled in as personality?
 4. Would Jake almost throw up? (DateBlocks, month-as-OS, a verb codebook, a dump-parser REPL, a second input, assignees and teams)
@@ -108,9 +108,9 @@ One field. Not a dashboard, not stacked billboards, not three apps in a trenchco
 
 The board is the home. It does not become a month, a calendar, a canvas, or a REPL.
 
-**VAULT instance (DOM field + SPECK save format):**
+**VAULT instance (DOM field + JSON model):**
 
-SPECK stores the graph (`NODE`, `NOTE`, status, indent). It is not a Forth/DOS taskmaster, not a paint engine, and not the product personality.
+The model stores the graph (nodes, notes, status, parent). It is not a Forth/DOS taskmaster, not a paint engine, and not the product personality.
 
 1. **One graph.** Every node: `id`, `title`, `body?`, `status` (`pending|rnd|active|done|dusted|none`), `parent`, ordered children, `urgent?`, `loose?`. Projects are roots (`parent` null). IDs live in source, not on the card.
 2. **Top bar** — wordmark, one FIND field, filter chips, one primary action. FIND **searches only**. The chips filter; they do not create. The action creates a job. There is no second input anywhere in the product.
@@ -157,122 +157,23 @@ Motion exists to say **what moved**, and for nothing else.
 
 ## 6. What already works (do not throw away)
 
-The VAULT field is a **React/DOM shell** over a **SPECK graph**. The live program is source. Do not restyle a dashboard kit and call that the OS.
+The VAULT field is a **React/DOM shell** over a **JSON graph model** (`src/model`). Do not restyle a dashboard kit and call that the OS.
 
 - One FIND field (search).
-- Persistence is the SPECK source string (`speck-os-v2` in `localStorage`).
+- Persistence is a versioned JSON document (`vault:doc` in `localStorage`) with snapshots and file export.
 - One graph; a job is a card plus a drawer; the catalogue is the plain tree; the dump tape is notes.
-- SPECK lex / parse / serialize / machine in `src/speck`. Shell in `src/shell`. **`src/speck/machine.ts` behaviour is settled** — a visual pass does not change it.
+- Model (pure ops + store) in `src/model`, with tests. Shell in `src/shell`. A visual pass does not change the model.
 - Tokens, geometry, and type in `src/index.css`, every value commented with why.
 
 **What failed, and stays failed:** DateBlocks; the beige UN seal as the shell; Yjs CRDT as the database; month-as-OS as home; overlay CHIP dossiers; CLIP-as-copy; the cobalt lash; the dump-parser dock; the paper sheet with power-red oval and PLACE-able salt organs; the sit-down verb codebook; unix stems on job cards; the charcoal cassette theatre with VU/CRT costume and orange `#FF5C1A`. Every one of these was shipped once and rejected. Do not revive them, and do not revive them wearing a new name.
 
 ---
 
-## 7. SPECK — the save format
+## 7. Save format
 
-SPECK is a real domain-specific language. It is not a metaphor. It is not a design-token rename.
+VAULT stores its graph as a versioned JSON document in `localStorage` (`vault:doc`), with rolling snapshots and Export/Import to a file. The model is `src/model`: pure functions, tested.
 
-It is **not** a general-purpose language (no Python-from-scratch, no LLVM, no stdlib). Cousins: PostScript, Forth, Logo, teletext, 3270.
-
-On this instance SPECK is the **save format** for the work graph and dump. The field reads and writes source. The user never types SPECK to sit down.
-
-The runtime lives in `src/speck`. It lexes, parses, serializes, and interprets graph edits. The live program is the source string.
-
-### Feature dream rule
-
-A new feature must be **sayable in SPECK**. If you cannot write it as source, it does not belong. Help Jake say it, or refuse the feature.
-
-### 7.1 Source
-
-Line-oriented. Indent (2 spaces) groups a body. Words are Forth-like. Case-insensitive opcodes; payloads keep their case. Comments: `//` or Forth `\` to end of line.
-
-```
-PIPE vault
-  COL pending
-  COL rnd
-  COL active
-  COL done
-  COL dusted
-NEST
-  NODE 1 "site" status none
-    NODE 10 "HOME PAGE" status active
-      NODE 11 "lock type ramp" status active URGENT
-      NODE 13 "still loop" status rnd LOOSE
-        BODY "8s loop, no sting"
-    NODE 30 "REPO" status pending
-  NODE 2 "print" status none
-    NODE 60 "RUN SHEET" status pending
-DUMP
-  NOTE 09.09.26 "type ramp 700 / 400"
-```
-
-**Tokens**
-
-| Form | Example | Meaning |
-| --- | --- | --- |
-| word | `PIPE` `NODE` `SHOVEL` | opcode |
-| string | `"type ramp 700 / 400"` | payload |
-| tape date | `09.09.26` | `MM.DD.YY` on DUMP notes |
-| number | `10` | id |
-
-Empty storage loads the seed program. `CLEAR` restores seed. Seed does **not** include `PLACE`, `GLYPH`, `INV`, `GRAIN`, or `SCAN`.
-
-### 7.2 Nouns (source)
-
-| Noun | Says |
-| --- | --- |
-| `PIPE` | the lane rack (a *view* of the graph) |
-| `COL` | `pending` `rnd` `active` `done` `dusted` |
-| `NEST` | the catalogue tree of the same graph |
-| `NODE` | a graph node: `id`, title, `status`, indent = parent, optional `LOOSE` / `URGENT` |
-| `BODY` | optional body on the current node |
-| `DUMP` | the note tape |
-| `NOTE` | a dump txt line |
-
-Dead as product chrome: `PLACE`, `GLYPH`, `INV`, `GRAIN`, `SCAN`, `SEAL`, `SKULL`, `CAL`, the `DOCK` legend. Legacy `TASK` / `STEM` lines still parse into `NODE`s, and `PLACE` / `GLYPH` / `INV` lines may still parse for old source; none of them are the product.
-
-Lane-drop sets that card's status (nested follow; `LOOSE` stays). Shovel advances a card one lane. Dock-back drops `LOOSE` and reparents onto the target card. In the catalogue, `ON` / Space advances a node, or lifts `none` onto `pending`. FIND highlights matching titles in-session and **does not insert `NODE`s**.
-
-### 7.3 Events
-
-Pointer and keys belong to the shell. The host forwards into the machine.
-
-```
-HIT NODE 13
-HIT ADD 10
-HIT SHOVEL 13
-FIND loop
-```
-
-HIT a card to open its drawer. HIT a title to type in it. HIT `[+]` to nest a boxed line. HIT a lane's ghost add to create a job. Drop a satellite on a parent card to dock. Never three forms. Never a verb bar.
-
-### 7.4 Command field
-
-FIND is **search**. One line, in the top bar. Titles are typed on the card, the drawer, or the row. Work is created by the lane's ghost add and the catalogue's `_`, not here.
-
-- A bare line (or `/query`) highlights matching titles in-session.
-- Pointer `_` on the tape appends a txt note. Hitch is a drop.
-- `CLEAR` may remain source recovery in the machine; FIND submit does not run a codebook.
-- Empty commit is a no-op.
-
-### 7.5 Runtime contract
-
-1. **The program is source.** `localStorage` key `speck-os-v2`. Ignore `speck-os-v1` and `speck-month-v1`.
-2. **The shell is DOM** over parsed source + session. Session: selected node, tree expand, tree focus, `pipeOpen` (the open job), field slot, buffer, echo, find query, dump focus.
-3. **Commits mutate source.** Stage, shovel, and lane-drop rewrite a status. Dock drops `LOOSE`. Editors rewrite title/body/notes. Lane adds and catalogue `_` insert nodes. The tape appends txt. Tape reorder rewrites note order. `CLEAR` restores seed. No worker. No CRDT. No JSON sidecar.
-4. **Filters are session, not source.** A chip narrows what the board shows; it never edits the graph.
-
-### 7.6 What SPECK is not
-
-- Not CSS. Not a general-purpose language.
-- Not a Forth/DOS REPL identity (`SEE` / `WORDS` / `#104` / dump-parser as the product).
-- Not a reason to costume the field as a taskmaster or a canvas OS.
-- Not a reason to add a settings app.
-- Not a second palette, a HUD, or DateBlocks.
-- Not a codebook the user types to sit down.
-
----
+SPECK — the line-based language VAULT used to run on — is archived in `/speck` with its own README. Nothing in the app depends on it.
 
 ## 8. Hard vetoes
 
@@ -350,7 +251,7 @@ Older canon still in force as **warning, not direction**: the Gemini neo-brutal 
 
 ## 10. How to apply this to another project
 
-1. Copy **this file**. Keep the test, the taste stack, the token *jobs*, the grammar, SPECK, the vetoes.
+1. Copy **this file**. Keep the test, the taste stack, the token *jobs*, the grammar, the vetoes.
 2. Copy the ink/tint law, the one-accent law, the two-face type split, and the elevation-once law verbatim. Those are the portable craft rules and they are the reason this world holds up.
 3. Change **world content** only: what the field shows, what FIND searches.
 4. Do not change the substrate into a CRM because "this product is a dashboard." If it cannot live as one graph seen through a board and a tree, with one search field, it is a different language — do not pretend it is this one.
@@ -358,7 +259,7 @@ Older canon still in force as **warning, not direction**: the Gemini neo-brutal 
 6. If you need a third colour, you are already lost. One blue and one danger red are the two signals.
 7. **Playing the standard straight is not permission to be careless.** Measure the geometry, hold the contrast floors, size type by ink width, and make motion explain what moved. A quiet world shows every loose value.
 
-**VAULT-specific content (this repo):** light DOM field; SPECK as save format; one graph; top bar with one FIND and one primary action; five-lane board of cards; right detail drawer with boxed nest; plain-stem catalogue below the fold; dump tape; pull / dock / shovel; persistence `speck-os-v2`. Maker BAD FORM. No assignees. No teams. No second input. No costume.
+**VAULT-specific content (this repo):** light DOM field; JSON model as save format; one graph; top bar with one FIND and one primary action; five-lane board of cards; right detail drawer with boxed nest; plain-stem catalogue below the fold; dump tape; pull / dock / shovel; persistence `vault:doc`. Maker BAD FORM. No assignees. No teams. No second input. No costume.
 
 ---
 

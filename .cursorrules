@@ -1,5 +1,5 @@
 MASTER AESTHETIC & SYSTEM RULES FOR VAULT WORLDWIDE:
-Full language: docs/LANGUAGE.md — portable BAD FORM canon (tokens, vetoes, SPECK save format, take/leave). Obey that file.
+Full language: docs/LANGUAGE.md — portable BAD FORM canon (tokens, vetoes, take/leave). Obey that file.
 Overnight agent brief: docs/OVERNIGHT_PROMPT.md.
 Product truth: PRODUCT.md. Built visual system, as measured: DESIGN.md.
 
@@ -20,12 +20,12 @@ COMPOSITION (desktop field ~1440, one column below 900px; not a PWA, not mobile-
 2. Board: five lanes PENDING · R&D · ACTIVE · DONE · DUSTED. Lane head = plaque + count + ghost add. Card = plaque name, hairline, 8px. A card's one quick action is a hover chevron to the next lane; at rest the board is only cards.
 3. Drawer at the right edge: status plaque, title, parent, DESCRIPTION, SUBTASKS with ticks. `[+]` adds a boxed line. A done subtask keeps full-strength text — the filled tick is the whole signal.
     20|4. Pull a subtask onto a lane for a `LOOSE` satellite; drop a satellite or boxed line on a parent card to **dock back** (drops `LOOSE`). Physics A: card moves, nested follow, loose stay, leash sags and tightens.
-5. Catalogue: stems `│ ├── └──`, drawn disclosure chevron, block behind the live name. First click selects; second click / Enter renames. `_` adds a child. Drag a stem to a lane to set status. Dump tape beside it: txt notes, snap-reorder, drop on a card to hitch.
+5. Catalogue: stems `│ ├── └──`, drawn disclosure chevron, block behind the live name. Click selects (and opens its card); double-click / Enter / F2 renames; `+` adds inside; Tab indents; Del deletes (undoable). Keys act only while the tree has focus. Drag a stem to a lane to set status. Dump tape beside it: txt notes, snap-reorder, drop on a card to hitch.
 6. Fold is cued — a sliver of the catalogue stays on screen, paid out of dead ground, never out of a measured region.
 7. Motion says **what moved**, nothing else: a card changing lane slides, the cards behind it close up, one thing arrives once, and every duration is zero under `prefers-reduced-motion`.
-8. SPECK source is the save format (`speck-os-v2`). Statuses `pending|rnd|active|done|dusted|none`. `LOOSE` marks a pulled satellite. `src/speck/machine.ts` behaviour is settled; a visual pass does not change it.
+8. The save format is a versioned JSON document in localStorage (`vault:doc`), with rolling snapshots (`vault:backups`) and Export/Import to a file. The model lives in `src/model` as pure functions with tests; a visual pass does not change it. Statuses `pending|rnd|active|done|dusted|none`. `loose` marks a pulled satellite. SPECK is archived in `/speck` and is not used by the app.
 
-HARD VETO — product: assignees, avatars, teams, presence, estimates, story points, progress bars, "+ New Deal", KPI rows; a second command input, verb bar, operator slab, dump-parser dock; FIND that creates; a typed codebook to sit down; month-as-OS as home; DateBlocks; CRDT; JSON-as-database; settings app; demo fluff (`BUY MILK`, lorem).
+HARD VETO — product: assignees, avatars, teams, presence, estimates, story points, progress bars, "+ New Deal", KPI rows; a second command input, verb bar, operator slab, dump-parser dock; FIND that creates; a typed codebook to sit down; global single-key shortcuts that change data (Space/Tab/Backspace outside a focused tree or card); month-as-OS as home; DateBlocks; CRDT; a server database; settings app; demo fluff (`BUY MILK`, lorem).
 HARD VETO — surface: unix stems on a card; boxes or cards in the catalogue; card-in-card; a second radius; shadows doing a border's job; elevation at rest; gradients/glass/blur/grain/scan/watermarks; a second accent or rainbow status chips; the tint carrying words; text under 4.5:1; icon fonts, emoji, Unicode glyph icons; section billboards, kickers, letterspaced body; Oswald-as-work-type; VT323/Orbitron; green-on-black or amber terminals.
 DEAD WORLDS, each shipped once and rejected — do not revive, and do not revive them renamed: paper sheet + organ windows + power-red oval + salt organs (CAL/SEAL/SKULL) + PLACE-drag + GRAIN/SCAN/INV rail; charcoal cassette theatre (housing, jacks, RECORD, transport, VU, CRT wells, Oswald, orange); beige/cream hi-fi faceplate; beige UN seal; NEXUS HUD; paper/black IMP canvas; BLACK LANTERN as maker; sit-down verb codebook.
 NOTE THE REVERSAL: the old "SaaS kanban chrome" veto is lifted **for the look and only the look** — lanes, cards, chips and a drawer are the world now. The SaaS *stack* above stays vetoed. Take the composition; refuse the org chart.

@@ -1,110 +1,113 @@
-import { type KeyboardEvent } from 'react'
-import { folderOf, laneOf, nestedOf, type Doc, type GraphNode } from '../speck/doc'
-import type { Session } from '../speck/ir'
-import { LANE_PLAQUE, type NodeStatus } from '../speck/tokens'
-import { Check, Cross, Folder, Plus } from './Glyph'
+import { useState } from 'react'
+import { laneOf, projectOf, subtasksOf } from '../model/doc'
+import { LANES, LANE_LABEL, type Doc, type Lane, type Node } from '../model/types'
+import { Caret, Check, Cross, Flag, Folder, Plus, Trash } from './Glyph'
+import { InlineEdit } from './InlineEdit'
+import { Mark } from './Mark'
+import type { Draft, Editing } from './Studio'
 import type { JobDrag } from './useJobDrag'
 
 type DrawerProps = {
   doc: Doc
-  session: Session
-  node: GraphNode
-  /** The same gesture the board uses, so a subtask can be pulled onto a lane. */
+  query: string
+  selectedId: number | null
+  editing: Editing | null
+  draft: Draft | null
+  node: Node
   drag: JobDrag
   onClose: () => void
-  onShovel: (id: number) => void
-  onRename: (id: number) => void
-  onEditBody: (id: number) => void
-  onAddNested: (parentId: number) => void
-  onSetStatus: (id: number, status: NodeStatus) => void
-  /** Narrows the board to the folder this job hangs under. */
-  onOpenFolder: (projectId: number) => void
-  onTitle: (value: string) => void
-  onTitleCommit: () => void
-  onFieldBlur: (id: number, slot: 'title' | 'body' | 'subtask' | 'status') => void
+  onSetLane: (lane: Lane) => void
+  onToggleUrgent: () => void
+  onDelete: () => void
+  onEdit: (id: number, field: 'title' | 'body') => void
+  onRename: (id: number, title: string) => void
+  onBody: (body: string) => void
+  onToggleDone: (id: number) => void
+  onDeleteLine: (id: number) => void
+  onStartLine: () => void
+  /** `keepGoing` after Enter, so a list of subtasks can be typed one after another. */
+  onLineCommit: (title: string, keepGoing: boolean) => void
+  onOpenProject: (projectId: number) => void
 }
 
 export function Drawer({
   doc,
-  session,
+  query,
+  editing,
+  draft,
   node,
   drag,
   onClose,
-  onShovel,
+  onSetLane,
+  onToggleUrgent,
+  onDelete,
+  onEdit,
   onRename,
-  onEditBody,
-  onAddNested,
-  onSetStatus,
-  onOpenFolder,
-  onTitle,
-  onTitleCommit,
-  onFieldBlur,
+  onBody,
+  onToggleDone,
+  onDeleteLine,
+  onStartLine,
+  onLineCommit,
+  onOpenProject,
 }: DrawerProps) {
   const lane = laneOf(node.status)
-  const folder = folderOf(doc, node.id)
-  const nested = nestedOf(doc, node.id)
-  const editingTitle = session.field?.id === node.id && session.field.slot === 'title'
-  const editingBody = session.field?.id === node.id && session.field.slot === 'body'
-  const addingSubtask = session.field?.id === node.id && session.field.slot === 'subtask'
-  const paragraphs = (node.body ?? '').split('\n').filter((p) => p.trim())
-
-  function onFieldKey(e: KeyboardEvent<HTMLElement>) {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault()
-      onTitleCommit()
-    }
-  }
+  const project = projectOf(doc, node.id)
+  const lines = subtasksOf(doc, node.id)
+  const editingTitle = editing?.id === node.id && editing.field === 'title' && editing.where === 'drawer'
+  const editingBody = editing?.id === node.id && editing.field === 'body'
+  const drafting = draft?.where === 'drawer' && draft.parent === node.id
+  // A fresh key per committed line resets the input, so Enter goes straight on to the next one.
+  const [lineKey, setLineKey] = useState(0)
+  const paragraphs = (node.body ?? '').split('\n')
 
   return (
-    <aside className="drawer" data-testid="folio" aria-label="Job detail">
+    <aside className="drawer" data-testid="drawer" aria-label="Task detail">
       <div className="drawer-top">
-        <button
-          type="button"
-          className={`drawer-status is-${lane}`}
-          data-testid="drawer-status"
-          aria-label={`Status ${LANE_PLAQUE[lane]}, advance`}
-          onClick={() => onShovel(node.id)}
-        >
+        <label className={`drawer-status is-${lane}`}>
           <span className="drawer-dot" aria-hidden="true" />
-          {LANE_PLAQUE[lane]}
-        </button>
-        <button
-          type="button"
-          className="drawer-close"
-          data-testid="folio-close"
-          aria-label="Close job detail"
-          onClick={onClose}
-        >
-          <Cross />
-        </button>
+          {LANE_LABEL[lane]}
+          <Caret className="drawer-status-caret" />
+          <select aria-label="Status" data-testid="drawer-status" value={lane} onChange={(e) => onSetLane(e.target.value as Lane)}>
+            {LANES.map((l) => (
+              <option key={l} value={l}>
+                {LANE_LABEL[l]}
+              </option>
+            ))}
+          </select>
+        </label>
+        <div className="drawer-tools">
+          <button
+            type="button"
+            className={`drawer-tool${node.urgent ? ' is-on' : ''}`}
+            aria-pressed={Boolean(node.urgent)}
+            aria-label={node.urgent ? 'Unmark urgent' : 'Mark urgent'}
+            title={node.urgent ? 'Unmark urgent' : 'Mark urgent'}
+            data-testid="drawer-urgent"
+            onClick={onToggleUrgent}
+          >
+            <Flag />
+          </button>
+          <button type="button" className="drawer-tool" aria-label="Delete task" title="Delete task" data-testid="drawer-delete" onClick={onDelete}>
+            <Trash />
+          </button>
+          <button type="button" className="drawer-tool" aria-label="Close task detail" title="Close (Esc)" data-testid="drawer-close" onClick={onClose}>
+            <Cross />
+          </button>
+        </div>
       </div>
 
       {editingTitle ? (
-        <input
-          className="drawer-title-input"
-          value={session.fieldBuffer}
-          autoFocus
-          aria-label="Job title"
-          placeholder="_"
-          onChange={(e) => onTitle(e.target.value)}
-          onBlur={() => onFieldBlur(node.id, 'title')}
-          onKeyDown={onFieldKey}
-        />
+        <InlineEdit className="drawer-title-input" value={node.title} ariaLabel="Task title" onCommit={(v) => onRename(node.id, v)} />
       ) : (
-        <h1 className="drawer-title" data-title onClick={() => onRename(node.id)}>
-          {node.title.trim() || '_'}
+        <h1 className="drawer-title" data-title onClick={() => onEdit(node.id, 'title')}>
+          <Mark text={node.title.trim() || '_'} query={query} />
         </h1>
       )}
 
-      {folder ? (
-        <button
-          type="button"
-          className="drawer-folder"
-          aria-label={`Show only ${folder.title}`}
-          onClick={() => onOpenFolder(folder.id)}
-        >
+      {project && project.id !== node.id ? (
+        <button type="button" className="drawer-folder" aria-label={`Show only ${project.title}`} onClick={() => onOpenProject(project.id)}>
           <Folder />
-          {folder.title.trim() || '_'}
+          {project.title.trim() || '_'}
         </button>
       ) : null}
 
@@ -112,32 +115,38 @@ export function Drawer({
 
       <h2 className="drawer-label">Description</h2>
       {editingBody ? (
-        <textarea
+        <InlineEdit
           className="drawer-body-input"
-          data-testid={`body-${node.id}`}
-          value={session.fieldBuffer}
-          autoFocus
+          value={node.body ?? ''}
+          ariaLabel="Description"
+          placeholder="Add a description"
+          multiline
           rows={6}
-          aria-label="Description"
-          placeholder="_"
-          onChange={(e) => onTitle(e.target.value)}
-          onBlur={() => onFieldBlur(node.id, 'body')}
+          testId="drawer-body-input"
+          onCommit={(v) => onBody(v)}
         />
       ) : (
-        <div className="drawer-body" data-testid={`body-${node.id}`} onClick={() => onEditBody(node.id)}>
-          {paragraphs.length ? (
-            paragraphs.map((line, i) => <p key={i}>{line}</p>)
+        <div className="drawer-body" data-testid="drawer-body" onClick={() => onEdit(node.id, 'body')}>
+          {node.body ? (
+            paragraphs.map((line, i) => (line.trim() ? <p key={i}><Mark text={line} query={query} /></p> : <p key={i} className="drawer-body-gap" />))
           ) : (
             <p className="drawer-body-empty">Add a description</p>
           )}
         </div>
       )}
 
-      <h2 className="drawer-label">Subtasks</h2>
+      <h2 className="drawer-label">
+        Subtasks
+        {lines.length ? (
+          <span className="drawer-label-count">
+            {lines.filter((l) => l.status === 'done').length}/{lines.length}
+          </span>
+        ) : null}
+      </h2>
       <ul className="subtasks">
-        {nested.map((child) => {
+        {lines.map((child) => {
           const done = child.status === 'done'
-          const editing = session.field?.id === child.id && session.field.slot === 'title'
+          const editingLine = editing?.id === child.id && editing.where === 'drawer'
           return (
             <li
               key={child.id}
@@ -151,53 +160,45 @@ export function Drawer({
               <button
                 type="button"
                 className="subtask-tick"
-                data-testid={`subtask-tick-${child.id}`}
                 aria-label={done ? `Reopen ${child.title}` : `Complete ${child.title}`}
                 aria-pressed={done}
-                onClick={() => onSetStatus(child.id, done ? 'pending' : 'done')}
+                onClick={() => onToggleDone(child.id)}
               >
                 <Check />
               </button>
-              {editing ? (
-                <input
-                  className="subtask-input"
-                  value={session.fieldBuffer}
-                  autoFocus
-                  aria-label="Subtask title"
-                  placeholder="_"
-                  onChange={(e) => onTitle(e.target.value)}
-                  onBlur={() => onFieldBlur(child.id, 'title')}
-                  onKeyDown={onFieldKey}
-                />
+              {editingLine ? (
+                <InlineEdit className="subtask-input" value={child.title} ariaLabel="Subtask title" onCommit={(v) => onRename(child.id, v)} />
               ) : (
-                <span className="subtask-name">{child.title.trim() || '_'}</span>
+                <span className="subtask-name">
+                  <Mark text={child.title.trim() || '_'} query={query} />
+                </span>
               )}
+              <button type="button" className="subtask-delete" aria-label={`Delete ${child.title}`} onClick={() => onDeleteLine(child.id)}>
+                <Cross />
+              </button>
             </li>
           )
         })}
-        <li className="subtask">
-          {addingSubtask ? (
+        <li className="subtask is-add">
+          {drafting ? (
             <>
-              <span className="subtask-add-glyph" aria-hidden="true" />
-              <input
+              <Plus className="subtask-add-glyph" />
+              <InlineEdit
+                key={lineKey}
                 className="subtask-input"
-                data-testid={`nest-add-${node.id}`}
-                value={session.fieldBuffer}
-                autoFocus
-                aria-label="New subtask"
-                placeholder="_"
-                onChange={(e) => onTitle(e.target.value)}
-                onBlur={() => onFieldBlur(node.id, 'subtask')}
-                onKeyDown={onFieldKey}
+                value=""
+                ariaLabel="New subtask"
+                placeholder="Subtask, then Enter for the next"
+                testId={`new-subtask-${node.id}`}
+                onCommit={(v, how) => {
+                  const keepGoing = how === 'enter' && v.trim() !== ''
+                  onLineCommit(v, keepGoing)
+                  if (keepGoing) setLineKey((k) => k + 1)
+                }}
               />
             </>
           ) : (
-            <button
-              type="button"
-              className="subtask-add"
-              data-testid={`nest-add-${node.id}`}
-              onClick={() => onAddNested(node.id)}
-            >
+            <button type="button" className="subtask-add" data-testid={`add-subtask-${node.id}`} onClick={onStartLine}>
               <Plus className="subtask-add-glyph" />
               Add subtask
             </button>

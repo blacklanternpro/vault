@@ -2,11 +2,11 @@
 
 **The costume era is over.** The visual world is the **category standard played straight** — a light field, one blue accent, hairlines, lanes of cards, a right detail drawer. It was chosen in an attended decision round, against four costumed alternatives, by a user who took the plain door on purpose. Do not re-roll a world. Do not put a costume back on.
 
-**Dead as home and dead as direction:** month-as-OS, DateBlocks, the charcoal cassette theatre, the paper/IMP canvas with salt organs, harvest amber, cobalt, power red, live orange, the dump-parser dock, DOS `#id` ledgers, the sit-down verb codebook. Keep **SPECK** as the save format (graph + dump source), not a Forth REPL and not a paint compositor identity. Persistence is SPECK source (`speck-os-v2`), not a task CRDT, not JSON-as-database.
+**Dead as home and dead as direction:** month-as-OS, DateBlocks, the charcoal cassette theatre, the paper/IMP canvas with salt organs, harvest amber, cobalt, power red, live orange, the dump-parser dock, DOS `#id` ledgers, the sit-down verb codebook. SPECK is archived in `/speck` and not used. Persistence is the JSON model in `src/model` (`vault:doc`, snapshots, export/import), not a task CRDT and not a server.
 
 Maker is **BAD FORM**. BLACK LANTERN is dead. Product stays **VAULT WORLDWIDE**.
 
-This is a **later-run** brief. The language is written. Graph ops live in `src/speck`. The shell lives in `src/shell`. Do not ignore `docs/LANGUAGE.md` — it is canon. Product truth: `PRODUCT.md`. Measured values as shipped: `DESIGN.md`.
+This is a **later-run** brief. The language is written. Graph ops live in `src/model` (pure, tested). The shell lives in `src/shell`. Do not ignore `docs/LANGUAGE.md` — it is canon. Product truth: `PRODUCT.md`. Measured values as shipped: `DESIGN.md`.
 
 Read this whole file. Then read `docs/LANGUAGE.md`. Then read `.cursorrules`. Then look at the current shell. Then go.
 
@@ -36,10 +36,10 @@ Jake / BAD FORM. Personal OS. Not a store product. Not a SaaS. Local-first, no c
 
 ## Canon (read in this order)
 
-1. **`docs/LANGUAGE.md`** — the grand language. Tokens, grammar, motion law, vetoes, SPECK save format. **Primary.**
+1. **`docs/LANGUAGE.md`** — the grand language. Tokens, grammar, motion law, vetoes, save format. **Primary.**
 2. **`.cursorrules`** — short law. Obey it. It points here.
 3. **`DESIGN.md`** — the shipped visual system, measured off the approved comp. Values live here; *rules* live in LANGUAGE.md.
-4. **Current shell** — `src/App.tsx` hosts `<Studio />`. Runtime graph is `src/speck`. Layout is top bar / board / drawer, then catalogue + dump tape below the fold.
+4. **Current shell** — `src/App.tsx` hosts `<Studio />`. Graph model is `src/model`. Layout is top bar / board / drawer, then catalogue + dump tape below the fold.
 5. **History** — every rejected pass, kept as warning, not direction: Gemini neo-brutal TUI; PRs #8–#11 (fried TUI → burn the box); PR #7 DateBlocks; PR #14 month field (a recovery, not home); the paper/IMP canvas; the charcoal cassette theatre; PR #25 paste-up mechanical (parked, unmerged, nothing carried over).
 6. **The locked world** — light field, one blue accent, hairlines, 8px radius, one UI sans on work and one condensed face on plaques. Lanes of cards. Right drawer. Plain-stem catalogue. No costume.
 
@@ -92,14 +92,14 @@ Full list: `docs/LANGUAGE.md` §8.
 
 ## What already works (keep)
 
-- SPECK graph in `src/speck` (lex / parse / serialize / machine). **`machine.ts` behaviour is settled — a visual pass does not touch it.**
+- Graph model in `src/model` (types / doc ops / store). **A visual pass does not touch it; run `npm test` and `npm run e2e`.**
 - One graph; board cards + drawer + catalogue tree + dump tape
 - The open job via `session.pipeOpen`; dock via `dockCard` (drops `LOOSE`); shovel advances a lane
-- Source as program (`speck-os-v2`)
+- Lossless JSON save (`vault:doc`) with undo, snapshots and export
 - Shell in `src/shell`; tokens, geometry and type in `src/index.css`, every value commented with why
 - `useBoardFlip.ts` — the lane-change slide. `Filament.tsx` — the slack leash. Both zeroed under reduced motion.
 
-Do not throw SPECK away. Do not rebuild a dump-parser. Do not make the month the OS. Do not restore the canvas field. Do not mix the two languages.
+Do not rebuild a dump-parser. Do not make the month the OS. Do not restore the canvas field. Do not mix the two languages.
 
 ---
 
@@ -127,7 +127,7 @@ Propose and make bold changes **inside the language**.
 
 Do not propose a new palette. Do not propose a new world. Do not revive DateBlocks, the cassette, the paper canvas, or the NEXUS HUD with VAULT stamped on it. Do not put stems on a card. Do not box the catalogue. Do not add a second input.
 
-New features must be SPECK-sayable as source.
+New features must be storable in the model without loss, undoable, and covered by a test.
 
 When in doubt: light field, one blue on the live thing, plaque caps on names, hairlines not shadows, boxed nest on the job, stems in the catalogue, one FIND, empty is `_`, and measure before you ship a number.
 

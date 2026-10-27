@@ -1,60 +1,67 @@
-import { useRef, type KeyboardEvent, type PointerEvent } from 'react'
-import { byId, type Doc } from '../speck/doc'
-import type { Session } from '../speck/ir'
+import { useEffect, useLayoutEffect, useRef, type PointerEvent } from 'react'
+import { byId } from '../model/doc'
+import type { Doc } from '../model/types'
 import { Plus } from './Glyph'
 
 const THRESH = 6
 
 type ScratchProps = {
   doc: Doc
-  session: Session
-  onAddNote: () => void
-  onNoteFocus: (index: number) => void
-  onNoteEdit: (index: number, text: string) => void
+  /** A note that was just created and wants the caret. */
+  focusNote: string | null
+  onFocused: () => void
+  onAdd: () => void
+  /** `session` names one stay in a note, so everything typed in it undoes as one step. */
+  onEdit: (id: string, text: string, session: string) => void
+  /** `hadText` is false for a note that was opened and left empty, which goes quietly. */
+  onRemove: (id: string, hadText: boolean, session: string) => void
   onReorder: (from: number, to: number) => void
-  onHitch: (index: number, nodeId: number) => void
-  onUnhitch: (index: number) => void
+  onHitch: (id: string, nodeId: number | null) => void
 }
 
-type Drag = {
-  from: number
-  startY: number
-  live: boolean
-  height: number
-}
+type Drag = { id: string; from: number; startY: number; live: boolean; height: number }
 
-export function Scratch({
-  doc,
-  session,
-  onAddNote,
-  onNoteFocus,
-  onNoteEdit,
-  onReorder,
-  onHitch,
-  onUnhitch,
-}: ScratchProps) {
+/**
+ * The dump: loose text notes. Each one is a plain textarea that keeps whatever
+ * you type, newlines and all. A note left empty is removed when you leave it.
+ * Drag a note to reorder it, or drop it on a card or a directory row to hitch it there.
+ */
+export function Scratch({ doc, focusNote, onFocused, onAdd, onEdit, onRemove, onReorder, onHitch }: ScratchProps) {
   const dragRef = useRef<Drag | null>(null)
   const listRef = useRef<HTMLDivElement>(null)
-  const noteIndex = session.selected?.kind === 'NOTE' ? session.selected.index : -1
+  /** What each note said when it was entered, so leaving it empty can tell "cleared" from "never written". */
+  const startText = useRef(new Map<string, string>())
+  const session = useRef(new Map<string, string>())
+  const sessionOf = (id: string) => session.current.get(id) ?? id
+
+  // Each note is as tall as its text, wrapped lines included.
+  useLayoutEffect(() => {
+    listRef.current?.querySelectorAll<HTMLTextAreaElement>('.note-text').forEach((el) => {
+      el.style.height = 'auto'
+      el.style.height = `${el.scrollHeight}px`
+    })
+  }, [doc.notes])
+
+  useEffect(() => {
+    if (!focusNote) return
+    const el = listRef.current?.querySelector<HTMLTextAreaElement>(`[data-note-id="${focusNote}"] textarea`)
+    el?.focus()
+    onFocused()
+  }, [focusNote, onFocused])
 
   function snapTo(clientY: number, from: number): number {
-    const list = listRef.current
-    if (!list) return from
-    const blocks = [...list.querySelectorAll('[data-note-index]')]
-    if (blocks.length === 0) return 0
+    const blocks = [...(listRef.current?.querySelectorAll('[data-note-id]') ?? [])]
     for (let i = 0; i < blocks.length; i++) {
       const r = blocks[i].getBoundingClientRect()
       if (clientY < r.top + r.height / 2) return i
     }
-    return blocks.length - 1
+    return blocks.length ? blocks.length - 1 : from
   }
 
-  function onDown(e: PointerEvent<HTMLElement>, index: number) {
-    if (e.button !== 0) return
-    if ((e.target as HTMLElement).closest('textarea, button')) return
+  function onDown(e: PointerEvent<HTMLElement>, id: string, index: number) {
+    if (e.button !== 0 || (e.target as HTMLElement).closest('textarea, button')) return
     e.currentTarget.setPointerCapture(e.pointerId)
-    const r = e.currentTarget.getBoundingClientRect()
-    dragRef.current = { from: index, startY: e.clientY, live: false, height: r.height }
+    dragRef.current = { id, from: index, startY: e.clientY, live: false, height: e.currentTarget.getBoundingClientRect().height }
   }
 
   function onMove(e: PointerEvent<HTMLElement>) {
@@ -62,97 +69,86 @@ export function Scratch({
     if (!drag) return
     if (!drag.live && Math.abs(e.clientY - drag.startY) < THRESH) return
     drag.live = true
-    const list = listRef.current
-    if (!list) return
     const to = snapTo(e.clientY, drag.from)
-    list.querySelectorAll('[data-note-index]').forEach((el, i) => {
-      const node = el as HTMLElement
+    listRef.current?.querySelectorAll<HTMLElement>('[data-note-id]').forEach((el, i) => {
       if (i === drag.from) {
-        node.style.transform = `translateY(${e.clientY - drag.startY}px)`
-        node.style.zIndex = '5'
-        node.style.opacity = '0.92'
+        el.style.transform = `translateY(${e.clientY - drag.startY}px)`
+        el.style.zIndex = '5'
+        el.style.opacity = '0.92'
         return
       }
       let shift = 0
       if (drag.from < to && i > drag.from && i <= to) shift = -drag.height - 2
       if (drag.from > to && i >= to && i < drag.from) shift = drag.height + 2
-      node.style.transform = shift ? `translateY(${shift}px)` : ''
+      el.style.transform = shift ? `translateY(${shift}px)` : ''
     })
   }
 
-  /** A note dropped on a job leashes to it; dropped on empty tape it comes loose. */
-  function hitchAt(clientX: number, clientY: number, skip: HTMLElement): number | 'unhitch' | null {
+  function hitchAt(x: number, y: number, skip: HTMLElement): number | 'unhitch' | null {
     skip.style.pointerEvents = 'none'
-    const node = document.elementFromPoint(clientX, clientY)
+    const el = document.elementFromPoint(x, y)
     skip.style.pointerEvents = ''
-    if (!(node instanceof Element)) return null
-    if (node.closest('[data-unhitch]')) return 'unhitch'
-    const job = node.closest('[data-card-id], [data-node-id]')
-    if (job) {
-      const id = Number(job.getAttribute('data-card-id') || job.getAttribute('data-node-id'))
+    if (!(el instanceof Element)) return null
+    const target = el.closest('[data-card-id], [data-node-id]')
+    if (target) {
+      const id = Number(target.getAttribute('data-card-id') ?? target.getAttribute('data-node-id'))
       if (Number.isFinite(id)) return id
     }
-    if (node.closest('.notes') && !node.closest('[data-note-index]')) return 'unhitch'
+    if (el.closest('.notes') && !el.closest('[data-note-id]')) return 'unhitch'
     return null
   }
 
-  function onUp(e: PointerEvent<HTMLElement>, index: number) {
+  function onUp(e: PointerEvent<HTMLElement>) {
     const drag = dragRef.current
     dragRef.current = null
-    const block = e.currentTarget
-    listRef.current?.querySelectorAll('[data-note-index]').forEach((el) => {
-      const node = el as HTMLElement
-      node.style.transform = ''
-      node.style.zIndex = ''
-      node.style.opacity = ''
+    listRef.current?.querySelectorAll<HTMLElement>('[data-note-id]').forEach((el) => {
+      el.style.transform = ''
+      el.style.zIndex = ''
+      el.style.opacity = ''
     })
-    if (!drag) return
-    if (!drag.live) {
-      onNoteFocus(index)
-      return
-    }
-    const hitch = hitchAt(e.clientX, e.clientY, block)
-    if (hitch === 'unhitch') {
-      onUnhitch(index)
-      return
-    }
-    if (typeof hitch === 'number') {
-      onHitch(index, hitch)
-      return
-    }
+    if (!drag?.live) return
+    const hitch = hitchAt(e.clientX, e.clientY, e.currentTarget)
+    if (hitch === 'unhitch') return onHitch(drag.id, null)
+    if (typeof hitch === 'number') return onHitch(drag.id, hitch)
     const to = snapTo(e.clientY, drag.from)
     if (to !== drag.from) onReorder(drag.from, to)
   }
 
   return (
-    <section className="dump" data-testid="scratch" aria-label="Dump">
+    <section className="dump" data-testid="dump" aria-label="Dump">
       <div className="section-head">
         <h2 className="section-name">Dump</h2>
-        <span className="section-note">
-          {doc.notes.length === 1 ? '1 note' : `${doc.notes.length} notes`}
-        </span>
+        <span className="section-note">{doc.notes.length === 1 ? '1 note' : `${doc.notes.length} notes`}</span>
       </div>
 
       <div className="notes" ref={listRef}>
         {doc.notes.map((note, index) => (
           <article
-            key={`${note.date}-${index}`}
-            className={`note${noteIndex === index ? ' is-live' : ''}`}
-            data-note-index={index}
-            onPointerDown={(e) => onDown(e, index)}
+            key={note.id}
+            className="note"
+            data-note-id={note.id}
+            onPointerDown={(e) => onDown(e, note.id, index)}
             onPointerMove={onMove}
-            onPointerUp={(e) => onUp(e, index)}
-            onPointerCancel={(e) => onUp(e, index)}
+            onPointerUp={onUp}
+            onPointerCancel={onUp}
           >
             <p className="note-date">{note.date || '—'}</p>
             <textarea
               className="note-text"
               value={note.text}
-              rows={Math.max(1, Math.min(8, note.text.split('\n').length))}
+              rows={Math.max(1, Math.min(10, note.text.split('\n').length))}
               aria-label="Note"
-              onChange={(e) => onNoteEdit(index, e.target.value)}
-              onFocus={() => onNoteFocus(index)}
-              onKeyDown={(e: KeyboardEvent<HTMLTextAreaElement>) => {
+              placeholder="_"
+              onFocus={() => {
+                startText.current.set(note.id, note.text)
+                session.current.set(note.id, `${note.id}:${Date.now()}`)
+              }}
+              onChange={(e) => onEdit(note.id, e.target.value, sessionOf(note.id))}
+              onBlur={(e) => {
+                if (e.target.value.trim()) return
+                onRemove(note.id, Boolean(startText.current.get(note.id)?.trim()), sessionOf(note.id))
+              }}
+              onKeyDown={(e) => {
                 if (e.key === 'Escape') (e.target as HTMLTextAreaElement).blur()
               }}
             />
@@ -160,20 +156,19 @@ export function Scratch({
               <button
                 type="button"
                 className="note-leash"
-                data-unhitch
-                data-testid={`hitch-plaque-${index}`}
-                aria-label="Unleash note"
+                aria-label="Unhitch note"
+                title="Unhitch"
                 onPointerDown={(e) => e.stopPropagation()}
-                onClick={() => onUnhitch(index)}
+                onClick={() => onHitch(note.id, null)}
               >
-                leashed to {byId(doc, note.node)?.title.trim() || '_'}
+                → {byId(doc, note.node)?.title.trim() || '_'}
               </button>
             ) : null}
           </article>
         ))}
       </div>
 
-      <button type="button" className="dump-add" data-testid="scratch-add" onClick={onAddNote}>
+      <button type="button" className="dump-add" data-testid="new-note" onClick={onAdd}>
         <Plus className="dump-add-glyph" />
         New note
       </button>

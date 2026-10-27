@@ -57,8 +57,6 @@
   --lane-gap: 10px;
   --drawer-width: 286px;
 
-  /* How much of the catalogue below the board is held above the fold. */
-  --fold-cue: 24px;
 }
 
 @layer base {
@@ -128,28 +126,16 @@
   background-color: var(--color-ground);
 }
 
-.field {
-  display: grid;
-  /*
-   * The column is bounded, or the board's own scrollable width becomes the
-   * grid's width and everything beside it stretches to match.
-   */
-  grid-template-columns: minmax(0, 1fr);
-  grid-template-rows: auto minmax(0, 1fr);
-  /*
-   * A screen less a sliver, not a screen. The board wants the whole viewport and
-   * the comp gives it one, but a field cut exactly at the fold is a field that
-   * looks like it ends there — so the catalogue's own top edge is held on screen
-   * at every desktop height, and the sliver is what says the field carries on.
-   */
-  height: calc(100vh - var(--fold-cue));
-}
 
 /* ----------------------------------------------------------------- topbar */
 
 .topbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
   display: flex;
   align-items: center;
+  gap: 0;
   height: 69px;
   padding: 0 20px 0 16px;
   background-color: var(--color-surface);
@@ -350,25 +336,21 @@
   grid-auto-flow: column;
   grid-auto-columns: var(--lane-width);
   gap: var(--lane-gap);
-  align-items: start;
-  height: 100%;
-  min-height: 0;
   /*
-   * The comp leaves 39px of bare ground under the lanes, and the fold cue is
-   * spent out of that rather than out of the lanes: the sliver of the catalogue
-   * takes the place of dead field, so the lane still ends exactly where the comp
-   * ends it and the page still says there is more of it.
+   * Lanes are as tall as the fullest one and no taller, so an emptyish board
+   * does not push the directory a screen down. The floor keeps a near-empty
+   * board a board rather than a strip of headers.
    */
-  padding: 21px 16px calc(39px - var(--fold-cue));
+  align-items: stretch;
+  padding: 21px 16px 16px;
   overflow-x: auto;
-  overflow-y: hidden;
+  overflow-y: visible;
 }
 
 .lane {
   display: flex;
   flex-direction: column;
-  height: 100%;
-  min-height: 0;
+  min-height: 260px;
   background-color: var(--color-surface);
   border: 1px solid var(--color-line);
   border-radius: var(--radius-slab);
@@ -404,9 +386,7 @@
   flex-direction: column;
   gap: 15px;
   flex: 1 1 auto;
-  min-height: 0;
   padding: 0 10px 10px;
-  overflow-y: auto;
 }
 
 /* ------------------------------------------------------------------ slabs */
@@ -559,9 +539,6 @@
 }
 
 .slab-flag {
-  position: absolute;
-  top: 12px;
-  right: 12px;
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -725,9 +702,10 @@
  * catalogue starts exactly where the field ends and the drawer paints over it.
  */
 .drawer {
-  position: absolute;
-  inset: 0 0 0 auto;
-  z-index: 10;
+  position: fixed;
+  inset: 69px 0 0 auto;
+  z-index: 15;
+  box-shadow: -12px 0 32px rgb(21 21 21 / 0.06);
   display: flex;
   flex-direction: column;
   width: var(--drawer-width);
@@ -986,12 +964,11 @@
 }
 
 .subtask-add {
-  pointer-events: none;
+  /* Always there: a task with no subtasks has to show how to add one, and touch has no hover. */
   display: flex;
   align-items: center;
   gap: 12px;
   width: 100%;
-  opacity: 0;
   transition: opacity 120ms ease, color 120ms ease;
   padding: 0;
   background: none;
@@ -1151,7 +1128,7 @@
 }
 
 /* A job in the tree is the same plaque as a job on the board, one size down. */
-.stem.is-job .stem-name {
+.stem.is-task .stem-name {
   font-family: var(--font-plaque);
   font-size: 14.5px;
   font-weight: 700;
@@ -1436,9 +1413,6 @@
  * also the only width where the whole field is reachable by scrolling alone.
  */
 @media (max-width: 900px) {
-  .field {
-    height: auto;
-  }
 
   .topbar {
     flex-wrap: wrap;
@@ -1498,17 +1472,558 @@
   }
 
   .drawer {
-    position: static;
+    position: fixed;
+    inset: auto 0 0 0;
+    max-height: 70vh;
     width: auto;
-    margin: 0 14px 14px;
-    border: 1px solid var(--color-line);
-    border-radius: var(--radius-slab);
+    margin: 0;
+    border-top: 1px solid var(--color-line);
+    border-left: 0;
+    border-radius: var(--radius-slab) var(--radius-slab) 0 0;
+    box-shadow: 0 -12px 32px rgb(21 21 21 / 0.12);
   }
 
   .catalogue {
     grid-template-columns: minmax(0, 1fr);
     gap: 14px;
     padding: 0 14px 24px;
+  }
+}
+
+/* ============================================================ hardening pass
+ * Controls added when the shell moved off SPECK: card meta, drafts, the tree's
+ * row tools, the drawer's tools, notices and the overflow menu. They reuse the
+ * tokens above and add no new colour, radius or face.
+ */
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* ------------------------------------------------------------- card meta */
+
+.slab:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.slab-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 8px 0 0;
+}
+
+.slab:has(.slab-tick) .slab-meta {
+  padding-left: 31px;
+}
+
+.slab-progress {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.slab-progress.is-complete {
+  color: var(--color-done);
+}
+
+.slab.is-draft {
+  border-color: var(--color-accent);
+  border-style: dashed;
+}
+
+.slab-project select {
+  max-width: 100%;
+  margin-top: 6px;
+  padding: 2px 4px;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-tick);
+  background-color: var(--color-surface);
+  font-size: 13px;
+  color: var(--color-ink-2);
+}
+
+.lane-void {
+  font-size: 12px;
+  color: var(--color-ink-2);
+  text-align: center;
+}
+
+/* ------------------------------------------------------------- top bar */
+
+.find-clear {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  background: none;
+  border: 0;
+  border-radius: var(--radius-tick);
+  color: var(--color-ink-2);
+}
+
+.find-clear:hover {
+  color: var(--color-ink);
+  background-color: var(--color-ground);
+}
+
+.find-clear svg {
+  width: 13px;
+  height: 13px;
+}
+
+.chip-toggle.is-on {
+  border-color: var(--color-urgent);
+  color: var(--color-urgent);
+  font-weight: 600;
+}
+
+.menu {
+  position: relative;
+  margin-left: 8px;
+}
+
+.menu-button {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-control);
+  color: var(--color-ink-2);
+}
+
+.menu-button:hover,
+.menu-button[aria-expanded='true'] {
+  border-color: var(--color-line-2);
+  color: var(--color-ink);
+}
+
+.menu-button svg {
+  width: 17px;
+  height: 17px;
+}
+
+.menu-list {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  min-width: 250px;
+  padding: 6px;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-control);
+  box-shadow: 0 10px 30px rgb(21 21 21 / 0.12);
+}
+
+.menu-list button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 7px 10px;
+  background: none;
+  border: 0;
+  border-radius: 5px;
+  font-size: 13.5px;
+  text-align: left;
+}
+
+.menu-list button:hover:not(:disabled) {
+  background-color: var(--color-ground);
+}
+
+.menu-list button:disabled {
+  color: var(--color-ink-3);
+  cursor: default;
+}
+
+.menu-list hr {
+  margin: 5px 4px;
+  border: 0;
+  border-top: 1px solid var(--color-line);
+}
+
+.menu-list kbd,
+.menu-meta {
+  font-family: inherit;
+  font-size: 12px;
+  color: var(--color-ink-2);
+}
+
+.menu-label {
+  margin: 4px 10px 2px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-ink-2);
+}
+
+/* -------------------------------------------------------------- notices */
+
+.banners {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 16px 0;
+}
+
+.banner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 12px 10px 16px;
+  background-color: var(--color-accent-wash);
+  border: 1px solid var(--color-accent-line);
+  border-radius: var(--radius-control);
+  font-size: 14px;
+}
+
+.banner span {
+  flex: 1 1 auto;
+}
+
+.banner.is-danger {
+  background-color: var(--color-surface);
+  border-color: var(--color-urgent);
+  color: var(--color-urgent);
+}
+
+.banner-action {
+  flex: none;
+  padding: 5px 10px;
+  background-color: var(--color-urgent);
+  border: 0;
+  border-radius: var(--radius-tick);
+  color: var(--color-accent-ink);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.banner-close,
+.toast-close {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  background: none;
+  border: 0;
+  border-radius: var(--radius-tick);
+  color: inherit;
+  opacity: 0.7;
+}
+
+.banner-close:hover,
+.toast-close:hover {
+  opacity: 1;
+}
+
+.banner-close svg,
+.toast-close svg {
+  width: 13px;
+  height: 13px;
+}
+
+.toasts {
+  position: fixed;
+  left: 50%;
+  bottom: 20px;
+  z-index: 40;
+  transform: translateX(-50%);
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 9px 10px 9px 16px;
+  background-color: var(--color-ink);
+  border-radius: var(--radius-control);
+  box-shadow: 0 10px 30px rgb(21 21 21 / 0.25);
+  color: var(--color-surface);
+  font-size: 14px;
+  animation: line-in 160ms cubic-bezier(0.2, 0.7, 0.3, 1) both;
+}
+
+.toast-action {
+  padding: 4px 9px;
+  background: none;
+  border: 1px solid rgb(255 255 255 / 0.35);
+  border-radius: var(--radius-tick);
+  color: var(--color-surface);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.toast-action:hover {
+  background-color: rgb(255 255 255 / 0.12);
+}
+
+/* --------------------------------------------------------------- drawer */
+
+.drawer-status {
+  position: relative;
+  cursor: pointer;
+}
+
+.drawer-status select {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.drawer-status:focus-within {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+  border-radius: 3px;
+}
+
+.drawer-status-caret {
+  width: 14px;
+  height: 14px;
+  margin-bottom: 3px;
+  margin-left: -4px;
+}
+
+.drawer-tools {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: auto;
+}
+
+.drawer-tool {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  background: none;
+  border: 0;
+  border-radius: var(--radius-tick);
+  color: var(--color-ink-2);
+}
+
+.drawer-tool:hover {
+  background-color: var(--color-ground);
+  color: var(--color-ink);
+}
+
+.drawer-tool.is-on {
+  color: var(--color-urgent);
+}
+
+.drawer-tool svg {
+  width: 16px;
+  height: 16px;
+}
+
+.drawer-label-count {
+  margin-left: 8px;
+  font-weight: 600;
+  color: var(--color-ink-2);
+}
+
+.drawer-body-gap {
+  height: 0.6em;
+}
+
+.subtask-delete {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 22px;
+  height: 22px;
+  margin-left: auto;
+  padding: 0;
+  background: none;
+  border: 0;
+  border-radius: var(--radius-tick);
+  color: var(--color-ink-3);
+  opacity: 0;
+}
+
+.subtask:hover .subtask-delete,
+.subtask-delete:focus-visible {
+  opacity: 1;
+}
+
+.subtask-delete:hover {
+  color: var(--color-urgent);
+}
+
+.subtask-delete svg {
+  width: 12px;
+  height: 12px;
+}
+
+/* ------------------------------------------------------------ directory */
+
+.forest:focus {
+  outline: none;
+}
+
+.forest:focus-visible .stem.is-live {
+  box-shadow: inset 2px 0 0 var(--color-accent);
+}
+
+.stem {
+  position: relative;
+  cursor: default;
+}
+
+.stem.is-subtask .stem-name {
+  color: var(--color-ink);
+}
+
+.stem.is-done .stem-name {
+  color: var(--color-ink-2);
+}
+
+.stem-check {
+  flex: none;
+  margin-right: 6px;
+  padding: 0;
+  background: none;
+  border: 0;
+  font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+  font-size: 12.5px;
+  line-height: 18px;
+  color: var(--color-ink-2);
+}
+
+.stem.is-done .stem-check {
+  color: var(--color-done);
+}
+
+.stem-check:hover {
+  color: var(--color-accent);
+}
+
+.stem-urgent {
+  flex: none;
+  margin-left: 6px;
+  font-weight: 700;
+  color: var(--color-urgent);
+}
+
+.stem-tools {
+  display: flex;
+  flex: none;
+  gap: 2px;
+  margin-left: 8px;
+  opacity: 0;
+}
+
+.stem:hover .stem-tools,
+.stem.is-live .stem-tools {
+  opacity: 1;
+}
+
+.stem-tool {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 18px;
+  padding: 0;
+  background: none;
+  border: 0;
+  border-radius: var(--radius-tick);
+  color: var(--color-ink-3);
+}
+
+.stem-tool:hover {
+  background-color: var(--color-surface);
+  color: var(--color-accent);
+}
+
+.stem-tool.is-danger:hover {
+  color: var(--color-urgent);
+}
+
+.stem-tool svg {
+  width: 11px;
+  height: 11px;
+}
+
+.stem-status {
+  position: relative;
+  cursor: pointer;
+}
+
+.stem-status select {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.stem-count {
+  flex: none;
+  margin-left: 12px;
+  font-size: 12px;
+  color: var(--color-ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.stem.is-draft {
+  background-color: var(--color-accent-wash);
+}
+
+.stem.is-ghost {
+  background-color: var(--color-surface);
+  box-shadow: 0 8px 20px rgb(21 21 21 / 0.13);
+}
+
+.forest-empty {
+  margin: 0;
+  padding: 4px 9px;
+  font-size: 13.5px;
+  color: var(--color-ink-2);
+}
+
+.forest-keys {
+  margin: 0;
+  padding: 10px 19px 14px;
+  border-top: 1px solid var(--color-line);
+  font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+  font-size: 11.5px;
+  color: var(--color-ink-2);
+}
+
+/* With the drawer open the dump sits under it; give the directory the room instead. */
+.studio.has-drawer .catalogue {
+  padding-right: calc(var(--drawer-width) + 16px);
+}
+
+@media (max-width: 900px) {
+  .studio.has-drawer .catalogue {
+    padding-right: 14px;
+  }
+
+  .menu {
+    order: 2;
   }
 }
 

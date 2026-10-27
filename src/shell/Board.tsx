@@ -1,113 +1,82 @@
-import { useMemo, useRef, type KeyboardEvent, type RefObject } from 'react'
-import { boardCards, boardSatellites, folderOf, laneOf, type Doc, type GraphNode } from '../speck/doc'
-import { type Session } from '../speck/ir'
-import { COL_ORDER, LANE_PLAQUE, type ColName } from '../speck/tokens'
+import { useMemo, useRef, useState, type FocusEvent, type KeyboardEvent, type RefObject } from 'react'
+import { boardCards, projectOf, projectsOf, progressOf, satellitesOf } from '../model/doc'
+import { LANES, LANE_LABEL, type Doc, type Lane, type Node } from '../model/types'
 import { Filament, type LiveLeash } from './Filament'
 import { Chevron, Plus, Ring } from './Glyph'
+import { InlineEdit } from './InlineEdit'
 import { Mark } from './Mark'
+import type { Draft, Editing } from './Studio'
 import { useBoardFlip, type Settling } from './useBoardFlip'
 import type { JobDrag } from './useJobDrag'
 
 type BoardProps = {
   doc: Doc
-  session: Session
-  /** null shows every folder's jobs, which is the top bar's default. */
+  query: string
+  selectedId: number | null
+  editing: Editing | null
+  draft: Draft | null
+  /** null shows every project's tasks. */
   filterId: number | null
   /** null keeps all five lanes; a lane name empties the others. */
-  laneFilter: ColName | null
+  laneFilter: Lane | null
   urgentOnly: boolean
+  /** Cards that match the search, or null when not searching. */
+  hits: Set<number> | null
+  openId: number | null
   drag: JobDrag
-  /** Shared with the drawer, so a subtask pulled from it pays out a cable too. */
   liveRef: RefObject<LiveLeash | null>
-  /** Set by the drag, read by the move animation: whose landing is already flying. */
   settling: RefObject<Settling>
   dragging: boolean
-  onCreateJob: (status: ColName) => void
-  /** Puts the job in the next lane along, which is the board's own verb. */
-  onShovel: (id: number) => void
-  onTitle: (value: string) => void
-  onTitleCommit: () => void
-  onFieldBlur: (id: number, slot: 'title' | 'body' | 'subtask' | 'status') => void
+  onOpen: (id: number) => void
+  onDelete: (id: number) => void
+  onAdvance: (id: number, lane: Lane) => void
+  onStartTask: (lane: Lane) => void
+  onDraftCommit: (title: string, lane: Lane, project: number | null) => void
+  onRename: (id: number, title: string) => void
+  onEditTitle: (id: number) => void
 }
 
-/** The lane a shovel moves a card into, or null at the end of the rack. */
-function nextOf(col: ColName): ColName | null {
-  return COL_ORDER[COL_ORDER.indexOf(col) + 1] ?? null
+function nextOf(lane: Lane): Lane | null {
+  return LANES[LANES.indexOf(lane) + 1] ?? null
 }
 
-export function Board({
-  doc,
-  session,
-  filterId,
-  laneFilter,
-  urgentOnly,
-  drag,
-  liveRef,
-  settling,
-  dragging,
-  onCreateJob,
-  onShovel,
-  onTitle,
-  onTitleCommit,
-  onFieldBlur,
-}: BoardProps) {
+export function Board(props: BoardProps) {
+  const { doc, query, selectedId, editing, draft, filterId, laneFilter, urgentOnly, hits, openId, drag } = props
   const boardRef = useRef<HTMLDivElement | null>(null)
-
   const cards = boardCards(doc, filterId)
-  const satellites = useMemo(() => boardSatellites(doc, filterId), [doc, filterId])
-  const query = session.find
-
-  /* Every one of these puts cards somewhere else, so all of them re-measure. */
-  const layout = useMemo(() => ({ doc, filterId, laneFilter, urgentOnly }), [doc, filterId, laneFilter, urgentOnly])
-  useBoardFlip(boardRef, layout, settling)
+  const satellites = useMemo(() => satellitesOf(doc, filterId), [doc, filterId])
+  const layout = useMemo(() => ({ doc, filterId, laneFilter, urgentOnly, hits }), [doc, filterId, laneFilter, urgentOnly, hits])
+  useBoardFlip(boardRef, layout, props.settling)
 
   /*
-   * The shovel is invisible until the pointer is on the card, which only guards
-   * it against a pointer that arrives before it presses. A tap synthesises the
-   * hover and the click together: the press lands on the card, the hover it
-   * brings reveals the shovel, and the click that follows finds it there, so a
-   * finger aimed at the card's corner would move the job instead of opening it.
-   * Reading the press wherever it lands lets the shovel decline anything that
-   * is not a mouse and hand the gesture back to the card.
+   * The chevron is hidden until hover, which a tap synthesises along with the
+   * click. Reading which pointer pressed lets the chevron decline a finger and
+   * hand the gesture back to the card.
    */
   const pressedWith = useRef('mouse')
 
-  function cardsIn(col: ColName) {
-    if (laneFilter && laneFilter !== col) return []
-    return cards.filter((n) => laneOf(n.status) === col && (!urgentOnly || Boolean(n.urgent)))
-  }
-
-  function titleOf(node: GraphNode) {
-    const editing = session.field?.id === node.id && session.field.slot === 'title'
-    if (editing) {
-      return (
-        <input
-          className="slab-input"
-          value={session.fieldBuffer}
-          autoFocus
-          aria-label="Job title"
-          placeholder="_"
-          onChange={(e) => onTitle(e.target.value)}
-          onBlur={() => onFieldBlur(node.id, 'title')}
-          onKeyDown={(e: KeyboardEvent<HTMLInputElement>) => {
-            if (e.key === 'Enter') {
-              e.preventDefault()
-              onTitleCommit()
-            }
-          }}
-          onPointerDown={(e) => e.stopPropagation()}
-        />
-      )
-    }
-    return (
-      <h3 className="slab-title" data-title>
-        <Mark text={node.title.trim() || '_'} query={query} />
-      </h3>
+  function cardsIn(lane: Lane) {
+    if (laneFilter && laneFilter !== lane) return []
+    return cards.filter(
+      (n) => (n.status === 'none' ? 'pending' : n.status) === lane && (!urgentOnly || n.urgent) && (!hits || hits.has(n.id)),
     )
   }
 
-  /** A jack shows only where a cable actually lands: on a satellite or its parent. */
-  function jackOf(node: GraphNode) {
+  function onCardKey(e: KeyboardEvent<HTMLElement>, node: Node) {
+    if (e.target !== e.currentTarget) return
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      props.onOpen(node.id)
+    } else if (e.key === 'F2') {
+      e.preventDefault()
+      props.onEditTitle(node.id)
+    } else if (e.key === 'Delete' || e.key === 'Backspace') {
+      e.preventDefault()
+      props.onDelete(node.id)
+    }
+  }
+
+  function jackOf(node: Node) {
     if (node.loose && node.parent != null) return 'jack is-sat'
     if (satellites.some((sat) => sat.parent === node.id)) return 'jack is-host'
     return 'jack-anchor'
@@ -115,48 +84,43 @@ export function Board({
 
   return (
     <div
-      className={`board${dragging ? ' is-dragging' : ''}`}
-      data-testid="manager"
+      className={`board${props.dragging ? ' is-dragging' : ''}`}
+      data-testid="board"
       role="list"
-      aria-label="Jobs by status"
+      aria-label="Tasks by status"
       ref={boardRef}
       onPointerDownCapture={(e) => {
         pressedWith.current = e.pointerType
       }}
     >
-      <Filament
-        doc={doc}
-        satellites={satellites}
-        hostRef={boardRef}
-        liveRef={liveRef}
-        dragging={dragging}
-      />
-      {COL_ORDER.map((col) => {
-        const items = cardsIn(col)
-        const shoveTo = nextOf(col)
+      <Filament doc={doc} satellites={satellites} hostRef={boardRef} liveRef={props.liveRef} dragging={props.dragging} />
+      {LANES.map((lane) => {
+        const items = cardsIn(lane)
+        const shoveTo = nextOf(lane)
+        const drafting = draft?.where === 'board' && draft.lane === lane ? draft : null
         return (
-          <section
-            key={col}
-            className="lane"
-            data-lane={col}
-            data-testid={`lane-${col}`}
-            role="listitem"
-            aria-label={LANE_PLAQUE[col]}
-          >
+          <section key={lane} className="lane" data-lane={lane} data-testid={`lane-${lane}`} role="listitem" aria-label={LANE_LABEL[lane]}>
             <header className="lane-head">
-              <h2 className="lane-name">{LANE_PLAQUE[col]}</h2>
+              <h2 className="lane-name">{LANE_LABEL[lane]}</h2>
               <span className="lane-count">{items.length}</span>
             </header>
             <div className="lane-stack">
               {items.map((node) => {
-                const open = session.pipeOpen === node.id
-                const live = session.selected?.kind === 'NODE' && session.selected.id === node.id
-                const folder = folderOf(doc, node.id)
+                const isOpen = openId === node.id
+                const live = selectedId === node.id
+                const project = projectOf(doc, node.id)
+                const { done, total } = progressOf(doc, node.id)
+                const editingHere = editing?.id === node.id && editing.where === 'board'
                 return (
                   <article
                     key={node.id}
-                    className={`slab${open ? ' is-open' : ''}${live ? ' is-live' : ''}${node.urgent ? ' is-urgent' : ''}${node.loose ? ' is-loose' : ''}`}
+                    tabIndex={0}
+                    aria-label={`${node.title || 'untitled'}, ${LANE_LABEL[lane]}`}
+                    className={`slab${isOpen ? ' is-open' : ''}${live ? ' is-live' : ''}${node.urgent ? ' is-urgent' : ''}${node.loose ? ' is-loose' : ''}`}
                     data-card-id={node.id}
+                    data-testid={`card-${node.id}`}
+                    onKeyDown={(e) => onCardKey(e, node)}
+                    onDoubleClick={() => props.onEditTitle(node.id)}
                     onPointerDown={(e) => drag.beginDrag(e, node.id, 'card', '[data-card-id]')}
                     onPointerMove={drag.onMove}
                     onPointerUp={drag.finishDrag}
@@ -164,32 +128,45 @@ export function Board({
                   >
                     <span className={jackOf(node)} data-jack={node.id} aria-hidden="true" />
                     <div className="slab-head">
-                      {col === 'done' ? <Ring className="slab-tick" /> : null}
-                      {titleOf(node)}
+                      {lane === 'done' ? <Ring className="slab-tick" /> : null}
+                      {editingHere ? (
+                        <InlineEdit
+                          className="slab-input"
+                          value={node.title}
+                          ariaLabel="Task title"
+                          selectAll
+                          onCommit={(v) => props.onRename(node.id, v)}
+                        />
+                      ) : (
+                        <h3 className="slab-title" data-title>
+                          <Mark text={node.title.trim() || '_'} query={query} />
+                        </h3>
+                      )}
                     </div>
-                    {folder ? (
-                      <p className="slab-folder">{folder.title.trim() || '_'}</p>
+                    {project && project.id !== node.id ? <p className="slab-folder">{project.title.trim() || '_'}</p> : null}
+                    {total || node.urgent ? (
+                      <p className="slab-meta">
+                        {total ? (
+                          <span className={`slab-progress${done === total ? ' is-complete' : ''}`} aria-label={`${done} of ${total} subtasks done`}>
+                            {done}/{total}
+                          </span>
+                        ) : null}
+                        {node.urgent ? <span className="slab-flag">URGENT</span> : null}
+                      </p>
                     ) : null}
-                    {node.urgent ? <span className="slab-flag">URGENT</span> : null}
-                    {/*
-                      The lane a card sits in is its status, so the card's one
-                      quick action is to put itself in the next lane along. The
-                      last lane has nowhere to go, so it offers nothing.
-                    */}
                     {shoveTo ? (
                       <button
                         type="button"
                         className="slab-shovel"
-                        data-testid={`slab-shovel-${node.id}`}
-                        aria-label={`Move ${node.title.trim() || 'job'} to ${LANE_PLAQUE[shoveTo]}`}
+                        data-testid={`advance-${node.id}`}
+                        aria-label={`Move ${node.title.trim() || 'task'} to ${LANE_LABEL[shoveTo]}`}
                         onPointerDown={(e) => {
                           if (e.pointerType === 'mouse') e.stopPropagation()
                         }}
                         onClick={(e) => {
-                          /* detail 0 is the keyboard, which never presses first. */
                           if (e.detail !== 0 && pressedWith.current !== 'mouse') return
                           e.stopPropagation()
-                          onShovel(node.id)
+                          props.onAdvance(node.id, shoveTo)
                         }}
                       >
                         <Chevron className="slab-shovel-glyph" />
@@ -198,21 +175,93 @@ export function Board({
                   </article>
                 )
               })}
-              {items.length === 0 ? <div className="lane-void" /> : null}
+              {drafting ? (
+                <DraftCard doc={doc} lane={lane} project={drafting.project} onCommit={props.onDraftCommit} />
+              ) : null}
+              {items.length === 0 && !drafting ? <div className="lane-void">{hits ? 'no matches' : ''}</div> : null}
               <button
                 type="button"
                 className="lane-add"
-                data-testid={col === 'pending' ? 'ghost-plus' : `lane-add-${col}`}
+                data-testid={`lane-add-${lane}`}
                 onPointerDown={(e) => e.stopPropagation()}
-                onClick={() => onCreateJob(col)}
+                onClick={() => props.onStartTask(lane)}
               >
                 <Plus className="lane-add-glyph" />
-                New job
+                New task
               </button>
             </div>
           </section>
         )
       })}
     </div>
+  )
+}
+
+/**
+ * A card that is still being written. It holds its own title and project until
+ * it is committed, so leaving it empty leaves nothing behind in the doc.
+ */
+function DraftCard({
+  doc,
+  lane,
+  project,
+  onCommit,
+}: {
+  doc: Doc
+  lane: Lane
+  project: number | null
+  onCommit: (title: string, lane: Lane, project: number | null) => void
+}) {
+  const projects = projectsOf(doc)
+  const [title, setTitle] = useState('')
+  const [pid, setPid] = useState<number | null>(project ?? projects[0]?.id ?? null)
+  const done = useRef(false)
+
+  function finish() {
+    if (done.current) return
+    done.current = true
+    onCommit(title, lane, pid)
+  }
+
+  function onBlur(e: FocusEvent<HTMLElement>) {
+    // Moving between the title and the project picker is still writing the card.
+    if (e.currentTarget.contains(e.relatedTarget as globalThis.Node | null)) return
+    finish()
+  }
+
+  return (
+    <article className="slab is-draft" data-testid="draft-card" onBlur={onBlur} onPointerDown={(e) => e.stopPropagation()}>
+      <div className="slab-head">
+        <input
+          className="slab-input"
+          autoFocus
+          value={title}
+          placeholder="Task name"
+          aria-label="New task name"
+          onChange={(e) => setTitle(e.target.value)}
+          onKeyDown={(e) => {
+            e.stopPropagation()
+            if (e.key === 'Enter' || e.key === 'Escape') {
+              e.preventDefault()
+              finish()
+            }
+          }}
+        />
+      </div>
+      {projects.length ? (
+        <label className="slab-project">
+          <span className="sr-only">Project</span>
+          <select value={pid ?? ''} aria-label="Project" onChange={(e) => setPid(Number(e.target.value))}>
+            {projects.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.title.trim() || '_'}
+              </option>
+            ))}
+          </select>
+        </label>
+      ) : (
+        <p className="slab-folder">inbox</p>
+      )}
+    </article>
   )
 }
