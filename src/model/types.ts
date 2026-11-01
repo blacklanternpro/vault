@@ -20,6 +20,8 @@ export const LANE_LABEL: Record<Lane, string> = {
   dusted: 'DUSTED',
 }
 
+export type Link = { label: string; url: string }
+
 export type Node = {
   id: number
   title: string
@@ -28,6 +30,32 @@ export type Node = {
   parent: number | null
   urgent?: boolean
   loose?: boolean
+  /** Due date, ISO YYYY-MM-DD. */
+  due?: string
+  /** The one next action, shown on the card face. */
+  next?: string
+  /** Where you got to when you last left this task. */
+  leftOff?: string
+  /** Repo, deploy, client thread, design file. */
+  links?: Link[]
+  /** On tonight's shelf (at most three at a time; the shell enforces it). */
+  tonight?: boolean
+  /** Last time this task was touched, ms since epoch. Feeds "stale" and "since last time". */
+  touched?: number
+  /** Accumulated session time in seconds (session clock). */
+  spent?: number
+}
+
+export const EVENT_KINDS = ['created', 'moved', 'ticked', 'renamed', 'deleted', 'note', 'leftoff', 'report', 'tonight', 'due', 'restored'] as const
+export type EventKind = (typeof EVENT_KINDS)[number]
+
+/** One line of the trail: something that happened to a task, or to the board. */
+export type Event = {
+  at: number
+  kind: EventKind
+  /** The task it happened to, when there is one. */
+  node?: number
+  text: string
 }
 
 export type Note = {
@@ -44,6 +72,16 @@ export type Note = {
 export type Doc = {
   nodes: Node[]
   notes: Note[]
+  /** The trail, oldest first, capped at MAX_EVENTS. */
+  events: Event[]
+  /** When this board was last closed or left, ms since epoch. "Since last time" reads from here. */
+  lastSeen?: number
+}
+
+export const MAX_EVENTS = 2000
+
+export function isEventKind(value: unknown): value is EventKind {
+  return typeof value === 'string' && (EVENT_KINDS as readonly string[]).includes(value)
 }
 
 export function isLane(value: unknown): value is Lane {

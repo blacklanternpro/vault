@@ -54,5 +54,5 @@ export function seedDoc(): Doc {
       }
     }
   }
-  return sanitizeDoc({ nodes, notes: [{ id: 'seed-note', date: '09.09.26', text: 'ask about the analytics export' }] })
+  return sanitizeDoc({ nodes, notes: [{ id: 'seed-note', date: '09.09.26', text: 'ask about the analytics export' }], events: [] })
 }

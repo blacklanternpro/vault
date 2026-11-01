@@ -1,4 +1,4 @@
-import { isLane, type Doc, type Lane, type Node, type Note, type Status } from './types'
+import { isEventKind, isLane, MAX_EVENTS, type Doc, type Event, type EventKind, type Lane, type Link, type Node, type Note, type Status } from './types'
 
 /*
  * Every operation here is pure: it takes a Doc and returns a new one, leaving
@@ -8,7 +8,14 @@ import { isLane, type Doc, type Lane, type Node, type Note, type Status } from '
  */
 
 function clone(doc: Doc): Doc {
-  return { nodes: doc.nodes.map((n) => ({ ...n })), notes: doc.notes.map((n) => ({ ...n })) }
+  const next: Doc = {
+    nodes: doc.nodes.map((n) => ({ ...n, links: n.links ? n.links.map((l) => ({ ...l })) : undefined })),
+    notes: doc.notes.map((n) => ({ ...n })),
+    events: doc.events.map((e) => ({ ...e })),
+  }
+  for (const n of next.nodes) if (n.links === undefined) delete n.links
+  if (doc.lastSeen != null) next.lastSeen = doc.lastSeen
+  return next
 }
 
 /** Ids stay small whole numbers, whatever an import claims. */
@@ -24,6 +31,7 @@ export const MAX_DEPTH = 64
 function freeze(doc: Doc): Doc {
   Object.freeze(doc.nodes)
   Object.freeze(doc.notes)
+  Object.freeze(doc.events)
   return Object.freeze(doc)
 }
 
@@ -221,6 +229,7 @@ export function normalize(doc: Doc): Doc {
     const depth = depthOf(doc, node.id)
     if (depth === 0) {
       delete node.loose
+      delete node.tonight
     } else {
       if (node.status === 'none') node.status = 'pending'
       if (depth === 1) delete node.loose
@@ -265,20 +274,121 @@ export function addNode(doc: Doc, spec: NewNode): { doc: Doc; id: number } {
   return { doc: freeze(normalize(next)), id }
 }
 
-export function updateNode(doc: Doc, id: number, patch: { title?: string; body?: string; urgent?: boolean }): Doc {
+export type NodePatch = {
+  title?: string
+  body?: string
+  urgent?: boolean
+  /** ISO YYYY-MM-DD; empty string clears. */
+  due?: string
+  next?: string
+  leftOff?: string
+  links?: Link[]
+  tonight?: boolean
+  touched?: number
+  spent?: number
+}
+
+/** Changes the fields given. Empty strings, false and empty lists clear a field. */
+export function updateNode(doc: Doc, id: number, patch: NodePatch): Doc {
   const next = clone(doc)
   const node = byId(next, id)
   if (!node) return doc
   if (patch.title !== undefined) node.title = patch.title
-  if (patch.body !== undefined) {
-    if (patch.body.trim()) node.body = patch.body
-    else delete node.body
+  const text = (key: 'body' | 'next' | 'leftOff' | 'due', value: string | undefined) => {
+    if (value === undefined) return
+    if (value.trim()) node[key] = value
+    else delete node[key]
   }
-  if (patch.urgent !== undefined) {
-    if (patch.urgent) node.urgent = true
-    else delete node.urgent
+  text('body', patch.body)
+  text('next', patch.next)
+  text('leftOff', patch.leftOff)
+  if (patch.due !== undefined) text('due', isIsoDate(patch.due) ? patch.due : '')
+  const flag = (key: 'urgent' | 'tonight', value: boolean | undefined) => {
+    if (value === undefined) return
+    if (value) node[key] = true
+    else delete node[key]
+  }
+  flag('urgent', patch.urgent)
+  flag('tonight', patch.tonight)
+  if (patch.links !== undefined) {
+    const clean = patch.links.filter((l) => isSafeUrl(l.url)).map((l) => ({ label: l.label.trim() || hostOf(l.url), url: l.url.trim() }))
+    if (clean.length) node.links = clean.slice(0, 20)
+    else delete node.links
+  }
+  if (patch.touched !== undefined) node.touched = patch.touched
+  if (patch.spent !== undefined) {
+    if (patch.spent > 0) node.spent = Math.round(patch.spent)
+    else delete node.spent
   }
   return freeze(next)
+}
+
+export function isIsoDate(value: unknown): value is string {
+  return typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(Date.parse(value))
+}
+
+export function isSafeUrl(value: unknown): value is string {
+  if (typeof value !== 'string') return false
+  try {
+    const u = new URL(value.trim())
+    return u.protocol === 'https:' || u.protocol === 'http:'
+  } catch {
+    return false
+  }
+}
+
+export function hostOf(url: string): string {
+  try {
+    return new URL(url).hostname.replace(/^www\./, '')
+  } catch {
+    return url
+  }
+}
+
+/** The cards on tonight's shelf, in document order. */
+export function tonightOf(doc: Doc): Node[] {
+  return doc.nodes.filter((n) => n.tonight && isCard(doc, n))
+}
+
+/* ------------------------------------------------------------------ trail */
+
+/** Appends to the trail. Oldest entries fall off past MAX_EVENTS. */
+export function logEvent(doc: Doc, kind: EventKind, text: string, node?: number, at = Date.now()): Doc {
+  const next = clone(doc)
+  const ev: Event = { at, kind, text }
+  if (node != null) ev.node = node
+  next.events.push(ev)
+  if (next.events.length > MAX_EVENTS) next.events = next.events.slice(next.events.length - MAX_EVENTS)
+  return freeze(next)
+}
+
+/** The trail of one task, newest first. */
+export function trailOf(doc: Doc, id: number): Event[] {
+  return doc.events.filter((e) => e.node === id).slice().reverse()
+}
+
+/** Everything that happened after `since`, newest first. */
+export function eventsSince(doc: Doc, since: number): Event[] {
+  return doc.events.filter((e) => e.at > since).slice().reverse()
+}
+
+export function markSeen(doc: Doc, at = Date.now()): Doc {
+  const next = clone(doc)
+  next.lastSeen = at
+  return freeze(next)
+}
+
+/** Cards with a `touched` stamp older than `days`, excluding DONE and DUSTED. */
+export function staleCards(doc: Doc, days: number, now = Date.now()): Node[] {
+  const cutoff = now - days * 86_400_000
+  return boardCards(doc, null).filter((n) => n.status !== 'done' && n.status !== 'dusted' && n.touched != null && n.touched < cutoff)
+}
+
+/** Days from today to a due date: negative is overdue, 0 is today. */
+export function daysUntil(due: string, now = new Date()): number {
+  const d = new Date(due + 'T00:00:00')
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  return Math.round((d.getTime() - today.getTime()) / 86_400_000)
 }
 
 /** Sets one node's status. Nothing else changes: subtasks keep their own ticks. */
@@ -475,6 +585,22 @@ export function sanitizeDoc(raw: unknown): Doc {
     if (typeof n.body === 'string' && n.body.trim()) node.body = n.body
     if (n.urgent === true) node.urgent = true
     if (n.loose === true) node.loose = true
+    if (isIsoDate(n.due)) node.due = n.due
+    if (typeof n.next === 'string' && n.next.trim()) node.next = n.next
+    if (typeof n.leftOff === 'string' && n.leftOff.trim()) node.leftOff = n.leftOff
+    if (Array.isArray(n.links)) {
+      const links: Link[] = []
+      for (const l of n.links) {
+        if (l && typeof l === 'object' && isSafeUrl((l as Link).url)) {
+          const url = String((l as Link).url).trim()
+          links.push({ label: typeof (l as Link).label === 'string' && (l as Link).label.trim() ? (l as Link).label.trim() : hostOf(url), url })
+        }
+      }
+      if (links.length) node.links = links.slice(0, 20)
+    }
+    if (n.tonight === true) node.tonight = true
+    if (typeof n.touched === 'number' && Number.isFinite(n.touched) && n.touched > 0) node.touched = Math.round(n.touched)
+    if (typeof n.spent === 'number' && Number.isFinite(n.spent) && n.spent > 0) node.spent = Math.round(n.spent)
     nodes.push(node)
   }
   const ids = new Set(nodes.map((n) => n.id))
@@ -523,7 +649,21 @@ export function sanitizeDoc(raw: unknown): Doc {
       notes.push(note)
     }
   }
-  return freeze(normalize({ nodes, notes }))
+  const events: Event[] = []
+  if (Array.isArray((raw as { events?: unknown }).events)) {
+    for (const item of (raw as { events: unknown[] }).events) {
+      if (!item || typeof item !== 'object') continue
+      const e = item as Record<string, unknown>
+      if (typeof e.at !== 'number' || !Number.isFinite(e.at) || !isEventKind(e.kind) || typeof e.text !== 'string') continue
+      const ev: Event = { at: Math.round(e.at), kind: e.kind, text: e.text }
+      if (isSafeId(e.node) && ids.has(e.node)) ev.node = e.node
+      events.push(ev)
+    }
+  }
+  const doc: Doc = { nodes, notes, events: events.slice(-MAX_EVENTS) }
+  const lastSeenRaw = (raw as { lastSeen?: unknown }).lastSeen
+  if (typeof lastSeenRaw === 'number' && Number.isFinite(lastSeenRaw) && lastSeenRaw > 0) doc.lastSeen = Math.round(lastSeenRaw)
+  return freeze(normalize(doc))
 }
 
 function isSafeId(value: unknown): value is number {

@@ -7,10 +7,16 @@ import {
   cardHits,
   cardOf,
   childrenOf,
+  daysUntil,
   depthOf,
+  eventsSince,
   linesOf,
+  logEvent,
+  markSeen,
   MAX_DEPTH,
   MAX_ID,
+  staleCards,
+  trailOf,
   restoreNote,
   restoreRemoved,
   dockCard,
@@ -32,7 +38,7 @@ import {
   updateNode,
 } from './doc'
 import { seedDoc } from './seed'
-import type { Doc } from './types'
+import { MAX_EVENTS, type Doc } from './types'
 
 function tiny(): Doc {
   return sanitizeDoc({
@@ -252,5 +258,55 @@ describe('sanitizing', () => {
   it('the seed is valid as shipped', () => {
     const s = seedDoc()
     expect(sanitizeDoc(JSON.parse(JSON.stringify(s)))).toEqual(s)
+  })
+})
+
+describe('night shift and handoff fields', () => {
+  it('due, next, left-off, links, tonight round-trip and clear', () => {
+    let d = updateNode(tiny(), 2, { due: '2026-11-07', next: 'wire the form', leftOff: 'hero done', links: [{ label: '', url: 'https://github.com/x/y' }, { label: 'bad', url: 'javascript:alert(1)' }], tonight: true })
+    const n = byId(d, 2)!
+    expect(n.due).toBe('2026-11-07')
+    expect(n.next).toBe('wire the form')
+    expect(n.links).toEqual([{ label: 'github.com', url: 'https://github.com/x/y' }])
+    expect(n.tonight).toBe(true)
+    expect(sanitizeDoc(JSON.parse(JSON.stringify(d)))).toEqual(d)
+    d = updateNode(d, 2, { due: 'not a date', next: '', links: [], tonight: false })
+    const m = byId(d, 2)!
+    expect(m.due).toBeUndefined()
+    expect(m.next).toBeUndefined()
+    expect(m.links).toBeUndefined()
+    expect(m.tonight).toBeUndefined()
+  })
+
+  it('a project cannot be on the shelf; a task outdented to a project drops off it', () => {
+    const d = outdentNode(updateNode(tiny(), 2, { tonight: true }), 2)
+    expect(byId(d, 2)?.tonight).toBeUndefined()
+  })
+
+  it('logs a trail, reads it per task and since a time, and caps it', () => {
+    let d = logEvent(tiny(), 'moved', 'to ACTIVE', 2, 1000)
+    d = logEvent(d, 'ticked', 'line one', 3, 2000)
+    d = logEvent(d, 'note', 'board note', undefined, 3000)
+    expect(trailOf(d, 2).map((e) => e.text)).toEqual(['to ACTIVE'])
+    expect(eventsSince(d, 1500).map((e) => e.at)).toEqual([3000, 2000])
+    d = markSeen(d, 2500)
+    expect(eventsSince(d, d.lastSeen!).length).toBe(1)
+    for (let i = 0; i < MAX_EVENTS + 5; i++) d = logEvent(d, 'note', `n${i}`, undefined, 5000 + i)
+    expect(d.events.length).toBe(MAX_EVENTS)
+    expect(sanitizeDoc(JSON.parse(JSON.stringify(d)))).toEqual(d)
+  })
+
+  it('deleting a task keeps its trail but drops the pointer when sanitized', () => {
+    const d = removeNode(logEvent(tiny(), 'moved', 'x', 2), 2)
+    const back = sanitizeDoc(JSON.parse(JSON.stringify(d)))
+    expect(back.events[0].node).toBeUndefined()
+  })
+
+  it('stale and due helpers', () => {
+    const now = Date.UTC(2026, 10, 2)
+    const d = updateNode(updateNode(tiny(), 2, { touched: now - 20 * 86_400_000 }), 5, { touched: now - 2 * 86_400_000 })
+    expect(staleCards(d, 14, now).map((n) => n.id)).toEqual([2])
+    expect(daysUntil('2026-11-07', new Date(2026, 10, 2))).toBe(5)
+    expect(daysUntil('2026-11-01', new Date(2026, 10, 2))).toBe(-1)
   })
 })
