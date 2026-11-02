@@ -2,6 +2,9 @@ import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { listBackups } from '../model/store'
 import { LANES, LANE_LABEL, isLane, type Lane, type Node } from '../model/types'
 import { BrandMark, Caret, Cross, Dots, Glass, Plus } from './Glyph'
+/* --- agent handoff --- */
+import type { ReactNode } from 'react'
+/* --- end agent handoff --- */
 
 type TopBarProps = {
   query: string
@@ -23,6 +26,17 @@ type TopBarProps = {
   canRedo: boolean
   onUndo: () => void
   onRedo: () => void
+  /* --- agent handoff: the session clock and the ⋯ menu's brief / report / session / time items (all optional) --- */
+  /** The running session clock, shown beside the primary action. */
+  clock?: ReactNode
+  /** True when a card is open or selected for the menu's "selected" items to act on. */
+  hasTarget?: boolean
+  sessionRunning?: boolean
+  onCopyBrief?: () => void
+  onPasteReport?: () => void
+  onToggleSession?: () => void
+  onTimesheet?: () => void
+  /* --- end agent handoff --- */
 }
 
 export function TopBar(p: TopBarProps) {
@@ -149,6 +163,8 @@ export function TopBar(p: TopBarProps) {
         </button>
       </div>
 
+      {p.clock /* agent handoff: the session clock */}
+
       <button type="button" className="new-job" data-testid="new-task" onClick={p.onNewTask}>
         <Plus className="new-job-glyph" />
         New task
@@ -189,6 +205,60 @@ export function TopBar(p: TopBarProps) {
             <button type="button" role="menuitem" data-testid="menu-import" onClick={() => fileRef.current?.click()}>
               Import from file…
             </button>
+            {/* --- agent handoff: brief out, report in, the clock, and the month's hours --- */}
+            {p.onCopyBrief && p.onPasteReport && p.onToggleSession && p.onTimesheet ? (
+              <>
+                <hr />
+                <button
+                  type="button"
+                  role="menuitem"
+                  data-testid="menu-copy-brief"
+                  disabled={!p.hasTarget}
+                  onClick={() => {
+                    setMenu(false)
+                    p.onCopyBrief?.()
+                  }}
+                >
+                  Copy brief for selected
+                </button>
+                <button
+                  type="button"
+                  role="menuitem"
+                  data-testid="menu-paste-report"
+                  disabled={!p.hasTarget}
+                  onClick={() => {
+                    setMenu(false)
+                    p.onPasteReport?.()
+                  }}
+                >
+                  Paste report…
+                </button>
+                <button
+                  type="button"
+                  role="menuitem"
+                  data-testid="menu-session"
+                  disabled={!p.hasTarget && !p.sessionRunning}
+                  onClick={() => {
+                    setMenu(false)
+                    p.onToggleSession?.()
+                  }}
+                >
+                  {p.sessionRunning ? 'Stop session' : 'Start session on selected'}
+                </button>
+                <button
+                  type="button"
+                  role="menuitem"
+                  data-testid="menu-timesheet"
+                  onClick={() => {
+                    setMenu(false)
+                    p.onTimesheet?.()
+                  }}
+                >
+                  Time this month…
+                </button>
+              </>
+            ) : null}
+            {/* --- end agent handoff --- */}
             {backups.length ? (
               <>
                 <hr />
