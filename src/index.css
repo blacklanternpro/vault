@@ -399,7 +399,8 @@
   min-height: 94px;
   padding: 23px 14px 18px;
   background-color: var(--color-surface);
-  border: 1px solid #e8e8e8;
+  /* One step darker than the panel hairline, so a card reads as an edge on a white lane. */
+  border: 1px solid var(--color-line-2);
   border-radius: var(--radius-slab);
   text-align: left;
   transition: border-color 120ms ease, background-color 120ms ease;
@@ -1400,15 +1401,14 @@
 
 /*
  * The comp's lane is 196px and at the comp's width the last one runs under the
- * drawer, which is what the comp shows. Five of those plus the drawer clear
- * each other at 1354, so from there the rail is held open at every width — the
- * board never reflows when a job opens, and the dump below stands in the same
- * rail — and the lanes take the remaining slack rather than leaving dead ground.
+ * drawer, which is what the comp shows. From 1360 the lanes take the whole
+ * width of the board pane rather than leaving dead ground; the drawer stays an
+ * overlay over the right of the board (the slot once held open for it went
+ * with the hellish directory, whose pane takes the left instead).
  */
 @media (min-width: 1360px) {
   .board {
     grid-auto-columns: minmax(var(--lane-width), 1fr);
-    padding-right: calc(var(--drawer-width) + 16px);
   }
 }
 
@@ -2037,5 +2037,732 @@
   * {
     transition-duration: 0ms !important;
     animation-duration: 0ms !important;
+  }
+}
+
+/* ======================================================== hellish directory
+ * One screen: on a wide field the directory is a resizable pane on the left
+ * with the dump as its first folder and a prompt at its foot, the board takes
+ * the rest, and the drawer stays the overlay it was. The one input in the top
+ * bar grows a palette, the filters become chips, the board takes vim keys, and
+ * a `?` sheet lists every shortcut. Same tokens, same faces, same radius; the
+ * prompt and the palette's command line are the one place outside the stems
+ * that monospace is allowed, because they are a shell.
+ */
+
+/* ------------------------------------------------------------- the split */
+
+/* The catalogue is one column now: the dump lives inside the directory as inbox/. */
+.catalogue {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0;
+  position: relative;
+}
+
+/* Stacked (below 1360): the prompt hangs off the foot of the directory panel. */
+.directory {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.shell {
+  flex: none;
+  padding: 8px 10px 10px;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-top: 0;
+  border-radius: 0 0 var(--radius-slab) var(--radius-slab);
+  font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+}
+
+.pane-handle {
+  display: none;
+}
+
+@media (min-width: 1360px) {
+  .studio {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .topbar,
+  .banners {
+    flex: none;
+  }
+
+  .stage {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: var(--dir-width, 320px) minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr);
+  }
+
+  /* The board pane: lanes fill its height and the pane scrolls, both ways, as one. */
+  .board {
+    grid-column: 2;
+    grid-row: 1;
+    min-width: 0;
+    min-height: 0;
+    overflow: auto;
+  }
+
+  /* The directory pane: a white rail on the left, the twin of the drawer's rail on the right. */
+  .catalogue {
+    grid-column: 1;
+    grid-row: 1;
+    min-width: 0;
+    min-height: 0;
+    padding: 0;
+    background-color: var(--color-surface);
+    border-right: 1px solid var(--color-line);
+  }
+
+  .studio.has-drawer .catalogue {
+    padding-right: 0;
+  }
+
+  .directory {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    border: 0;
+    border-radius: 0;
+  }
+
+  .directory .section-head {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    flex-wrap: wrap;
+    gap: 0 10px;
+    padding: 13px 19px 11px;
+    background-color: var(--color-surface);
+  }
+
+  .directory .section-note {
+    font-size: 13px;
+  }
+
+  .shell {
+    border: 0;
+    border-top: 1px solid var(--color-line);
+    border-radius: 0;
+  }
+
+  /*
+   * The handle rides the pane's right hairline. It is wider than the line so
+   * it can be caught, and shows itself only under the pointer or focus.
+   */
+  .pane-handle {
+    display: block;
+    position: absolute;
+    top: 0;
+    right: -4px;
+    z-index: 2;
+    width: 7px;
+    height: 100%;
+    cursor: col-resize;
+    touch-action: none;
+  }
+
+  .pane-handle::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 3px;
+    width: 1px;
+    transition: background-color 120ms ease;
+  }
+
+  .pane-handle:hover::after,
+  .pane-handle.is-dragging::after,
+  .pane-handle:focus-visible::after {
+    background-color: var(--color-accent-line);
+  }
+
+  .pane-handle:focus-visible {
+    outline: none;
+  }
+}
+
+/* --------------------------------------------------------------- inbox/ */
+
+/* The notes column sits where the forest's columns do, and the dump sheds its panel. */
+.forest-inbox {
+  padding: 0 10px;
+}
+
+.dump {
+  background: none;
+  border: 0;
+  border-radius: 0;
+}
+
+.notes {
+  padding: 0;
+}
+
+/* A note is a row on a stem: the stem and the date hold the top line, the text may run on. */
+.stem.note {
+  display: flex;
+  align-items: flex-start;
+  gap: 0;
+  padding: 1px 9px;
+}
+
+.note + .note {
+  box-shadow: none;
+}
+
+.note-date {
+  flex: none;
+  margin: 0 10px 0 0;
+  font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.note-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.note-text {
+  width: 100%;
+  line-height: 18px;
+}
+
+.note-leash {
+  font-size: 11.5px;
+  line-height: 18px;
+}
+
+/* ---------------------------------------------------------------- prompt */
+
+.shell-out {
+  margin: 0 0 8px;
+  padding: 6px 9px;
+  max-height: 40vh;
+  overflow: auto;
+  font: inherit;
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--color-ink-2);
+  background-color: var(--color-ground);
+  border-radius: 5px;
+  white-space: pre;
+}
+
+.shell-out.is-error {
+  color: var(--color-urgent);
+}
+
+.shell-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 32px;
+  padding: 0 9px;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-control);
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+
+.shell-line:focus-within {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px var(--color-accent-wash);
+}
+
+.shell-prompt {
+  flex: none;
+  font-size: 12.5px;
+  color: var(--color-ink-2);
+  white-space: nowrap;
+}
+
+.shell-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  border: 0;
+  background: none;
+  outline: none;
+  font-size: 12.5px;
+}
+
+.shell-input::placeholder {
+  color: var(--color-ink-2);
+}
+
+/* --------------------------------------------------------------- palette */
+
+.find {
+  position: relative;
+}
+
+.palette {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: -1px;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  width: min(620px, calc(100vw - 32px));
+  max-height: min(60vh, 520px);
+  overflow: auto;
+  padding: 6px;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-control);
+  box-shadow: 0 10px 30px rgb(21 21 21 / 0.12);
+  cursor: default;
+}
+
+.palette-hint {
+  margin: 0;
+  padding: 7px 10px;
+  font-size: 12.5px;
+  color: var(--color-ink-2);
+}
+
+.palette-hint code {
+  font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+  font-size: 12px;
+  color: var(--color-ink);
+}
+
+.palette-group {
+  margin: 6px 10px 2px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-ink-2);
+}
+
+.palette-slot + .palette-slot .palette-group {
+  margin-top: 8px;
+}
+
+.palette-row {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  width: 100%;
+  padding: 7px 10px;
+  background: none;
+  border: 0;
+  border-radius: 5px;
+  font-size: 13.5px;
+  color: var(--color-ink);
+  text-align: left;
+}
+
+.palette-row.is-active {
+  background-color: var(--color-accent-wash);
+}
+
+.palette-row:disabled {
+  color: var(--color-ink-2);
+  cursor: default;
+}
+
+.palette-title {
+  flex: none;
+  font-family: var(--font-plaque);
+  font-size: 14.5px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+}
+
+.palette-snippet {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12.5px;
+  color: var(--color-ink-2);
+}
+
+.palette-prompt,
+.palette-command {
+  font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+  font-size: 12.5px;
+}
+
+.palette-prompt {
+  flex: none;
+  color: var(--color-ink-2);
+}
+
+.palette-command,
+.palette-filter {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.palette-key {
+  flex: none;
+  margin-left: auto;
+  font-size: 11.5px;
+  letter-spacing: 0.04em;
+  color: var(--color-ink-2);
+}
+
+.palette-out {
+  margin: 4px 0 0;
+  padding: 6px 9px;
+  max-height: 40vh;
+  overflow: auto;
+  font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--color-ink-2);
+  background-color: var(--color-ground);
+  border-radius: 5px;
+  white-space: pre;
+}
+
+.palette-out.is-error {
+  color: var(--color-urgent);
+}
+
+/* ----------------------------------------------------------------- chips */
+
+/* A chip is now a filter that is on, with its own ×; `Filter…` is the way to add one. */
+.chip.is-filter {
+  gap: 6px;
+  padding-right: 6px;
+  cursor: default;
+}
+
+.chip-clear {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  background: none;
+  border: 0;
+  border-radius: var(--radius-tick);
+  color: var(--color-ink-2);
+}
+
+.chip-clear:hover {
+  background-color: var(--color-ground);
+  color: var(--color-ink);
+}
+
+.chip-clear svg {
+  width: 12px;
+  height: 12px;
+}
+
+.chip.is-urgent {
+  border-color: var(--color-urgent);
+  color: var(--color-urgent);
+  font-weight: 600;
+}
+
+.chip.is-urgent .chip-clear {
+  color: inherit;
+}
+
+.chip-open {
+  color: var(--color-ink-2);
+}
+
+.chip-open:hover {
+  color: var(--color-ink);
+}
+
+/* ----------------------------------------------------------------- saved */
+
+.saved {
+  flex: none;
+  margin-left: auto;
+  margin-right: 14px;
+  font-size: 12px;
+  color: var(--color-ink-2);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.saved + .new-job {
+  margin-left: 0;
+}
+
+/* ------------------------------------------------------------------ help */
+
+.help-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: start center;
+  padding: 10vh 16px 16px;
+  background-color: rgb(21 21 21 / 0.12);
+}
+
+.help {
+  width: min(880px, 100%);
+  max-height: 80vh;
+  overflow: auto;
+  padding: 18px 22px 22px;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-control);
+  box-shadow: 0 20px 50px rgb(21 21 21 / 0.18);
+  outline: none;
+  animation: line-in 160ms cubic-bezier(0.2, 0.7, 0.3, 1) both;
+}
+
+.help-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.help-title {
+  margin: 0;
+  font-family: var(--font-plaque);
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 22px;
+  letter-spacing: 0.055em;
+  text-transform: uppercase;
+}
+
+.help-close {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  margin-left: auto;
+  padding: 0;
+  background: none;
+  border: 0;
+  border-radius: 6px;
+  color: var(--color-ink-2);
+}
+
+.help-close:hover {
+  background-color: var(--color-ground);
+  color: var(--color-ink);
+}
+
+.help-close svg {
+  width: 17px;
+  height: 17px;
+}
+
+.help-groups {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px 28px;
+  margin-top: 16px;
+}
+
+.help-group-name {
+  margin: 0 0 8px;
+  font-family: var(--font-plaque);
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 18px;
+  letter-spacing: 0.015em;
+  text-transform: uppercase;
+  color: var(--color-ink-2);
+}
+
+.help-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+}
+
+.help-row {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr);
+  gap: 10px;
+  align-items: baseline;
+  font-size: 13px;
+  line-height: 18px;
+}
+
+.help-row dt {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.help-row dd {
+  margin: 0;
+}
+
+.help kbd {
+  display: inline-block;
+  min-width: 18px;
+  padding: 0 5px;
+  background-color: var(--color-ground);
+  border: 1px solid var(--color-line-2);
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 11.5px;
+  line-height: 16px;
+  text-align: center;
+  white-space: nowrap;
+  color: var(--color-ink);
+}
+
+/* --------------------------------------------------------- compact cards */
+
+/* Name over one meta line — project · 2/5 · URGENT — and nothing else. */
+.slab {
+  min-height: 56px;
+  padding: 10px 12px 9px;
+}
+
+.slab:hover {
+  border-color: var(--color-ink-3);
+}
+
+.subtask.is-ghost {
+  border-color: var(--color-line-2);
+}
+
+.slab-title,
+.slab-input {
+  font-size: 14px;
+  line-height: 18px;
+}
+
+.slab-meta {
+  display: flex;
+  align-items: baseline;
+  gap: 0;
+  min-width: 0;
+  margin: 2px 0 0;
+  font-size: 12px;
+  line-height: 16px;
+  white-space: nowrap;
+}
+
+.slab-meta > * + *::before {
+  content: '·';
+  margin: 0 5px;
+  font-weight: 400;
+  color: var(--color-ink-3);
+}
+
+.slab-meta .slab-folder {
+  flex: 0 1 auto;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--color-ink-2);
+}
+
+.slab-progress,
+.slab-flag {
+  flex: none;
+}
+
+.slab-head:has(.slab-tick) {
+  margin-left: -4px;
+  margin-right: -10px;
+}
+
+.slab:has(.slab-tick) .slab-meta {
+  padding-left: 24px;
+}
+
+.slab:has(.slab-tick) .slab-meta .slab-folder {
+  margin-right: 0;
+  padding-left: 0;
+}
+
+.jack,
+.jack-anchor {
+  top: 15px;
+}
+
+/* The board itself can hold focus for the vim keys; a card's own ring says which card. */
+.board:focus {
+  outline: none;
+}
+
+.board:focus-visible {
+  box-shadow: inset 0 0 0 2px var(--color-accent-line);
+}
+
+/* ------------------------------------------------------------------ tree */
+
+/* The status sits right after the name; the row's tools float to the right edge. */
+.stem-name {
+  flex: 0 1 auto;
+}
+
+.stem-tools {
+  position: absolute;
+  top: 50%;
+  right: 4px;
+  transform: translateY(-50%);
+  margin: 0;
+  padding: 0 0 0 6px;
+  border-radius: 4px;
+  pointer-events: none;
+}
+
+.stem:hover .stem-tools,
+.stem.is-live .stem-tools {
+  pointer-events: auto;
+  background-color: var(--color-ground);
+}
+
+.stem.is-live .stem-tools {
+  background-color: var(--color-accent-wash);
+}
+
+/* A fixed 18px gutter for the disclosure mark, so a stem never runs into it. */
+.stem-fold {
+  width: 18px;
+}
+
+.stem-add-glyph {
+  width: 14px;
+  height: 14px;
+  margin: 0 2px;
+}
+
+/* A 28px target on an 18px row: the button overhangs the row rather than growing it. */
+.stem-tool {
+  width: 28px;
+  height: 28px;
+  margin: -5px 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .help {
+    animation: none;
   }
 }

@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState, type FocusEvent, type KeyboardEvent, type RefObject } from 'react'
-import { boardCards, projectOf, projectsOf, progressOf, satellitesOf } from '../model/doc'
+import { boardCards, byId, laneOf, projectOf, projectsOf, progressOf, satellitesOf } from '../model/doc'
 import { LANES, LANE_LABEL, type Doc, type Lane, type Node } from '../model/types'
 import { Filament, type LiveLeash } from './Filament'
 import { Chevron, Plus, Ring } from './Glyph'
@@ -8,6 +8,7 @@ import { Mark } from './Mark'
 import type { Draft, Editing } from './Studio'
 import { useBoardFlip, type Settling } from './useBoardFlip'
 import type { JobDrag } from './useJobDrag'
+import { afterDelete, shoveLane, vimKey, vimTarget } from './vim'
 
 type BoardProps = {
   doc: Doc
@@ -82,6 +83,58 @@ export function Board(props: BoardProps) {
     return 'jack-anchor'
   }
 
+  /* ---------------------------------------------------- hellish directory: vim keys
+   * With the board or one of its cards focused: j/k walk the lane, h/l cross to
+   * the nearest card in the next lane, Shift+H/L shove the card a lane along,
+   * o opens, x deletes (with the Undo toast). Never from inside a field.
+   */
+
+  function cardEl(id: number): HTMLElement | null {
+    return boardRef.current?.querySelector<HTMLElement>(`[data-card-id="${id}"]`) ?? null
+  }
+
+  function focusCard(id: number, afterRender = false) {
+    const go = () => cardEl(id)?.focus()
+    if (afterRender) requestAnimationFrame(go)
+    else go()
+  }
+
+  function onBoardKey(e: KeyboardEvent<HTMLDivElement>) {
+    const t = e.target as HTMLElement
+    if (t.closest('input, textarea, select, [contenteditable="true"]')) return
+    if (e.metaKey || e.ctrlKey || e.altKey) return
+    const key = vimKey(e.key, e.shiftKey)
+    if (!key) return
+    const fromEl = t.closest<HTMLElement>('[data-card-id]')
+    const from = fromEl ? Number(fromEl.dataset.cardId) : null
+    const lanes = LANES.map((lane) => ({ lane, ids: cardsIn(lane).map((n) => n.id) }))
+    e.preventDefault()
+    e.stopPropagation()
+    if (key === 'down' || key === 'up' || key === 'left' || key === 'right') {
+      const to = vimTarget(key, lanes, from, (id) => {
+        const r = cardEl(id)?.getBoundingClientRect()
+        return r ? r.top + r.height / 2 : 0
+      })
+      if (to != null) focusCard(to)
+      return
+    }
+    if (from == null) return
+    if (key === 'open') {
+      props.onOpen(from)
+    } else if (key === 'delete') {
+      const next = afterDelete(lanes, from)
+      props.onDelete(from)
+      if (next != null) focusCard(next, true)
+      else boardRef.current?.focus()
+    } else {
+      const node = byId(doc, from)
+      const lane = node ? shoveLane(laneOf(node.status), key === 'shoveLeft' ? -1 : 1) : null
+      if (!lane) return
+      props.onAdvance(from, lane)
+      focusCard(from, true)
+    }
+  }
+
   return (
     <div
       className={`board${props.dragging ? ' is-dragging' : ''}`}
@@ -89,6 +142,8 @@ export function Board(props: BoardProps) {
       role="list"
       aria-label="Tasks by status"
       ref={boardRef}
+      tabIndex={0}
+      onKeyDown={onBoardKey}
       onPointerDownCapture={(e) => {
         pressedWith.current = e.pointerType
       }}
@@ -143,9 +198,10 @@ export function Board(props: BoardProps) {
                         </h3>
                       )}
                     </div>
-                    {project && project.id !== node.id ? <p className="slab-folder">{project.title.trim() || '_'}</p> : null}
-                    {total || node.urgent ? (
+                    {/* Hellish directory: one meta line — project · progress · urgent — so the card stays compact. */}
+                    {(project && project.id !== node.id) || total || node.urgent ? (
                       <p className="slab-meta">
+                        {project && project.id !== node.id ? <span className="slab-folder">{project.title.trim() || '_'}</span> : null}
                         {total ? (
                           <span className={`slab-progress${done === total ? ' is-complete' : ''}`} aria-label={`${done} of ${total} subtasks done`}>
                             {done}/{total}

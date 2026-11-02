@@ -1,14 +1,14 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import {
   addNode,
   addNote,
-  boardCards,
   byId,
   cardHits,
   cardOf,
   dockCard,
   hitchNote,
   isCard,
+  laneOf,
   moveCard,
   moveNote,
   projectOf,
@@ -24,14 +24,20 @@ import {
   toggleDone,
   updateNode,
 } from '../model/doc'
+import { paletteKind, runShell, type ShellResult } from '../model/shell'
 import { exportFileName, exportText, importText, listBackups, load, save, snapshot, subscribe } from '../model/store'
 import type { Doc, Lane } from '../model/types'
 import { Board } from './Board'
 import { Directory } from './Directory'
 import { Drawer } from './Drawer'
 import type { LiveLeash } from './Filament'
+import { Help } from './Help'
 import { Notices, type Toast } from './Notices'
+import type { FilterPatch } from './Palette'
+import { PaneHandle } from './Pane'
+import { readDirWidth, writeDirWidth } from './paneWidth'
 import { Scratch } from './Scratch'
+import { Shell } from './Shell'
 import { TopBar } from './TopBar'
 import type { Settling } from './useBoardFlip'
 import { useHistory } from './useHistory'
@@ -83,6 +89,10 @@ export function Studio() {
       : [],
   )
   const [saveFailed, setSaveFailed] = useState(false)
+  /* Hellish directory: the shortcut sheet, the last good save, the directory pane's width. */
+  const [help, setHelp] = useState(false)
+  const [savedAt, setSavedAt] = useState<number | null>(null)
+  const [dirWidth, setDirWidth] = useState(readDirWidth)
 
   const liveRef = useRef<LiveLeash | null>(null)
   const settlingRef = useRef<Settling>(null)
@@ -100,6 +110,7 @@ export function Studio() {
     const ok = save(doc)
     if (ok) lastSaved.current = json
     setSaveFailed(!ok)
+    if (ok) setSavedAt(Date.now())
   }, [doc, holdSave])
 
   const { replace, adopt } = history
@@ -121,7 +132,9 @@ export function Studio() {
   const selectedId = selected != null && byId(doc, selected) ? selected : null
   const projects = projectsOf(doc)
   const filterId = projectFilter != null && byId(doc, projectFilter)?.parent === null ? projectFilter : null
-  const hits = useMemo(() => (query.trim() ? cardHits(doc, query) : null), [doc, query])
+  // Hellish directory: the one input also takes `>` commands and `p:` `s:` `!` filter words; only plain text searches.
+  const search = paletteKind(query) === 'search' ? query : ''
+  const hits = useMemo(() => (search.trim() ? cardHits(doc, search) : null), [doc, search])
 
   /* ---------------------------------------------------------------- notices */
 
@@ -181,7 +194,7 @@ export function Studio() {
       setUrgentOnly(false)
       cleared.push('urgent')
     }
-    if (query.trim() && !cardHits(next, query).has(id)) {
+    if (search.trim() && !cardHits(next, search).has(id)) {
       setQuery('')
       cleared.push('search')
     }
@@ -225,15 +238,66 @@ export function Studio() {
 
   /* ---------------------------------------------------------------- reading */
 
+  /**
+   * Hellish directory: one selection, two views. Selecting from the board (or
+   * the shell) unfolds the directory down to the row, so it can be scrolled to
+   * and lit; the Directory does the scrolling when its selected row changes.
+   */
+  function unfold(id: number) {
+    setCollapsed((set) => {
+      const cur = history.ref.current
+      const next = new Set(set)
+      let node = byId(cur, id)
+      while (node && node.parent != null) {
+        node = byId(cur, node.parent)
+        if (node) next.delete(node.id)
+      }
+      return next.size === set.size ? set : next
+    })
+  }
+
   function openNode(id: number) {
     const card = cardOf(history.ref.current, id)
     setSelected(id)
+    unfold(id)
     setOpenId(card ? card.id : null)
   }
 
-  function runSearch() {
-    const first = boardCards(doc, filterId).find((c) => hits?.has(c.id))
-    if (first) openNode(first.id)
+  /* ---------------------------------------------- hellish directory: shell */
+
+  /**
+   * One line of the prompt (or a `>` line in the palette). The shell is pure
+   * and hands back what changed; it is applied here so every mutation goes
+   * through commit (undoable, toasted) and a delete gets the usual Undo.
+   */
+  function runShellLine(line: string): ShellResult {
+    const before = history.ref.current
+    const res = runShell(line, { doc: before, cwd: filterId })
+    if (res.doc) {
+      commit(res.doc)
+      toast(res.text)
+      const made = res.select != null && !byId(before, res.select) ? byId(res.doc, res.select) : undefined
+      if (made && made.parent != null) reveal(res.doc, made.id, laneOf(made.status))
+      else if (made && filterId != null) {
+        setProjectFilter(null)
+        toast('Cleared the project filter so you can see the new project')
+      }
+    }
+    if (res.remove != null) deleteNode(res.remove)
+    if (res.cwd !== undefined) setProjectFilter(res.cwd)
+    if (res.open != null) openNode(res.open)
+    else if (res.select != null) {
+      setSelected(res.select)
+      unfold(res.select)
+    }
+    return res
+  }
+
+  /** A filter row from the palette: `p:homepage`, `s:active`, `!`. Only the words given change. */
+  function applyFilter(patch: FilterPatch) {
+    if (patch.project !== undefined) setProjectFilter(patch.project)
+    if (patch.lane !== undefined) setLaneFilter(patch.lane)
+    if (patch.urgent !== undefined) setUrgentOnly(patch.urgent)
   }
 
   /* ------------------------------------------------------------------- keys */
@@ -253,6 +317,17 @@ export function Studio() {
       }
       // Anything typed into a field belongs to that field: its own undo, its own Backspace.
       if (t?.closest('input, textarea, select, [contenteditable="true"]')) return
+      // Hellish directory: `/` goes to the one input, `?` lists the shortcuts. Neither touches data.
+      if (!mod && !e.altKey && e.key === '/') {
+        e.preventDefault()
+        document.querySelector<HTMLInputElement>('.find-input')?.focus()
+        return
+      }
+      if (!mod && !e.altKey && e.key === '?') {
+        e.preventDefault()
+        setHelp(true)
+        return
+      }
       if (mod && (e.key.toLowerCase() === 'z' || e.key.toLowerCase() === 'y')) {
         e.preventDefault()
         const again = e.key.toLowerCase() === 'y' || e.shiftKey
@@ -334,7 +409,7 @@ export function Studio() {
 
   /* ---------------------------------------------------------------- render */
 
-  const shared = { doc, query, selectedId, editing, draft }
+  const shared = { doc, query: search, selectedId, editing, draft }
 
   return (
     <div className={`studio${open ? ' has-drawer' : ''}`} data-testid="studio">
@@ -346,7 +421,12 @@ export function Studio() {
         laneFilter={laneFilter}
         urgentOnly={urgentOnly}
         onQueryChange={setQuery}
-        onQuerySubmit={runSearch}
+        doc={doc}
+        savedAt={savedAt}
+        onOpenNode={openNode}
+        onRunCommand={runShellLine}
+        onApplyFilter={applyFilter}
+        onHelp={() => setHelp(true)}
         onFilterChange={setProjectFilter}
         onLaneFilterChange={setLaneFilter}
         onUrgentOnlyChange={setUrgentOnly}
@@ -371,7 +451,8 @@ export function Studio() {
         onExport={exportFile}
       />
 
-      <main className="stage">
+      {/* Hellish directory: on a wide field the stage splits — directory pane left (--dir-width), board right. */}
+      <main className="stage" style={{ '--dir-width': `${dirWidth}px` } as CSSProperties}>
         <Board
           {...shared}
           filterId={filterId}
@@ -446,28 +527,40 @@ export function Studio() {
             onToggleDone={(id) => commit(toggleDone(history.ref.current, id))}
             onStage={(id, lane) => commit(moveCard(history.ref.current, id, lane))}
             onPull={(id, lane) => commit(pullCard(history.ref.current, id, lane))}
+            /* Hellish directory: the dump is the listing's first folder, inbox/. */
+            inbox={
+              <Scratch
+                doc={doc}
+                focusNote={focusNote}
+                onFocused={() => setFocusNote(null)}
+                onAdd={() => {
+                  const made = addNote(history.ref.current)
+                  commit(made.doc)
+                  setFocusNote(made.id)
+                }}
+                onEdit={(id, text, session) => commit(setNoteText(history.ref.current, id, text), `note:${session}`, Infinity)}
+                onRemove={(id, original, session) => {
+                  const before = history.ref.current
+                  const after = removeNote(before, id)
+                  // Same step as the typing that emptied it, so Undo brings the note back with its words.
+                  commit(after, `note:${session}`, Infinity)
+                  if (original.trim()) {
+                    toast('Note removed', undoOf(after, (cur) => setNoteText(restoreNote(cur, before, id), id, original)))
+                  }
+                }}
+                onReorder={(from, to) => commit(moveNote(history.ref.current, from, to))}
+                onHitch={(id, nodeId) => commit(hitchNote(history.ref.current, id, nodeId))}
+              />
+            }
           />
-          <Scratch
-            doc={doc}
-            focusNote={focusNote}
-            onFocused={() => setFocusNote(null)}
-            onAdd={() => {
-              const made = addNote(history.ref.current)
-              commit(made.doc)
-              setFocusNote(made.id)
+          {/* Hellish directory: the prompt at the foot of the pane, and the handle that sets its width. */}
+          <Shell doc={doc} cwd={filterId} onRun={runShellLine} />
+          <PaneHandle
+            width={dirWidth}
+            onWidth={(w) => {
+              setDirWidth(w)
+              writeDirWidth(w)
             }}
-            onEdit={(id, text, session) => commit(setNoteText(history.ref.current, id, text), `note:${session}`, Infinity)}
-            onRemove={(id, original, session) => {
-              const before = history.ref.current
-              const after = removeNote(before, id)
-              // Same step as the typing that emptied it, so Undo brings the note back with its words.
-              commit(after, `note:${session}`, Infinity)
-              if (original.trim()) {
-                toast('Note removed', undoOf(after, (cur) => setNoteText(restoreNote(cur, before, id), id, original)))
-              }
-            }}
-            onReorder={(from, to) => commit(moveNote(history.ref.current, from, to))}
-            onHitch={(id, nodeId) => commit(hitchNote(history.ref.current, id, nodeId))}
           />
         </section>
       </main>
@@ -510,6 +603,9 @@ export function Studio() {
           onOpenProject={(id) => setProjectFilter(id)}
         />
       ) : null}
+
+      {/* Hellish directory: every shortcut, from `?` or the ⋯ menu. */}
+      <Help open={help} onClose={() => setHelp(false)} />
     </div>
   )
 }

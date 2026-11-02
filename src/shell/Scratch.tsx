@@ -114,63 +114,79 @@ export function Scratch({ doc, focusNote, onFocused, onAdd, onEdit, onRemove, on
     if (to !== drag.from) onReorder(drag.from, to)
   }
 
+  /*
+   * Hellish directory: the dump is the first folder of the listing, `inbox/`,
+   * and each note is a row on a stem — date, then the text — so the tape and
+   * the tree read as one column. The logic above is untouched.
+   */
   return (
-    <section className="dump" data-testid="dump" aria-label="Dump">
-      <div className="section-head">
-        <h2 className="section-name">Dump</h2>
-        <span className="section-note">{doc.notes.length === 1 ? '1 note' : `${doc.notes.length} notes`}</span>
+    <section className="dump inbox forest-col" data-testid="dump" aria-label="Inbox">
+      <div className="stem is-project is-inbox" data-testid="inbox-head">
+        <span className="stem-rule" aria-hidden="true" />
+        <span className="stem-fold" aria-hidden="true" />
+        <span className="stem-name">inbox/</span>
+        <span className="stem-count">{doc.notes.length}</span>
       </div>
 
       <div className="notes" ref={listRef}>
         {doc.notes.map((note, index) => (
           <article
             key={note.id}
-            className="note"
+            className="stem note"
             data-note-id={note.id}
             onPointerDown={(e) => onDown(e, note.id, index)}
             onPointerMove={onMove}
             onPointerUp={onUp}
             onPointerCancel={onUp}
           >
+            <span className="stem-rule" aria-hidden="true">
+              {index === doc.notes.length - 1 ? '└──' : '├──'}
+            </span>
+            <span className="stem-fold" aria-hidden="true" />
             <p className="note-date">{note.date || '—'}</p>
-            <textarea
-              className="note-text"
-              value={note.text}
-              rows={Math.max(1, Math.min(10, note.text.split('\n').length))}
-              aria-label="Note"
-              placeholder="_"
-              onFocus={() => {
-                startText.current.set(note.id, note.text)
-                session.current.set(note.id, `${note.id}:${Date.now()}`)
-              }}
-              onChange={(e) => onEdit(note.id, e.target.value, sessionOf(note.id))}
-              onBlur={(e) => {
-                if (e.target.value.trim()) return
-                onRemove(note.id, startText.current.get(note.id) ?? '', sessionOf(note.id))
-              }}
-              onKeyDown={(e) => {
-                if (e.key === 'Escape') (e.target as HTMLTextAreaElement).blur()
-              }}
-            />
-            {note.node != null ? (
-              <button
-                type="button"
-                className="note-leash"
-                aria-label="Unhitch note"
-                title="Unhitch"
-                onPointerDown={(e) => e.stopPropagation()}
-                onClick={() => onHitch(note.id, null)}
-              >
-                → {byId(doc, note.node)?.title.trim() || '_'}
-              </button>
-            ) : null}
+            <div className="note-body">
+              <textarea
+                className="note-text"
+                value={note.text}
+                rows={Math.max(1, Math.min(10, note.text.split('\n').length))}
+                aria-label="Note"
+                placeholder="_"
+                onFocus={() => {
+                  startText.current.set(note.id, note.text)
+                  session.current.set(note.id, `${note.id}:${Date.now()}`)
+                }}
+                onChange={(e) => onEdit(note.id, e.target.value, sessionOf(note.id))}
+                onBlur={(e) => {
+                  if (e.target.value.trim()) return
+                  onRemove(note.id, startText.current.get(note.id) ?? '', sessionOf(note.id))
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Escape') (e.target as HTMLTextAreaElement).blur()
+                }}
+              />
+              {note.node != null ? (
+                <button
+                  type="button"
+                  className="note-leash"
+                  aria-label="Unhitch note"
+                  title="Unhitch"
+                  onPointerDown={(e) => e.stopPropagation()}
+                  onClick={() => onHitch(note.id, null)}
+                >
+                  → {byId(doc, note.node)?.title.trim() || '_'}
+                </button>
+              ) : null}
+            </div>
           </article>
         ))}
       </div>
 
-      <button type="button" className="dump-add" data-testid="new-note" onClick={onAdd}>
-        <Plus className="dump-add-glyph" />
-        New note
+      <button type="button" className="stem stem-ghost dump-add" data-testid="new-note" onClick={onAdd}>
+        <span className="stem-rule" aria-hidden="true">
+          └──
+        </span>
+        <Plus className="stem-add-glyph" />
+        <span className="stem-name">new note</span>
       </button>
     </section>
   )
