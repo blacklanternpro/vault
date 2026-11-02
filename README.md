@@ -36,6 +36,7 @@ It's an editing surface, and every change shows on the board immediately.
 | Tab / Shift+Tab | indent / outdent |
 | Alt+↑ ↓ | reorder among siblings |
 | `x` | tick a subtask |
+| `t` | put the row's card on tonight's shelf, or take it off |
 | Delete | delete (Undo in the toast, or Ctrl+Z) |
 
 **Everywhere.**
@@ -43,6 +44,15 @@ It's an editing surface, and every change shows on the board immediately.
 - Ctrl+Z and Ctrl+Shift+Z undo and redo anything.
 - Esc closes the current draft, edit or drawer.
 - No single key changes data unless a card or the tree has focus.
+
+**Night shift.**
+- **Due date** and the one **next action** live in the drawer under the title. The card shows both; the date chip warms as the day comes (`Fri 7 Nov` → `today` → `3d overdue`).
+- **Tonight.** A shelf above the lanes holds at most three cards: press `t` on a focused card or directory row, use the drawer's pennant, or drop a card on the shelf. While it holds anything the other cards dim; Esc with nothing open, or *show all*, lifts that for the session.
+- **Left off.** Close a drawer that has been open ten minutes or more and it asks where you got to. The answer shows under the title, on the shelf card, and as the card's hover text.
+- **Since last time.** On the first open after a stretch away, one line under the top bar sums up what changed; *show* lists it.
+- **Trail.** Every change — made, moved, ticked, renamed, deleted, restored, dated, shelved — is written at the foot of its drawer.
+- **Weekly review** (⋯ menu, and offered on Sundays): done this week, stuck, due in the next seven days. **Dust:** a card untouched for two weeks greys its name and offers DUSTED.
+- **Night mode** in the ⋯ menu; with no choice stored, the system's dark preference is followed.
 
 ## Your data
 

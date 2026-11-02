@@ -23,6 +23,10 @@ type TopBarProps = {
   canRedo: boolean
   onUndo: () => void
   onRedo: () => void
+  /* ----- night shift (optional) ----- */
+  onReview?: () => void
+  theme?: 'light' | 'night'
+  onToggleTheme?: () => void
 }
 
 export function TopBar(p: TopBarProps) {
@@ -189,6 +193,37 @@ export function TopBar(p: TopBarProps) {
             <button type="button" role="menuitem" data-testid="menu-import" onClick={() => fileRef.current?.click()}>
               Import from file…
             </button>
+            {/* ----- night shift ----- */}
+            {p.onReview || p.onToggleTheme ? <hr /> : null}
+            {p.onReview ? (
+              <button
+                type="button"
+                role="menuitem"
+                data-testid="menu-review"
+                onClick={() => {
+                  setMenu(false)
+                  p.onReview?.()
+                }}
+              >
+                Weekly review
+              </button>
+            ) : null}
+            {p.onToggleTheme ? (
+              <button
+                type="button"
+                role="menuitemcheckbox"
+                aria-checked={p.theme === 'night'}
+                data-testid="menu-night"
+                onClick={() => {
+                  setMenu(false)
+                  p.onToggleTheme?.()
+                }}
+              >
+                Night mode
+                <span className="menu-meta">{p.theme === 'night' ? 'on' : 'off'}</span>
+              </button>
+            ) : null}
+            {/* ----- end night shift ----- */}
             {backups.length ? (
               <>
                 <hr />

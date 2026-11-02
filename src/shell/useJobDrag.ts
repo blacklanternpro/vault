@@ -30,6 +30,8 @@ type JobDragOptions = {
   onDock: (id: number, parentId: number) => void
   /** A press that never travelled far enough to be a drag. */
   onTap: (id: number, target: Element) => void
+  /** Night shift: a card dropped on tonight's shelf (`[data-drop="tonight"]`). The card stays in its lane. */
+  onShelf?: (id: number) => void
 }
 
 export type JobDrag = {
@@ -54,6 +56,7 @@ export function useJobDrag({
   onPull,
   onDock,
   onTap,
+  onShelf,
 }: JobDragOptions): JobDrag {
   const dragRef = useRef<Drag | null>(null)
   const ghostRef = useRef<HTMLElement | null>(null)
@@ -215,6 +218,17 @@ export function useJobDrag({
     const hit = dropAt(e.clientX, e.clientY)
     const home = originRef.current?.getBoundingClientRect() ?? null
     releaseOrigin()
+
+    /* night shift: the shelf is read first, since it sits over no lane and takes only whole cards */
+    if (onShelf && drag.kind === 'card') {
+      const under = document.elementFromPoint(e.clientX, e.clientY)
+      if (under instanceof Element && under.closest('[data-drop="tonight"]')) {
+        onShelf(drag.id)
+        // The card is still in its lane; the copy goes home.
+        if (ghost) settle(ghost, null, home)
+        return
+      }
+    }
 
     if (dockId != null && (drag.kind === 'nested' || Boolean(byId(doc, drag.id)?.loose))) {
       settling.current = { id: drag.id, at: performance.now() }

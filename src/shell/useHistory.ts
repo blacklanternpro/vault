@@ -17,6 +17,8 @@ export type DocHistory = {
   replace: (next: Doc) => void
   /** A doc another tab saved. Taken as is, and the undo history is cleared: those changes are not this tab's to undo. */
   adopt: (next: Doc) => void
+  /** Night shift: the same doc with a bookkeeping field changed (lastSeen). Not an edit, so not a step: past and future stay as they are. */
+  amend: (next: Doc) => void
   undo: () => boolean
   redo: () => boolean
   canUndo: boolean
@@ -70,6 +72,15 @@ export function useHistory(initial: Doc): DocHistory {
     [set],
   )
 
+  const amend = useCallback(
+    (next: Doc) => {
+      const cur = stateRef.current
+      if (next === cur.present) return
+      set({ past: cur.past, present: next, future: cur.future })
+    },
+    [set],
+  )
+
   const undo = useCallback(() => {
     const cur = stateRef.current
     const prev = cur.past[cur.past.length - 1]
@@ -94,6 +105,7 @@ export function useHistory(initial: Doc): DocHistory {
     commit,
     replace,
     adopt,
+    amend,
     undo,
     redo,
     canUndo: state.past.length > 0,

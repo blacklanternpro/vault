@@ -1,11 +1,17 @@
-import { useState } from 'react'
-import { laneOf, linesOf, projectOf } from '../model/doc'
+import { useEffect, useRef, useState } from 'react'
+import { daysUntil, laneOf, linesOf, projectOf, trailOf } from '../model/doc'
 import { LANES, LANE_LABEL, type Doc, type Lane, type Node } from '../model/types'
 import { Caret, Check, Cross, Flag, Folder, Plus, Trash } from './Glyph'
 import { InlineEdit } from './InlineEdit'
 import { Mark } from './Mark'
 import type { Draft, Editing } from './Studio'
 import type { JobDrag } from './useJobDrag'
+/* night shift */
+import { LeftOffPrompt } from './LeftOff'
+import { Calendar, Pennant } from './NightGlyph'
+import { daysSince, dueLabel, dueTone } from './time'
+import { STALE_DAYS } from './trail'
+import { Trail } from './Trail'
 
 type DrawerProps = {
   doc: Doc
@@ -28,6 +34,17 @@ type DrawerProps = {
   /** `keepGoing` after Enter, so a list of subtasks can be typed one after another. */
   onLineCommit: (title: string, keepGoing: boolean) => void
   onOpenProject: (projectId: number) => void
+  /* ----- night shift (all optional, so the drawer stands without the Studio wiring) ----- */
+  /** The clock the chips read; defaults to the moment of render. */
+  now?: Date
+  /** ISO YYYY-MM-DD, or '' to clear. */
+  onDue?: (due: string) => void
+  onNext?: (next: string) => void
+  onToggleTonight?: () => void
+  /** Shelve a stale card. */
+  onDust?: () => void
+  /** Set while the drawer is closing after a long stay: asks where you got to before it goes. */
+  leftOff?: { onSave: (text: string) => void; onSkip: () => void } | null
 }
 
 export function Drawer({
@@ -49,6 +66,12 @@ export function Drawer({
   onStartLine,
   onLineCommit,
   onOpenProject,
+  now,
+  onDue,
+  onNext,
+  onToggleTonight,
+  onDust,
+  leftOff,
 }: DrawerProps) {
   const lane = laneOf(node.status)
   const project = projectOf(doc, node.id)
@@ -61,8 +84,25 @@ export function Drawer({
   const [lineKey, setLineKey] = useState(0)
   const paragraphs = (node.body ?? '').split('\n')
 
+  /* ----- night shift ----- */
+  const clock = now ?? new Date()
+  const [editingNext, setEditingNext] = useState(false)
+  const titleRef = useRef<HTMLHeadingElement>(null)
+  // The drawer opens on its title: a reader lands on the name, not somewhere behind the rail.
+  // Opened from the directory, it leaves focus there: the tree is a keyboard surface mid-use.
+  useEffect(() => {
+    if (document.activeElement?.closest('.forest')) return
+    titleRef.current?.focus({ preventScroll: true })
+  }, [])
+  const dueDays = node.due ? daysUntil(node.due, clock) : null
+  const untouched = node.touched != null && node.status !== 'done' && node.status !== 'dusted' ? daysSince(node.touched, clock.getTime()) : 0
+  const stale = untouched >= STALE_DAYS
+  const trail = trailOf(doc, node.id)
+  /* ----- end night shift ----- */
+
   return (
     <aside className="drawer" data-testid="drawer" aria-label="Task detail">
+      {leftOff ? <LeftOffPrompt onSave={leftOff.onSave} onSkip={leftOff.onSkip} /> : null}
       <div className="drawer-top">
         <label className={`drawer-status is-${lane}`}>
           <span className="drawer-dot" aria-hidden="true" />
@@ -77,6 +117,19 @@ export function Drawer({
           </select>
         </label>
         <div className="drawer-tools">
+          {onToggleTonight ? (
+            <button
+              type="button"
+              className={`drawer-tool drawer-tonight${node.tonight ? ' is-tonight' : ''}`}
+              aria-pressed={Boolean(node.tonight)}
+              aria-label={node.tonight ? "Take off tonight's shelf" : "Put on tonight's shelf"}
+              title={node.tonight ? 'Off the shelf (t)' : 'Tonight (t)'}
+              data-testid="drawer-tonight"
+              onClick={onToggleTonight}
+            >
+              <Pennant />
+            </button>
+          ) : null}
           <button
             type="button"
             className={`drawer-tool${node.urgent ? ' is-on' : ''}`}
@@ -100,7 +153,7 @@ export function Drawer({
       {editingTitle ? (
         <InlineEdit className="drawer-title-input" value={node.title} ariaLabel="Task title" onCommit={(v) => onRename(node.id, v)} />
       ) : (
-        <h1 className="drawer-title" data-title onClick={() => onEdit(node.id, 'title')}>
+        <h1 className="drawer-title" data-title ref={titleRef} tabIndex={-1} data-testid="drawer-title" onClick={() => onEdit(node.id, 'title')}>
           <Mark text={node.title.trim() || '_'} query={query} />
         </h1>
       )}
@@ -111,6 +164,76 @@ export function Drawer({
           {project.title.trim() || '_'}
         </button>
       ) : null}
+
+      {/* ----- night shift: due, next action, left-off, dust ----- */}
+      {onDue || onNext ? (
+        <div className="drawer-night" data-testid="drawer-night">
+          {onDue ? (
+            <div className="drawer-due-row">
+              <label className={`drawer-due${node.due && dueDays != null ? ` is-${dueTone(dueDays)}` : ' is-unset'}`} data-testid="drawer-due-chip">
+                <Calendar className="drawer-due-glyph" />
+                <span className="drawer-due-label">{node.due ? dueLabel(node.due, clock) : 'due _'}</span>
+                {/* The native picker is stretched over the chip, the way the top bar's chips carry their select. */}
+                <input
+                  key={node.due ?? ''}
+                  type="date"
+                  className="drawer-due-input"
+                  aria-label="Due date"
+                  data-testid="drawer-due"
+                  defaultValue={node.due ?? ''}
+                  onChange={(e) => {
+                    if (e.target.value) onDue(e.target.value)
+                  }}
+                  onBlur={(e) => {
+                    if (!e.target.value && node.due) onDue('')
+                  }}
+                />
+              </label>
+              {node.due ? (
+                <button type="button" className="drawer-due-clear" aria-label="Clear due date" title="Clear due date" data-testid="drawer-due-clear" onClick={() => onDue('')}>
+                  <Cross />
+                </button>
+              ) : null}
+            </div>
+          ) : null}
+          {onNext ? (
+            <div className="drawer-next-row">
+              <span className="drawer-next-label">next</span>
+              {editingNext ? (
+                <InlineEdit
+                  className="drawer-next-input"
+                  value={node.next ?? ''}
+                  ariaLabel="Next action"
+                  placeholder="the one next action"
+                  testId="drawer-next-input"
+                  onCommit={(v) => {
+                    setEditingNext(false)
+                    onNext(v)
+                  }}
+                />
+              ) : (
+                <button type="button" className={`drawer-next${node.next ? '' : ' is-empty'}`} data-testid="drawer-next" onClick={() => setEditingNext(true)}>
+                  {node.next ?? '_'}
+                </button>
+              )}
+            </div>
+          ) : null}
+          {node.leftOff ? (
+            <p className="drawer-leftoff" data-testid="drawer-leftoff">
+              left off: {node.leftOff}
+            </p>
+          ) : null}
+          {stale && onDust ? (
+            <p className="drawer-stale" data-testid="drawer-stale">
+              Untouched for {untouched} days — move to DUSTED?
+              <button type="button" className="drawer-stale-dust" data-testid="drawer-dust" onClick={onDust}>
+                → DUSTED
+              </button>
+            </p>
+          ) : null}
+        </div>
+      ) : null}
+      {/* ----- end night shift ----- */}
 
       <hr className="drawer-rule" />
 
@@ -207,6 +330,9 @@ export function Drawer({
           )}
         </li>
       </ul>
+
+      {/* ----- night shift: the trail ----- */}
+      <Trail events={trail} now={clock} />
     </aside>
   )
 }

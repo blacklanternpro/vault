@@ -24,7 +24,7 @@ import {
   toggleDone,
   updateNode,
 } from '../model/doc'
-import { exportFileName, exportText, importText, listBackups, load, save, snapshot, subscribe } from '../model/store'
+import { DOC_KEY, exportFileName, exportText, importText, listBackups, load, save, snapshot, subscribe } from '../model/store'
 import type { Doc, Lane } from '../model/types'
 import { Board } from './Board'
 import { Directory } from './Directory'
@@ -36,6 +36,30 @@ import { TopBar } from './TopBar'
 import type { Settling } from './useBoardFlip'
 import { useHistory } from './useHistory'
 import { useJobDrag } from './useJobDrag'
+/* ----- night shift ----- */
+import { eventsSince, markSeen, tonightOf } from '../model/doc'
+import { Review } from './Review'
+import { Since } from './Since'
+import { dueDate, weekKey } from './time'
+import { Tonight } from './Tonight'
+import { cardIdOf, laneArrow, note, quoted, stamp, TONIGHT_MAX } from './trail'
+import { useNow } from './useNow'
+import { useTheme } from './useTheme'
+
+/** How long a drawer has to have been open before closing it asks where you got to. `?leftoffMs=100` shortens it for a test. */
+const LEFTOFF_MS = 10 * 60 * 1000
+const REVIEW_OFFERED_KEY = 'vault:review-offered'
+
+function leftOffThreshold(): number {
+  try {
+    const v = Number(new URLSearchParams(window.location.search).get('leftoffMs'))
+    if (Number.isFinite(v) && v > 0) return v
+  } catch {
+    /* no window, no search: the default holds */
+  }
+  return LEFTOFF_MS
+}
+/* ----- end night shift ----- */
 
 /** Where a not-yet-created item is being typed. Drafts live here, never in the doc. */
 export type Draft =
@@ -91,6 +115,29 @@ export function Studio() {
   // An untouched seed is not written; a migrated or recovered board is, so the next load reads it directly.
   const lastSaved = useRef(boot.origin === 'saved' || boot.origin === 'seed' ? JSON.stringify(boot.doc) : '')
 
+  /* ======================================================= night shift: state */
+  const now = useNow()
+  const { theme, toggle: toggleTheme } = useTheme()
+  /** The shelf dims the rest of the board until Esc or "show all" lifts it, for the session. */
+  const [dimLifted, setDimLifted] = useState(false)
+  const [review, setReview] = useState(false)
+  /** A drawer that has been open a while is closing: ask where you got to, then do `then`. */
+  const [leftOff, setLeftOff] = useState<{ id: number; then: () => void } | null>(null)
+  const openedAt = useRef<number | null>(null)
+  const [leftOffMs] = useState(leftOffThreshold)
+  /** What happened since the board was last left, read once at boot. */
+  const [since] = useState(() => {
+    const at = boot.doc.lastSeen
+    if (at == null) return null
+    const events = eventsSince(boot.doc, at)
+    return events.length ? { at, events } : null
+  })
+  const [sinceShown, setSinceShown] = useState(true)
+  /** The card the open drawer came from, so closing it can hand focus back. */
+  const lastOpen = useRef<number | null>(null)
+  const seenAt = useRef(0)
+  /* ======================================================= end night shift */
+
   /* ------------------------------------------------------------ persistence */
 
   useEffect(() => {
@@ -112,6 +159,46 @@ export function Studio() {
       }),
     [adopt],
   )
+
+  /* ======================================================= night shift: last seen */
+  /*
+   * Leaving the board stamps it as seen, synchronously, since there is no later
+   * for a page that is going. It is bookkeeping, not an edit: it goes into the
+   * doc without a step on the undo stack, and an untouched seed is still not
+   * written over a save that is not there yet.
+   */
+  const { amend } = history
+  useEffect(() => {
+    const mark = () => {
+      const t = Date.now()
+      if (t - seenAt.current < 1000) return
+      // Nothing has been written yet and nothing has happened: a seed has no "since last time" to keep.
+      if (boot.origin === 'seed' && lastSaved.current === JSON.stringify(boot.doc)) return
+      // A board that is not on disk (never saved, or storage cleared under us) is not put there on the way out.
+      try {
+        if (localStorage.getItem(DOC_KEY) == null) return
+      } catch {
+        return
+      }
+      seenAt.current = t
+      const next = markSeen(history.ref.current, t)
+      if (!holdSave) {
+        const json = JSON.stringify(next)
+        if (save(next)) lastSaved.current = json
+      }
+      amend(next)
+    }
+    const onVisibility = () => {
+      if (document.visibilityState === 'hidden') mark()
+    }
+    window.addEventListener('pagehide', mark)
+    document.addEventListener('visibilitychange', onVisibility)
+    return () => {
+      window.removeEventListener('pagehide', mark)
+      document.removeEventListener('visibilitychange', onVisibility)
+    }
+  }, [amend, boot, history.ref, holdSave])
+  /* ======================================================= end night shift */
 
   /* ---------------------------------------------------------------- derived */
 
@@ -155,14 +242,16 @@ export function Studio() {
     const node = byId(before, id)
     if (!node) return
     const ids = subtreeIds(before, id)
-    const after = removeNode(before, id)
+    const name = node.title.trim() || 'untitled'
+    /* night shift: the trail keeps the delete (the node is gone, so the line stands on its own) and the restore */
+    const after = note(removeNode(before, id), 'deleted', `deleted ${quoted(name)}`)
     commit(after)
     setEditing(null)
-    const name = node.title.trim() || 'untitled'
     const inside = ids.length - 1
+    const own = cardIdOf(before, id) === id
     toast(
       `Deleted “${name}”${inside ? ` and ${inside} inside` : ''}`,
-      undoOf(after, (cur) => restoreRemoved(cur, before, ids)),
+      undoOf(after, (cur) => stamp(restoreRemoved(cur, before, ids), id, 'restored', own ? 'restored' : `restored ${quoted(name)}`)),
     )
   }
 
@@ -210,9 +299,10 @@ export function Studio() {
       pid = made.id
     }
     const made = addNode(next, { parent: pid, title, status: lane })
-    commit(made.doc)
+    const after = created(made.doc, made.id)
+    commit(after)
     setSelected(made.id)
-    reveal(made.doc, made.id, lane)
+    reveal(after, made.id, lane)
   }
 
   function rename(id: number, title: string) {
@@ -220,15 +310,115 @@ export function Studio() {
     if (!clean) return
     const node = byId(history.ref.current, id)
     if (!node || node.title === clean) return
-    commit(updateNode(history.ref.current, id, { title: clean }))
+    const own = cardIdOf(history.ref.current, id) === id
+    commit(
+      stamp(updateNode(history.ref.current, id, { title: clean }), id, 'renamed', own ? `renamed from ${quoted(node.title)}` : `renamed ${quoted(node.title)} to ${quoted(clean)}`),
+    )
   }
+
+  /* ======================================================= night shift: trail writers */
+  /*
+   * Every change is written to the trail after it is made, inside the same
+   * commit, so an undo takes the line back with the change. A line goes on the
+   * card it happened to (a subtask's tick on its card) and stamps it touched.
+   */
+
+  /** A node just made: "created" on a card, "added" on the card a new line went into. */
+  function created(next: Doc, id: number): Doc {
+    const node = byId(next, id)
+    if (!node) return next
+    return stamp(next, id, 'created', cardIdOf(next, id) === id ? 'created' : `added ${quoted(node.title)}`)
+  }
+
+  /** A lane change by any verb. Nothing is written when the lane is the same one. */
+  function moved(cur: Doc, id: number, lane: Lane, next: Doc): Doc {
+    const was = byId(cur, id)?.status
+    if (next === cur || was === lane) return next
+    return stamp(next, id, 'moved', laneArrow(lane))
+  }
+
+  function ticked(cur: Doc, id: number): Doc {
+    const node = byId(cur, id)
+    const next = toggleDone(cur, id)
+    if (next === cur || !node) return next
+    return stamp(next, id, 'ticked', `${byId(next, id)?.status === 'done' ? 'ticked' : 'unticked'} ${quoted(node.title)}`)
+  }
+
+  function toggleTonight(id: number) {
+    const cur = history.ref.current
+    const cardId = cardIdOf(cur, id)
+    const node = byId(cur, cardId)
+    if (!node || !isCard(cur, node)) return
+    if (node.tonight) {
+      commit(stamp(updateNode(cur, cardId, { tonight: false }), cardId, 'tonight', "off tonight's shelf"))
+      return
+    }
+    if (tonightOf(cur).length >= TONIGHT_MAX) {
+      toast('Tonight holds three. Finish or drop one first.')
+      return
+    }
+    commit(stamp(updateNode(cur, cardId, { tonight: true }), cardId, 'tonight', "on tonight's shelf"))
+  }
+
+  function setDue(id: number, due: string) {
+    const cur = history.ref.current
+    if ((byId(cur, id)?.due ?? '') === due) return
+    commit(stamp(updateNode(cur, id, { due }), id, 'due', due ? `due ${dueDate(due, now)}` : 'due date cleared'))
+  }
+
+  function setNext(id: number, next: string) {
+    const cur = history.ref.current
+    if ((byId(cur, id)?.next ?? '') === next.trim()) return
+    commit(updateNode(cur, id, { next: next.trim(), touched: Date.now() }))
+  }
+
+  /** The shelf dims the board; Esc with nothing open, or "show all", lifts it for the session. */
+  function liftDim() {
+    if (tonightOf(history.ref.current).length) setDimLifted(true)
+  }
+
+  /**
+   * Closing a drawer that has been open a while first asks where you got to.
+   * `then` is what the close was going to do, and runs once the question is
+   * answered or skipped. A second close request while the question is up just
+   * replaces what happens after.
+   */
+  function requestClose(then: () => void) {
+    const id = keyState.current.openId
+    const at = openedAt.current
+    const node = id != null ? byId(history.ref.current, id) : undefined
+    if (id != null && node && at != null && Date.now() - at >= leftOffMs) {
+      setLeftOff({ id, then })
+      return
+    }
+    then()
+  }
+
+  function resolveLeftOff(text: string | null) {
+    const pending = leftOff
+    if (!pending) return
+    setLeftOff(null)
+    const clean = text?.trim() ?? ''
+    const cur = history.ref.current
+    if (clean && byId(cur, pending.id)) {
+      commit(stamp(updateNode(cur, pending.id, { leftOff: clean }), pending.id, 'leftoff', `left off: ${clean}`))
+    }
+    pending.then()
+  }
+  /* ======================================================= end night shift */
 
   /* ---------------------------------------------------------------- reading */
 
   function openNode(id: number) {
     const card = cardOf(history.ref.current, id)
-    setSelected(id)
-    setOpenId(card ? card.id : null)
+    const go = () => {
+      setSelected(id)
+      setOpenId(card ? card.id : null)
+    }
+    /* night shift: leaving one card for another is a close too, and may ask where you got to */
+    const leaving = keyState.current.openId != null && (card?.id ?? null) !== keyState.current.openId
+    if (leaving) requestClose(go)
+    else go()
   }
 
   function runSearch() {
@@ -239,8 +429,11 @@ export function Studio() {
   /* ------------------------------------------------------------------- keys */
 
   const { undo, redo } = history
-  const keyState = useRef({ draft, editing, openId, selected })
-  keyState.current = { draft, editing, openId, selected }
+  const keyState = useRef({ draft, editing, openId, selected, leftOff })
+  keyState.current = { draft, editing, openId, selected, leftOff }
+  /* night shift: the Esc branches below reach these through a ref, so the listener is bound once */
+  const nightKeys = useRef({ requestClose, resolveLeftOff, liftDim })
+  nightKeys.current = { requestClose, resolveLeftOff, liftDim }
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -262,10 +455,16 @@ export function Studio() {
       }
       if (e.key === 'Escape') {
         const s = keyState.current
-        if (s.draft) setDraft(null)
+        const n = nightKeys.current
+        /* night shift: a pending "where did you get to?" is skipped; a close may ask it; nothing open lifts the shelf's dim */
+        if (s.leftOff) n.resolveLeftOff(null)
+        else if (s.draft) setDraft(null)
         else if (s.editing) setEditing(null)
-        else if (s.openId != null) setOpenId(null)
-        else setSelected(null)
+        else if (s.openId != null) n.requestClose(() => setOpenId(null))
+        else {
+          setSelected(null)
+          n.liftDim()
+        }
       }
     }
     window.addEventListener('keydown', onKey)
@@ -279,9 +478,25 @@ export function Studio() {
     liveRef,
     settling: settlingRef,
     setDragging,
-    onStage: (id, lane, beforeId) => commit(moveCard(history.ref.current, id, lane, beforeId)),
-    onPull: (id, lane, beforeId) => commit(pullCard(history.ref.current, id, lane, beforeId)),
-    onDock: (id, parentId) => commit(dockCard(history.ref.current, id, parentId)),
+    onStage: (id, lane, beforeId) => {
+      const cur = history.ref.current
+      commit(moved(cur, id, lane, moveCard(cur, id, lane, beforeId)))
+    },
+    onPull: (id, lane, beforeId) => {
+      const cur = history.ref.current
+      const next = pullCard(cur, id, lane, beforeId)
+      commit(next === cur ? cur : stamp(next, id, 'moved', `pulled ${laneArrow(lane)}`))
+    },
+    onDock: (id, parentId) => {
+      const cur = history.ref.current
+      const next = dockCard(cur, id, parentId)
+      const child = byId(cur, id)
+      commit(next === cur || !child ? next : stamp(next, parentId, 'moved', `docked ${quoted(child.title)}`))
+    },
+    onShelf: (id) => {
+      // Dropping a card that is already on the shelf puts it nowhere new.
+      if (!byId(history.ref.current, id)?.tonight) toggleTonight(id)
+    },
     onTap: (id, target) => {
       const inDrawer = Boolean(target.closest('[data-nested-id]'))
       if (inDrawer) {
@@ -332,6 +547,43 @@ export function Studio() {
     toast(`Restored the snapshot from ${new Date(at).toLocaleString()}`, undoOf(found.doc, () => before))
   }
 
+  /* ======================================================= night shift: effects */
+
+  // How long the drawer has been on this card, for the left-off question.
+  const openCardId = open?.id ?? null
+  useEffect(() => {
+    openedAt.current = openCardId != null ? Date.now() : null
+  }, [openCardId])
+
+  // The drawer took focus on its title when it opened; closing hands it back to the card it came from.
+  // Only when the focus went with the drawer: a reader working in the tree keeps their place there.
+  useEffect(() => {
+    if (openCardId == null && lastOpen.current != null) {
+      const active = document.activeElement
+      if (!active || active === document.body) {
+        document.querySelector<HTMLElement>(`[data-card-id="${lastOpen.current}"]`)?.focus({ preventScroll: true })
+      }
+    }
+    lastOpen.current = openCardId
+  }, [openCardId])
+
+  // Sunday's first open offers the review, once a week. A test runner is never offered it.
+  useEffect(() => {
+    if (new Date().getDay() !== 0 || navigator.webdriver) return
+    const key = weekKey()
+    try {
+      if (localStorage.getItem(REVIEW_OFFERED_KEY) === key) return
+      localStorage.setItem(REVIEW_OFFERED_KEY, key)
+    } catch {
+      return
+    }
+    toast('Sunday. Weekly review?', { label: 'Open', run: () => setReview(true) })
+  }, [toast])
+
+  const tonight = tonightOf(doc)
+  const focusMode = tonight.length > 0 && !dimLifted
+  /* ======================================================= end night shift */
+
   /* ---------------------------------------------------------------- render */
 
   const shared = { doc, query, selectedId, editing, draft }
@@ -358,7 +610,13 @@ export function Studio() {
         canRedo={history.canRedo}
         onUndo={() => undo()}
         onRedo={() => redo()}
+        onReview={() => setReview(true)}
+        theme={theme}
+        onToggleTheme={toggleTheme}
       />
+
+      {/* ----- night shift: since last time ----- */}
+      {since && sinceShown ? <Since doc={doc} since={since.at} events={since.events} now={now} onDismiss={() => setSinceShown(false)} /> : null}
 
       <Notices
         toasts={toasts}
@@ -372,6 +630,18 @@ export function Studio() {
       />
 
       <main className="stage">
+        {/* ----- night shift: tonight's shelf ----- */}
+        <Tonight
+          doc={doc}
+          cards={tonight}
+          now={now}
+          openId={open?.id ?? null}
+          focus={focusMode}
+          dragging={dragging}
+          onOpen={openNode}
+          onRemove={toggleTonight}
+          onToggleFocus={() => setDimLifted((lifted) => !lifted)}
+        />
         <Board
           {...shared}
           filterId={filterId}
@@ -383,9 +653,15 @@ export function Studio() {
           liveRef={liveRef}
           settling={settlingRef}
           dragging={dragging}
+          now={now}
+          focus={focusMode}
+          onToggleTonight={toggleTonight}
           onOpen={openNode}
           onDelete={deleteNode}
-          onAdvance={(id, lane) => commit(setStatus(history.ref.current, id, lane))}
+          onAdvance={(id, lane) => {
+            const cur = history.ref.current
+            commit(moved(cur, id, lane, setStatus(cur, id, lane)))
+          }}
           onStartTask={startTask}
           onDraftCommit={(title, lane, project) => {
             setDraft(null)
@@ -431,7 +707,7 @@ export function Studio() {
             onDraftCommit={(parent, title, keepGoing) => {
               if (title.trim()) {
                 const made = addNode(history.ref.current, { parent, title: title.trim() })
-                commit(made.doc)
+                commit(created(made.doc, made.id))
                 if (!keepGoing) setSelected(made.id)
                 if (parent == null && filterId != null) {
                   setProjectFilter(null)
@@ -442,10 +718,21 @@ export function Studio() {
             }}
             onDelete={deleteNode}
             onCommit={(next) => commit(next)}
-            onSetLane={(id, lane) => commit(setStatus(history.ref.current, id, lane))}
-            onToggleDone={(id) => commit(toggleDone(history.ref.current, id))}
-            onStage={(id, lane) => commit(moveCard(history.ref.current, id, lane))}
-            onPull={(id, lane) => commit(pullCard(history.ref.current, id, lane))}
+            onSetLane={(id, lane) => {
+              const cur = history.ref.current
+              commit(moved(cur, id, lane, setStatus(cur, id, lane)))
+            }}
+            onToggleDone={(id) => commit(ticked(history.ref.current, id))}
+            onStage={(id, lane) => {
+              const cur = history.ref.current
+              commit(moved(cur, id, lane, moveCard(cur, id, lane)))
+            }}
+            onPull={(id, lane) => {
+              const cur = history.ref.current
+              const next = pullCard(cur, id, lane)
+              commit(next === cur ? cur : stamp(next, id, 'moved', `pulled ${laneArrow(lane)}`))
+            }}
+            onToggleTonight={toggleTonight}
           />
           <Scratch
             doc={doc}
@@ -467,7 +754,13 @@ export function Studio() {
               }
             }}
             onReorder={(from, to) => commit(moveNote(history.ref.current, from, to))}
-            onHitch={(id, nodeId) => commit(hitchNote(history.ref.current, id, nodeId))}
+            onHitch={(id, nodeId) => {
+              const cur = history.ref.current
+              const next = hitchNote(cur, id, nodeId)
+              const text = cur.notes.find((n) => n.id === id)?.text.split('\n')[0]?.trim()
+              /* night shift: a note hitched to a card goes on its trail */
+              commit(nodeId != null && next !== cur ? stamp(next, nodeId, 'note', `note hitched${text ? `: ${quoted(text)}` : ''}`) : next)
+            }}
           />
         </section>
       </main>
@@ -478,10 +771,14 @@ export function Studio() {
           {...shared}
           node={open}
           drag={drag}
-          onClose={() => setOpenId(null)}
-          onSetLane={(lane) => commit(setStatus(history.ref.current, open.id, lane))}
-          onToggleUrgent={() => commit(updateNode(history.ref.current, open.id, { urgent: !open.urgent }))}
+          onClose={() => requestClose(() => setOpenId(null))}
+          onSetLane={(lane) => {
+            const cur = history.ref.current
+            commit(moved(cur, open.id, lane, setStatus(cur, open.id, lane)))
+          }}
+          onToggleUrgent={() => commit(updateNode(history.ref.current, open.id, { urgent: !open.urgent, touched: Date.now() }))}
           onDelete={() => {
+            setLeftOff(null)
             deleteNode(open.id)
             setOpenId(null)
           }}
@@ -495,19 +792,53 @@ export function Studio() {
           }}
           onBody={(body) => {
             setEditing(null)
-            if (body !== (open.body ?? '')) commit(updateNode(history.ref.current, open.id, { body }))
+            if (body !== (open.body ?? '')) {
+              const cur = history.ref.current
+              const text = !body.trim() ? 'description cleared' : open.body?.trim() ? 'description edited' : 'description added'
+              commit(stamp(updateNode(cur, open.id, { body }), open.id, 'note', text))
+            }
           }}
-          onToggleDone={(id) => commit(toggleDone(history.ref.current, id))}
+          onToggleDone={(id) => commit(ticked(history.ref.current, id))}
           onDeleteLine={deleteNode}
           onStartLine={() => {
             setEditing(null)
             setDraft({ where: 'drawer', parent: open.id })
           }}
           onLineCommit={(title, keepGoing) => {
-            if (title.trim()) commit(addNode(history.ref.current, { parent: open.id, title: title.trim() }).doc)
+            if (title.trim()) {
+              const made = addNode(history.ref.current, { parent: open.id, title: title.trim() })
+              commit(created(made.doc, made.id))
+            }
             if (!keepGoing || !title.trim()) setDraft(null)
           }}
           onOpenProject={(id) => setProjectFilter(id)}
+          /* ----- night shift ----- */
+          now={now}
+          onDue={(due) => setDue(open.id, due)}
+          onNext={(next) => setNext(open.id, next)}
+          onToggleTonight={() => toggleTonight(open.id)}
+          onDust={() => {
+            const cur = history.ref.current
+            commit(moved(cur, open.id, 'dusted', setStatus(cur, open.id, 'dusted')))
+          }}
+          leftOff={leftOff && leftOff.id === open.id ? { onSave: resolveLeftOff, onSkip: () => resolveLeftOff(null) } : null}
+        />
+      ) : null}
+
+      {/* ----- night shift: the weekly review ----- */}
+      {review ? (
+        <Review
+          doc={doc}
+          now={now}
+          onClose={() => setReview(false)}
+          onOpen={(id) => {
+            setReview(false)
+            openNode(id)
+          }}
+          onDust={(id) => {
+            const cur = history.ref.current
+            commit(moved(cur, id, 'dusted', setStatus(cur, id, 'dusted')))
+          }}
         />
       ) : null}
     </div>

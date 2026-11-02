@@ -2039,3 +2039,949 @@
     animation-duration: 0ms !important;
   }
 }
+
+/* ============================================================== night shift
+ * Due dates, the one next action, tonight's shelf, the left-off question,
+ * "since last time", the trail, Sunday's review, dust, and night mode. One
+ * block at the foot of the sheet, so everything measured above reads as it
+ * was measured. Every value here is spent from the tokens at the top: no new
+ * colour, no second radius, no third face. The marks are drawn in NightGlyph.
+ */
+
+/* ----------------------------------------------------- rest-state visibility
+ * From the accessibility review: a control that is invisible until hovered is
+ * invisible to a keyboard and to a finger. The lane's ledger row, the card's
+ * chevron and the tree's row tools now sit at half strength at rest and come
+ * up full on hover or focus, which the rules above already do on the way up.
+ * They are also hittable at rest, since a thing you can see you can press.
+ */
+.lane-add {
+  opacity: 0.5;
+  pointer-events: auto;
+}
+
+.slab-shovel {
+  opacity: 0.5;
+  pointer-events: auto;
+}
+
+.stem-tools {
+  opacity: 0.5;
+}
+
+/* ------------------------------------------------------ themed hard values
+ * The sheet above sets a handful of greys by hand, straight off the comp.
+ * Night mode has to reach them, so they move onto variables here (light values
+ * unchanged) and the rules below re-point the properties at the variables.
+ */
+:root {
+  --slab-line: #e8e8e8;
+  --slab-folder-ink: #4a4a4a;
+  --slab-tick-ink: #5b5b5b;
+  --drawer-folder-ink: #454545;
+  --drawer-folder-mark: #6f6f6f;
+  --drawer-body-ink: #2b2b2b;
+  --toast-rule: rgb(255 255 255 / 0.35);
+  --toast-hover: rgb(255 255 255 / 0.12);
+}
+
+.slab,
+.subtask.is-ghost {
+  border-color: var(--slab-line);
+}
+
+.slab {
+  transition: border-color 120ms ease, background-color 120ms ease, opacity 140ms ease;
+}
+
+.slab-folder {
+  color: var(--slab-folder-ink);
+}
+
+.slab-tick {
+  color: var(--slab-tick-ink);
+}
+
+.drawer-folder {
+  color: var(--drawer-folder-ink);
+}
+
+.drawer-folder svg {
+  color: var(--drawer-folder-mark);
+}
+
+.drawer-body p {
+  color: var(--drawer-body-ink);
+}
+
+.toast-action {
+  border-color: var(--toast-rule);
+}
+
+.toast-action:hover {
+  background-color: var(--toast-hover);
+}
+
+/* ----------------------------------------------------------------- due chip
+ * The date on a card's meta line warms as the day comes: the quiet grey past a
+ * week out, ink inside three days, the accent on the day, the flag red once it
+ * has gone by. It is a word, so it is never set in the marks-only tint.
+ */
+.due-chip {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--color-ink-2);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.due-chip.is-near {
+  color: var(--color-ink);
+}
+
+.due-chip.is-today {
+  color: var(--color-accent);
+}
+
+.due-chip.is-overdue {
+  color: var(--color-urgent);
+}
+
+/* ------------------------------------------------------------- card face
+ * The one next action sits under the name in the quiet grey; a stale card's
+ * name drops to the same grey with a day count beside its progress; a card on
+ * tonight's shelf carries the pennant at the end of its meta line.
+ */
+.slab-next {
+  margin: 6px 0 0;
+  font-size: 12.5px;
+  line-height: 16px;
+  color: var(--color-ink-2);
+  overflow-wrap: anywhere;
+}
+
+.slab:has(.slab-tick) .slab-next {
+  margin-right: -14px;
+  padding-left: 28px;
+}
+
+.slab.is-stale:not(.is-urgent) .slab-title {
+  color: var(--color-ink-2);
+}
+
+.slab-dust {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--color-ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.slab-pennant {
+  flex: none;
+  width: 13px;
+  height: 13px;
+  color: var(--color-ink-3);
+}
+
+/*
+ * Focus mode: while the shelf holds anything, every card not on it steps back
+ * to 0.45, so the board says what tonight is for without saying anything else.
+ * The open card and a draft stay full; a card in the air is already its own signal.
+ */
+.board.is-focus .slab:not(.is-tonight):not(.is-open):not(.is-draft):not(.is-ghost) {
+  opacity: 0.45;
+}
+
+/* ------------------------------------------------------------------ shelf
+ * A strip above the lanes, the same white panel on the same hairline, holding
+ * at most three compact cards: name, folder, due chip, where you left off.
+ * It takes the board's own gutters and keeps clear of the drawer's rail the
+ * way the lanes do. During a drag it dashes, as an empty lane does — the one
+ * meaning a dashed edge has here: somewhere else is involved.
+ */
+.tonight {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 46px;
+  margin: 16px 16px -5px;
+  padding: 5px 10px 5px 19px;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-slab);
+  transition: border-color 120ms ease;
+}
+
+.tonight.is-target {
+  border-style: dashed;
+  border-color: var(--color-accent-line);
+}
+
+.tonight-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: none;
+  margin: 0;
+  font-family: var(--font-plaque);
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 22px;
+  letter-spacing: 0.055em;
+  text-transform: uppercase;
+}
+
+.tonight-glyph {
+  width: 15px;
+  height: 15px;
+  color: var(--color-ink-3);
+}
+
+.tonight-count {
+  font-family: var(--font-sans);
+  font-size: 15px;
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--color-ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.tonight-empty {
+  margin: 0;
+  font-size: 13.5px;
+  color: var(--color-ink-2);
+}
+
+.tonight-shelf {
+  display: flex;
+  gap: 10px;
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow-x: auto;
+}
+
+.tonight-card {
+  display: flex;
+  align-items: center;
+  flex: 0 1 400px;
+  min-width: 0;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-slab);
+  transition: border-color 120ms ease, background-color 120ms ease;
+}
+
+.tonight-card:hover {
+  border-color: var(--color-line-2);
+}
+
+.tonight-card.is-open {
+  background-color: var(--color-accent-wash);
+  border-color: var(--color-accent);
+}
+
+.tonight-open {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 7px 4px 7px 12px;
+  background: none;
+  border: 0;
+  text-align: left;
+}
+
+.tonight-title {
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 60%;
+  font-family: var(--font-plaque);
+  font-size: 14.5px;
+  font-weight: 700;
+  line-height: 18px;
+  text-transform: uppercase;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tonight-folder {
+  flex: none;
+  font-size: 12.5px;
+  color: var(--color-ink-2);
+}
+
+.tonight-leftoff {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 12.5px;
+  font-style: italic;
+  color: var(--color-ink-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tonight-drop {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 24px;
+  height: 24px;
+  margin-right: 4px;
+  padding: 0;
+  background: none;
+  border: 0;
+  border-radius: var(--radius-tick);
+  color: var(--color-ink-3);
+}
+
+.tonight-drop:hover {
+  background-color: var(--color-ground);
+  color: var(--color-urgent);
+}
+
+.tonight-drop svg {
+  width: 12px;
+  height: 12px;
+}
+
+/* A text action, like the tree's status verb: micro caps, no box. */
+.tonight-focus,
+.since-show,
+.trail-more,
+.review-action,
+.drawer-stale-dust {
+  flex: none;
+  padding: 0;
+  background: none;
+  border: 0;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-ink-2);
+  white-space: nowrap;
+}
+
+.tonight-focus:hover,
+.since-show:hover,
+.trail-more:hover,
+.review-action:hover,
+.drawer-stale-dust:hover {
+  color: var(--color-accent);
+}
+
+.tonight-focus {
+  margin-left: auto;
+  padding: 0 6px;
+}
+
+@media (min-width: 1360px) {
+  .tonight {
+    margin-right: calc(var(--drawer-width) + 16px);
+  }
+}
+
+/* ------------------------------------------------------------ since strip
+ * One line under the top bar on the first open after a stretch away. It is
+ * read, then shown or dismissed; it writes nothing.
+ */
+.since {
+  background-color: var(--color-surface);
+  border-bottom: 1px solid var(--color-line);
+}
+
+.since-line {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 38px;
+  padding: 0 20px 0 16px;
+}
+
+.since-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+  font-size: 13.5px;
+  color: var(--color-ink-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.since-close {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  background: none;
+  border: 0;
+  border-radius: var(--radius-tick);
+  color: var(--color-ink-2);
+}
+
+.since-close:hover {
+  background-color: var(--color-ground);
+  color: var(--color-ink);
+}
+
+.since-close svg {
+  width: 13px;
+  height: 13px;
+}
+
+.since-list {
+  display: flex;
+  flex-direction: column;
+  max-height: 240px;
+  margin: 0;
+  padding: 2px 16px 10px;
+  list-style: none;
+  overflow-y: auto;
+}
+
+.since-item {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  padding: 3px 0;
+  font-size: 13.5px;
+  line-height: 20px;
+}
+
+.since-what {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.since-when {
+  flex: none;
+  font-size: 12.5px;
+  color: var(--color-ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ------------------------------------------------------- drawer: night lines
+ * Under the title row: the due chip (the native picker stretched over it, the
+ * way the top bar's chips carry their select), the one next action, where you
+ * left off in quiet italics, and the dust line when a card has gathered any.
+ */
+.drawer-night {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  margin: 14px 0 0;
+}
+
+.drawer-due-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.drawer-due {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 28px;
+  padding: 0 10px 0 9px;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-control);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--color-ink-2);
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+
+.drawer-due:hover {
+  border-color: var(--color-line-2);
+}
+
+.drawer-due:focus-within {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px var(--color-accent-wash);
+}
+
+.drawer-due.is-unset {
+  font-weight: 400;
+}
+
+.drawer-due.is-near {
+  color: var(--color-ink);
+}
+
+.drawer-due.is-today {
+  color: var(--color-accent);
+}
+
+.drawer-due.is-overdue {
+  color: var(--color-urgent);
+}
+
+.drawer-due-glyph {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  color: var(--color-ink-3);
+}
+
+.drawer-due.is-today .drawer-due-glyph,
+.drawer-due.is-overdue .drawer-due-glyph {
+  color: inherit;
+}
+
+.drawer-due-input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.drawer-due-clear {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  background: none;
+  border: 0;
+  border-radius: var(--radius-tick);
+  color: var(--color-ink-3);
+}
+
+.drawer-due-clear:hover {
+  background-color: var(--color-ground);
+  color: var(--color-urgent);
+}
+
+.drawer-due-clear svg {
+  width: 12px;
+  height: 12px;
+}
+
+.drawer-next-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.drawer-next-label {
+  flex: none;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-ink-2);
+}
+
+.drawer-next {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 0;
+  background: none;
+  border: 0;
+  font-size: 13.5px;
+  line-height: 20px;
+  color: var(--color-ink);
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+
+.drawer-next.is-empty {
+  color: var(--color-ink-2);
+}
+
+.drawer-next:hover {
+  color: var(--color-accent);
+}
+
+.drawer-next-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  outline: none;
+  font-size: 13.5px;
+  line-height: 20px;
+}
+
+.drawer-leftoff {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 18px;
+  font-style: italic;
+  color: var(--color-ink-2);
+  overflow-wrap: anywhere;
+}
+
+.drawer-stale {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 18px;
+  color: var(--color-ink-2);
+}
+
+.drawer-tool.is-tonight {
+  color: var(--color-accent);
+}
+
+/* ------------------------------------------------------------- left-off ask
+ * Asked at the top of a drawer that has been open a while and is closing: a
+ * washed row, one line, Enter keeps it and Esc lets it go.
+ */
+.leftoff {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: none;
+  margin: 0 0 14px;
+  padding: 10px 12px 9px;
+  background-color: var(--color-accent-wash);
+  border: 1px solid var(--color-accent-line);
+  border-radius: var(--radius-control);
+}
+
+.leftoff-ask {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--color-ink);
+}
+
+.leftoff-input {
+  width: 100%;
+  padding: 6px 9px;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: 6px;
+  outline: none;
+  font-size: 13.5px;
+}
+
+.leftoff-input:focus {
+  border-color: var(--color-accent);
+}
+
+.leftoff-keys {
+  margin: 0;
+  font-size: 11.5px;
+  color: var(--color-ink-2);
+}
+
+/* ------------------------------------------------------------------ trail
+ * The foot of the drawer: what has happened to this task, newest first, in
+ * the quiet grey, eight lines and then "show all".
+ */
+.trail {
+  margin: 30px 0 0;
+}
+
+.trail-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.trail-line {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-size: 12.5px;
+  line-height: 18px;
+  color: var(--color-ink-2);
+}
+
+.trail-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.trail-when {
+  flex: none;
+  font-variant-numeric: tabular-nums;
+}
+
+.trail-more {
+  margin: 8px 0 0;
+}
+
+/* ----------------------------------------------------------------- review
+ * Sunday's sit-down: a sheet over the field in the field's own clothes — the
+ * same bar, the same three panels on the same hairline — and Esc puts it away.
+ */
+.review {
+  position: fixed;
+  inset: 0;
+  z-index: 45;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--color-ground);
+  overflow-y: auto;
+  animation: line-in 160ms cubic-bezier(0.2, 0.7, 0.3, 1) both;
+}
+
+.review-head {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex: none;
+  height: 69px;
+  padding: 0 20px 0 16px;
+  background-color: var(--color-surface);
+  border-bottom: 1px solid var(--color-line);
+}
+
+.review-name {
+  margin: 0;
+  font-family: var(--font-plaque);
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 22px;
+  letter-spacing: 0.055em;
+  text-transform: uppercase;
+}
+
+.review-range {
+  margin: 0;
+  font-size: 13.5px;
+  color: var(--color-ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.review-close {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 38px;
+  height: 38px;
+  margin-left: auto;
+  padding: 0;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-control);
+  color: var(--color-ink-2);
+}
+
+.review-close:hover {
+  border-color: var(--color-line-2);
+  color: var(--color-ink);
+}
+
+.review-close svg {
+  width: 17px;
+  height: 17px;
+}
+
+.review-columns {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--lane-gap);
+  align-items: start;
+  padding: 21px 16px 24px;
+}
+
+.review-col {
+  min-height: 260px;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-slab);
+}
+
+.review-label {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0;
+  padding: 15px 19px 12px;
+  font-family: var(--font-plaque);
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 22px;
+  letter-spacing: 0.055em;
+  text-transform: uppercase;
+}
+
+.review-count {
+  font-family: var(--font-sans);
+  font-size: 15px;
+  font-weight: 400;
+  letter-spacing: 0;
+  color: var(--color-ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.review-list {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0 10px 10px;
+  list-style: none;
+}
+
+.review-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  row-gap: 3px;
+  column-gap: 12px;
+  padding: 9px;
+  border-radius: 5px;
+}
+
+.review-row + .review-row {
+  box-shadow: 0 -1px 0 var(--color-line);
+}
+
+.review-row:hover {
+  background-color: var(--color-ground);
+}
+
+.review-title {
+  padding: 0;
+  background: none;
+  border: 0;
+  font-family: var(--font-plaque);
+  font-size: 14.5px;
+  font-weight: 700;
+  line-height: 18px;
+  text-transform: uppercase;
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+
+.review-title:hover {
+  color: var(--color-accent);
+}
+
+.review-meta {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 12.5px;
+  line-height: 16px;
+  color: var(--color-ink-2);
+}
+
+.review-actions {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.review-empty {
+  padding: 4px 9px;
+  font-size: 13.5px;
+  color: var(--color-ink-2);
+}
+
+@media (max-width: 900px) {
+  .tonight {
+    margin: 14px 14px -5px;
+  }
+
+  .review-columns {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 14px;
+  }
+}
+
+/* ------------------------------------------------------------- night mode
+ * The same field after dark: the tokens re-pointed, nothing else. Ink-2 holds
+ * 7.2:1 on the panel and ink-3 3.7:1, so every word and every mark clears the
+ * floors it clears by day; the accent and the flag red are lifted to 5.5:1 and
+ * 5.2:1 for the same reason; the five lane inks are lifted alike. A stored
+ * choice on <html> wins; with none, the system's own dark preference does.
+ */
+:root[data-theme='night'] {
+  --color-ground: #101114;
+  --color-surface: #17191d;
+  --color-ink: #ecedef;
+  --color-ink-2: #a2a6ad;
+  --color-ink-3: #6f737a;
+  --color-line: #262930;
+  --color-line-2: #33373f;
+  --color-accent: #4c8ff7;
+  --color-accent-deep: #3b7de6;
+  /* Dark on the lifted blue: 5.9:1, where white on it would be 3.2:1. */
+  --color-accent-ink: #101114;
+  --color-accent-wash: #172238;
+  --color-accent-line: #2b4a80;
+  --color-urgent: #f0574b;
+  --color-pending: #a2a6ad;
+  --color-rnd: #b39bf2;
+  --color-active: #4c8ff7;
+  --color-done: #4cbf86;
+  --color-dusted: #b9a089;
+  --slab-line: #262930;
+  --slab-folder-ink: #b4b8bf;
+  --slab-tick-ink: #a2a6ad;
+  --drawer-folder-ink: #c0c3c9;
+  --drawer-folder-mark: #8a8e95;
+  --drawer-body-ink: #d6d8dc;
+  --toast-rule: rgb(16 17 20 / 0.35);
+  --toast-hover: rgb(16 17 20 / 0.1);
+  color-scheme: dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --color-ground: #101114;
+    --color-surface: #17191d;
+    --color-ink: #ecedef;
+    --color-ink-2: #a2a6ad;
+    --color-ink-3: #6f737a;
+    --color-line: #262930;
+    --color-line-2: #33373f;
+    --color-accent: #4c8ff7;
+    --color-accent-deep: #3b7de6;
+    --color-accent-ink: #101114;
+    --color-accent-wash: #172238;
+    --color-accent-line: #2b4a80;
+    --color-urgent: #f0574b;
+    --color-pending: #a2a6ad;
+    --color-rnd: #b39bf2;
+    --color-active: #4c8ff7;
+    --color-done: #4cbf86;
+    --color-dusted: #b9a089;
+    --slab-line: #262930;
+    --slab-folder-ink: #b4b8bf;
+    --slab-tick-ink: #a2a6ad;
+    --drawer-folder-ink: #c0c3c9;
+    --drawer-folder-mark: #8a8e95;
+    --drawer-body-ink: #d6d8dc;
+    --toast-rule: rgb(16 17 20 / 0.35);
+    --toast-hover: rgb(16 17 20 / 0.1);
+    color-scheme: dark;
+  }
+}
