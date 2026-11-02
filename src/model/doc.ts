@@ -480,6 +480,31 @@ export function outdentNode(doc: Doc, id: number): Doc {
   return freeze(normalize(next))
 }
 
+/* ---------------------------------------------------- hellish directory: mv */
+
+/**
+ * Moves a node, and everything under it, to be the last child of `parentId`
+ * (or the last project, when null). Refuses to move a node into itself or
+ * its own subtree, and returns the same Doc when nothing would change. The
+ * shell's `mv path dest/` runs through here; a pulled satellite docks as it goes.
+ */
+export function reparentNode(doc: Doc, id: number, parentId: number | null): Doc {
+  const node = byId(doc, id)
+  if (!node) return doc
+  if (parentId != null) {
+    if (!byId(doc, parentId) || parentId === id || inSubtree(doc, id, parentId)) return doc
+  }
+  if (node.parent === parentId && !node.loose) return doc
+  const next = clone(doc)
+  const block = new Set(subtreeIds(next, id))
+  const moving = next.nodes.filter((n) => block.has(n.id))
+  next.nodes = next.nodes.filter((n) => !block.has(n.id)).concat(moving)
+  const n = byId(next, id)!
+  n.parent = parentId
+  delete n.loose
+  return freeze(normalize(next))
+}
+
 /** Moves a node one place up or down among its siblings. */
 export function shiftNode(doc: Doc, id: number, dir: -1 | 1): Doc {
   const node = byId(doc, id)

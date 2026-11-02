@@ -1,4 +1,4 @@
-import { memo, useEffect, useMemo, useRef, useState, type ChangeEvent, type KeyboardEvent, type MouseEvent, type PointerEvent } from 'react'
+import { memo, useEffect, useMemo, useRef, useState, type ChangeEvent, type KeyboardEvent, type MouseEvent, type PointerEvent, type ReactNode } from 'react'
 import { byId, childrenOf, depthOf, indentNode, kindOf, laneOf, outdentNode, projectsOf, searchPaths, shiftNode } from '../model/doc'
 import { treeRows, type TreeRow } from '../model/tree'
 import { LANES, LANE_LABEL, isLane, type Doc, type Lane, type Node } from '../model/types'
@@ -33,6 +33,8 @@ type DirectoryProps = {
   onPull: (id: number, lane: Lane) => void
   /** Night shift: `t` on a row puts its card on tonight's shelf, or takes it off. */
   onToggleTonight?: (id: number) => void
+  /** Hellish directory: the notes, drawn as the first folder (`inbox/`) above the project tree. */
+  inbox?: ReactNode
 }
 
 const THRESH = 6
@@ -56,12 +58,23 @@ export function Directory(props: DirectoryProps) {
   const flat = useMemo(() => columns.flat(), [columns])
   const taskCount = doc.nodes.filter((n) => n.parent != null && kindOf(doc, n.id) === 'task').length
 
-  // Keep the selected row in view as the keyboard moves it.
+  // Keep the selected row in view as the keyboard moves it, or as a card on the board selects it.
   // (scrollIntoView is slow on a long multi-column tree, so measure and scroll only when it is actually off screen.)
+  // Hellish directory: on a wide field the directory is its own scrolling pane, so that is what scrolls; below it, the page.
   useEffect(() => {
     if (selectedId == null) return
-    const r = document.getElementById(`tree-${selectedId}`)?.getBoundingClientRect()
-    if (!r) return
+    const el = document.getElementById(`tree-${selectedId}`)
+    const r = el?.getBoundingClientRect()
+    if (!el || !r) return
+    const pane = el.closest<HTMLElement>('.directory')
+    if (pane && pane.scrollHeight > pane.clientHeight + 1 && getComputedStyle(pane).overflowY !== 'visible') {
+      const p = pane.getBoundingClientRect()
+      // The pane's head is sticky, so the usable top edge is under it.
+      const head = pane.querySelector('.section-head')?.getBoundingClientRect().height ?? 0
+      if (r.top < p.top + head + 8) pane.scrollTop += r.top - p.top - head - 8
+      else if (r.bottom > p.bottom - 8) pane.scrollTop += r.bottom - p.bottom + 8
+      return
+    }
     const top = 80
     if (r.top < top) window.scrollBy(0, r.top - top)
     else if (r.bottom > window.innerHeight - 16) window.scrollBy(0, r.bottom - window.innerHeight + 16)
@@ -311,6 +324,9 @@ export function Directory(props: DirectoryProps) {
           ~/vault · {roots.length === 1 ? '1 project' : `${roots.length} projects`} · {taskCount === 1 ? '1 task' : `${taskCount} tasks`}
         </span>
       </div>
+
+      {/* Hellish directory: inbox/ — the notes — is the first folder of the listing. Hidden while a search narrows the tree. */}
+      {props.inbox && !keep ? <div className="forest-inbox">{props.inbox}</div> : null}
 
       <div
         className="forest"

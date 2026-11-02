@@ -58,6 +58,11 @@ describe('bridge client', () => {
     expect(await removeInbox('http://x', 0)).toBe(true)
   })
 
+  it('reads the inbox as vault-agent sends it, wrapped in { inbox }', async () => {
+    vi.spyOn(globalThis, 'fetch').mockImplementation(() => respond(200, { inbox: [{ at: 5, taskId: 2, text: '## Report' }] }))
+    expect(await pullInbox('http://x')).toEqual([{ at: 5, taskId: 2, text: '## Report' }])
+  })
+
   it('newer picks the later savedAt', () => {
     expect(newer({ savedAt: 1 }, { savedAt: 2 })).toBe('theirs')
     expect(newer({ savedAt: 3 }, { savedAt: 2 })).toBe('mine')

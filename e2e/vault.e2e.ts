@@ -12,6 +12,11 @@ const row = (page: Page, id: number) => page.getByTestId(`tree-row-${id}`)
 const laneOfCard = (page: Page, id: number) => card(page, id).locator('xpath=ancestor::section[@data-lane]').getAttribute('data-lane')
 const saved = (page: Page) =>
   page.evaluate(() => (JSON.parse(localStorage.getItem('vault:doc') ?? 'null')?.doc ?? null) as { nodes: Array<Record<string, unknown>>; notes: Array<Record<string, unknown>> })
+/* Hellish directory: filters are applied from the one input — `p:research`, `s:active`, `!` — and show as chips. */
+const filter = async (page: Page, words: string) => {
+  await page.getByTestId('search').fill(words)
+  await page.getByTestId('search').press('Enter')
+}
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/')
@@ -57,7 +62,7 @@ test.describe('no key changes data behind your back', () => {
 
   test('Backspace on a focused filter does not delete anything', async ({ page }) => {
     await card(page, 8).click()
-    await page.getByTestId('project-filter').focus()
+    await page.getByTestId('filter-open').focus()
     await page.keyboard.press('Backspace')
     await page.keyboard.press('Delete')
     await expect(card(page, 8)).toBeVisible()
@@ -143,7 +148,7 @@ test.describe('board', () => {
   })
 
   test('New task with a project filter lands in that project, visibly', async ({ page }) => {
-    await page.getByTestId('project-filter').selectOption({ label: 'research' })
+    await filter(page, 'p:research')
     await page.getByTestId('new-task').click()
     await page.getByRole('textbox', { name: 'New task name' }).fill('FIND COMPETITORS')
     await page.getByRole('textbox', { name: 'New task name' }).press('Enter')
@@ -164,7 +169,7 @@ test.describe('board', () => {
     await page.getByTestId('drawer-urgent').click()
     await expect(card(page, 13)).toContainText('URGENT')
     await expect(row(page, 13)).toContainText('!')
-    await page.getByTestId('urgent-filter').click()
+    await filter(page, '!')
     await expect(page.locator('[data-card-id]')).toHaveCount(1)
   })
 })
@@ -341,8 +346,8 @@ test.describe('second review', () => {
 
   for (const setup of ['urgent', 'status', 'search'] as const) {
     test(`a new task made under the ${setup} filter is visible`, async ({ page }) => {
-      if (setup === 'urgent') await page.getByTestId('urgent-filter').click()
-      if (setup === 'status') await page.getByTestId('status-filter').selectOption('active')
+      if (setup === 'urgent') await filter(page, '!')
+      if (setup === 'status') await filter(page, 's:active')
       if (setup === 'search') await page.getByTestId('search').fill('wire')
       await page.getByTestId('new-task').click()
       await page.getByRole('textbox', { name: 'New task name' }).fill('MADE UNDER FILTER')

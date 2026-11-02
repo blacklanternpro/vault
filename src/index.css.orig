@@ -1,0 +1,3673 @@
+@import 'tailwindcss';
+@import '@fontsource-variable/public-sans/wght.css';
+@import '@fontsource-variable/sofia-sans-semi-condensed/wght.css';
+
+/*
+ * VAULT WORLDWIDE — the board.
+ * Every number here is measured off .impeccable/mocks/canon-board.webp: colours
+ * sampled from comp pixels, type sizes derived from ink-row profiles, boxes from
+ * border scans. Both faces are the ones font-match ranked (.impeccable/build/spec.json).
+ */
+
+@theme {
+  --color-ground: #f2f3f6;
+  --color-surface: #ffffff;
+  --color-ink: #151515;
+  /* Secondary text. 5.4:1 on the surface, 4.9:1 on the ground: readable ink. */
+  --color-ink-2: #666a70;
+  /*
+   * The tint, and never text: glyph strokes, tree stems, disclosure marks. It
+   * is held at 3:1 on both the surface and the ground, which is the floor for a
+   * mark that carries meaning, and below what a word is allowed to be set in.
+   */
+  --color-ink-3: #83878e;
+  --color-line: #e5e6e8;
+  --color-line-2: #d7d9dd;
+  --color-accent: #0b6ef3;
+  /* The same blue pressed down, which is the only step the accent has. */
+  --color-accent-deep: #0a5cdd;
+  --color-accent-ink: #ffffff;
+  --color-accent-wash: #f1f6fe;
+  --color-accent-line: #a9c9fb;
+  --color-urgent: #d92c20;
+
+  /*
+   * Status has a colour only where a job is entered. The board stays in one
+   * accent, as the comp has it, so the lane a card sits in is what says its
+   * state; the drawer's plaque is where the state gets named, and names it in
+   * ink. Dusted is the one warm ink in the field, which is the whole point of
+   * it: the shelved thing is the only thing here that has gathered any.
+   */
+  --color-pending: #666a70;
+  --color-rnd: #7a4ddb;
+  --color-active: #0b6ef3;
+  --color-done: #157f4a;
+  --color-dusted: #7b6a5d;
+
+  --font-sans: 'Public Sans Variable', 'Public Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  /* The plaque face: job names and lane names, the only caps the board shouts. */
+  --font-plaque: 'Sofia Sans Semi Condensed Variable', 'Sofia Sans Semi Condensed', 'Public Sans Variable', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+
+  --radius-slab: 8px;
+  --radius-control: 8px;
+  --radius-tick: 4px;
+
+  /* Board metrics, straight off the comp's border scan. */
+  --lane-width: 196px;
+  --lane-gap: 10px;
+  --drawer-width: 286px;
+
+}
+
+@layer base {
+  html {
+    background-color: var(--color-ground);
+  }
+
+  body {
+    margin: 0;
+    background-color: var(--color-ground);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-size: 15px;
+    line-height: 1.45;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  ::selection {
+    background-color: var(--color-accent-wash);
+    color: var(--color-ink);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 1px;
+    border-radius: 3px;
+  }
+
+  button,
+  input,
+  textarea,
+  select {
+    font: inherit;
+    color: inherit;
+  }
+
+  button {
+    cursor: pointer;
+  }
+
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-line-2) transparent;
+  }
+
+  *::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    background-color: var(--color-line-2);
+    border: 3px solid var(--color-ground);
+    border-radius: 6px;
+  }
+
+  *::-webkit-scrollbar-track {
+    background-color: transparent;
+  }
+}
+
+/* ------------------------------------------------------------------ shell */
+
+.studio {
+  min-height: 100vh;
+  background-color: var(--color-ground);
+}
+
+
+/* ----------------------------------------------------------------- topbar */
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 0;
+  height: 69px;
+  padding: 0 20px 0 16px;
+  background-color: var(--color-surface);
+  border-bottom: 1px solid var(--color-line);
+}
+
+.topbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  flex: none;
+}
+
+.brand-mark {
+  display: block;
+  width: 36px;
+  height: 33px;
+  color: var(--color-ink);
+}
+
+.brand-name {
+  margin: 0;
+  padding-top: 4px;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.find {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  flex: 0 0 377px;
+  height: 40px;
+  margin-left: 55px;
+  padding: 0 14px;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-control);
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+
+.find:focus-within {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px var(--color-accent-wash);
+}
+
+.find-glass {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  color: var(--color-ink-3);
+}
+
+.find-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  border: 0;
+  background: none;
+  font-size: 13.5px;
+  outline: none;
+}
+
+.find-input::placeholder {
+  color: var(--color-ink-2);
+}
+
+.find-keys {
+  flex: none;
+  font-size: 12px;
+  color: var(--color-ink-2);
+  letter-spacing: 0.04em;
+}
+
+.find-count {
+  flex: none;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-accent);
+  letter-spacing: 0.04em;
+}
+
+/*
+ * The chips pack against the search field and the primary action pins to the
+ * right rail, so the slack between them absorbs whatever the labels cost.
+ */
+.topbar-filters {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1 1 auto;
+  min-width: 0;
+  margin-left: 28px;
+}
+
+.chip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 36px;
+  padding: 0 12px 0 13px;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-control);
+  font-size: 14.5px;
+  color: var(--color-ink);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.chip:focus-within {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px var(--color-accent-wash);
+}
+
+.chip-label {
+  pointer-events: none;
+}
+
+.chip-select {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  border-radius: inherit;
+  background: none;
+  opacity: 0;
+  appearance: none;
+  cursor: pointer;
+}
+
+.chip:hover {
+  border-color: var(--color-line-2);
+}
+
+.chip-caret {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  color: var(--color-ink-2);
+  pointer-events: none;
+}
+
+.new-job {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  height: 38px;
+  margin-left: auto;
+  padding: 0 7px 0 15px;
+  background-color: var(--color-accent);
+  border: 1px solid var(--color-accent);
+  border-radius: var(--radius-control);
+  color: var(--color-accent-ink);
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.new-job:hover {
+  background-color: var(--color-accent-deep);
+}
+
+.new-job-glyph {
+  width: 16px;
+  height: 16px;
+}
+
+/* The chevron is thrown to the far edge in the comp, away from `+ New`. */
+.new-job-chevron {
+  width: 17px;
+  height: 17px;
+  margin-left: 10px;
+  opacity: 0.75;
+}
+
+/* ------------------------------------------------------------------ stage */
+
+/*
+ * The drawer floats over the right of the stage rather than taking a column, so
+ * opening a job never reshuffles the lanes underneath. In the comp the DUSTED
+ * lane runs on under the panel, which is what fixes this behaviour.
+ */
+.stage {
+  position: relative;
+  min-height: 0;
+}
+
+/* ------------------------------------------------------------------ board */
+
+.board {
+  position: relative;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: var(--lane-width);
+  gap: var(--lane-gap);
+  /*
+   * Lanes are as tall as the fullest one and no taller, so an emptyish board
+   * does not push the directory a screen down. The floor keeps a near-empty
+   * board a board rather than a strip of headers.
+   */
+  align-items: stretch;
+  padding: 21px 16px 16px;
+  overflow-x: auto;
+  overflow-y: visible;
+}
+
+.lane {
+  display: flex;
+  flex-direction: column;
+  min-height: 260px;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-slab);
+}
+
+.lane-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  flex: none;
+  padding: 15px 19px 21px;
+}
+
+.lane-name {
+  font-family: var(--font-plaque);
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 22px;
+  letter-spacing: 0.055em;
+  text-transform: uppercase;
+}
+
+.lane-count {
+  font-size: 15px;
+  font-weight: 400;
+  color: var(--color-ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.lane-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  flex: 1 1 auto;
+  padding: 0 10px 10px;
+}
+
+/* ------------------------------------------------------------------ slabs */
+
+.slab {
+  position: relative;
+  /* Ties the filament's layer and wins on document order, so cables pass behind. */
+  z-index: 1;
+  flex: none;
+  min-height: 94px;
+  padding: 23px 14px 18px;
+  background-color: var(--color-surface);
+  border: 1px solid #e8e8e8;
+  border-radius: var(--radius-slab);
+  text-align: left;
+  transition: border-color 120ms ease, background-color 120ms ease;
+}
+
+.slab:hover {
+  border-color: var(--color-line-2);
+}
+
+.slab.is-open {
+  background-color: var(--color-accent-wash);
+  border-color: var(--color-accent);
+}
+
+.slab.is-live:not(.is-open) {
+  border-color: var(--color-accent-line);
+}
+
+/*
+ * A found card gets nothing here on purpose. The hit is already declared on the
+ * word that matched, and a plate is what the open card is, so spending the wash
+ * on both left one card in twelve separated from the rest by a hairline's colour
+ * alone. The catalogue already draws the line in the right place — the stem's
+ * plate is selection and its found state is a mark on the name — and the board
+ * now draws it the same way: the plate is where you are, the mark is what you
+ * searched for.
+ */
+
+/*
+ * Airborne, and elevation says so on its own — the shadow is the whole signal.
+ * A card in the air is still the same card, so it keeps its own hairline.
+ */
+.slab.is-ghost {
+  box-shadow: 0 8px 20px rgb(21 21 21 / 0.13);
+}
+
+.slab.is-away {
+  opacity: 0.32;
+}
+
+/*
+ * The card's one quick action, held out of sight until the pointer is on the
+ * card — so the resting board is exactly the comp's, and the thing you reach
+ * for is there the moment you reach. It takes the card's own background so it
+ * masks the plate it sits on rather than patching white over a washed one.
+ *
+ * Hidden means unhittable, the way the lane's and the drawer's own hidden rows
+ * already work. That is only half of it: a tap synthesises hover before it
+ * synthesises the click, so the reveal and the hit arrive in one gesture and
+ * the corner is live again. The other half is in Board.tsx, which declines a
+ * press that did not come from a mouse and lets it reach the card instead.
+ */
+.slab-shovel {
+  position: absolute;
+  right: 5px;
+  bottom: 5px;
+  display: grid;
+  place-items: center;
+  width: 23px;
+  height: 23px;
+  padding: 0;
+  background-color: inherit;
+  border: 0;
+  border-radius: 6px;
+  color: var(--color-ink-3);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 110ms ease, color 110ms ease, background-color 110ms ease;
+}
+
+.slab:hover .slab-shovel,
+.slab-shovel:focus-visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.slab-shovel:hover {
+  background-color: var(--color-accent-wash);
+  color: var(--color-accent);
+}
+
+.slab-shovel-glyph {
+  width: 15px;
+  height: 15px;
+}
+
+.slab-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/*
+ * A done card drops its ring into a gutter and runs the plaque and the folder
+ * down one text column beside it, the way the comp's DONE lane does. Both rows
+ * spend the card's side padding, so the longest name still holds one line.
+ */
+.slab-head:has(.slab-tick) {
+  gap: 7px;
+  margin-left: -5px;
+  margin-right: -14px;
+}
+
+.slab:has(.slab-tick) .slab-folder {
+  margin-right: -14px;
+  padding-left: 28px;
+}
+
+.slab-tick {
+  flex: none;
+  width: 21px;
+  height: 21px;
+  color: #5b5b5b;
+}
+
+.slab-title {
+  margin: 0;
+  font-family: var(--font-plaque);
+  font-size: 15.5px;
+  font-weight: 700;
+  line-height: 20px;
+  letter-spacing: 0;
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+}
+
+.slab-folder {
+  margin: 11px 0 0;
+  font-size: 12.5px;
+  line-height: 16px;
+  color: #4a4a4a;
+  overflow-wrap: anywhere;
+}
+
+.slab.is-urgent .slab-title {
+  color: var(--color-urgent);
+}
+
+.slab-flag {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--color-urgent);
+}
+
+.slab-input {
+  width: 100%;
+  border: 0;
+  background: none;
+  outline: none;
+  padding: 0;
+  font-family: var(--font-plaque);
+  font-size: 15.5px;
+  font-weight: 700;
+  line-height: 20px;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+/*
+ * The lane's last line is empty and writes: the same ledger row the tree and
+ * the tape use. It stays out of the way while the lane holds cards, since the
+ * comp shows no such row, and holds its place when the lane is empty, which is
+ * the only time it is the lane's whole content.
+ */
+.lane-add {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  flex: none;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 120ms ease, color 120ms ease;
+  width: 100%;
+  padding: 11px 4px;
+  background: none;
+  border: 0;
+  color: var(--color-ink-2);
+  font-size: 13.5px;
+  text-align: left;
+}
+
+.lane:hover .lane-add,
+.lane-add:focus-visible,
+.lane-stack:has(.lane-void) .lane-add {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* In an empty lane the row is the first line, not a note stranded at the foot. */
+.lane-stack:has(.lane-void) .lane-add {
+  order: -1;
+}
+
+.lane-add:hover {
+  color: var(--color-accent);
+}
+
+.lane-add-glyph {
+  flex: none;
+  width: 15px;
+  height: 15px;
+}
+
+.lane-void {
+  flex: 1 1 auto;
+  min-height: 44px;
+  border-radius: var(--radius-slab);
+}
+
+.board.is-dragging .lane-void {
+  border: 1px dashed var(--color-accent-line);
+}
+
+/* ----------------------------------------------------------------- leashes
+ * A job pulled LOOSE keeps a visible cable back to the card it came from, so
+ * the graph stays legible after the board has scattered it across lanes.
+ */
+
+/*
+ * The cable runs over the lane panels, which are unpositioned and so paint
+ * below it, and under the cards, which tie its z-index and win on order. It has
+ * to be both: threaded behind a card it passes, and never hidden by a lane.
+ */
+.filaments {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.leash-jacket {
+  fill: none;
+  stroke: var(--color-surface);
+  stroke-width: 4;
+  stroke-linecap: round;
+}
+
+.leash-core {
+  fill: none;
+  stroke: var(--color-line-2);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+}
+
+.leash-core.is-taut {
+  stroke: var(--color-accent);
+}
+
+.jack,
+.jack-anchor {
+  position: absolute;
+  top: 19px;
+}
+
+.jack-anchor {
+  width: 1px;
+  height: 1px;
+  left: 1px;
+}
+
+/* Held inside the card edge: the lane stack scrolls, so anything overhanging clips. */
+.jack {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: var(--color-surface);
+  border: 1.5px solid var(--color-line-2);
+  z-index: 2;
+}
+
+.jack.is-sat {
+  left: 3px;
+}
+
+.jack.is-host {
+  right: 3px;
+}
+
+.slab.is-loose {
+  border-style: dashed;
+  border-color: var(--color-line-2);
+}
+
+.slab.is-loose .jack {
+  border-color: var(--color-accent);
+}
+
+/* ----------------------------------------------------------------- drawer */
+
+/*
+ * The rail ends where the field does, and the sliver below it is the dump's own
+ * top edge — same 286px column, same white, one hairline between them, so the
+ * right rail reads as running the whole page rather than stopping. Hanging the
+ * rail past the field to reach the screen edge instead cost more than it bought:
+ * it is 24px of the dump's header, clipped at every scroll position, because the
+ * catalogue starts exactly where the field ends and the drawer paints over it.
+ */
+.drawer {
+  position: fixed;
+  inset: 69px 0 0 auto;
+  z-index: 15;
+  box-shadow: -12px 0 32px rgb(21 21 21 / 0.06);
+  display: flex;
+  flex-direction: column;
+  width: var(--drawer-width);
+  padding: 19px 18px 24px;
+  background-color: var(--color-surface);
+  border-left: 1px solid var(--color-line);
+  overflow-y: auto;
+}
+
+.drawer-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: none;
+}
+
+.drawer-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0;
+  background: none;
+  border: 0;
+  font-family: var(--font-plaque);
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 20px;
+  letter-spacing: 0;
+  text-transform: uppercase;
+  color: var(--color-active);
+}
+
+/* The plaque's caps ride above the line's optical centre; the dot goes with them. */
+.drawer-dot {
+  width: 11px;
+  height: 11px;
+  margin-bottom: 4px;
+  border-radius: 50%;
+  background-color: currentColor;
+}
+
+.drawer-status.is-pending {
+  color: var(--color-pending);
+}
+
+.drawer-status.is-rnd {
+  color: var(--color-rnd);
+}
+
+.drawer-status.is-done {
+  color: var(--color-done);
+}
+
+.drawer-status.is-dusted {
+  color: var(--color-dusted);
+}
+
+.drawer-close {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  margin-left: auto;
+  background: none;
+  border: 0;
+  border-radius: 6px;
+  color: var(--color-ink-2);
+}
+
+.drawer-close:hover {
+  background-color: var(--color-ground);
+  color: var(--color-ink);
+}
+
+.drawer-close svg {
+  width: 19px;
+  height: 19px;
+}
+
+.drawer-title {
+  margin: 21px 0 0;
+  font-family: var(--font-plaque);
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 32px;
+  letter-spacing: 0.016em;
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+}
+
+.drawer-title-input {
+  width: 100%;
+  margin: 21px 0 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  outline: none;
+  font-family: var(--font-plaque);
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 32px;
+  letter-spacing: 0.016em;
+  text-transform: uppercase;
+}
+
+.drawer-folder {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 13px 0 0;
+  padding: 0;
+  background: none;
+  border: 0;
+  font-size: 15.5px;
+  line-height: 21px;
+  color: #454545;
+}
+
+.drawer-folder:hover {
+  color: var(--color-accent);
+}
+
+.drawer-folder svg {
+  flex: none;
+  width: 21px;
+  height: 21px;
+  color: #6f6f6f;
+}
+
+.drawer-rule {
+  flex: none;
+  height: 1px;
+  margin: 19px 0 0;
+  background-color: var(--color-line);
+  border: 0;
+}
+
+/*
+ * The comp sets these in the condensed face, not the body one: same 86px of ink
+ * for DESCRIPTION, but taller caps inside it. So they are plaques like the lane
+ * heads and the job names, two sizes down — which is also the reading that made
+ * the drawer's own labels the page's worst-scoring text while they were set in
+ * the body sans, spaced out to reach the same width at three quarters the cap.
+ */
+.drawer-label {
+  margin: 21px 0 0;
+  font-family: var(--font-plaque);
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 18px;
+  letter-spacing: 0.015em;
+  text-transform: uppercase;
+  color: var(--color-ink-2);
+}
+
+.drawer-body + .drawer-label {
+  margin-top: 39px;
+}
+
+.drawer-body {
+  margin: 12px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+}
+
+.drawer-body p {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 25px;
+  color: #2b2b2b;
+  overflow-wrap: anywhere;
+}
+
+.drawer-body-empty {
+  color: var(--color-ink-2);
+}
+
+.drawer-body-input {
+  width: 100%;
+  margin: 9px 0 0;
+  padding: 9px 10px;
+  background-color: var(--color-ground);
+  border: 1px solid var(--color-line);
+  border-radius: 6px;
+  outline: none;
+  font-size: 15px;
+  line-height: 1.55;
+  resize: vertical;
+}
+
+.drawer-body-input:focus {
+  border-color: var(--color-accent);
+}
+
+.subtasks {
+  margin: 20px 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.subtask {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+
+.subtask-tick {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  background-color: var(--color-surface);
+  border: 1.5px solid var(--color-line-2);
+  border-radius: var(--radius-tick);
+  color: transparent;
+}
+
+.subtask-tick svg {
+  width: 12px;
+  height: 12px;
+}
+
+.subtask.is-done .subtask-tick {
+  background-color: var(--color-accent);
+  border-color: var(--color-accent);
+  color: var(--color-accent-ink);
+}
+
+.subtask-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 12.5px;
+  line-height: 20px;
+  color: var(--color-ink);
+  overflow-wrap: anywhere;
+}
+
+/*
+ * A done subtask keeps its full-strength text. The filled tick is the whole
+ * signal; greying the sentence too would read as "cancelled", not "finished".
+ */
+
+.subtask-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  border: 0;
+  background: none;
+  outline: none;
+  font-size: 15px;
+}
+
+.subtask-add {
+  /* Always there: a task with no subtasks has to show how to add one, and touch has no hover. */
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  transition: opacity 120ms ease, color 120ms ease;
+  padding: 0;
+  background: none;
+  border: 0;
+  color: var(--color-ink-2);
+  font-size: 15px;
+  text-align: left;
+}
+
+.drawer:hover .subtask-add,
+.subtask-add:focus-visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.subtask-add:hover {
+  color: var(--color-accent);
+}
+
+.subtask-add-glyph {
+  flex: none;
+  width: 19px;
+  height: 19px;
+  color: var(--color-ink-3);
+}
+
+/* -------------------------------------------------------------- catalogue */
+
+/*
+ * The field carries on below the board: same ground, same white panels on the
+ * same hairline, same plaque heads. The directory is the tree, the dump is the
+ * tape, and the dump takes the drawer's width so the right rail stays put.
+ */
+.catalogue {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--drawer-width);
+  gap: var(--lane-gap);
+  align-items: start;
+  padding: 0 16px 39px;
+}
+
+.directory,
+.dump {
+  min-width: 0;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-slab);
+}
+
+.section-head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin: 0;
+  padding: 15px 19px 21px;
+}
+
+.section-name {
+  margin: 0;
+  font-family: var(--font-plaque);
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 22px;
+  letter-spacing: 0.055em;
+  text-transform: uppercase;
+}
+
+.section-note {
+  font-size: 15px;
+  color: var(--color-ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
+/*
+ * Wide columns, not narrow ones: a subtask sits four stems deep, and a narrow
+ * column is where its name starts losing its tail to an ellipsis. Folders flow
+ * rather than sit on a grid, so a short folder does not hold a row open.
+ */
+.forest {
+  /*
+   * A grid, not CSS columns: multi-column layout re-flows the whole listing on
+   * every selection change, which on a thousand-row board costs a frame and more.
+   */
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(400px, 100%), 1fr));
+  column-gap: 28px;
+  align-items: start;
+  padding: 0 10px 14px;
+}
+
+.forest-col {
+  break-inside: avoid;
+  min-width: 0;
+}
+
+.stem {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  width: 100%;
+  padding: 1px 9px;
+  background: none;
+  border: 0;
+  border-radius: 5px;
+  font-size: 13.5px;
+  line-height: 18px;
+  text-align: left;
+}
+
+.stem:hover {
+  background-color: var(--color-ground);
+}
+
+.stem.is-live {
+  background-color: var(--color-accent-wash);
+}
+
+.stem.is-found .stem-name {
+  font-weight: 600;
+}
+
+.stem-ghost {
+  color: var(--color-ink-2);
+}
+
+.stem-ghost:hover {
+  color: var(--color-accent);
+}
+
+.stem-add-glyph {
+  /* Sits in the disclosure column, so the label lands on the job names above. */
+  flex: none;
+  width: 14px;
+  height: 14px;
+  margin-right: 3px;
+}
+
+/*
+ * The stems are the tree's structure, not a decoration under it, so they are
+ * set in the tint that every other mark on the page is held to rather than a
+ * grey faint enough to guess at.
+ */
+.stem-rule {
+  flex: none;
+  color: var(--color-ink-3);
+  font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+  font-size: 12.5px;
+  /* The row pitch is set to the box-drawing glyph so the verticals actually join. */
+  line-height: 18px;
+  white-space: pre;
+}
+
+.stem-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.stem.is-project .stem-name {
+  font-weight: 600;
+}
+
+/* A job in the tree is the same plaque as a job on the board, one size down. */
+.stem.is-task .stem-name {
+  font-family: var(--font-plaque);
+  font-size: 14.5px;
+  font-weight: 700;
+  line-height: 18px;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+}
+
+.stem-status {
+  flex: none;
+  margin-left: 12px;
+  padding: 0;
+  background: none;
+  border: 0;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--color-ink-2);
+}
+
+.stem-status:hover {
+  color: var(--color-accent);
+}
+
+.stem-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  border: 0;
+  background: none;
+  outline: none;
+  font-size: 13.5px;
+}
+
+/*
+ * The disclosure is a drawn mark from the same set as the rest of the chrome,
+ * not another dash: a dash in this column reads as one more length of stem and
+ * the tree stops being legible. It turns from the chip's caret to the button's
+ * chevron, which is the field's one way of saying open and shut.
+ */
+.stem-fold {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 14px;
+  height: 18px;
+  padding: 0;
+  background: none;
+  border: 0;
+  color: var(--color-ink-3);
+}
+
+.stem-fold svg {
+  width: 11px;
+  height: 11px;
+}
+
+.stem-fold:hover {
+  color: var(--color-ink);
+}
+
+.notes {
+  display: flex;
+  flex-direction: column;
+  padding: 0 10px 6px;
+}
+
+.note {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 12px;
+  padding: 9px;
+  border-radius: 5px;
+}
+
+.note + .note {
+  box-shadow: 0 -1px 0 var(--color-line);
+}
+
+.note:hover {
+  background-color: var(--color-ground);
+}
+
+.note.is-live {
+  background-color: var(--color-accent-wash);
+}
+
+.note-date {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 20px;
+  color: var(--color-ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.note-text {
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  outline: none;
+  font-size: 13.5px;
+  line-height: 20px;
+  resize: none;
+  overflow: hidden;
+}
+
+.note-leash {
+  grid-column: 2;
+  padding: 0;
+  background: none;
+  border: 0;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--color-accent);
+  text-align: left;
+}
+
+/* The tape's last line is empty and writes: the same ledger row the tree uses. */
+.dump-add {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  padding: 9px;
+  background: none;
+  border: 0;
+  border-radius: 5px;
+  box-shadow: 0 -1px 0 var(--color-line);
+  color: var(--color-ink-2);
+  font-size: 13.5px;
+  text-align: left;
+}
+
+.dump-add:hover {
+  background-color: var(--color-ground);
+  color: var(--color-accent);
+}
+
+.dump-add-glyph {
+  flex: none;
+  width: 15px;
+  height: 15px;
+}
+
+/* ----------------------------------------------------------------- states */
+
+/*
+ * A find hit is washed in the one accent; the board has no second colour. The
+ * rule under it is the accent at full strength rather than the hairline tint,
+ * because this is now the only place a hit is declared: it is a mark that
+ * carries meaning and has to clear 3:1, which the hairline tint does not.
+ */
+.find-mark {
+  background-color: var(--color-accent-wash);
+  box-shadow: inset 0 -1px 0 var(--color-accent);
+  color: inherit;
+  border-radius: 2px;
+}
+
+/* ----------------------------------------------------------------- motion
+ * The one authored moment is the pull: a line of a job comes out of the drawer,
+ * pays out a cable that goes taut as it crosses the board, lands in a lane as a
+ * card, and the cable settles back into slack. Everything here serves that —
+ * the lift that says the thing is in the air, the cable that says it is still
+ * attached, and the reveals that get the drawer and its lines on screen without
+ * a cut. Nothing decorative, and all of it off under reduced motion.
+ */
+
+/* Airborne: the thing leaves the page and casts a shadow on it. */
+@keyframes lift {
+  from {
+    transform: scale(0.99);
+  }
+  to {
+    transform: scale(1.025);
+  }
+}
+
+.slab.is-ghost,
+.subtask.is-ghost {
+  animation: lift 130ms cubic-bezier(0.2, 0.7, 0.3, 1) forwards;
+}
+
+/*
+ * A subtask in the air is on its way to being a card, so it borrows the card's
+ * plate to travel on — hairline and all. Its own row has no surface to lift.
+ */
+.subtask.is-ghost {
+  box-sizing: content-box;
+  padding: 11px 13px;
+  background-color: var(--color-surface);
+  border: 1px solid #e8e8e8;
+  border-radius: var(--radius-slab);
+  box-shadow: 0 8px 20px rgb(21 21 21 / 0.13);
+}
+
+/* The row it came out of holds its place, faint, until the drop resolves. */
+.subtask.is-away {
+  opacity: 0.32;
+}
+
+/*
+ * Slack is the resting state and the leash animates its own sag frame by frame,
+ * so only the colour crosses over — going taut is a change of state, not a jump.
+ */
+.leash-core {
+  transition: stroke 140ms ease;
+}
+
+/* The drawer arrives from the rail it lives on rather than cutting in. */
+@keyframes drawer-in {
+  from {
+    opacity: 0;
+    transform: translateX(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.drawer {
+  animation: drawer-in 170ms cubic-bezier(0.2, 0.7, 0.3, 1) both;
+}
+
+/*
+ * The drawer's own lines come in behind it, close enough together to read as
+ * one movement and staggered enough that the eye lands on the title first.
+ */
+@keyframes line-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.drawer-title,
+.drawer-folder,
+.drawer-body,
+.subtasks {
+  animation: line-in 200ms cubic-bezier(0.2, 0.7, 0.3, 1) both;
+}
+
+.drawer-folder {
+  animation-delay: 30ms;
+}
+
+.drawer-body {
+  animation-delay: 55ms;
+}
+
+.subtasks {
+  animation-delay: 80ms;
+}
+
+/* ------------------------------------------------------------- responsive */
+
+/*
+ * The comp's lane is 196px and at the comp's width the last one runs under the
+ * drawer, which is what the comp shows. Five of those plus the drawer clear
+ * each other at 1354, so from there the rail is held open at every width — the
+ * board never reflows when a job opens, and the dump below stands in the same
+ * rail — and the lanes take the remaining slack rather than leaving dead ground.
+ */
+@media (min-width: 1360px) {
+  .board {
+    grid-auto-columns: minmax(var(--lane-width), 1fr);
+    padding-right: calc(var(--drawer-width) + 16px);
+  }
+}
+
+/*
+ * Narrow: the field stops being one screen and becomes one column. The board
+ * keeps its own sideways scroll, because five lanes are the point, and the
+ * drawer and the catalogue fall in under it as the next panels down — which is
+ * also the only width where the whole field is reachable by scrolling alone.
+ */
+@media (max-width: 900px) {
+
+  .topbar {
+    flex-wrap: wrap;
+    height: auto;
+    padding: 11px 14px 12px;
+    gap: 10px 12px;
+  }
+
+  /* The name and the primary action hold the first line between them. */
+  .topbar-brand {
+    order: 1;
+  }
+
+  .new-job {
+    order: 2;
+    margin-left: auto;
+  }
+
+  .find {
+    order: 3;
+    flex: 1 1 100%;
+    margin-left: 0;
+  }
+
+  /*
+   * The filters run off the edge on one line rather than stacking into a third
+   * and fourth row. On a narrow screen the board is what the screen is for, and
+   * a filter is something you reach for.
+   */
+  .topbar-filters {
+    order: 4;
+    flex: 1 1 100%;
+    flex-wrap: nowrap;
+    gap: 8px;
+    margin-left: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .topbar-filters::-webkit-scrollbar {
+    display: none;
+  }
+
+  /*
+   * The lanes take the tallest one's height rather than each their own. Only one
+   * is on screen at a time here, so a short lane left at its natural height puts
+   * a screen of bare ground under its last card while the tall lane that set the
+   * board's height sits off the right edge — the slack belongs inside the panel,
+   * which is where the comp and every wider width already put it.
+   */
+  .board {
+    grid-auto-columns: min(80vw, 320px);
+    align-items: stretch;
+    height: auto;
+    /* One seam for the whole column: board to drawer to catalogue to tape. */
+    padding: 14px;
+  }
+
+  .drawer {
+    position: fixed;
+    inset: auto 0 0 0;
+    max-height: 70vh;
+    width: auto;
+    margin: 0;
+    border-top: 1px solid var(--color-line);
+    border-left: 0;
+    border-radius: var(--radius-slab) var(--radius-slab) 0 0;
+    box-shadow: 0 -12px 32px rgb(21 21 21 / 0.12);
+  }
+
+  .catalogue {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 14px;
+    padding: 0 14px 24px;
+  }
+}
+
+/* ============================================================ hardening pass
+ * Controls added when the shell moved off SPECK: card meta, drafts, the tree's
+ * row tools, the drawer's tools, notices and the overflow menu. They reuse the
+ * tokens above and add no new colour, radius or face.
+ */
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* ------------------------------------------------------------- card meta */
+
+.slab:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.slab-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 8px 0 0;
+}
+
+.slab:has(.slab-tick) .slab-meta {
+  padding-left: 31px;
+}
+
+.slab-progress {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.slab-progress.is-complete {
+  color: var(--color-done);
+}
+
+.slab.is-draft {
+  border-color: var(--color-accent);
+  border-style: dashed;
+}
+
+.slab-project select {
+  max-width: 100%;
+  margin-top: 6px;
+  padding: 2px 4px;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-tick);
+  background-color: var(--color-surface);
+  font-size: 13px;
+  color: var(--color-ink-2);
+}
+
+.lane-void {
+  font-size: 12px;
+  color: var(--color-ink-2);
+  text-align: center;
+}
+
+/* ------------------------------------------------------------- top bar */
+
+.find-clear {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  background: none;
+  border: 0;
+  border-radius: var(--radius-tick);
+  color: var(--color-ink-2);
+}
+
+.find-clear:hover {
+  color: var(--color-ink);
+  background-color: var(--color-ground);
+}
+
+.find-clear svg {
+  width: 13px;
+  height: 13px;
+}
+
+.chip-toggle.is-on {
+  border-color: var(--color-urgent);
+  color: var(--color-urgent);
+  font-weight: 600;
+}
+
+.menu {
+  position: relative;
+  margin-left: 8px;
+}
+
+.menu-button {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-control);
+  color: var(--color-ink-2);
+}
+
+.menu-button:hover,
+.menu-button[aria-expanded='true'] {
+  border-color: var(--color-line-2);
+  color: var(--color-ink);
+}
+
+.menu-button svg {
+  width: 17px;
+  height: 17px;
+}
+
+.menu-list {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  min-width: 250px;
+  padding: 6px;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-control);
+  box-shadow: 0 10px 30px rgb(21 21 21 / 0.12);
+}
+
+.menu-list button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 7px 10px;
+  background: none;
+  border: 0;
+  border-radius: 5px;
+  font-size: 13.5px;
+  text-align: left;
+}
+
+.menu-list button:hover:not(:disabled) {
+  background-color: var(--color-ground);
+}
+
+.menu-list button:disabled {
+  color: var(--color-ink-3);
+  cursor: default;
+}
+
+.menu-list hr {
+  margin: 5px 4px;
+  border: 0;
+  border-top: 1px solid var(--color-line);
+}
+
+.menu-list kbd,
+.menu-meta {
+  font-family: inherit;
+  font-size: 12px;
+  color: var(--color-ink-2);
+}
+
+.menu-label {
+  margin: 4px 10px 2px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-ink-2);
+}
+
+/* -------------------------------------------------------------- notices */
+
+.banners {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 16px 0;
+}
+
+.banner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 12px 10px 16px;
+  background-color: var(--color-accent-wash);
+  border: 1px solid var(--color-accent-line);
+  border-radius: var(--radius-control);
+  font-size: 14px;
+}
+
+.banner span {
+  flex: 1 1 auto;
+}
+
+.banner.is-danger {
+  background-color: var(--color-surface);
+  border-color: var(--color-urgent);
+  color: var(--color-urgent);
+}
+
+.banner-action {
+  flex: none;
+  padding: 5px 10px;
+  background-color: var(--color-urgent);
+  border: 0;
+  border-radius: var(--radius-tick);
+  color: var(--color-accent-ink);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.banner-close,
+.toast-close {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  background: none;
+  border: 0;
+  border-radius: var(--radius-tick);
+  color: inherit;
+  opacity: 0.7;
+}
+
+.banner-close:hover,
+.toast-close:hover {
+  opacity: 1;
+}
+
+.banner-close svg,
+.toast-close svg {
+  width: 13px;
+  height: 13px;
+}
+
+.toasts {
+  position: fixed;
+  left: 50%;
+  bottom: 20px;
+  z-index: 40;
+  transform: translateX(-50%);
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 9px 10px 9px 16px;
+  background-color: var(--color-ink);
+  border-radius: var(--radius-control);
+  box-shadow: 0 10px 30px rgb(21 21 21 / 0.25);
+  color: var(--color-surface);
+  font-size: 14px;
+  animation: line-in 160ms cubic-bezier(0.2, 0.7, 0.3, 1) both;
+}
+
+.toast-action {
+  padding: 4px 9px;
+  background: none;
+  border: 1px solid rgb(255 255 255 / 0.35);
+  border-radius: var(--radius-tick);
+  color: var(--color-surface);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.toast-action:hover {
+  background-color: rgb(255 255 255 / 0.12);
+}
+
+/* --------------------------------------------------------------- drawer */
+
+.drawer-status {
+  position: relative;
+  cursor: pointer;
+}
+
+.drawer-status select {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.drawer-status:focus-within {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+  border-radius: 3px;
+}
+
+.drawer-status-caret {
+  width: 14px;
+  height: 14px;
+  margin-bottom: 3px;
+  margin-left: -4px;
+}
+
+.drawer-tools {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: auto;
+}
+
+.drawer-tool {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  background: none;
+  border: 0;
+  border-radius: var(--radius-tick);
+  color: var(--color-ink-2);
+}
+
+.drawer-tool:hover {
+  background-color: var(--color-ground);
+  color: var(--color-ink);
+}
+
+.drawer-tool.is-on {
+  color: var(--color-urgent);
+}
+
+.drawer-tool svg {
+  width: 16px;
+  height: 16px;
+}
+
+.drawer-label-count {
+  margin-left: 8px;
+  font-weight: 600;
+  color: var(--color-ink-2);
+}
+
+.drawer-body-gap {
+  height: 0.6em;
+}
+
+.subtask-delete {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 22px;
+  height: 22px;
+  margin-left: auto;
+  padding: 0;
+  background: none;
+  border: 0;
+  border-radius: var(--radius-tick);
+  color: var(--color-ink-3);
+  opacity: 0;
+}
+
+.subtask:hover .subtask-delete,
+.subtask-delete:focus-visible {
+  opacity: 1;
+}
+
+.subtask-delete:hover {
+  color: var(--color-urgent);
+}
+
+.subtask-delete svg {
+  width: 12px;
+  height: 12px;
+}
+
+/* ------------------------------------------------------------ directory */
+
+.forest:focus {
+  outline: none;
+}
+
+.forest:focus-visible .stem.is-live {
+  box-shadow: inset 2px 0 0 var(--color-accent);
+}
+
+.stem {
+  position: relative;
+  cursor: default;
+}
+
+.stem.is-subtask .stem-name {
+  color: var(--color-ink);
+}
+
+.stem.is-done .stem-name {
+  color: var(--color-ink-2);
+}
+
+.stem-check {
+  flex: none;
+  margin-right: 6px;
+  padding: 0;
+  background: none;
+  border: 0;
+  font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+  font-size: 12.5px;
+  line-height: 18px;
+  color: var(--color-ink-2);
+}
+
+.stem.is-done .stem-check {
+  color: var(--color-done);
+}
+
+.stem-check:hover {
+  color: var(--color-accent);
+}
+
+.stem-urgent {
+  flex: none;
+  margin-left: 6px;
+  font-weight: 700;
+  color: var(--color-urgent);
+}
+
+.stem-tools {
+  display: flex;
+  flex: none;
+  gap: 2px;
+  margin-left: 8px;
+  opacity: 0;
+}
+
+.stem:hover .stem-tools,
+.stem.is-live .stem-tools {
+  opacity: 1;
+}
+
+.stem-tool {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 18px;
+  padding: 0;
+  background: none;
+  border: 0;
+  border-radius: var(--radius-tick);
+  color: var(--color-ink-3);
+}
+
+.stem-tool:hover {
+  background-color: var(--color-surface);
+  color: var(--color-accent);
+}
+
+.stem-tool.is-danger:hover {
+  color: var(--color-urgent);
+}
+
+.stem-tool svg {
+  width: 11px;
+  height: 11px;
+}
+
+.stem-status {
+  position: relative;
+  cursor: pointer;
+}
+
+.stem-status select {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.stem-count {
+  flex: none;
+  margin-left: 12px;
+  font-size: 12px;
+  color: var(--color-ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.stem.is-draft {
+  background-color: var(--color-accent-wash);
+}
+
+.stem.is-ghost {
+  background-color: var(--color-surface);
+  box-shadow: 0 8px 20px rgb(21 21 21 / 0.13);
+}
+
+.forest-empty {
+  margin: 0;
+  padding: 4px 9px;
+  font-size: 13.5px;
+  color: var(--color-ink-2);
+}
+
+.forest-keys {
+  margin: 0;
+  padding: 10px 19px 14px;
+  border-top: 1px solid var(--color-line);
+  font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+  font-size: 11.5px;
+  color: var(--color-ink-2);
+}
+
+/* With the drawer open the dump sits under it; give the directory the room instead. */
+.studio.has-drawer .catalogue {
+  padding-right: calc(var(--drawer-width) + 16px);
+}
+
+@media (max-width: 900px) {
+  .studio.has-drawer .catalogue {
+    padding-right: 14px;
+  }
+
+  .menu {
+    order: 2;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition-duration: 0ms !important;
+    animation-duration: 0ms !important;
+  }
+}
+
+/* ============================================================ agent handoff
+ * The ledger between the desk and its agents: links on a job, the brief
+ * that goes out, the report that comes back, the session clock in the top
+ * bar, the inbox banner, and the two panels (Paste report, Time this month).
+ * Same tokens, same faces, same 8px / 6px / 4px, no new colour.
+ */
+
+/* --------------------------------------------------------------- links */
+
+.links {
+  margin: 14px 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.link {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+/* A chip inside the drawer: white, hairline, the inner 6px, the mark in the tint and the label in ink. */
+.link-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  max-width: 100%;
+  height: 28px;
+  padding: 0 10px 0 8px;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: 6px;
+  color: var(--color-ink);
+  font-size: 12.5px;
+  line-height: 20px;
+  text-decoration: none;
+  transition: border-color 120ms ease, color 120ms ease;
+}
+
+.link-chip:hover {
+  border-color: var(--color-line-2);
+  color: var(--color-accent);
+}
+
+.link-mark {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  color: var(--color-ink-3);
+}
+
+.link-chip:hover .link-mark {
+  color: var(--color-accent);
+}
+
+.link-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.link-remove {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  background: none;
+  border: 0;
+  border-radius: var(--radius-tick);
+  color: var(--color-ink-3);
+  opacity: 0;
+}
+
+.link:hover .link-remove,
+.link-remove:focus-visible,
+.link-remove.is-shown {
+  opacity: 1;
+}
+
+.link-remove:hover {
+  color: var(--color-urgent);
+}
+
+.link-remove svg {
+  width: 12px;
+  height: 12px;
+}
+
+/* A URL just pasted, held on the wash until it is taken as a link or waved off. */
+.link-offer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 6px 6px 6px 9px;
+  background-color: var(--color-accent-wash);
+  border: 1px solid var(--color-accent-line);
+  border-radius: 6px;
+  font-size: 12.5px;
+  line-height: 20px;
+}
+
+.link-offer-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--color-ink-2);
+}
+
+.link-offer-add {
+  flex: none;
+  padding: 0;
+  background: none;
+  border: 0;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--color-accent);
+}
+
+.link-offer-add:hover {
+  color: var(--color-accent-deep);
+}
+
+.link-form {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+
+/* The two fields are writing surfaces, like the description: ground fill, hairline, the inner 6px. */
+.link-input {
+  width: 100%;
+  padding: 6px 9px;
+  background-color: var(--color-ground);
+  border: 1px solid var(--color-line);
+  border-radius: 6px;
+  outline: none;
+  font-size: 13.5px;
+  line-height: 20px;
+}
+
+.link-input:focus {
+  border-color: var(--color-accent);
+}
+
+.link-input.is-bad {
+  border-color: var(--color-urgent);
+}
+
+.link-form-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.link-form-add,
+.link-form-cancel {
+  padding: 0;
+  background: none;
+  border: 0;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--color-ink-2);
+}
+
+.link-form-add {
+  color: var(--color-accent);
+}
+
+.link-form-add:hover {
+  color: var(--color-accent-deep);
+}
+
+.link-form-cancel:hover {
+  color: var(--color-ink);
+}
+
+.link-form-bad {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  color: var(--color-urgent);
+}
+
+/* On the card: a chain and a count, beside the subtask count, in the same grey. */
+.slab-links {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.slab-links-mark {
+  width: 12px;
+  height: 12px;
+}
+
+/* ------------------------------------------------------------- handoff */
+
+.handoff {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+  margin: 14px 0 0;
+}
+
+/* Small white plates, hairline, the inner 6px: the drawer's own buttons, not the page's one primary. */
+.handoff-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  height: 32px;
+  padding: 0 9px;
+  overflow: hidden;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: 6px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--color-ink);
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: border-color 120ms ease, color 120ms ease, background-color 120ms ease;
+}
+
+.handoff-button:hover {
+  border-color: var(--color-line-2);
+  color: var(--color-accent);
+}
+
+/* The clock running on this job: the plate takes the wash and the accent hairline, the same way a selected card does. */
+.handoff-button.is-on {
+  background-color: var(--color-accent-wash);
+  border-color: var(--color-accent-line);
+  color: var(--color-accent);
+}
+
+.handoff-mark {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  color: var(--color-ink-3);
+}
+
+.handoff-button:hover .handoff-mark,
+.handoff-button.is-on .handoff-mark {
+  color: currentColor;
+}
+
+.handoff-spent {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 12px 0 0;
+  font-size: 12.5px;
+  line-height: 20px;
+  color: var(--color-ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------- clock */
+
+/*
+ * The running session in the top bar, in the slack between the chips and the
+ * primary action: a live dot, the plaque, the time, Stop. At 1440 that slack
+ * is about 180px, which holds the dot, the time and Stop; the plaque joins
+ * them from 1600px up, and below that the task is named on hover and is one
+ * click away.
+ */
+.clock {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: none;
+  height: 36px;
+  margin-left: auto;
+  padding: 0 5px 0 4px;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-control);
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+/* The clock takes the slack, so the primary action behind it sits where it always does. */
+.clock + .new-job {
+  margin-left: 10px;
+}
+
+.clock-task {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  height: 28px;
+  padding: 0 7px 0 8px;
+  background: none;
+  border: 0;
+  border-radius: 5px;
+  color: var(--color-ink);
+}
+
+.clock-task:hover {
+  background-color: var(--color-ground);
+}
+
+.clock-dot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--color-accent);
+}
+
+.clock-name,
+.clock-sep {
+  display: none;
+}
+
+.clock-name {
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-family: var(--font-plaque);
+  font-size: 14.5px;
+  font-weight: 700;
+  line-height: 18px;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+}
+
+.clock-task:hover .clock-name {
+  color: var(--color-accent);
+}
+
+.clock-sep {
+  color: var(--color-ink-2);
+}
+
+.clock-time {
+  font-variant-numeric: tabular-nums;
+}
+
+@media (min-width: 1600px) {
+  .clock-name,
+  .clock-sep {
+    display: inline;
+  }
+}
+
+.clock-stop {
+  height: 24px;
+  padding: 0 9px;
+  background: none;
+  border: 1px solid var(--color-line);
+  border-radius: 5px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-ink-2);
+}
+
+.clock-stop:hover {
+  border-color: var(--color-line-2);
+  color: var(--color-ink);
+  background-color: var(--color-ground);
+}
+
+/* -------------------------------------------------------------- inbox */
+
+.inbox-banners {
+  padding-top: 12px;
+}
+
+.banners + .toasts + .inbox-banners {
+  padding-top: 8px;
+}
+
+/* With the drawer open the banner would run under it, Review and all; it stops where the rail starts. */
+.studio.has-drawer .inbox-banners {
+  padding-right: calc(var(--drawer-width) + 16px);
+}
+
+.banner-action.is-accent {
+  background-color: var(--color-accent);
+}
+
+.banner-action.is-accent:hover {
+  background-color: var(--color-accent-deep);
+}
+
+.banner-meta {
+  color: var(--color-ink-2);
+}
+
+/* -------------------------------------------------------------- panels */
+
+.modal-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 35;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background-color: rgb(21 21 21 / 0.28);
+}
+
+/* One panel on the field: white, hairline, 8px. It is in the air over the page, so it carries the airborne shadow. */
+.modal {
+  display: flex;
+  flex-direction: column;
+  width: min(560px, 100%);
+  max-height: calc(100vh - 48px);
+  padding: 16px 18px 18px;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-slab);
+  box-shadow: 0 8px 20px rgb(21 21 21 / 0.13);
+  overflow-y: auto;
+  outline: none;
+  animation: line-in 160ms cubic-bezier(0.2, 0.7, 0.3, 1) both;
+}
+
+.modal-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.modal-title {
+  margin: 0;
+  margin-right: auto;
+  font-family: var(--font-plaque);
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 22px;
+  letter-spacing: 0.055em;
+  text-transform: uppercase;
+}
+
+.modal-lead {
+  margin: 10px 0 0;
+  font-size: 13.5px;
+  line-height: 20px;
+  color: var(--color-ink-2);
+}
+
+.report-task-name {
+  font-family: var(--font-plaque);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  color: var(--color-ink);
+}
+
+.report-task {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.report-task select {
+  max-width: 100%;
+  padding: 3px 6px;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-tick);
+  background-color: var(--color-surface);
+  font-size: 13px;
+  color: var(--color-ink);
+}
+
+/* The report goes in on a writing surface: ground fill, hairline, the inner 6px, the way the description is. */
+.report-input {
+  width: 100%;
+  margin: 12px 0 0;
+  padding: 9px 10px;
+  background-color: var(--color-ground);
+  border: 1px solid var(--color-line);
+  border-radius: 6px;
+  outline: none;
+  font-size: 13.5px;
+  line-height: 1.55;
+  resize: vertical;
+}
+
+.report-input:focus {
+  border-color: var(--color-accent);
+}
+
+.report-plan {
+  margin: 14px 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.report-row label {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 13.5px;
+  line-height: 20px;
+  cursor: pointer;
+}
+
+.report-row input {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  margin: 2px 0 0;
+  accent-color: var(--color-accent);
+}
+
+.report-row.is-off span {
+  color: var(--color-ink-2);
+}
+
+.report-row strong {
+  font-weight: 600;
+}
+
+.report-row-note {
+  color: var(--color-ink-2);
+}
+
+.report-empty,
+.report-aside {
+  margin: 12px 0 0;
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--color-ink-2);
+}
+
+.modal-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 18px 0 0;
+}
+
+/* The panel's one action: the accent as a hairline and a word, never a second solid blue on the page. */
+.modal-apply {
+  height: 34px;
+  padding: 0 14px;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-accent-line);
+  border-radius: var(--radius-control);
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--color-accent);
+}
+
+.modal-apply:hover:not(:disabled) {
+  background-color: var(--color-accent-wash);
+  border-color: var(--color-accent);
+}
+
+.modal-apply:disabled {
+  border-color: var(--color-line);
+  color: var(--color-ink-3);
+  cursor: default;
+}
+
+.modal-cancel {
+  padding: 0;
+  background: none;
+  border: 0;
+  font-size: 13.5px;
+  color: var(--color-ink-2);
+}
+
+.modal-cancel:hover {
+  color: var(--color-ink);
+}
+
+/* Time this month: a plain table on hairlines, counts tabular, the project names as the rows' own plaques. */
+.timesheet {
+  width: 100%;
+  margin: 14px 0 0;
+  border-collapse: collapse;
+  font-size: 13.5px;
+  line-height: 20px;
+}
+
+.timesheet th,
+.timesheet td {
+  padding: 7px 0;
+  border-bottom: 1px solid var(--color-line);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.timesheet th {
+  font-weight: 600;
+}
+
+.timesheet thead th {
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-ink-2);
+}
+
+.timesheet th[scope='row'],
+.timesheet thead th:first-child {
+  text-align: left;
+}
+
+.timesheet tbody th[scope='row'] {
+  font-weight: 600;
+}
+
+.timesheet tfoot th,
+.timesheet tfoot td {
+  border-bottom: 0;
+  color: var(--color-ink);
+  font-weight: 600;
+}
+
+@media (max-width: 900px) {
+  .clock {
+    order: 2;
+    margin-left: 0;
+  }
+
+  /* One column: the plaque has room again, and the drawer sits below, not beside. */
+  .clock-name,
+  .clock-sep {
+    display: inline;
+  }
+
+  .clock-name {
+    max-width: 110px;
+  }
+
+  .handoff {
+    grid-template-columns: 1fr;
+  }
+
+  .studio.has-drawer .inbox-banners {
+    padding-right: 14px;
+  }
+
+  .inbox-banners {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+}
+
+/* ======================================================== end agent handoff */
+
+
+/* ============================================================== night shift
+ * Due dates, the one next action, tonight's shelf, the left-off question,
+ * "since last time", the trail, Sunday's review, dust, and night mode. One
+ * block at the foot of the sheet, so everything measured above reads as it
+ * was measured. Every value here is spent from the tokens at the top: no new
+ * colour, no second radius, no third face. The marks are drawn in NightGlyph.
+ */
+
+/* ----------------------------------------------------- rest-state visibility
+ * From the accessibility review: a control that is invisible until hovered is
+ * invisible to a keyboard and to a finger. The lane's ledger row, the card's
+ * chevron and the tree's row tools now sit at half strength at rest and come
+ * up full on hover or focus, which the rules above already do on the way up.
+ * They are also hittable at rest, since a thing you can see you can press.
+ */
+.lane-add {
+  opacity: 0.5;
+  pointer-events: auto;
+}
+
+.slab-shovel {
+  opacity: 0.5;
+  pointer-events: auto;
+}
+
+.stem-tools {
+  opacity: 0.5;
+}
+
+/* ------------------------------------------------------ themed hard values
+ * The sheet above sets a handful of greys by hand, straight off the comp.
+ * Night mode has to reach them, so they move onto variables here (light values
+ * unchanged) and the rules below re-point the properties at the variables.
+ */
+:root {
+  --slab-line: #e8e8e8;
+  --slab-folder-ink: #4a4a4a;
+  --slab-tick-ink: #5b5b5b;
+  --drawer-folder-ink: #454545;
+  --drawer-folder-mark: #6f6f6f;
+  --drawer-body-ink: #2b2b2b;
+  --toast-rule: rgb(255 255 255 / 0.35);
+  --toast-hover: rgb(255 255 255 / 0.12);
+}
+
+.slab,
+.subtask.is-ghost {
+  border-color: var(--slab-line);
+}
+
+.slab {
+  transition: border-color 120ms ease, background-color 120ms ease, opacity 140ms ease;
+}
+
+.slab-folder {
+  color: var(--slab-folder-ink);
+}
+
+.slab-tick {
+  color: var(--slab-tick-ink);
+}
+
+.drawer-folder {
+  color: var(--drawer-folder-ink);
+}
+
+.drawer-folder svg {
+  color: var(--drawer-folder-mark);
+}
+
+.drawer-body p {
+  color: var(--drawer-body-ink);
+}
+
+.toast-action {
+  border-color: var(--toast-rule);
+}
+
+.toast-action:hover {
+  background-color: var(--toast-hover);
+}
+
+/* ----------------------------------------------------------------- due chip
+ * The date on a card's meta line warms as the day comes: the quiet grey past a
+ * week out, ink inside three days, the accent on the day, the flag red once it
+ * has gone by. It is a word, so it is never set in the marks-only tint.
+ */
+.due-chip {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--color-ink-2);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.due-chip.is-near {
+  color: var(--color-ink);
+}
+
+.due-chip.is-today {
+  color: var(--color-accent);
+}
+
+.due-chip.is-overdue {
+  color: var(--color-urgent);
+}
+
+/* ------------------------------------------------------------- card face
+ * The one next action sits under the name in the quiet grey; a stale card's
+ * name drops to the same grey with a day count beside its progress; a card on
+ * tonight's shelf carries the pennant at the end of its meta line.
+ */
+.slab-next {
+  margin: 6px 0 0;
+  font-size: 12.5px;
+  line-height: 16px;
+  color: var(--color-ink-2);
+  overflow-wrap: anywhere;
+}
+
+.slab:has(.slab-tick) .slab-next {
+  margin-right: -14px;
+  padding-left: 28px;
+}
+
+.slab.is-stale:not(.is-urgent) .slab-title {
+  color: var(--color-ink-2);
+}
+
+.slab-dust {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--color-ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.slab-pennant {
+  flex: none;
+  width: 13px;
+  height: 13px;
+  color: var(--color-ink-3);
+}
+
+/*
+ * Focus mode: while the shelf holds anything, every card not on it steps back
+ * to 0.45, so the board says what tonight is for without saying anything else.
+ * The open card and a draft stay full; a card in the air is already its own signal.
+ */
+.board.is-focus .slab:not(.is-tonight):not(.is-open):not(.is-draft):not(.is-ghost) {
+  opacity: 0.45;
+}
+
+/* ------------------------------------------------------------------ shelf
+ * A strip above the lanes, the same white panel on the same hairline, holding
+ * at most three compact cards: name, folder, due chip, where you left off.
+ * It takes the board's own gutters and keeps clear of the drawer's rail the
+ * way the lanes do. During a drag it dashes, as an empty lane does — the one
+ * meaning a dashed edge has here: somewhere else is involved.
+ */
+.tonight {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 46px;
+  margin: 16px 16px -5px;
+  padding: 5px 10px 5px 19px;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-slab);
+  transition: border-color 120ms ease;
+}
+
+.tonight.is-target {
+  border-style: dashed;
+  border-color: var(--color-accent-line);
+}
+
+.tonight-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: none;
+  margin: 0;
+  font-family: var(--font-plaque);
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 22px;
+  letter-spacing: 0.055em;
+  text-transform: uppercase;
+}
+
+.tonight-glyph {
+  width: 15px;
+  height: 15px;
+  color: var(--color-ink-3);
+}
+
+.tonight-count {
+  font-family: var(--font-sans);
+  font-size: 15px;
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--color-ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.tonight-empty {
+  margin: 0;
+  font-size: 13.5px;
+  color: var(--color-ink-2);
+}
+
+.tonight-shelf {
+  display: flex;
+  gap: 10px;
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow-x: auto;
+}
+
+.tonight-card {
+  display: flex;
+  align-items: center;
+  flex: 0 1 400px;
+  min-width: 0;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-slab);
+  transition: border-color 120ms ease, background-color 120ms ease;
+}
+
+.tonight-card:hover {
+  border-color: var(--color-line-2);
+}
+
+.tonight-card.is-open {
+  background-color: var(--color-accent-wash);
+  border-color: var(--color-accent);
+}
+
+.tonight-open {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 7px 4px 7px 12px;
+  background: none;
+  border: 0;
+  text-align: left;
+}
+
+.tonight-title {
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 60%;
+  font-family: var(--font-plaque);
+  font-size: 14.5px;
+  font-weight: 700;
+  line-height: 18px;
+  text-transform: uppercase;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tonight-folder {
+  flex: none;
+  font-size: 12.5px;
+  color: var(--color-ink-2);
+}
+
+.tonight-leftoff {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 12.5px;
+  font-style: italic;
+  color: var(--color-ink-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tonight-drop {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 24px;
+  height: 24px;
+  margin-right: 4px;
+  padding: 0;
+  background: none;
+  border: 0;
+  border-radius: var(--radius-tick);
+  color: var(--color-ink-3);
+}
+
+.tonight-drop:hover {
+  background-color: var(--color-ground);
+  color: var(--color-urgent);
+}
+
+.tonight-drop svg {
+  width: 12px;
+  height: 12px;
+}
+
+/* A text action, like the tree's status verb: micro caps, no box. */
+.tonight-focus,
+.since-show,
+.trail-more,
+.review-action,
+.drawer-stale-dust {
+  flex: none;
+  padding: 0;
+  background: none;
+  border: 0;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-ink-2);
+  white-space: nowrap;
+}
+
+.tonight-focus:hover,
+.since-show:hover,
+.trail-more:hover,
+.review-action:hover,
+.drawer-stale-dust:hover {
+  color: var(--color-accent);
+}
+
+.tonight-focus {
+  margin-left: auto;
+  padding: 0 6px;
+}
+
+@media (min-width: 1360px) {
+  .tonight {
+    margin-right: calc(var(--drawer-width) + 16px);
+  }
+}
+
+/* ------------------------------------------------------------ since strip
+ * One line under the top bar on the first open after a stretch away. It is
+ * read, then shown or dismissed; it writes nothing.
+ */
+.since {
+  background-color: var(--color-surface);
+  border-bottom: 1px solid var(--color-line);
+}
+
+.since-line {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 38px;
+  padding: 0 20px 0 16px;
+}
+
+.since-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+  font-size: 13.5px;
+  color: var(--color-ink-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.since-close {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  background: none;
+  border: 0;
+  border-radius: var(--radius-tick);
+  color: var(--color-ink-2);
+}
+
+.since-close:hover {
+  background-color: var(--color-ground);
+  color: var(--color-ink);
+}
+
+.since-close svg {
+  width: 13px;
+  height: 13px;
+}
+
+.since-list {
+  display: flex;
+  flex-direction: column;
+  max-height: 240px;
+  margin: 0;
+  padding: 2px 16px 10px;
+  list-style: none;
+  overflow-y: auto;
+}
+
+.since-item {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  padding: 3px 0;
+  font-size: 13.5px;
+  line-height: 20px;
+}
+
+.since-what {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/* With the drawer open its rail would cover the strip's controls; the strip pays the rail's width, as the board does. */
+.studio.has-drawer .since-line,
+.studio.has-drawer .since-list {
+  padding-right: calc(var(--drawer-width) + 20px);
+}
+
+.since-when {
+  flex: none;
+  font-size: 12.5px;
+  color: var(--color-ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ------------------------------------------------------- drawer: night lines
+ * Under the title row: the due chip (the native picker stretched over it, the
+ * way the top bar's chips carry their select), the one next action, where you
+ * left off in quiet italics, and the dust line when a card has gathered any.
+ */
+.drawer-night {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  margin: 14px 0 0;
+}
+
+.drawer-due-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.drawer-due {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 28px;
+  padding: 0 10px 0 9px;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-control);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--color-ink-2);
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+
+.drawer-due:hover {
+  border-color: var(--color-line-2);
+}
+
+.drawer-due:focus-within {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px var(--color-accent-wash);
+}
+
+.drawer-due.is-unset {
+  font-weight: 400;
+}
+
+.drawer-due.is-near {
+  color: var(--color-ink);
+}
+
+.drawer-due.is-today {
+  color: var(--color-accent);
+}
+
+.drawer-due.is-overdue {
+  color: var(--color-urgent);
+}
+
+.drawer-due-glyph {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  color: var(--color-ink-3);
+}
+
+.drawer-due.is-today .drawer-due-glyph,
+.drawer-due.is-overdue .drawer-due-glyph {
+  color: inherit;
+}
+
+.drawer-due-input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.drawer-due-clear {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  background: none;
+  border: 0;
+  border-radius: var(--radius-tick);
+  color: var(--color-ink-3);
+}
+
+.drawer-due-clear:hover {
+  background-color: var(--color-ground);
+  color: var(--color-urgent);
+}
+
+.drawer-due-clear svg {
+  width: 12px;
+  height: 12px;
+}
+
+.drawer-next-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.drawer-next-label {
+  flex: none;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-ink-2);
+}
+
+.drawer-next {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 0;
+  background: none;
+  border: 0;
+  font-size: 13.5px;
+  line-height: 20px;
+  color: var(--color-ink);
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+
+.drawer-next.is-empty {
+  color: var(--color-ink-2);
+}
+
+.drawer-next:hover {
+  color: var(--color-accent);
+}
+
+.drawer-next-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  outline: none;
+  font-size: 13.5px;
+  line-height: 20px;
+}
+
+.drawer-leftoff {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 18px;
+  font-style: italic;
+  color: var(--color-ink-2);
+  overflow-wrap: anywhere;
+}
+
+.drawer-stale {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 18px;
+  color: var(--color-ink-2);
+}
+
+.drawer-tool.is-tonight {
+  color: var(--color-accent);
+}
+
+/* ------------------------------------------------------------- left-off ask
+ * Asked at the top of a drawer that has been open a while and is closing: a
+ * washed row, one line, Enter keeps it and Esc lets it go.
+ */
+.leftoff {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: none;
+  margin: 0 0 14px;
+  padding: 10px 12px 9px;
+  background-color: var(--color-accent-wash);
+  border: 1px solid var(--color-accent-line);
+  border-radius: var(--radius-control);
+}
+
+.leftoff-ask {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--color-ink);
+}
+
+.leftoff-input {
+  width: 100%;
+  padding: 6px 9px;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: 6px;
+  outline: none;
+  font-size: 13.5px;
+}
+
+.leftoff-input:focus {
+  border-color: var(--color-accent);
+}
+
+.leftoff-keys {
+  margin: 0;
+  font-size: 11.5px;
+  color: var(--color-ink-2);
+}
+
+/* ------------------------------------------------------------------ trail
+ * The foot of the drawer: what has happened to this task, newest first, in
+ * the quiet grey, eight lines and then "show all".
+ */
+.trail {
+  margin: 30px 0 0;
+}
+
+.trail-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.trail-line {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-size: 12.5px;
+  line-height: 18px;
+  color: var(--color-ink-2);
+}
+
+.trail-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.trail-when {
+  flex: none;
+  font-variant-numeric: tabular-nums;
+}
+
+.trail-more {
+  margin: 8px 0 0;
+}
+
+/* ----------------------------------------------------------------- review
+ * Sunday's sit-down: a sheet over the field in the field's own clothes — the
+ * same bar, the same three panels on the same hairline — and Esc puts it away.
+ */
+.review {
+  position: fixed;
+  inset: 0;
+  z-index: 45;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--color-ground);
+  overflow-y: auto;
+  animation: line-in 160ms cubic-bezier(0.2, 0.7, 0.3, 1) both;
+}
+
+.review-head {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex: none;
+  height: 69px;
+  padding: 0 20px 0 16px;
+  background-color: var(--color-surface);
+  border-bottom: 1px solid var(--color-line);
+}
+
+.review-name {
+  margin: 0;
+  font-family: var(--font-plaque);
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 22px;
+  letter-spacing: 0.055em;
+  text-transform: uppercase;
+}
+
+.review-range {
+  margin: 0;
+  font-size: 13.5px;
+  color: var(--color-ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.review-close {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 38px;
+  height: 38px;
+  margin-left: auto;
+  padding: 0;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-control);
+  color: var(--color-ink-2);
+}
+
+.review-close:hover {
+  border-color: var(--color-line-2);
+  color: var(--color-ink);
+}
+
+.review-close svg {
+  width: 17px;
+  height: 17px;
+}
+
+.review-columns {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--lane-gap);
+  align-items: start;
+  padding: 21px 16px 24px;
+}
+
+.review-col {
+  min-height: 260px;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-slab);
+}
+
+.review-label {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0;
+  padding: 15px 19px 12px;
+  font-family: var(--font-plaque);
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 22px;
+  letter-spacing: 0.055em;
+  text-transform: uppercase;
+}
+
+.review-count {
+  font-family: var(--font-sans);
+  font-size: 15px;
+  font-weight: 400;
+  letter-spacing: 0;
+  color: var(--color-ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.review-list {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0 10px 10px;
+  list-style: none;
+}
+
+.review-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  row-gap: 3px;
+  column-gap: 12px;
+  padding: 9px;
+  border-radius: 5px;
+}
+
+.review-row + .review-row {
+  box-shadow: 0 -1px 0 var(--color-line);
+}
+
+.review-row:hover {
+  background-color: var(--color-ground);
+}
+
+.review-title {
+  padding: 0;
+  background: none;
+  border: 0;
+  font-family: var(--font-plaque);
+  font-size: 14.5px;
+  font-weight: 700;
+  line-height: 18px;
+  text-transform: uppercase;
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+
+.review-title:hover {
+  color: var(--color-accent);
+}
+
+.review-meta {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 12.5px;
+  line-height: 16px;
+  color: var(--color-ink-2);
+}
+
+.review-actions {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.review-empty {
+  padding: 4px 9px;
+  font-size: 13.5px;
+  color: var(--color-ink-2);
+}
+
+@media (max-width: 900px) {
+  /* One seam for the column, the same 14px the board pays below it. */
+  .tonight {
+    margin: 14px 14px 0;
+  }
+
+  .studio.has-drawer .since-line,
+  .studio.has-drawer .since-list {
+    padding-right: 14px;
+  }
+
+  .review-columns {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 14px;
+  }
+}
+
+/* ------------------------------------------------------------- night mode
+ * The same field after dark: the tokens re-pointed, nothing else. Ink-2 holds
+ * 7.2:1 on the panel and ink-3 3.7:1, so every word and every mark clears the
+ * floors it clears by day; the accent and the flag red are lifted to 5.5:1 and
+ * 5.2:1 for the same reason; the five lane inks are lifted alike. A stored
+ * choice on <html> wins; with none, the system's own dark preference does.
+ */
+:root[data-theme='night'] {
+  --color-ground: #101114;
+  --color-surface: #17191d;
+  --color-ink: #ecedef;
+  --color-ink-2: #a2a6ad;
+  --color-ink-3: #6f737a;
+  --color-line: #262930;
+  --color-line-2: #33373f;
+  --color-accent: #4c8ff7;
+  --color-accent-deep: #3b7de6;
+  /* Dark on the lifted blue: 5.9:1, where white on it would be 3.2:1. */
+  --color-accent-ink: #101114;
+  --color-accent-wash: #172238;
+  --color-accent-line: #2b4a80;
+  --color-urgent: #f0574b;
+  --color-pending: #a2a6ad;
+  --color-rnd: #b39bf2;
+  --color-active: #4c8ff7;
+  --color-done: #4cbf86;
+  --color-dusted: #b9a089;
+  --slab-line: #262930;
+  --slab-folder-ink: #b4b8bf;
+  --slab-tick-ink: #a2a6ad;
+  --drawer-folder-ink: #c0c3c9;
+  --drawer-folder-mark: #8a8e95;
+  --drawer-body-ink: #d6d8dc;
+  --toast-rule: rgb(16 17 20 / 0.35);
+  --toast-hover: rgb(16 17 20 / 0.1);
+  color-scheme: dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --color-ground: #101114;
+    --color-surface: #17191d;
+    --color-ink: #ecedef;
+    --color-ink-2: #a2a6ad;
+    --color-ink-3: #6f737a;
+    --color-line: #262930;
+    --color-line-2: #33373f;
+    --color-accent: #4c8ff7;
+    --color-accent-deep: #3b7de6;
+    --color-accent-ink: #101114;
+    --color-accent-wash: #172238;
+    --color-accent-line: #2b4a80;
+    --color-urgent: #f0574b;
+    --color-pending: #a2a6ad;
+    --color-rnd: #b39bf2;
+    --color-active: #4c8ff7;
+    --color-done: #4cbf86;
+    --color-dusted: #b9a089;
+    --slab-line: #262930;
+    --slab-folder-ink: #b4b8bf;
+    --slab-tick-ink: #a2a6ad;
+    --drawer-folder-ink: #c0c3c9;
+    --drawer-folder-mark: #8a8e95;
+    --drawer-body-ink: #d6d8dc;
+    --toast-rule: rgb(16 17 20 / 0.35);
+    --toast-hover: rgb(16 17 20 / 0.1);
+    color-scheme: dark;
+  }
+}

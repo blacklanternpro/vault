@@ -39,8 +39,21 @@ It's an editing surface, and every change shows on the board immediately.
 | `t` | put the row's card on tonight's shelf, or take it off |
 | Delete | delete (Undo in the toast, or Ctrl+Z) |
 
+**Shell.** A prompt at the foot of the directory (`$`). Paths are `project/TASK/subtask`; any unique prefix of a name will do, case does not matter, Tab completes the next segment, ↑↓ recall.
+
+```
+ls [path]        cd [path]        touch path/NAME     mkdir NAME
+mv path dest/    mv path .        rm [-r] path        done / undone path
+st path lane     urgent path      rename path "NAME"  open path
+pwd · help · clear
+```
+
+Every change goes through the same undo as the pointer does, and gets a toast. The same lines run from the palette with a leading `>`.
+
+**Board keys.** With the board or a card focused: `j` `k` move in the lane, `h` `l` cross to the nearest card in the next lane, `Shift+H` / `Shift+L` move the card a lane, `o` opens, `x` deletes (with Undo). `?` lists every shortcut.
+
 **Everywhere.**
-- Ctrl+K focuses search. Search covers titles, subtasks and descriptions, and narrows both the board and the tree.
+- Ctrl+K (or `/`) opens the palette on the one input: plain words search titles, subtasks and descriptions and narrow both the board and the tree; `> mv …` runs a shell line; `p:homepage` `s:active` `!` apply filters, which show as chips you can remove. On a wide screen the directory is a resizable pane on the left of the board, with the notes as its first folder, `inbox/`.
 - Ctrl+Z and Ctrl+Shift+Z undo and redo anything.
 - Esc closes the current draft, edit or drawer.
 - No single key changes data unless a card or the tree has focus.
@@ -131,9 +144,10 @@ VAULT reads the inbox on load, when another tab writes it, when the tab comes ba
 ```
 src/
   model/        the graph: types, pure operations, store, legacy SPECK reader, seed — with tests
-                brief.ts (the markdown brief, link kinds, time) and report.ts (report parser, matcher, plan)
-  shell/        React: Studio (state, undo, keys), Board, Drawer, Directory, Scratch (dump), TopBar, Notices
+                brief.ts (the markdown brief, link kinds, time), report.ts (report parser, matcher, plan), shell.ts (the shell grammar), bridge.ts
+  shell/        React: Studio (state, undo, keys), Board, Drawer, Directory, Scratch (inbox/), Shell (prompt), Palette, Help, TopBar, Notices
                 handoff: Links, Handoff, Report, Clock, Timesheet, InboxBanner, Modal, useSession, useInbox
+                night shift: Tonight, Since, Review, Trail, LeftOff, DueChip, useTheme
   index.css     tokens + every style, commented
 e2e/            Playwright browser tests, one per bug from the Oct 2026 review
 speck/          the archived SPECK language (not used by the app) — see speck/README.md

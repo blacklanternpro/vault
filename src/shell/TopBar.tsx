@@ -1,10 +1,11 @@
-import { useEffect, useRef, useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from 'react'
+import type { ShellResult } from '../model/shell'
 import { listBackups } from '../model/store'
-import { LANES, LANE_LABEL, isLane, type Lane, type Node } from '../model/types'
-import { BrandMark, Caret, Cross, Dots, Glass, Plus } from './Glyph'
-/* --- agent handoff --- */
+import { LANE_LABEL, type Doc, type Lane, type Node } from '../model/types'
+import { BrandMark, Cross, Dots, Plus } from './Glyph'
+import { Palette, type FilterPatch } from './Palette'
+import { Saved } from './Saved'
 import type { ReactNode } from 'react'
-/* --- end agent handoff --- */
 
 type TopBarProps = {
   query: string
@@ -14,7 +15,6 @@ type TopBarProps = {
   laneFilter: Lane | null
   urgentOnly: boolean
   onQueryChange: (value: string) => void
-  onQuerySubmit: () => void
   onFilterChange: (projectId: number | null) => void
   onLaneFilterChange: (lane: Lane | null) => void
   onUrgentOnlyChange: (urgentOnly: boolean) => void
@@ -41,12 +41,51 @@ type TopBarProps = {
   onReview?: () => void
   theme?: 'light' | 'night'
   onToggleTheme?: () => void
+  /* --- agent bridge (optional) --- */
+  bridgeOn?: boolean
+  bridgeStatus?: 'off' | 'connecting' | 'online' | 'offline'
+  onToggleBridge?: () => void
+  /* Hellish directory: the palette under the one input, filter chips, the saved stamp, the shortcut sheet. */
+  doc: Doc
+  savedAt: number | null
+  onOpenNode: (id: number) => void
+  onRunCommand: (line: string) => ShellResult
+  onApplyFilter: (patch: FilterPatch) => void
+  onHelp: () => void
 }
 
 export function TopBar(p: TopBarProps) {
   const [menu, setMenu] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
   const menuRef = useRef<HTMLDivElement>(null)
+  const findRef = useRef<HTMLInputElement>(null)
+
+  /* Hellish directory: the ⋯ menu walks with the keyboard — ↓ on the button opens it, ↑ ↓ Home End move between its items, Esc closes (above). */
+  function onMenuKey(e: ReactKeyboardEvent<HTMLDivElement>) {
+    if (!menu) {
+      if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return
+      e.preventDefault()
+      setMenu(true)
+      requestAnimationFrame(() => menuRef.current?.querySelector<HTMLButtonElement>('[role^="menuitem"]:not(:disabled)')?.focus())
+      return
+    }
+    const items = [...e.currentTarget.querySelectorAll<HTMLButtonElement>('[role^="menuitem"]:not(:disabled)')]
+    if (!items.length) return
+    const at = items.indexOf(document.activeElement as HTMLButtonElement)
+    let to = -1
+    if (e.key === 'ArrowDown') to = at < 0 ? 0 : (at + 1) % items.length
+    else if (e.key === 'ArrowUp') to = at < 0 ? items.length - 1 : (at - 1 + items.length) % items.length
+    else if (e.key === 'Home') to = 0
+    else if (e.key === 'End') to = items.length - 1
+    if (to < 0) return
+    e.preventDefault()
+    items[to].focus()
+  }
+
+  function openFilter() {
+    p.onQueryChange('p:')
+    findRef.current?.focus()
+  }
 
   useEffect(() => {
     if (!menu) return
@@ -67,11 +106,6 @@ export function TopBar(p: TopBarProps) {
     }
   }, [menu])
 
-  function onSubmit(e: FormEvent) {
-    e.preventDefault()
-    p.onQuerySubmit()
-  }
-
   const project = p.filterId == null ? null : p.projects.find((x) => x.id === p.filterId)
   const backups = menu ? listBackups().slice(0, 8) : []
 
@@ -82,99 +116,58 @@ export function TopBar(p: TopBarProps) {
         <p className="brand-name">Vault Worldwide</p>
       </div>
 
-      <form className="find studio-find" role="search" onSubmit={onSubmit}>
-        <Glass className="find-glass" />
-        <input
-          className="find-input"
-          type="text"
-          value={p.query}
-          placeholder="Search tasks, subtasks, descriptions"
-          aria-label="Search"
-          data-testid="search"
-          onChange={(e) => p.onQueryChange(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Escape') {
-              e.preventDefault()
-              e.stopPropagation()
-              p.onQueryChange('')
-              e.currentTarget.blur()
-            }
-          }}
-        />
-        {p.hits == null ? (
-          <span className="find-keys" aria-hidden="true">
-            Ctrl K
-          </span>
-        ) : (
-          <>
-            <span className="find-count" data-testid="search-count">
-              {p.hits === 1 ? '1 task' : `${p.hits} tasks`}
-            </span>
-            <button type="button" className="find-clear" aria-label="Clear search" onClick={() => p.onQueryChange('')}>
+      {/* Hellish directory: the one input is the palette's — search, `>` commands and p: s: ! filters, with its rows beneath. */}
+      <Palette
+        doc={p.doc}
+        text={p.query}
+        hits={p.hits}
+        inputRef={findRef}
+        onChange={p.onQueryChange}
+        onOpenNode={p.onOpenNode}
+        onRunCommand={p.onRunCommand}
+        onApplyFilter={p.onApplyFilter}
+      />
+
+      {/* Hellish directory: the filters are chips drawn from what is active, each with its own ×; `Filter…` opens the palette on `p:`. */}
+      <div className="topbar-filters" data-testid="filters">
+        {project ? (
+          <span className="chip is-filter" data-testid="chip-project">
+            <span className="chip-label">{project.title.trim() || '_'}</span>
+            <button type="button" className="chip-clear" aria-label="Remove the project filter" onClick={() => p.onFilterChange(null)}>
               <Cross />
             </button>
-          </>
-        )}
-      </form>
-
-      <div className="topbar-filters">
-        <label className="chip">
-          <span className="chip-label">{project ? project.title.trim() || '_' : 'All projects'}</span>
-          <Caret className="chip-caret" />
-          <select
-            className="chip-select"
-            aria-label="Project"
-            data-testid="project-filter"
-            value={p.filterId ?? 'all'}
-            onChange={(e) => p.onFilterChange(e.target.value === 'all' ? null : Number(e.target.value))}
-          >
-            <option value="all">All projects</option>
-            {p.projects.map((x) => (
-              <option key={x.id} value={x.id}>
-                {x.title.trim() || '_'}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <label className="chip">
-          <span className="chip-label">{p.laneFilter ? `Status: ${LANE_LABEL[p.laneFilter]}` : 'Status: any'}</span>
-          <Caret className="chip-caret" />
-          <select
-            className="chip-select"
-            aria-label="Status"
-            data-testid="status-filter"
-            value={p.laneFilter ?? 'any'}
-            onChange={(e) => p.onLaneFilterChange(isLane(e.target.value) ? e.target.value : null)}
-          >
-            <option value="any">Status: any</option>
-            {LANES.map((l) => (
-              <option key={l} value={l}>
-                {LANE_LABEL[l]}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <button
-          type="button"
-          className={`chip chip-toggle${p.urgentOnly ? ' is-on' : ''}`}
-          aria-pressed={p.urgentOnly}
-          data-testid="urgent-filter"
-          onClick={() => p.onUrgentOnlyChange(!p.urgentOnly)}
-        >
-          Urgent only
+          </span>
+        ) : null}
+        {p.laneFilter ? (
+          <span className="chip is-filter" data-testid="chip-status">
+            <span className="chip-label">{LANE_LABEL[p.laneFilter]}</span>
+            <button type="button" className="chip-clear" aria-label="Remove the status filter" onClick={() => p.onLaneFilterChange(null)}>
+              <Cross />
+            </button>
+          </span>
+        ) : null}
+        {p.urgentOnly ? (
+          <span className="chip is-filter is-urgent" data-testid="chip-urgent">
+            <span className="chip-label">Urgent</span>
+            <button type="button" className="chip-clear" aria-label="Remove the urgent filter" onClick={() => p.onUrgentOnlyChange(false)}>
+              <Cross />
+            </button>
+          </span>
+        ) : null}
+        <button type="button" className="chip chip-open" data-testid="filter-open" aria-label="Filter by project, status or urgency" onClick={openFilter}>
+          Filter…
         </button>
       </div>
 
       {p.clock /* agent handoff: the session clock */}
+      <Saved at={p.savedAt} />
 
       <button type="button" className="new-job" data-testid="new-task" onClick={p.onNewTask}>
         <Plus className="new-job-glyph" />
         New task
       </button>
 
-      <div className="menu" ref={menuRef}>
+      <div className="menu" ref={menuRef} onKeyDown={onMenuKey}>
         <button
           type="button"
           className="menu-button"
@@ -193,6 +186,17 @@ export function TopBar(p: TopBarProps) {
             </button>
             <button type="button" role="menuitem" disabled={!p.canRedo} onClick={() => p.onRedo()}>
               Redo <kbd>Ctrl ⇧ Z</kbd>
+            </button>
+            <button
+              type="button"
+              role="menuitem"
+              data-testid="menu-help"
+              onClick={() => {
+                setMenu(false)
+                p.onHelp()
+              }}
+            >
+              Keyboard shortcuts <kbd>?</kbd>
             </button>
             <hr />
             <button
@@ -294,6 +298,24 @@ export function TopBar(p: TopBarProps) {
               </button>
             ) : null}
             {/* ----- end night shift ----- */}
+            {/* --- agent bridge --- */}
+            {p.onToggleBridge ? (
+              <button
+                type="button"
+                role="menuitemcheckbox"
+                aria-checked={Boolean(p.bridgeOn)}
+                data-testid="menu-bridge"
+                title="Keeps this board in step with vault-agent serve on localhost:7331, so MCP agents can read and update it"
+                onClick={() => {
+                  setMenu(false)
+                  p.onToggleBridge?.()
+                }}
+              >
+                Local agent bridge
+                <span className="menu-meta">{!p.bridgeOn ? 'off' : p.bridgeStatus === 'online' ? 'on' : p.bridgeStatus === 'connecting' ? '…' : 'no answer'}</span>
+              </button>
+            ) : null}
+            {/* --- end agent bridge --- */}
             {backups.length ? (
               <>
                 <hr />

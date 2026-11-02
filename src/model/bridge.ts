@@ -104,7 +104,9 @@ export async function pushDoc(url: string, doc: Doc, savedAt = Date.now()): Prom
 export async function pullInbox(url: string): Promise<InboxEntry[]> {
   const r = await withTimeout((signal) => fetch(`${base(url)}/inbox`, { signal }))
   if (!r.ok) return []
-  const list: unknown = await r.json()
+  const body: unknown = await r.json()
+  // vault-agent answers { inbox: [...] }; a bare list is accepted too.
+  const list: unknown = body && typeof body === 'object' && !Array.isArray(body) ? (body as { inbox?: unknown }).inbox : body
   if (!Array.isArray(list)) return []
   return list
     .filter((e): e is InboxEntry => Boolean(e) && typeof e === 'object' && typeof (e as InboxEntry).text === 'string')

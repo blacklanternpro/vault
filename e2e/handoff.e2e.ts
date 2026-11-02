@@ -193,7 +193,7 @@ test.describe('session clock', () => {
     await expect(page.getByTestId('clock-time')).toHaveText(/^00:01:(3[5-9]|4\d|5\d)$/)
     // At 1440 the chips need the room, so the plaque waits for a wider field; the clock never covers a chip.
     await expect(clock.locator('.clock-name')).toBeHidden()
-    const [chip, box] = await Promise.all([page.getByTestId('urgent-filter').boundingBox(), clock.boundingBox()])
+    const [chip, box] = await Promise.all([page.getByTestId('filter-open').boundingBox(), clock.boundingBox()])
     expect(chip!.x + chip!.width).toBeLessThanOrEqual(box!.x)
     await page.setViewportSize({ width: 1680, height: 900 })
     await expect(clock.locator('.clock-name')).toHaveText('SITE REDESIGN')

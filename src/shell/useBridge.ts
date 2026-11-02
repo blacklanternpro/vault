@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { newer, ping, pullDoc, pullInbox, pushDoc, readBridgeSettings, removeInbox, writeBridgeSettings, type BridgeSettings, type InboxEntry } from '../model/bridge'
+import { DOC_KEY } from '../model/store'
 import type { Doc } from '../model/types'
 
 /*
@@ -23,6 +24,17 @@ type Options = {
 }
 
 const POLL_MS = 5000
+
+/** When this browser last saved the board (0 for a board never saved, such as the first-run sample). */
+function localSavedAt(): number {
+  try {
+    const raw = window.localStorage.getItem(DOC_KEY)
+    const at = raw ? (JSON.parse(raw) as { savedAt?: unknown }).savedAt : 0
+    return typeof at === 'number' && Number.isFinite(at) ? at : 0
+  } catch {
+    return 0
+  }
+}
 const PUSH_DEBOUNCE_MS = 800
 
 export function useBridge({ doc, adopt, notify }: Options) {
@@ -80,8 +92,8 @@ export function useBridge({ doc, adopt, notify }: Options) {
         const theirs = await pullDoc(url)
         const mineJson = JSON.stringify(docRef.current)
         if (first && known.current.savedAt === 0) {
-          // First contact: whichever side has content wins; an empty bridge takes ours.
-          if (theirs.doc.nodes.length === 0 || newer({ savedAt: Date.now() }, theirs) === 'mine') {
+          // First contact: the side saved more recently wins; an empty bridge always takes ours.
+          if (theirs.doc.nodes.length === 0 || newer({ savedAt: localSavedAt() }, theirs) === 'mine') {
             const r = await pushDoc(url, docRef.current)
             if (r.ok) known.current = { json: mineJson, savedAt: r.savedAt }
             else if (r.conflict) take(r.doc, r.savedAt)
