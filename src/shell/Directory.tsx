@@ -67,7 +67,9 @@ export function Directory(props: DirectoryProps) {
     const pane = el.closest<HTMLElement>('.directory')
     if (pane && pane.scrollHeight > pane.clientHeight + 1 && getComputedStyle(pane).overflowY !== 'visible') {
       const p = pane.getBoundingClientRect()
-      if (r.top < p.top + 8) pane.scrollTop += r.top - p.top - 8
+      // The pane's head is sticky, so the usable top edge is under it.
+      const head = pane.querySelector('.section-head')?.getBoundingClientRect().height ?? 0
+      if (r.top < p.top + head + 8) pane.scrollTop += r.top - p.top - head - 8
       else if (r.bottom > p.bottom - 8) pane.scrollTop += r.bottom - p.bottom + 8
       return
     }
