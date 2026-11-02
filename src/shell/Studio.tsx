@@ -9,6 +9,7 @@ import {
   dockCard,
   hitchNote,
   isCard,
+  logEvent, // agent handoff
   moveCard,
   moveNote,
   projectOf,
@@ -36,6 +37,17 @@ import { TopBar } from './TopBar'
 import type { Settling } from './useBoardFlip'
 import { useHistory } from './useHistory'
 import { useJobDrag } from './useJobDrag'
+/* --- agent handoff --- */
+import { briefOf, formatDuration, sessionText, slugOf, spentOf } from '../model/brief'
+import { applyPlan, revertApplied, type PlanRow } from '../model/report'
+import { copyText, downloadText } from './clipboard'
+import { SessionClock } from './Clock'
+import { InboxBanner } from './InboxBanner'
+import { ReportModal } from './Report'
+import { TimesheetModal } from './Timesheet'
+import { useInbox, type InboxEntry } from './useInbox'
+import { useSession } from './useSession'
+/* --- end agent handoff --- */
 
 /** Where a not-yet-created item is being typed. Drafts live here, never in the doc. */
 export type Draft =
@@ -83,6 +95,13 @@ export function Studio() {
       : [],
   )
   const [saveFailed, setSaveFailed] = useState(false)
+
+  /* --- agent handoff: the session clock, the report panel, the month's hours, the inbox --- */
+  const clock = useSession()
+  const [report, setReport] = useState<{ taskId: number | null; text: string; entry?: InboxEntry } | null>(null)
+  const [timesheet, setTimesheet] = useState(false)
+  const inbox = useInbox()
+  /* --- end agent handoff --- */
 
   const liveRef = useRef<LiveLeash | null>(null)
   const settlingRef = useRef<Settling>(null)
@@ -332,6 +351,96 @@ export function Studio() {
     toast(`Restored the snapshot from ${new Date(at).toLocaleString()}`, undoOf(found.doc, () => before))
   }
 
+  /* --------------------------------------------------------- agent handoff
+   * A task goes out as a brief, comes back as a report, and the clock runs
+   * in between. The ⋯ menu's items act on `target`: the open card, else the
+   * selected one's card.
+   */
+
+  const target = open ?? (selectedId != null ? cardOf(doc, selectedId) : undefined)
+
+  function copyBrief(id: number) {
+    const cur = history.ref.current
+    if (!byId(cur, id)) return
+    const text = briefOf(cur, id)
+    void copyText(text).then((ok) => {
+      if (!ok) {
+        toast("Couldn't reach the clipboard", { label: 'Download .md', run: () => downloadBrief(id) })
+        return
+      }
+      if (byId(history.ref.current, id)) commit(logEvent(history.ref.current, 'report', 'brief copied', id))
+      toast(`Brief copied (${text.trimEnd().split('\n').length} lines)`)
+    })
+  }
+
+  function downloadBrief(id: number) {
+    const cur = history.ref.current
+    const node = byId(cur, id)
+    if (!node) return
+    const name = `${slugOf(node.title)}-brief.md`
+    downloadText(name, briefOf(cur, id))
+    commit(logEvent(cur, 'report', 'brief downloaded', id))
+    toast(`Downloaded ${name}`)
+  }
+
+  function openReport(taskId: number | null, text = '', entry?: InboxEntry) {
+    setReport({ taskId, text, entry })
+  }
+
+  /** One commit for the whole report, so one Ctrl+Z takes all of it back. */
+  function applyReport(taskId: number, rows: PlanRow[]) {
+    const entry = report?.entry
+    setReport(null)
+    if (entry) inbox.remove(entry)
+    const before = history.ref.current
+    const applied = applyPlan(before, taskId, rows)
+    if (applied.doc === before) {
+      toast(applied.summary)
+      return
+    }
+    commit(applied.doc)
+    toast(applied.summary, undoOf(applied.doc, (cur) => revertApplied(cur, taskId, applied)))
+  }
+
+  /** Stops the clock and books its seconds to the task it ran on. */
+  function stopSession() {
+    const stopped = clock.stop()
+    if (!stopped) return
+    const before = history.ref.current
+    const node = byId(before, stopped.id)
+    if (!node || stopped.seconds < 1) {
+      toast('Session stopped')
+      return
+    }
+    const was = node.spent ?? 0
+    const at = Date.now()
+    const after = logEvent(updateNode(before, stopped.id, { spent: was + stopped.seconds, touched: at }), 'note', sessionText(stopped.seconds), stopped.id, at)
+    commit(after)
+    toast(`${formatDuration(stopped.seconds)} logged to ${node.title.trim() || '_'}`, undoOf(after, (cur) => updateNode(cur, stopped.id, { spent: was })))
+  }
+
+  function startSession(id: number) {
+    if (clock.session?.id === id) return
+    if (clock.session) stopSession()
+    const node = byId(history.ref.current, id)
+    if (!node) return
+    clock.start(id)
+    toast(`Session started on ${node.title.trim() || '_'}`)
+  }
+
+  function toggleSession() {
+    if (clock.session) stopSession()
+    else if (target) startSession(target.id)
+  }
+
+  // A clock on a task that is no longer there has nothing to run for.
+  const { session, stop: stopClock } = clock
+  useEffect(() => {
+    if (session && !byId(doc, session.id)) stopClock()
+  }, [doc, session, stopClock])
+
+  /* ------------------------------------------------------ end agent handoff */
+
   /* ---------------------------------------------------------------- render */
 
   const shared = { doc, query, selectedId, editing, draft }
@@ -358,7 +467,25 @@ export function Studio() {
         canRedo={history.canRedo}
         onUndo={() => undo()}
         onRedo={() => redo()}
+        /* --- agent handoff --- */
+        clock={<SessionClock doc={doc} session={clock.session} onOpen={openNode} onStop={stopSession} />}
+        hasTarget={Boolean(target)}
+        sessionRunning={Boolean(clock.session)}
+        onCopyBrief={() => target && copyBrief(target.id)}
+        onPasteReport={() => target && openReport(target.id)}
+        onToggleSession={toggleSession}
+        onTimesheet={() => setTimesheet(true)}
+        /* --- end agent handoff --- */
       />
+
+      {/* --- agent handoff: reports left in the inbox --- */}
+      <InboxBanner
+        doc={doc}
+        entries={inbox.entries}
+        onReview={(e) => openReport(e.taskId != null && byId(doc, e.taskId) ? e.taskId : null, e.text, e)}
+        onDismiss={inbox.remove}
+      />
+      {/* --- end agent handoff --- */}
 
       <Notices
         toasts={toasts}
@@ -508,8 +635,23 @@ export function Studio() {
             if (!keepGoing || !title.trim()) setDraft(null)
           }}
           onOpenProject={(id) => setProjectFilter(id)}
+          /* --- agent handoff --- */
+          spent={spentOf(doc, open.id)}
+          sessionRunning={clock.session?.id === open.id}
+          onLinks={(links) => commit(updateNode(history.ref.current, open.id, { links }))}
+          onCopyBrief={() => copyBrief(open.id)}
+          onDownloadBrief={() => downloadBrief(open.id)}
+          onPasteReport={() => openReport(open.id)}
+          onStartSession={() => startSession(open.id)}
+          onStopSession={stopSession}
+          /* --- end agent handoff --- */
         />
       ) : null}
+
+      {/* --- agent handoff: the report panel and the month's hours --- */}
+      {report ? <ReportModal doc={doc} taskId={report.taskId} initialText={report.text} onApply={applyReport} onClose={() => setReport(null)} /> : null}
+      {timesheet ? <TimesheetModal doc={doc} onClose={() => setTimesheet(false)} /> : null}
+      {/* --- end agent handoff --- */}
     </div>
   )
 }

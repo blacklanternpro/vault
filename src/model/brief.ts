@@ -36,13 +36,17 @@ export function findUrls(text: string): string[] {
 
 /* -------------------------------------------------------------------- time */
 
-/** Seconds as the field writes them: `2h 15m`, `1h 02m`, `12m`, `45s`. */
+/**
+ * Seconds as the field writes them: `2h 15m`, `1h 02m`, `12m 05s`, `45s`.
+ * Under an hour the seconds are kept, so a session read back off the trail
+ * adds up to the same time the task was given.
+ */
 export function formatDuration(seconds: number): string {
   const s = Math.max(0, Math.round(seconds))
   const h = Math.floor(s / 3600)
   const m = Math.floor((s % 3600) / 60)
   if (h > 0) return `${h}h ${String(m).padStart(2, '0')}m`
-  if (m > 0) return `${m}m`
+  if (m > 0) return `${m}m ${String(s % 60).padStart(2, '0')}s`
   return `${s}s`
 }
 

@@ -6,6 +6,13 @@ import { InlineEdit } from './InlineEdit'
 import { Mark } from './Mark'
 import type { Draft, Editing } from './Studio'
 import type { JobDrag } from './useJobDrag'
+/* --- agent handoff --- */
+import type { ClipboardEvent } from 'react'
+import { findUrls } from '../model/brief'
+import type { Link } from '../model/types'
+import { HandoffTools } from './Handoff'
+import { LinksSection } from './Links'
+/* --- end agent handoff --- */
 
 type DrawerProps = {
   doc: Doc
@@ -28,6 +35,18 @@ type DrawerProps = {
   /** `keepGoing` after Enter, so a list of subtasks can be typed one after another. */
   onLineCommit: (title: string, keepGoing: boolean) => void
   onOpenProject: (projectId: number) => void
+  /* --- agent handoff: links, brief, report, session clock (all optional, so the drawer stands without them) --- */
+  /** Seconds logged on this task and everything inside it. */
+  spent?: number
+  /** The session clock is running on this task. */
+  sessionRunning?: boolean
+  onLinks?: (links: Link[]) => void
+  onCopyBrief?: () => void
+  onDownloadBrief?: () => void
+  onPasteReport?: () => void
+  onStartSession?: () => void
+  onStopSession?: () => void
+  /* --- end agent handoff --- */
 }
 
 export function Drawer({
@@ -49,7 +68,27 @@ export function Drawer({
   onStartLine,
   onLineCommit,
   onOpenProject,
+  /* --- agent handoff --- */
+  spent,
+  sessionRunning,
+  onLinks,
+  onCopyBrief,
+  onDownloadBrief,
+  onPasteReport,
+  onStartSession,
+  onStopSession,
+  /* --- end agent handoff --- */
 }: DrawerProps) {
+  /* --- agent handoff: a URL pasted anywhere in the drawer (bar the link form itself) is offered as a link --- */
+  const [offer, setOffer] = useState<string | null>(null)
+  function onPaste(e: ClipboardEvent<HTMLElement>) {
+    if (!onLinks) return
+    const target = e.target as HTMLElement
+    if (target.closest('.link-form, .drawer-title-input')) return
+    const url = findUrls(e.clipboardData?.getData('text') ?? '').find((u) => !(node.links ?? []).some((l) => l.url === u))
+    if (url) setOffer(url)
+  }
+  /* --- end agent handoff --- */
   const lane = laneOf(node.status)
   const project = projectOf(doc, node.id)
   // Nested lines show indented under their parent line, so nothing in the card is out of sight.
@@ -62,7 +101,7 @@ export function Drawer({
   const paragraphs = (node.body ?? '').split('\n')
 
   return (
-    <aside className="drawer" data-testid="drawer" aria-label="Task detail">
+    <aside className="drawer" data-testid="drawer" aria-label="Task detail" onPaste={onPaste /* agent handoff */}>
       <div className="drawer-top">
         <label className={`drawer-status is-${lane}`}>
           <span className="drawer-dot" aria-hidden="true" />
@@ -207,6 +246,21 @@ export function Drawer({
           )}
         </li>
       </ul>
+
+      {/* --- agent handoff: LINKS, then HANDOFF (brief out, report in, the clock between) --- */}
+      {onLinks ? <LinksSection node={node} offer={offer} onOffer={setOffer} onChange={onLinks} /> : null}
+      {onCopyBrief && onDownloadBrief && onPasteReport && onStartSession && onStopSession ? (
+        <HandoffTools
+          spent={spent ?? 0}
+          running={Boolean(sessionRunning)}
+          onCopyBrief={onCopyBrief}
+          onDownloadBrief={onDownloadBrief}
+          onPasteReport={onPasteReport}
+          onStartSession={onStartSession}
+          onStopSession={onStopSession}
+        />
+      ) : null}
+      {/* --- end agent handoff --- */}
     </aside>
   )
 }

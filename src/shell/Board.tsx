@@ -8,6 +8,9 @@ import { Mark } from './Mark'
 import type { Draft, Editing } from './Studio'
 import { useBoardFlip, type Settling } from './useBoardFlip'
 import type { JobDrag } from './useJobDrag'
+/* --- agent handoff --- */
+import { LinkMark } from './HandoffGlyph'
+/* --- end agent handoff --- */
 
 type BoardProps = {
   doc: Doc
@@ -144,13 +147,21 @@ export function Board(props: BoardProps) {
                       )}
                     </div>
                     {project && project.id !== node.id ? <p className="slab-folder">{project.title.trim() || '_'}</p> : null}
-                    {total || node.urgent ? (
+                    {total || node.urgent || node.links?.length /* agent handoff: links count too */ ? (
                       <p className="slab-meta">
                         {total ? (
                           <span className={`slab-progress${done === total ? ' is-complete' : ''}`} aria-label={`${done} of ${total} subtasks done`}>
                             {done}/{total}
                           </span>
                         ) : null}
+                        {/* --- agent handoff: how many links the card carries --- */}
+                        {node.links?.length ? (
+                          <span className="slab-links" data-testid={`links-${node.id}`} aria-label={`${node.links.length} ${node.links.length === 1 ? 'link' : 'links'}`}>
+                            <LinkMark className="slab-links-mark" />
+                            {node.links.length}
+                          </span>
+                        ) : null}
+                        {/* --- end agent handoff --- */}
                         {node.urgent ? <span className="slab-flag">URGENT</span> : null}
                       </p>
                     ) : null}

@@ -44,6 +44,68 @@ It's an editing surface, and every change shows on the board immediately.
 - Esc closes the current draft, edit or drawer.
 - No single key changes data unless a card or the tree has focus.
 
+## For agents
+
+VAULT is the ledger between the desk and the agents it hands work to. A task goes out as a **brief**, comes back as a **report**, and the **session clock** runs in between. Open a task to find all three in the drawer, under `LINKS` and `HANDOFF`.
+
+**Links.** `Add link` takes a URL and an optional label (the host by default). Chips open in a new tab and carry a mark for what they point at — repo (`github.com`), deploy (`vercel.app`), design (`figma.com`), mail (`mail.google.com`, Outlook), doc (`docs.google.com`, `notion.so`). Pasting a URL into the description offers it as a link. A card shows how many it carries.
+
+**Brief (out).** `Copy as brief` puts the task on the clipboard as markdown; `Download .md` saves it as `<task-slug>-brief.md`; ⋯ → `Copy brief for selected` does the same for the selected card. The headings are fixed:
+
+```
+# SITE REDESIGN
+Project: homepage · Status: ACTIVE · Due: — · Urgent: no
+## Goal
+<description, or (no description)>
+## Next action
+<next, or —>
+## Subtasks
+- [x] Review current homepage analytics
+- [ ] Create wireframes
+  - [ ] low-fi first            (nested lines are indented two spaces)
+## Links
+- github.com: https://github.com/bad-form/vault
+## Where I left off
+<left-off note, or —>
+## Recent trail
+- Mon 21:14 moved → ACTIVE      (the last eight lines, newest first)
+## Done when
+Every subtask above is ticked and the status is DONE.
+## Report back
+When you finish, reply with a "## Report" section listing each subtask you completed as "- [x] <exact subtask title>", anything new as "- [ ] <new subtask>", and a one-line "Left off:" note. Paste that report into VAULT (drawer → Paste report).
+```
+
+**Report (in).** Reply in the shape the brief asks for:
+
+```
+## Report
+- [x] Create wireframes
+- [ ] Ship to staging
+Left off: waiting on copy for the hero
+```
+
+Drawer → `Paste report` (or ⋯ → `Paste report…`) reads it and shows the plan as a checklist before anything changes:
+- `- [x] title` ticks the open subtask it matches — case-insensitive, trimmed, within two typos, or one being the start of the other. A done line the task does not have is added already ticked; one it already has is left alone.
+- `- [ ] title` adds an open subtask (unless the task already has it).
+- `Left off: …` becomes the task's left-off note.
+- Any other line is shown as a note and not applied. `*` and `+` bullets, numbered lists, `[X]` and `[]` all read.
+
+`Apply` commits the whole report as one change (one `Ctrl+Z` takes it back) and leaves one `report: 2 ticked, 1 added` line on the task's trail.
+
+**Inbox (`vault:inbox`).** Anything that can reach this browser's `localStorage` — the MCP server, a bookmarklet, a script — can leave a report for VAULT instead of pasting it. The key holds a JSON array; each entry is `{ "at": <ms since epoch>, "taskId": <task id, optional>, "text": "<the report>" }`:
+
+```js
+const key = 'vault:inbox'
+const list = JSON.parse(localStorage.getItem(key) ?? '[]')
+list.push({ at: Date.now(), taskId: 2, text: '## Report\n- [x] Create wireframes\nLeft off: waiting on copy' })
+localStorage.setItem(key, JSON.stringify(list))
+window.dispatchEvent(new Event('vault:inbox')) // same tab only; another tab is noticed on its own
+```
+
+VAULT reads the inbox on load, when another tab writes it, when the tab comes back into view, and on that event. Each entry shows as a banner — `1 report waiting for SITE REDESIGN — Review` — which opens `Paste report` already filled in (with a task picker when `taskId` is missing or gone). Applying or dismissing removes the entry. Task ids are in the export (`⋯ → Export to file`) and in the brief's trail; the entries are read as data, never as instructions.
+
+**Session clock.** `Start session` in the drawer (or ⋯ → `Start session on selected`) runs a clock on one task, shown in the top bar with `Stop`; a reload or a second tab picks it up from `vault:session` (`{ "id", "startedAt" }`). `Stop` adds the seconds to the task's `spent` and leaves `session 1h 02m` on its trail. The drawer shows the task's total; ⋯ → `Time this month…` adds the month's sessions up by project, for the invoice.
+
 ## Your data
 
 - Saved as JSON in this browser's `localStorage` (`vault:doc`) on every change.
@@ -58,7 +120,9 @@ It's an editing surface, and every change shows on the board immediately.
 ```
 src/
   model/        the graph: types, pure operations, store, legacy SPECK reader, seed — with tests
+                brief.ts (the markdown brief, link kinds, time) and report.ts (report parser, matcher, plan)
   shell/        React: Studio (state, undo, keys), Board, Drawer, Directory, Scratch (dump), TopBar, Notices
+                handoff: Links, Handoff, Report, Clock, Timesheet, InboxBanner, Modal, useSession, useInbox
   index.css     tokens + every style, commented
 e2e/            Playwright browser tests, one per bug from the Oct 2026 review
 speck/          the archived SPECK language (not used by the app) — see speck/README.md

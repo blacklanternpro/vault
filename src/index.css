@@ -2039,3 +2039,676 @@
     animation-duration: 0ms !important;
   }
 }
+
+/* ============================================================ agent handoff
+ * The ledger between the desk and its agents: links on a job, the brief
+ * that goes out, the report that comes back, the session clock in the top
+ * bar, the inbox banner, and the two panels (Paste report, Time this month).
+ * Same tokens, same faces, same 8px / 6px / 4px, no new colour.
+ */
+
+/* --------------------------------------------------------------- links */
+
+.links {
+  margin: 14px 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.link {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+/* A chip inside the drawer: white, hairline, the inner 6px, the mark in the tint and the label in ink. */
+.link-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  max-width: 100%;
+  height: 28px;
+  padding: 0 10px 0 8px;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: 6px;
+  color: var(--color-ink);
+  font-size: 12.5px;
+  line-height: 20px;
+  text-decoration: none;
+  transition: border-color 120ms ease, color 120ms ease;
+}
+
+.link-chip:hover {
+  border-color: var(--color-line-2);
+  color: var(--color-accent);
+}
+
+.link-mark {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  color: var(--color-ink-3);
+}
+
+.link-chip:hover .link-mark {
+  color: var(--color-accent);
+}
+
+.link-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.link-remove {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  background: none;
+  border: 0;
+  border-radius: var(--radius-tick);
+  color: var(--color-ink-3);
+  opacity: 0;
+}
+
+.link:hover .link-remove,
+.link-remove:focus-visible,
+.link-remove.is-shown {
+  opacity: 1;
+}
+
+.link-remove:hover {
+  color: var(--color-urgent);
+}
+
+.link-remove svg {
+  width: 12px;
+  height: 12px;
+}
+
+/* A URL just pasted, held on the wash until it is taken as a link or waved off. */
+.link-offer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 6px 6px 6px 9px;
+  background-color: var(--color-accent-wash);
+  border: 1px solid var(--color-accent-line);
+  border-radius: 6px;
+  font-size: 12.5px;
+  line-height: 20px;
+}
+
+.link-offer-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--color-ink-2);
+}
+
+.link-offer-add {
+  flex: none;
+  padding: 0;
+  background: none;
+  border: 0;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--color-accent);
+}
+
+.link-offer-add:hover {
+  color: var(--color-accent-deep);
+}
+
+.link-form {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+
+/* The two fields are writing surfaces, like the description: ground fill, hairline, the inner 6px. */
+.link-input {
+  width: 100%;
+  padding: 6px 9px;
+  background-color: var(--color-ground);
+  border: 1px solid var(--color-line);
+  border-radius: 6px;
+  outline: none;
+  font-size: 13.5px;
+  line-height: 20px;
+}
+
+.link-input:focus {
+  border-color: var(--color-accent);
+}
+
+.link-input.is-bad {
+  border-color: var(--color-urgent);
+}
+
+.link-form-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.link-form-add,
+.link-form-cancel {
+  padding: 0;
+  background: none;
+  border: 0;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--color-ink-2);
+}
+
+.link-form-add {
+  color: var(--color-accent);
+}
+
+.link-form-add:hover {
+  color: var(--color-accent-deep);
+}
+
+.link-form-cancel:hover {
+  color: var(--color-ink);
+}
+
+.link-form-bad {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  color: var(--color-urgent);
+}
+
+/* On the card: a chain and a count, beside the subtask count, in the same grey. */
+.slab-links {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.slab-links-mark {
+  width: 12px;
+  height: 12px;
+}
+
+/* ------------------------------------------------------------- handoff */
+
+.handoff {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+  margin: 14px 0 0;
+}
+
+/* Small white plates, hairline, the inner 6px: the drawer's own buttons, not the page's one primary. */
+.handoff-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  height: 32px;
+  padding: 0 9px;
+  overflow: hidden;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: 6px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--color-ink);
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: border-color 120ms ease, color 120ms ease, background-color 120ms ease;
+}
+
+.handoff-button:hover {
+  border-color: var(--color-line-2);
+  color: var(--color-accent);
+}
+
+/* The clock running on this job: the plate takes the wash and the accent hairline, the same way a selected card does. */
+.handoff-button.is-on {
+  background-color: var(--color-accent-wash);
+  border-color: var(--color-accent-line);
+  color: var(--color-accent);
+}
+
+.handoff-mark {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  color: var(--color-ink-3);
+}
+
+.handoff-button:hover .handoff-mark,
+.handoff-button.is-on .handoff-mark {
+  color: currentColor;
+}
+
+.handoff-spent {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 12px 0 0;
+  font-size: 12.5px;
+  line-height: 20px;
+  color: var(--color-ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------- clock */
+
+/*
+ * The running session in the top bar, in the slack between the chips and the
+ * primary action: a live dot, the plaque, the time, Stop. At 1440 that slack
+ * is about 180px, which holds the dot, the time and Stop; the plaque joins
+ * them from 1600px up, and below that the task is named on hover and is one
+ * click away.
+ */
+.clock {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: none;
+  height: 36px;
+  margin-left: auto;
+  padding: 0 5px 0 4px;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-control);
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+/* The clock takes the slack, so the primary action behind it sits where it always does. */
+.clock + .new-job {
+  margin-left: 10px;
+}
+
+.clock-task {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  height: 28px;
+  padding: 0 7px 0 8px;
+  background: none;
+  border: 0;
+  border-radius: 5px;
+  color: var(--color-ink);
+}
+
+.clock-task:hover {
+  background-color: var(--color-ground);
+}
+
+.clock-dot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--color-accent);
+}
+
+.clock-name,
+.clock-sep {
+  display: none;
+}
+
+.clock-name {
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-family: var(--font-plaque);
+  font-size: 14.5px;
+  font-weight: 700;
+  line-height: 18px;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+}
+
+.clock-task:hover .clock-name {
+  color: var(--color-accent);
+}
+
+.clock-sep {
+  color: var(--color-ink-2);
+}
+
+.clock-time {
+  font-variant-numeric: tabular-nums;
+}
+
+@media (min-width: 1600px) {
+  .clock-name,
+  .clock-sep {
+    display: inline;
+  }
+}
+
+.clock-stop {
+  height: 24px;
+  padding: 0 9px;
+  background: none;
+  border: 1px solid var(--color-line);
+  border-radius: 5px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-ink-2);
+}
+
+.clock-stop:hover {
+  border-color: var(--color-line-2);
+  color: var(--color-ink);
+  background-color: var(--color-ground);
+}
+
+/* -------------------------------------------------------------- inbox */
+
+.inbox-banners {
+  padding-top: 12px;
+}
+
+.banners + .toasts + .inbox-banners {
+  padding-top: 8px;
+}
+
+/* With the drawer open the banner would run under it, Review and all; it stops where the rail starts. */
+.studio.has-drawer .inbox-banners {
+  padding-right: calc(var(--drawer-width) + 16px);
+}
+
+.banner-action.is-accent {
+  background-color: var(--color-accent);
+}
+
+.banner-action.is-accent:hover {
+  background-color: var(--color-accent-deep);
+}
+
+.banner-meta {
+  color: var(--color-ink-2);
+}
+
+/* -------------------------------------------------------------- panels */
+
+.modal-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 35;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background-color: rgb(21 21 21 / 0.28);
+}
+
+/* One panel on the field: white, hairline, 8px. It is in the air over the page, so it carries the airborne shadow. */
+.modal {
+  display: flex;
+  flex-direction: column;
+  width: min(560px, 100%);
+  max-height: calc(100vh - 48px);
+  padding: 16px 18px 18px;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-slab);
+  box-shadow: 0 8px 20px rgb(21 21 21 / 0.13);
+  overflow-y: auto;
+  outline: none;
+  animation: line-in 160ms cubic-bezier(0.2, 0.7, 0.3, 1) both;
+}
+
+.modal-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.modal-title {
+  margin: 0;
+  margin-right: auto;
+  font-family: var(--font-plaque);
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 22px;
+  letter-spacing: 0.055em;
+  text-transform: uppercase;
+}
+
+.modal-lead {
+  margin: 10px 0 0;
+  font-size: 13.5px;
+  line-height: 20px;
+  color: var(--color-ink-2);
+}
+
+.report-task-name {
+  font-family: var(--font-plaque);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  color: var(--color-ink);
+}
+
+.report-task {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.report-task select {
+  max-width: 100%;
+  padding: 3px 6px;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-tick);
+  background-color: var(--color-surface);
+  font-size: 13px;
+  color: var(--color-ink);
+}
+
+/* The report goes in on a writing surface: ground fill, hairline, the inner 6px, the way the description is. */
+.report-input {
+  width: 100%;
+  margin: 12px 0 0;
+  padding: 9px 10px;
+  background-color: var(--color-ground);
+  border: 1px solid var(--color-line);
+  border-radius: 6px;
+  outline: none;
+  font-size: 13.5px;
+  line-height: 1.55;
+  resize: vertical;
+}
+
+.report-input:focus {
+  border-color: var(--color-accent);
+}
+
+.report-plan {
+  margin: 14px 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.report-row label {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 13.5px;
+  line-height: 20px;
+  cursor: pointer;
+}
+
+.report-row input {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  margin: 2px 0 0;
+  accent-color: var(--color-accent);
+}
+
+.report-row.is-off span {
+  color: var(--color-ink-2);
+}
+
+.report-row strong {
+  font-weight: 600;
+}
+
+.report-row-note {
+  color: var(--color-ink-2);
+}
+
+.report-empty,
+.report-aside {
+  margin: 12px 0 0;
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--color-ink-2);
+}
+
+.modal-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 18px 0 0;
+}
+
+/* The panel's one action: the accent as a hairline and a word, never a second solid blue on the page. */
+.modal-apply {
+  height: 34px;
+  padding: 0 14px;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-accent-line);
+  border-radius: var(--radius-control);
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--color-accent);
+}
+
+.modal-apply:hover:not(:disabled) {
+  background-color: var(--color-accent-wash);
+  border-color: var(--color-accent);
+}
+
+.modal-apply:disabled {
+  border-color: var(--color-line);
+  color: var(--color-ink-3);
+  cursor: default;
+}
+
+.modal-cancel {
+  padding: 0;
+  background: none;
+  border: 0;
+  font-size: 13.5px;
+  color: var(--color-ink-2);
+}
+
+.modal-cancel:hover {
+  color: var(--color-ink);
+}
+
+/* Time this month: a plain table on hairlines, counts tabular, the project names as the rows' own plaques. */
+.timesheet {
+  width: 100%;
+  margin: 14px 0 0;
+  border-collapse: collapse;
+  font-size: 13.5px;
+  line-height: 20px;
+}
+
+.timesheet th,
+.timesheet td {
+  padding: 7px 0;
+  border-bottom: 1px solid var(--color-line);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.timesheet th {
+  font-weight: 600;
+}
+
+.timesheet thead th {
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-ink-2);
+}
+
+.timesheet th[scope='row'],
+.timesheet thead th:first-child {
+  text-align: left;
+}
+
+.timesheet tbody th[scope='row'] {
+  font-weight: 600;
+}
+
+.timesheet tfoot th,
+.timesheet tfoot td {
+  border-bottom: 0;
+  color: var(--color-ink);
+  font-weight: 600;
+}
+
+@media (max-width: 900px) {
+  .clock {
+    order: 2;
+    margin-left: 0;
+  }
+
+  /* One column: the plaque has room again, and the drawer sits below, not beside. */
+  .clock-name,
+  .clock-sep {
+    display: inline;
+  }
+
+  .clock-name {
+    max-width: 110px;
+  }
+
+  .handoff {
+    grid-template-columns: 1fr;
+  }
+
+  .studio.has-drawer .inbox-banners {
+    padding-right: 14px;
+  }
+
+  .inbox-banners {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+}
+
+/* ======================================================== end agent handoff */
