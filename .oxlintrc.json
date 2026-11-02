@@ -17,6 +17,7 @@
   "ignorePatterns": [
     "speck/**",
     ".agents/**",
-    "dist/**"
+    "dist/**",
+    "agent/dist/**"
   ]
 }

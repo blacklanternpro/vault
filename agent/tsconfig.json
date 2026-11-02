@@ -1,0 +1,30 @@
+{
+  "compilerOptions": {
+    "target": "es2023",
+    "lib": ["ES2023", "DOM"],
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "types": ["node"],
+    "skipLibCheck": true,
+
+    /*
+     * The agent compiles the web app's model (../src/model) in place rather
+     * than copying it, so the root of the emit is the repo root: the CLI lands
+     * at dist/agent/src/cli.js and the model at dist/src/model/. scripts/postbuild.mjs
+     * adds the .js extensions Node needs and writes the dist/cli.js entry.
+     */
+    "rootDir": "..",
+    "outDir": "dist",
+    "sourceMap": false,
+    "declaration": false,
+
+    "verbatimModuleSyntax": true,
+    "moduleDetection": "force",
+    "esModuleInterop": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "erasableSyntaxOnly": true,
+    "noFallthroughCasesInSwitch": true
+  },
+  "include": ["src"]
+}

@@ -1,10 +1,14 @@
-import { defineConfig } from 'vite'
+import { configDefaults, defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  test: {
+    // The agent package (agent/) has its own vitest run: `npm run agent:test`.
+    exclude: [...configDefaults.exclude, 'agent/**'],
+  },
   server: {
     // Bind on all interfaces (not just localhost) so the dev server is
     // reachable from outside the container/VM, e.g. via Cloud Agent port
