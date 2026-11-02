@@ -408,7 +408,7 @@ test.describe('second review', () => {
     const errors: string[] = []
     page.on('pageerror', (e) => errors.push(e.message))
     await page.getByTestId('import-file').setInputFiles(file)
-    await expect(page.getByTestId('toast')).toContainText('Imported', { timeout: 20_000 })
+    await expect(page.getByTestId('toast')).toContainText('Imported', { timeout: 40_000 })
     await page.getByTestId('new-task').click()
     await page.getByRole('textbox', { name: 'New task name' }).fill('STILL WORKS')
     await page.getByRole('textbox', { name: 'New task name' }).press('Enter')

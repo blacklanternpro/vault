@@ -2205,6 +2205,10 @@
   border-radius: 0;
 }
 
+.dump-add {
+  box-shadow: none;
+}
+
 .notes {
   padding: 0;
 }
@@ -2443,6 +2447,17 @@
 
 /* ----------------------------------------------------------------- chips */
 
+/* The chips run off the edge on one line rather than pushing the primary action; a tight bar scrolls them. */
+.topbar-filters {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.topbar-filters::-webkit-scrollbar {
+  display: none;
+}
+
 /* A chip is now a filter that is on, with its own ×; `Filter…` is the way to add one. */
 .chip.is-filter {
   gap: 6px;
@@ -2504,6 +2519,13 @@
 
 .saved + .new-job {
   margin-left: 0;
+}
+
+/* The stamp is the first thing to go when the bar is tight: the chips and the primary action matter more. */
+@media (max-width: 1400px) {
+  .saved {
+    display: none;
+  }
 }
 
 /* ------------------------------------------------------------------ help */

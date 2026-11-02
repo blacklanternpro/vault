@@ -120,7 +120,7 @@ export function TopBar(p: TopBarProps) {
         ) : null}
         {p.laneFilter ? (
           <span className="chip is-filter" data-testid="chip-status">
-            <span className="chip-label">Status: {LANE_LABEL[p.laneFilter]}</span>
+            <span className="chip-label">{LANE_LABEL[p.laneFilter]}</span>
             <button type="button" className="chip-clear" aria-label="Remove the status filter" onClick={() => p.onLaneFilterChange(null)}>
               <Cross />
             </button>
@@ -128,7 +128,7 @@ export function TopBar(p: TopBarProps) {
         ) : null}
         {p.urgentOnly ? (
           <span className="chip is-filter is-urgent" data-testid="chip-urgent">
-            <span className="chip-label">Urgent only</span>
+            <span className="chip-label">Urgent</span>
             <button type="button" className="chip-clear" aria-label="Remove the urgent filter" onClick={() => p.onUrgentOnlyChange(false)}>
               <Cross />
             </button>
