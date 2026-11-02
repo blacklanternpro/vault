@@ -65,7 +65,7 @@ app: `{ "inbox": [ { "at": 1793578710847, "taskId": 8, "text": "## Report ..." }
 
 ```sh
 vault-agent serve                                  # http://127.0.0.1:7331
-vault-agent serve --port 7331 --origin https://vault.example.app --origin https://vault-git-main.vercel.app
+vault-agent serve --port 7331 --origin https://vault.example.app   # the live site, https://vault-lilac-six.vercel.app, is allowed by default
 ```
 
 Plain Node `http`, bound to loopback, JSON in and out.

@@ -93,6 +93,8 @@ export function createBridge(opts: BridgeOptions): http.Server {
       res.setHeader('Access-Control-Allow-Methods', METHODS)
       res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
       res.setHeader('Access-Control-Max-Age', '600')
+      // Chrome asks before a public https page may reach localhost (Private Network Access).
+      if (req.headers['access-control-request-private-network'] === 'true') res.setHeader('Access-Control-Allow-Private-Network', 'true')
     }
     if (method === 'OPTIONS') return { status: 204, body: null }
 

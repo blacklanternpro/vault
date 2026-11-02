@@ -85,7 +85,7 @@ describe('vault-agent', () => {
     const running = main(['serve', '--port', '0', '--file', fx.store.file, '--origin', 'https://vault.example.app'], { out: (s) => out.push(s), err: (s) => err.push(s), until })
     while (!err.join('').includes('vault-agent bridge on')) await new Promise((r) => setTimeout(r, 10))
     const banner = err.join('')
-    expect(banner).toContain('origins: http://localhost:5173, http://localhost:4173, http://127.0.0.1:5173, http://127.0.0.1:4173, https://vault.example.app')
+    expect(banner).toContain('origins: http://localhost:5173, http://localhost:4173, http://127.0.0.1:5173, http://127.0.0.1:4173, https://vault-lilac-six.vercel.app, https://vault.example.app')
     const url = /bridge on (http:\/\/[^\s]+)/.exec(banner)![1]
     const health = await fetch(`${url}/health`).then((r) => r.json())
     expect(health).toMatchObject({ app: 'vault-agent', file: fx.store.file })
