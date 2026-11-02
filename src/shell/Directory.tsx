@@ -31,6 +31,8 @@ type DirectoryProps = {
   onToggleDone: (id: number) => void
   onStage: (id: number, lane: Lane) => void
   onPull: (id: number, lane: Lane) => void
+  /** Night shift: `t` on a row puts its card on tonight's shelf, or takes it off. */
+  onToggleTonight?: (id: number) => void
 }
 
 const THRESH = 6
@@ -141,6 +143,12 @@ export function Directory(props: DirectoryProps) {
     if (key.toLowerCase() === 'x' && !e.metaKey && !e.ctrlKey && depthOf(doc, id) >= 2) {
       handled()
       props.onToggleDone(id)
+      return
+    }
+    /* night shift: t shelves the row's card */
+    if (key.toLowerCase() === 't' && !e.metaKey && !e.ctrlKey && !e.altKey && props.onToggleTonight && depthOf(doc, id) >= 1) {
+      handled()
+      props.onToggleTonight(id)
     }
   }
 
@@ -350,7 +358,7 @@ export function Directory(props: DirectoryProps) {
         ) : null}
       </div>
       <p className="forest-keys" aria-hidden="true">
-        ↑↓ move · ←→ fold · enter rename · + add inside · tab / ⇧tab indent · alt ↑↓ reorder · x done · del delete · ctrl z undo
+        ↑↓ move · ←→ fold · enter rename · + add inside · tab / ⇧tab indent · alt ↑↓ reorder · x done · t tonight · del delete · ctrl z undo
       </p>
     </section>
   )

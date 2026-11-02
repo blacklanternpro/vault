@@ -11,6 +11,11 @@ import type { JobDrag } from './useJobDrag'
 /* --- agent handoff --- */
 import { LinkMark } from './HandoffGlyph'
 /* --- end agent handoff --- */
+/* night shift */
+import { DueChip } from './DueChip'
+import { Pennant } from './NightGlyph'
+import { daysSince } from './time'
+import { STALE_DAYS } from './trail'
 
 type BoardProps = {
   doc: Doc
@@ -37,6 +42,13 @@ type BoardProps = {
   onDraftCommit: (title: string, lane: Lane, project: number | null) => void
   onRename: (id: number, title: string) => void
   onEditTitle: (id: number) => void
+  /* ----- night shift (optional) ----- */
+  /** The clock the due chips read; defaults to the moment of render. */
+  now?: Date
+  /** Tonight's shelf holds something: every card not on it dims. */
+  focus?: boolean
+  /** `t` on a focused card. */
+  onToggleTonight?: (id: number) => void
 }
 
 function nextOf(lane: Lane): Lane | null {
@@ -50,6 +62,8 @@ export function Board(props: BoardProps) {
   const satellites = useMemo(() => satellitesOf(doc, filterId), [doc, filterId])
   const layout = useMemo(() => ({ doc, filterId, laneFilter, urgentOnly, hits }), [doc, filterId, laneFilter, urgentOnly, hits])
   useBoardFlip(boardRef, layout, props.settling)
+  /* night shift: one clock per render, so every chip on the board agrees */
+  const now = props.now ?? new Date()
 
   /*
    * The chevron is hidden until hover, which a tap synthesises along with the
@@ -76,6 +90,10 @@ export function Board(props: BoardProps) {
     } else if (e.key === 'Delete' || e.key === 'Backspace') {
       e.preventDefault()
       props.onDelete(node.id)
+    } else if ((e.key === 't' || e.key === 'T') && !e.metaKey && !e.ctrlKey && !e.altKey && props.onToggleTonight) {
+      /* night shift: t puts the focused card on the shelf, or takes it off */
+      e.preventDefault()
+      props.onToggleTonight(node.id)
     }
   }
 
@@ -87,7 +105,7 @@ export function Board(props: BoardProps) {
 
   return (
     <div
-      className={`board${props.dragging ? ' is-dragging' : ''}`}
+      className={`board${props.dragging ? ' is-dragging' : ''}${props.focus ? ' is-focus' : ''}`}
       data-testid="board"
       role="list"
       aria-label="Tasks by status"
@@ -114,14 +132,19 @@ export function Board(props: BoardProps) {
                 const project = projectOf(doc, node.id)
                 const { done, total } = progressOf(doc, node.id)
                 const editingHere = editing?.id === node.id && editing.where === 'board'
+                /* night shift: dust and the shelf */
+                const untouched = node.touched != null && lane !== 'done' && lane !== 'dusted' ? daysSince(node.touched, now.getTime()) : 0
+                const stale = untouched >= STALE_DAYS
+                const nightMeta = Boolean(node.due || node.tonight || stale)
                 return (
                   <article
                     key={node.id}
                     tabIndex={0}
                     aria-label={`${node.title || 'untitled'}, ${LANE_LABEL[lane]}`}
-                    className={`slab${isOpen ? ' is-open' : ''}${live ? ' is-live' : ''}${node.urgent ? ' is-urgent' : ''}${node.loose ? ' is-loose' : ''}`}
+                    className={`slab${isOpen ? ' is-open' : ''}${live ? ' is-live' : ''}${node.urgent ? ' is-urgent' : ''}${node.loose ? ' is-loose' : ''}${node.tonight ? ' is-tonight' : ''}${stale ? ' is-stale' : ''}`}
                     data-card-id={node.id}
                     data-testid={`card-${node.id}`}
+                    title={node.leftOff ? `left off: ${node.leftOff}` : undefined}
                     onKeyDown={(e) => onCardKey(e, node)}
                     onDoubleClick={() => props.onEditTitle(node.id)}
                     onPointerDown={(e) => drag.beginDrag(e, node.id, 'card', '[data-card-id]')}
@@ -146,8 +169,14 @@ export function Board(props: BoardProps) {
                         </h3>
                       )}
                     </div>
+                    {/* night shift: the one next action, under the name */}
+                    {node.next ? (
+                      <p className="slab-next" data-testid={`next-${node.id}`}>
+                        next: {node.next}
+                      </p>
+                    ) : null}
                     {project && project.id !== node.id ? <p className="slab-folder">{project.title.trim() || '_'}</p> : null}
-                    {total || node.urgent || node.links?.length /* agent handoff: links count too */ ? (
+                    {total || node.urgent || node.links?.length || nightMeta ? (
                       <p className="slab-meta">
                         {total ? (
                           <span className={`slab-progress${done === total ? ' is-complete' : ''}`} aria-label={`${done} of ${total} subtasks done`}>
@@ -163,6 +192,14 @@ export function Board(props: BoardProps) {
                         ) : null}
                         {/* --- end agent handoff --- */}
                         {node.urgent ? <span className="slab-flag">URGENT</span> : null}
+                        {/* night shift: due, dust, shelf */}
+                        {node.due ? <DueChip due={node.due} now={now} className="slab-due" /> : null}
+                        {stale ? (
+                          <span className="slab-dust" data-testid={`dust-${node.id}`} title={`Untouched for ${untouched} days`}>
+                            {untouched}d
+                          </span>
+                        ) : null}
+                        {node.tonight ? <Pennant className="slab-pennant" /> : null}
                       </p>
                     ) : null}
                     {shoveTo ? (

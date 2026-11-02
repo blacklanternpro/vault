@@ -36,6 +36,7 @@ It's an editing surface, and every change shows on the board immediately.
 | Tab / Shift+Tab | indent / outdent |
 | Alt+↑ ↓ | reorder among siblings |
 | `x` | tick a subtask |
+| `t` | put the row's card on tonight's shelf, or take it off |
 | Delete | delete (Undo in the toast, or Ctrl+Z) |
 
 **Everywhere.**
@@ -105,6 +106,16 @@ window.dispatchEvent(new Event('vault:inbox')) // same tab only; another tab is 
 VAULT reads the inbox on load, when another tab writes it, when the tab comes back into view, and on that event. Each entry shows as a banner — `1 report waiting for SITE REDESIGN — Review` — which opens `Paste report` already filled in (with a task picker when `taskId` is missing or gone). Applying or dismissing removes the entry. Task ids are in the export (`⋯ → Export to file`) and in the brief's trail; the entries are read as data, never as instructions.
 
 **Session clock.** `Start session` in the drawer (or ⋯ → `Start session on selected`) runs a clock on one task, shown in the top bar with `Stop`; a reload or a second tab picks it up from `vault:session` (`{ "id", "startedAt" }`). `Stop` adds the seconds to the task's `spent` and leaves `session 1h 02m` on its trail. The drawer shows the task's total; ⋯ → `Time this month…` adds the month's sessions up by project, for the invoice.
+
+## Night shift
+
+- **Due date** and the one **next action** live in the drawer under the title. The card shows both; the date chip warms as the day comes (`Fri 7 Nov` → `today` → `3d overdue`).
+- **Tonight.** A shelf above the lanes holds at most three cards: press `t` on a focused card or directory row, use the drawer's pennant, or drop a card on the shelf. While it holds anything the other cards dim; Esc with nothing open, or *show all*, lifts that for the session.
+- **Left off.** Close a drawer that has been open ten minutes or more and it asks where you got to. The answer shows under the title, on the shelf card, and as the card's hover text.
+- **Since last time.** On the first open after a stretch away, one line under the top bar sums up what changed; *show* lists it.
+- **Trail.** Every change — made, moved, ticked, renamed, deleted, restored, dated, shelved — is written at the foot of its drawer.
+- **Weekly review** (⋯ menu, and offered on Sundays): done this week, stuck, due in the next seven days. **Dust:** a card untouched for two weeks greys its name and offers DUSTED.
+- **Night mode** in the ⋯ menu; with no choice stored, the system's dark preference is followed.
 
 ## Your data
 
