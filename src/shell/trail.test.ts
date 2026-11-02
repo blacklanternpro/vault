@@ -16,11 +16,11 @@ function tiny(): Doc {
 }
 
 describe('stamping the trail', () => {
-  it('writes the line against the card and touches it', () => {
+  it('writes the line against the card and touches both the line and the card', () => {
     const d = stamp(tiny(), 3, 'ticked', `ticked ${quoted('Create wireframes')}`, 5000)
     expect(cardIdOf(d, 3)).toBe(2)
     expect(byId(d, 2)?.touched).toBe(5000)
-    expect(byId(d, 3)?.touched).toBeUndefined()
+    expect(byId(d, 3)?.touched).toBe(5000)
     expect(trailOf(d, 2)).toEqual([{ at: 5000, kind: 'ticked', node: 2, text: 'ticked “Create wireframes”' }])
   })
 

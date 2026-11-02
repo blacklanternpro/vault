@@ -2466,6 +2466,12 @@
   overflow-wrap: anywhere;
 }
 
+/* With the drawer open its rail would cover the strip's controls; the strip pays the rail's width, as the board does. */
+.studio.has-drawer .since-line,
+.studio.has-drawer .since-list {
+  padding-right: calc(var(--drawer-width) + 20px);
+}
+
 .since-when {
   flex: none;
   font-size: 12.5px;
@@ -2906,8 +2912,14 @@
 }
 
 @media (max-width: 900px) {
+  /* One seam for the column, the same 14px the board pays below it. */
   .tonight {
-    margin: 14px 14px -5px;
+    margin: 14px 14px 0;
+  }
+
+  .studio.has-drawer .since-line,
+  .studio.has-drawer .since-list {
+    padding-right: 14px;
   }
 
   .review-columns {

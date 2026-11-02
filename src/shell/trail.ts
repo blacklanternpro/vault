@@ -20,10 +20,11 @@ export function cardIdOf(doc: Doc, id: number): number {
   return cardOf(doc, id)?.id ?? id
 }
 
-/** One line on the trail, with the card it belongs to stamped as touched now. */
+/** One line on the trail, with the node it happened to and the card it belongs to both stamped as touched now. */
 export function stamp(doc: Doc, id: number, kind: EventKind, text: string, at = Date.now()): Doc {
   const target = cardIdOf(doc, id)
-  const touched = byId(doc, target) ? updateNode(doc, target, { touched: at }) : doc
+  let touched = byId(doc, id) ? updateNode(doc, id, { touched: at }) : doc
+  if (target !== id && byId(touched, target)) touched = updateNode(touched, target, { touched: at })
   return logEvent(touched, kind, text, byId(touched, target) ? target : undefined, at)
 }
 
