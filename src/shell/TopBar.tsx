@@ -1,7 +1,10 @@
-import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { listBackups } from '../model/store'
 import { LANES, LANE_LABEL, isLane, type Lane, type Node } from '../model/types'
 import { BrandMark, Caret, Cross, Dots, Glass, Plus } from './Glyph'
+/* --- agent handoff --- */
+import type { ReactNode } from 'react'
+/* --- end agent handoff --- */
 
 type TopBarProps = {
   query: string
