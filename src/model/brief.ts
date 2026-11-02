@@ -148,7 +148,7 @@ export function briefOf(doc: Doc, id: number, now = Date.now()): string {
   const out: string[] = []
   out.push(`# ${node.title.trim() || '_'}`)
   out.push(
-    `Project: ${project && project.id !== id ? project.title.trim() || '_' : '—'} · Status: ${LANE_LABEL[laneOf(node.status)]} · Due: ${node.due ?? '—'} · Urgent: ${node.urgent ? 'yes' : 'no'}`,
+    `Task #${node.id} · Project: ${project && project.id !== id ? project.title.trim() || '_' : '—'} · Status: ${LANE_LABEL[laneOf(node.status)]} · Due: ${node.due ?? '—'} · Urgent: ${node.urgent ? 'yes' : 'no'}`,
   )
   out.push('## Goal')
   out.push(node.body?.trim() ? node.body.trim() : '(no description)')

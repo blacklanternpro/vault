@@ -48,7 +48,7 @@ describe('briefOf', () => {
       '## Done when',
       '## Report back',
     ])
-    expect(text).toContain('Project: homepage · Status: ACTIVE · Due: — · Urgent: no')
+    expect(text).toContain('Task #2 · Project: homepage · Status: ACTIVE · Due: — · Urgent: no')
     expect(text).toContain('Redesign the homepage.\nStrong CTAs.')
     expect(text).toContain('- [x] Review analytics\n- [ ] Create wireframes\n  - [ ] low-fi first\n')
     expect(text).toContain('## Done when\nEvery subtask above is ticked and the status is DONE.')
@@ -99,7 +99,7 @@ describe('briefOf', () => {
   })
 
   it('names a project brief without a parent line', () => {
-    expect(briefOf(tiny(), 1)).toContain('Project: — · Status: PENDING')
+    expect(briefOf(tiny(), 1)).toContain('Task #1 · Project: — · Status: PENDING')
   })
 })
 

@@ -54,7 +54,7 @@ VAULT is the ledger between the desk and the agents it hands work to. A task goe
 
 ```
 # SITE REDESIGN
-Project: homepage · Status: ACTIVE · Due: — · Urgent: no
+Task #2 · Project: homepage · Status: ACTIVE · Due: — · Urgent: no
 ## Goal
 <description, or (no description)>
 ## Next action

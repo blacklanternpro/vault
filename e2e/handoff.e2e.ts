@@ -105,7 +105,7 @@ test.describe('brief', () => {
     await page.getByTestId('copy-brief').click()
     await expect(page.getByTestId('toast')).toContainText(/Brief copied \(\d+ lines\)/)
     const text = await page.evaluate(() => navigator.clipboard.readText())
-    expect(text).toContain('# SITE REDESIGN\nProject: homepage · Status: ACTIVE · Due: — · Urgent: no\n## Goal\n')
+    expect(text).toContain('# SITE REDESIGN\nTask #2 · Project: homepage · Status: ACTIVE · Due: — · Urgent: no\n## Goal\n')
     expect(text).toContain('- [x] Review current homepage analytics\n- [x] Define new information hierarchy\n- [ ] Create wireframes\n')
     expect(text).toContain('## Done when\nEvery subtask above is ticked and the status is DONE.\n## Report back\n')
     const doc = await saved(page)
