@@ -586,6 +586,7 @@ kbd {
   border-style: solid;
   border-color: var(--line-2);
   border-bottom: 3px solid var(--st-done);
+  border-radius: 8px 8px 0 0;
 }
 .chute-slot .plaque {
   color: var(--st-done);
@@ -691,7 +692,8 @@ kbd {
   padding: 18px 10px;
   border: 1px solid var(--line-2);
   border-bottom: 4px solid var(--st-done);
-  border-radius: 10px;
+  /* The green floor is the chute's ledge: square bottom corners so it lies flat instead of curling up. */
+  border-radius: 10px 10px 0 0;
   background: var(--surface);
   text-align: center;
 }
