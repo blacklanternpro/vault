@@ -1,3 +1,4 @@
+import { fileURLToPath } from 'node:url'
 import { configDefaults, defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
@@ -5,6 +6,15 @@ import tailwindcss from '@tailwindcss/vite'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  build: {
+    rollupOptions: {
+      // The board, plus the pivot-and-drop prototype at /proto/.
+      input: {
+        main: fileURLToPath(new URL('./index.html', import.meta.url)),
+        proto: fileURLToPath(new URL('./proto/index.html', import.meta.url)),
+      },
+    },
+  },
   test: {
     // The agent package (agent/) has its own vitest run: `npm run agent:test`.
     exclude: [...configDefaults.exclude, 'agent/**'],

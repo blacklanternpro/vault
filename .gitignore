@@ -30,3 +30,4 @@ dist-ssr
 .impeccable/build/crops
 test-results
 playwright-report
+.shots/
