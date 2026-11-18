@@ -92,27 +92,43 @@ describe('planSync: no agreed base (first contact, or lost)', () => {
   })
 })
 
-describe('adoptMessage', () => {
-  it('says what was taken, plainly', () => {
-    expect(adoptMessage({ kind: 'take', changes: 1 })).toBe('took 1 agent edit.')
-    expect(adoptMessage({ kind: 'take', changes: 3 })).toBe('took 3 agent edits.')
-    expect(adoptMessage({ kind: 'take' })).toBe("took the agent's board.")
+describe('adoptMessage (docs/VOICE.md §3.5, G4)', () => {
+  it('took-theirs', () => {
+    expect(adoptMessage({ kind: 'take', rev: 41 })).toBe("took vault-agent's copy (rev 41). yours is in snapshots")
   })
 
-  it('says what was merged, and owns up to clashes', () => {
-    const r = { theirChanges: 2, conflicts: [] }
-    expect(adoptMessage({ kind: 'merge', result: r })).toBe('merged 2 agent edits with yours.')
+  it('merged, with the count and the rev', () => {
+    const doc = board()
+    expect(adoptMessage({ kind: 'merge', rev: 41, doc, result: { theirChanges: 3, conflicts: [] } })).toBe('merged 3 changes from vault-agent (rev 41)')
+    expect(adoptMessage({ kind: 'merge', rev: 7, doc, result: { theirChanges: 1, conflicts: [] } })).toBe('merged 1 change from vault-agent (rev 7)')
+    expect(adoptMessage({ kind: 'merge', rev: 7, doc, result: { theirChanges: 0, conflicts: [] } })).toBe('merged changes from vault-agent (rev 7)')
+  })
+
+  it('a clash names the task, says whose was kept and where the other went', () => {
+    const doc = board()
+    expect(adoptMessage({ kind: 'merge', rev: 9, doc, result: { theirChanges: 2, conflicts: [{ on: 'node', id: 2, field: 'title', kept: 'mine' }] } })).toBe(
+      'you and vault-agent both changed site. kept yours; theirs is in snapshots',
+    )
     expect(
       adoptMessage({
         kind: 'merge',
+        rev: 9,
+        doc,
         result: {
-          theirChanges: 1,
+          theirChanges: 2,
           conflicts: [
             { on: 'node', id: 2, field: 'title', kept: 'mine' },
-            { on: 'node', id: 3, field: 'deleted', kept: 'theirs' },
+            { on: 'node', id: 2, field: 'body', kept: 'mine' },
+            { on: 'note', id: 'na', field: 'text', kept: 'mine' },
           ],
         },
       }),
-    ).toBe('merged 1 agent edit with yours. 1 clash, kept yours. 1 thing you deleted came back (the agent changed it).')
+    ).toBe('you and vault-agent both changed site and 1 more. kept yours; theirs is in snapshots')
+  })
+
+  it('owns up to a delete that came back', () => {
+    expect(adoptMessage({ kind: 'merge', rev: 9, doc: board(), result: { theirChanges: 1, conflicts: [{ on: 'node', id: 3, field: 'deleted', kept: 'theirs' }] } })).toBe(
+      'merged 1 change from vault-agent (rev 9) · 1 you deleted came back',
+    )
   })
 })

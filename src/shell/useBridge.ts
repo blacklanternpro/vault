@@ -50,13 +50,30 @@ type Options = {
   adopt: (doc: Doc) => void
   /** Put the person's own board back ("restore mine"), as one undoable commit. */
   restore: (doc: Doc) => void
-  /** Tell the person something (a toast), with an optional button. */
-  notify: (text: string, action?: Action) => void
+  /**
+   * Tell the person something, with an optional action word. `notice` marks
+   * a message about the board's data (a merge, a take, a refused token):
+   * it belongs in the sticky notice slot, not the passing status line.
+   */
+  notify: (text: string, action?: Action, notice?: boolean) => void
 }
 
 const POLL_MS = 5000
 const PUSH_DEBOUNCE_MS = 800
-const TOKEN_HELP = 'run vault-agent token, or open the link vault-agent serve prints.'
+
+/** 24-hour hh:mm, as the voice sheet writes times. */
+function clock(at: number): string {
+  const d = new Date(at)
+  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
+}
+
+function hostOf(url: string): string {
+  try {
+    return new URL(url).host
+  } catch {
+    return url
+  }
+}
 
 /** When this browser last saved the board (0 for a board never saved, such as the first-run sample). */
 function localSavedAt(): number {
@@ -98,7 +115,7 @@ export function useBridge({ doc, adopt, restore, notify }: Options) {
 
   useEffect(() => {
     if (!tokenFromLink) return
-    notifyRef.current(readBridgeSettings().enabled ? 'got the bridge token.' : 'got the bridge token. turn the bridge on in the menu to connect.')
+    notifyRef.current(readBridgeSettings().enabled ? 'bridge token saved' : 'bridge token saved. turn the bridge on in the menu to connect')
   }, [tokenFromLink])
 
   const setSettings = useCallback((next: BridgeSettings) => {
@@ -121,14 +138,14 @@ export function useBridge({ doc, adopt, restore, notify }: Options) {
       authWarned = false
       if (!wasOnline.current) {
         wasOnline.current = true
-        notifyRef.current('Agent bridge connected')
+        notifyRef.current(`bridge on · ${hostOf(url)}`)
       }
     }
     const offline = () => {
       setStatus('offline')
       if (wasOnline.current) {
         wasOnline.current = false
-        notifyRef.current("Agent bridge isn't answering; working locally")
+        notifyRef.current('bridge offline · working locally')
       }
     }
     const refused = () => {
@@ -136,18 +153,33 @@ export function useBridge({ doc, adopt, restore, notify }: Options) {
       wasOnline.current = false
       if (authWarned) return
       authWarned = true
-      notifyRef.current(`bridge token ${target.token ? 'is wrong' : 'missing'}. ${TOKEN_HELP}`)
+      notifyRef.current(
+        target.token ? 'bridge refused: wrong token. open the link vault-agent serve prints' : 'bridge refused: no token. run vault-agent serve and open the link it prints',
+        undefined,
+        true,
+      )
     }
 
     const taken = (next: Doc, how: Adoption) => {
       if (stopped) return
       const before = how.before
+      const at = Date.now()
+      // Yours first, then (when something of theirs lost a clash) theirs: both in snapshots, as the notice says.
       snapshot(before, true)
+      if (how.kind === 'merge' && how.result.conflicts.some((c) => c.kept === 'mine')) snapshot(how.theirs, true)
       docRef.current = next
       adoptRef.current(next)
-      const text = how.kind === 'take' ? adoptMessage({ kind: 'take', changes: how.changes }) : adoptMessage({ kind: 'merge', result: how.result })
-      notifyRef.current(text, { label: 'restore mine', run: () => restoreRef.current(before) })
+      const text = how.kind === 'take' ? adoptMessage({ kind: 'take', rev: how.rev }) : adoptMessage({ kind: 'merge', rev: how.rev, doc: next, result: how.result })
+      const restoreMine = () => {
+        // What is on screen now (the outside copy, and anything since) goes to the snapshots first.
+        snapshot(docRef.current, true)
+        restoreRef.current(before)
+        notifyRef.current(`restored yours (${clock(at)}). theirs is in snapshots`)
+      }
+      // Said once the contact is over, after "bridge on", so the notice with "restore mine" is what is left showing.
+      pending = { text, action: { label: 'restore mine', run: restoreMine } }
     }
+    let pending: { text: string; action: Action } | null = null
 
     const engine = createBridgeSync({
       transport: {
@@ -168,6 +200,10 @@ export function useBridge({ doc, adopt, restore, notify }: Options) {
       if (outcome === 'auth') return refused()
       if (outcome === 'offline') return offline()
       online()
+      if (pending) {
+        notifyRef.current(pending.text, pending.action, true)
+        pending = null
+      }
       const entries = await pullInbox(target).catch(() => null)
       if (!stopped && entries) setInbox(entries)
     }

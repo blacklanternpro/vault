@@ -255,6 +255,8 @@ export function Studio() {
   const dismiss = useCallback((id: number) => setToasts((list) => list.filter((t) => t.id !== id)), [])
 
   /* --- agent bridge: the board kept in step with `vault-agent serve`, when it is turned on --- */
+  /** The one notice slot the bridge uses, so a newer bridge notice replaces the last rather than stacking. */
+  const bridgeNotice = useRef(0)
   const bridge = useBridge({
     doc,
     // The bridge's copy (taken or merged) is one undo step: Ctrl+Z puts back what you had, and earlier undo stays.
@@ -263,8 +265,18 @@ export function Studio() {
       history.replace(d)
     },
     // "restore mine": your board as it was before that, as one undoable change (pushed on the next contact).
-    restore: (d) => history.commit(d),
-    notify: (text, action) => toast(text, action),
+    restore: (d) => {
+      history.commit(d)
+      setToasts((list) => list.filter((t) => t.id !== bridgeNotice.current))
+    },
+    // Data notices (merged, took, token refused) sit in the sticky notice slot until answered; the bridge has one slot.
+    notify: (text, action, notice) => {
+      if (!notice) return toast(text, action)
+      const id = ++toastSeq.current
+      const prev = bridgeNotice.current
+      bridgeNotice.current = id
+      setToasts((list) => [...list.filter((t) => t.id !== prev), { id, text, action, sticky: true }])
+    },
   })
   // Reports an agent left on the bridge join the browser's own inbox, where the banner already reads them.
   const { inbox: bridgeInbox, dismissInbox: dismissBridgeInbox } = bridge

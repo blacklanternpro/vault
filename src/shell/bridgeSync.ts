@@ -21,8 +21,8 @@ export type Transport = {
   push: (doc: Doc, base: number) => Promise<PushResult>
 }
 
-/** How an outside copy came in. `before` is the board the person had, for "restore mine". */
-export type Adoption = { kind: 'take'; before: Doc; changes?: number } | { kind: 'merge'; before: Doc; result: MergeResult }
+/** How an outside copy came in. `before` is the board the person had, for "restore mine"; `rev` the bridge's rev it came from. */
+export type Adoption = { kind: 'take'; before: Doc; rev: number; changes?: number } | { kind: 'merge'; before: Doc; rev: number; theirs: Doc; result: MergeResult }
 
 export type Outcome = 'online' | 'offline' | 'auth'
 
@@ -85,12 +85,12 @@ export function createBridgeSync(deps: SyncDeps) {
         return 'online'
       } else if (plan.act === 'take') {
         agree({ rev: plan.rev, doc: plan.doc })
-        if (!sameDoc(plan.doc, mine)) deps.adopt(plan.doc, { kind: 'take', before: mine, changes: plan.changes })
+        if (!sameDoc(plan.doc, mine)) deps.adopt(plan.doc, { kind: 'take', before: mine, rev: plan.rev, changes: plan.changes })
         return 'online'
       } else if (plan.act === 'push') {
         next = await push(plan.doc, plan.base)
       } else {
-        if (!sameDoc(plan.doc, mine)) deps.adopt(plan.doc, { kind: 'merge', before: mine, result: plan.result })
+        if (!sameDoc(plan.doc, mine)) deps.adopt(plan.doc, { kind: 'merge', before: mine, rev: theirs.rev, theirs: theirs.doc, result: plan.result })
         // Their copy is now the common ancestor of what is on screen and of whatever they write next.
         agree({ rev: theirs.rev, doc: theirs.doc })
         if (sameDoc(plan.doc, theirs.doc)) return 'online'

@@ -63,7 +63,7 @@ function fakeAgent(doc: Doc, rev: number, inbox: Item[] = [], token = 'tok') {
   return s
 }
 
-type Handle = { doc: Doc; bridge: ReturnType<typeof useBridge>; toasts: Array<{ text: string; action?: { label: string; run: () => void } }>; adopted: number; restored: number }
+type Handle = { doc: Doc; bridge: ReturnType<typeof useBridge>; toasts: Array<{ text: string; action?: { label: string; run: () => void }; notice?: boolean }>; adopted: number; restored: number }
 
 let root: Root | null = null
 let host: HTMLDivElement | null = null
@@ -83,7 +83,7 @@ function mount(initial: Doc): Handle {
         h.restored += 1
         setDoc(d)
       },
-      notify: (text, action) => h.toasts.push({ text, action }),
+      notify: (text, action, notice) => h.toasts.push({ text, action, notice }),
     })
     ;(h as Handle & { set: (d: Doc) => void }).set = setDoc
     return null
@@ -125,6 +125,7 @@ describe('useBridge', () => {
     const h = mount(mine)
 
     await until(() => h.toasts.some((t) => t.text.startsWith('merged')))
+    expect(h.toasts.find((t) => t.text.startsWith('merged'))?.notice).toBe(true)
     expect(h.doc.nodes.map((n) => n.title)).toEqual(expect.arrayContaining(['site (mine)', 'from the agent']))
     await until(() => agent.puts.length > 0)
     expect(agent.puts[0].base).toBe(4)
@@ -133,11 +134,18 @@ describe('useBridge', () => {
     const snaps = JSON.parse(localStorage.getItem(BACKUP_KEY) ?? '[]') as Array<{ doc: Doc }>
     expect(snaps.some((s) => sameDoc(sanitizeDoc(s.doc), mine))).toBe(true)
 
+    // "connected" first, so the toast left showing is the one with "restore mine".
+    expect(h.toasts.map((t) => t.text).slice(0, 2)).toEqual(['bridge on · localhost:7331', 'merged 1 change from vault-agent (rev 4)'])
     const toast = h.toasts.find((t) => t.text.startsWith('merged'))!
-    expect(toast.text).toBe('merged 1 agent edit with yours.')
+    expect(toast.text).toBe('merged 1 change from vault-agent (rev 4)')
     expect(toast.action?.label).toBe('restore mine')
+    const merged = h.doc
     toast.action!.run()
     await until(() => h.restored === 1 && sameDoc(h.doc, mine))
+    expect(h.toasts.at(-1)?.text).toMatch(/^restored yours \(\d\d:\d\d\)\. theirs is in snapshots$/)
+    // Theirs (the merged board) is in the snapshots now.
+    const after = JSON.parse(localStorage.getItem(BACKUP_KEY) ?? '[]') as Array<{ doc: Doc }>
+    expect(after.some((s) => sameDoc(sanitizeDoc(s.doc), merged))).toBe(true)
     // …and pushed with a proper base, so the bridge ends up with mine too.
     await until(() => sameDoc(agent.doc, mine))
     expect(agent.puts.every((p) => typeof p.base === 'number')).toBe(true)
@@ -165,9 +173,17 @@ describe('useBridge', () => {
     await until(() => h.toasts.length > 0)
     expect(readBridgeSettings()).toMatchObject({ enabled: false, token: 'fresh' })
     expect(window.location.hash).toBe('#keep')
-    expect(h.toasts[0].text).toBe('got the bridge token. turn the bridge on in the menu to connect.')
+    expect(h.toasts[0].text).toBe('bridge token saved. turn the bridge on in the menu to connect')
     expect(h.bridge.status).toBe('off')
     expect(localStorage.getItem(BRIDGE_KEY)).toContain('fresh')
+  })
+
+  it('a wrong token says so', async () => {
+    writeBridgeSettings({ enabled: true, url: URL_, token: 'stale' })
+    fakeAgent(board(), 1)
+    const h = mount(board())
+    await until(() => h.toasts.length > 0)
+    expect(h.toasts[0]).toMatchObject({ text: 'bridge refused: wrong token. open the link vault-agent serve prints', notice: true })
   })
 
   it('a missing or wrong token: offline, and says how to get one', async () => {
@@ -176,6 +192,6 @@ describe('useBridge', () => {
     const h = mount(board())
     await until(() => h.toasts.length > 0)
     expect(h.bridge.status).toBe('offline')
-    expect(h.toasts[0].text).toBe('bridge token missing. run vault-agent token, or open the link vault-agent serve prints.')
+    expect(h.toasts[0]).toMatchObject({ text: 'bridge refused: no token. run vault-agent serve and open the link it prints', notice: true })
   })
 })

@@ -52,7 +52,7 @@ export type MergeResult = {
   conflicts: Conflict[]
   /** Mine's new task ids that collided with theirs, old → new. */
   remapped: Map<number, number>
-  /** How many tasks and notes the other side added, changed or removed since the base (for "merged 3 agent edits"). */
+  /** How many tasks and notes the other side added, changed or removed since the base (for "merged 3 changes from vault-agent"). */
   theirChanges: number
 }
 
