@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { boardCards, linesOf, projectsOf } from '../src/model/doc'
-import { MemoryStore, updateBoard, type Envelope } from './board'
+import { MemoryStore, strongEtag, updateBoard, type Envelope } from './board'
 import { matchTitle, push, PushError, receiptOf, status, statusText, type PushTree } from './push'
 
 const AT = Date.parse('2026-11-18T10:00:00Z') // a Wednesday
@@ -102,6 +102,14 @@ describe('the store', () => {
     expect(rev).toBe(8)
     const { doc } = await store.read()
     expect(projectsOf(doc).map((p) => p.title)).toEqual(['site', 'r1i'])
+  })
+})
+
+describe('blob etags', () => {
+  it('a weak ETag from a compressed read is used in its strong form for ifMatch', () => {
+    expect(strongEtag('W/"36deb644b41295bbd72e786b45f18d41"')).toBe('"36deb644b41295bbd72e786b45f18d41"')
+    expect(strongEtag('"abc"')).toBe('"abc"')
+    expect(strongEtag('')).toBeNull()
   })
 })
 

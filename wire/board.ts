@@ -60,6 +60,16 @@ export async function updateBoard<T>(store: BoardStore, change: (doc: Doc) => { 
   throw lastError instanceof Error ? lastError : new ConflictError('board kept changing; try again')
 }
 
+/**
+ * Blob ETags are the content's MD5; a compressed response marks the same tag
+ * weak (W/"md5"). ifMatch needs the strong form. If a weak tag ever meant
+ * something else, the write is refused (a conflict), never let through.
+ */
+export function strongEtag(etag: string | null | undefined): string | null {
+  if (!etag) return null
+  return etag.startsWith('W/') ? etag.slice(2) : etag
+}
+
 /* ---------------------------------------------------------------- memory */
 
 /** For tests: behaves like the blob store, ETags included. */
@@ -103,11 +113,13 @@ export class BlobStore implements BoardStore {
   }
 
   async read(): Promise<Snapshot> {
-    const got = await get(this.pathname, { access: 'private', useCache: false, token: this.token })
+    // Accept-Encoding: identity matters. A compressed read (br) answers with a weak
+    // ETag, W/"…", and put({ ifMatch }) refuses a weak one with 412 every time.
+    const got = await get(this.pathname, { access: 'private', useCache: false, token: this.token, headers: { 'Accept-Encoding': 'identity' } })
     if (!got) return { version: 1, rev: 0, savedAt: null, doc: sanitizeDoc(EMPTY), etag: null }
     if (got.statusCode !== 200) throw new Error(`unexpected blob status ${got.statusCode}`)
     const text = await new Response(got.stream).text()
-    return { ...parseEnvelope(text), etag: got.blob.etag }
+    return { ...parseEnvelope(text), etag: strongEtag(got.blob.etag) }
   }
 
   async write(env: Envelope, etag: string | null): Promise<{ etag: string }> {
@@ -124,7 +136,7 @@ export class BlobStore implements BoardStore {
       })
       return { etag: res.etag }
     } catch (err) {
-      if (err instanceof BlobPreconditionFailedError) throw new ConflictError(`the board changed since it was read (ifMatch ${etag})`)
+      if (err instanceof BlobPreconditionFailedError) throw new ConflictError('the board changed since it was read')
       if (!etag && err instanceof Error && /already exists/i.test(err.message)) throw new ConflictError('the board was created meanwhile')
       throw err
     }
