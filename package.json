@@ -9,7 +9,7 @@
     "lint": "oxlint",
     "test": "vitest run",
     "preview": "vite preview",
-    "e2e": "playwright test --project=e2e",
+    "e2e": "playwright test --project=e2e --project=e2e-races",
     "agent:build": "npm --prefix agent run build",
     "agent:test": "npm --prefix agent test",
     "e2e:a11y": "playwright test --project=e2e e2e/a11y.e2e.ts",
