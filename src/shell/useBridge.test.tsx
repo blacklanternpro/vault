@@ -126,7 +126,8 @@ describe('useBridge', () => {
 
     await until(() => h.toasts.some((t) => t.text.startsWith('merged')))
     expect(h.toasts.find((t) => t.text.startsWith('merged'))?.notice).toBe(true)
-    expect(h.doc.nodes.map((n) => n.title)).toEqual(expect.arrayContaining(['site (mine)', 'from the agent']))
+    // The notice is pushed synchronously; the adopted doc arrives on the next render.
+    await until(() => ['site (mine)', 'from the agent'].every((t) => h.doc.nodes.some((n) => n.title === t)))
     await until(() => agent.puts.length > 0)
     expect(agent.puts[0].base).toBe(4)
     expect(byId(agent.doc, 2)?.title).toBe('site (mine)')
