@@ -1,4 +1,4 @@
-import { isEventKind, isLane, MAX_EVENTS, type Doc, type Event, type EventKind, type Lane, type Link, type Node, type Note, type Status } from './types'
+import { isEventKind, isLane, MAX_EVENTS, type Doc, type Event, type EventKind, type Lane, type Link, type Node, type Note, type Status } from './types.js'
 
 /*
  * Every operation here is pure: it takes a Doc and returns a new one, leaving
