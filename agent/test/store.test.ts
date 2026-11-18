@@ -165,3 +165,42 @@ describe('inbox', () => {
     expect(fx.store.readInbox()).toEqual([first[0]])
   })
 })
+
+describe('two writers (Phase 1, G1): the browser names its base, the agent writes in between', () => {
+  it('a browser push based on a rev the agent has since moved past is refused with the agent’s board', () => {
+    fx = makeStore()
+    const seen = fx.store.read()
+    // The agent writes between the browser's read and its push.
+    fx.store.update((doc) => ({ doc: addNode(doc, { parent: 1, title: 'from the agent' }).doc, result: null }))
+    const browserDoc = addNode(seen.doc, { parent: 1, title: 'from the browser' }).doc
+    const out = fx.store.put({ app: 'vault', version: 1, savedAt: Date.now() + 60_000, base: seen.rev, doc: browserDoc })
+    expect(out.ok).toBe(false)
+    if (out.ok) return
+    expect(out.current.rev).toBe(seen.rev + 1)
+    expect(out.current.doc.nodes.some((n) => n.title === 'from the agent')).toBe(true)
+    // The file still has the agent's write: a newer savedAt does not win.
+    expect(fx.store.read().doc.nodes.some((n) => n.title === 'from the agent')).toBe(true)
+    // Pushed again on the rev it now knows: taken.
+    expect(fx.store.put({ app: 'vault', version: 1, savedAt: 1, base: out.current.rev, doc: browserDoc })).toMatchObject({ ok: true, snapshot: { rev: seen.rev + 2 } })
+  })
+
+  it('a base from the future is refused too', () => {
+    fx = makeStore()
+    expect(fx.store.put({ app: 'vault', version: 1, savedAt: 1, base: fx.store.read().rev + 5, doc: fixtureDoc() })).toMatchObject({ ok: false })
+  })
+
+  it('first contact with no file: base 0 is the current rev', () => {
+    fx = makeStore(null)
+    expect(fx.store.put({ app: 'vault', version: 1, savedAt: 1, base: 0, doc: fixtureDoc() })).toMatchObject({ ok: true, snapshot: { rev: 1 } })
+  })
+
+  it('two inbox removals by id, one after the other, each take their own item', () => {
+    fx = makeStore()
+    const a = fx.store.appendInbox({ text: 'a' }).item
+    fx.store.appendInbox({ text: 'b' })
+    const c = fx.store.appendInbox({ text: 'c' }).item
+    expect(fx.store.removeInboxById(a.id)?.text).toBe('a')
+    expect(fx.store.removeInboxById(c.id)?.text).toBe('c')
+    expect(fx.store.readInbox().map((i) => i.text)).toEqual(['b'])
+  })
+})

@@ -1,4 +1,5 @@
 import { sanitizeDoc } from './doc'
+import type { Agreed } from './sync'
 import type { Doc } from './types'
 
 /*
@@ -10,8 +11,11 @@ import type { Doc } from './types'
  * Conflict rule (Phase 1 contract, mirrors the server): the server's board
  * carries `rev`, a write counter. A push names the rev it was based on
  * (`base`); anything but the current rev is refused with 409 and the server's
- * envelope. What the caller does with a refusal (merge, snapshot, "restore
- * mine") is G1's.
+ * envelope. What the caller does with a refusal is in ./sync.ts (decide) and
+ * src/shell/bridgeSync.ts (do): merge, snapshot, "restore mine".
+ *
+ * The last doc both sides agreed on (and its rev) is kept under
+ * `vault:bridge-base`, so a reload can still merge rather than guess.
  *
  * Auth (Phase 1 contract, G3): when the settings carry a `token`, every
  * request sends `Authorization: Bearer <token>`. `vault-agent serve` prints
@@ -20,6 +24,10 @@ import type { Doc } from './types'
 
 export const DEFAULT_BRIDGE_URL = 'http://localhost:7331'
 export const BRIDGE_KEY = 'vault:bridge'
+export const BRIDGE_BASE_KEY = 'vault:bridge-base'
+
+/** The bridge answered 401 or 403: the token is missing or wrong. */
+export class BridgeAuthError extends Error {}
 
 export type BridgeSettings = { enabled: boolean; url: string; token?: string }
 
@@ -36,7 +44,7 @@ export type PullResult = { doc: Doc; savedAt: number; rev: number }
 export type PushResult =
   | { ok: true; savedAt: number; rev?: number }
   | { ok: false; conflict: true; doc: Doc; savedAt: number; rev: number }
-  | { ok: false; conflict: false; error: string }
+  | { ok: false; conflict: false; error: string; auth?: true }
 
 export function readBridgeSettings(): BridgeSettings {
   try {
@@ -87,20 +95,37 @@ function parseEnvelope(raw: unknown): PullResult {
   return { doc: sanitizeDoc(raw), savedAt: 0, rev: 0 }
 }
 
+/**
+ * Is the bridge there, and does it take our token? `GET /health` answers
+ * without a token (vault-agent from Phase 1 says `authorized: false` then);
+ * an older agent that says nothing about it counts as authorized. Never throws.
+ */
+export async function bridgeHealth(url: BridgeTarget): Promise<{ up: boolean; authorized: boolean }> {
+  try {
+    const r = await withTimeout((signal) => fetch(`${base(url)}/health`, { headers: auth(url), signal }), 1500)
+    if (r.status === 401 || r.status === 403) return { up: true, authorized: false }
+    if (!r.ok) return { up: true, authorized: true }
+    let body: unknown = null
+    try {
+      body = await r.json()
+    } catch {
+      /* not JSON: something answered */
+    }
+    const said = body && typeof body === 'object' ? (body as { authorized?: unknown }).authorized : undefined
+    return { up: true, authorized: said !== false }
+  } catch {
+    return { up: false, authorized: false }
+  }
+}
+
 /** True when the bridge answers at all. Never throws. */
 export async function ping(url: BridgeTarget): Promise<boolean> {
-  try {
-    const r = await withTimeout((signal) => fetch(`${base(url)}/doc`, { method: 'HEAD', headers: auth(url), signal }), 1500)
-    if (r.ok || r.status === 405) return true
-    const g = await withTimeout((signal) => fetch(`${base(url)}/doc`, { headers: auth(url), signal }), 1500)
-    return g.ok
-  } catch {
-    return false
-  }
+  return (await bridgeHealth(url)).up
 }
 
 export async function pullDoc(url: BridgeTarget): Promise<PullResult> {
   const r = await withTimeout((signal) => fetch(`${base(url)}/doc`, { headers: auth(url), signal }))
+  if (r.status === 401 || r.status === 403) throw new BridgeAuthError(`bridge: GET /doc ${r.status}`)
   if (!r.ok) throw new Error(`bridge: GET /doc ${r.status}`)
   return parseEnvelope(await r.json())
 }
@@ -117,6 +142,7 @@ export async function pushDoc(url: BridgeTarget, doc: Doc, savedAt = Date.now(),
       const theirs = parseEnvelope(await r.json())
       return { ok: false, conflict: true, doc: theirs.doc, savedAt: theirs.savedAt, rev: theirs.rev }
     }
+    if (r.status === 401 || r.status === 403) return { ok: false, conflict: false, error: `bridge: PUT /doc ${r.status}`, auth: true }
     if (!r.ok) return { ok: false, conflict: false, error: `bridge: PUT /doc ${r.status}` }
     let rev: number | undefined
     try {
@@ -148,23 +174,85 @@ export async function pullInbox(url: BridgeTarget): Promise<InboxEntry[]> {
     }))
 }
 
-/** Removes one inbox entry by its id (a number is the legacy position, kept for old agents). */
-export async function removeInbox(url: BridgeTarget, idOrIndex: string | number): Promise<boolean> {
+/** Removes one inbox entry by its id. Never by position: two removals at once could take the wrong one. */
+export async function removeInbox(url: BridgeTarget, id: string): Promise<boolean> {
   try {
-    const r = await withTimeout((signal) => fetch(`${base(url)}/inbox/${encodeURIComponent(String(idOrIndex))}`, { method: 'DELETE', headers: auth(url), signal }))
+    const r = await withTimeout((signal) => fetch(`${base(url)}/inbox/${encodeURIComponent(id)}`, { method: 'DELETE', headers: auth(url), signal }))
     return r.ok
   } catch {
     return false
   }
 }
 
-/**
- * Three-way-free merge rule for a pull: the newer `savedAt` wins outright.
- * Agents and the browser never edit the same task at the same instant in
- * practice, and the trail keeps whatever one side did; a real merge would
- * need per-node clocks and is not worth it for one person.
- */
+/** Legacy (before Phase 1): the newer `savedAt` wins. The bridge no longer decides by this; see ./sync.ts. */
 export function newer(mine: { savedAt: number }, theirs: { savedAt: number }): 'mine' | 'theirs' | 'same' {
   if (mine.savedAt === theirs.savedAt) return 'same'
   return mine.savedAt > theirs.savedAt ? 'mine' : 'theirs'
+}
+
+/* ------------------------------------------------------- the agreed base */
+
+/** The last doc this browser and the bridge at `url` both had, and its rev; null when there is none. */
+export function readBridgeBase(url: string): Agreed | null {
+  try {
+    const raw = localStorage.getItem(BRIDGE_BASE_KEY)
+    if (!raw) return null
+    const parsed = JSON.parse(raw) as { url?: unknown; rev?: unknown; doc?: unknown }
+    if (parsed.url !== url || typeof parsed.rev !== 'number' || !Number.isInteger(parsed.rev)) return null
+    return { rev: parsed.rev, doc: sanitizeDoc(parsed.doc) }
+  } catch {
+    return null
+  }
+}
+
+export function writeBridgeBase(url: string, agreed: Agreed | null): void {
+  try {
+    if (!agreed) localStorage.removeItem(BRIDGE_BASE_KEY)
+    else localStorage.setItem(BRIDGE_BASE_KEY, JSON.stringify({ url, rev: agreed.rev, doc: agreed.doc }))
+  } catch {
+    /* full or private: the base still lives in memory for this tab */
+  }
+}
+
+/* ---------------------------------------------------- the token hand-off */
+
+const TOKEN_PART = 'bridge-token='
+
+/** Takes `bridge-token=<token>` out of a location hash; the rest of the hash is kept as it was. */
+export function splitBridgeToken(hash: string): { token: string | null; hash: string } {
+  const body = hash.startsWith('#') ? hash.slice(1) : hash
+  if (!body) return { token: null, hash: '' }
+  const parts = body.split('&')
+  const at = parts.findIndex((p) => p.startsWith(TOKEN_PART))
+  if (at < 0) return { token: null, hash }
+  let token: string | null = null
+  try {
+    const value = decodeURIComponent(parts[at].slice(TOKEN_PART.length))
+    if (/^[\x21-\x7e]{1,512}$/.test(value)) token = value
+  } catch {
+    /* malformed: strip it, keep nothing */
+  }
+  const rest = parts.filter((_, i) => i !== at).filter(Boolean)
+  return { token, hash: rest.length ? `#${rest.join('&')}` : '' }
+}
+
+type Loc = { hash: string; pathname: string; search: string }
+type Hist = { state: unknown; replaceState: (state: unknown, unused: string, url: string) => void }
+
+/**
+ * On load: a link from `vault-agent serve` carries `#bridge-token=<token>`.
+ * The token goes into the bridge settings (the bridge stays off if it was
+ * off: the person turns it on) and out of the address bar, so it is not left
+ * in history or a shared screenshot. Returns the token taken, or null.
+ */
+export function intakeBridgeToken(loc: Loc, hist: Hist): string | null {
+  if (!loc.hash.includes(TOKEN_PART)) return null
+  const { token, hash } = splitBridgeToken(loc.hash)
+  if (token) writeBridgeSettings({ ...readBridgeSettings(), token })
+  try {
+    hist.replaceState(hist.state, '', `${loc.pathname}${loc.search}${hash}`)
+  } catch {
+    /* a sandboxed frame: the token is stored either way */
+  }
+  return token
 }
