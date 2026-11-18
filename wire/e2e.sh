@@ -29,7 +29,8 @@ curl -sS -X POST "$H/register" -H 'Content-Type: application/json' \
 cut12 < "$T/reg.json"; echo
 CID=$(node -e 'console.log(JSON.parse(require("fs").readFileSync(process.argv[1])).client_id)' "$T/reg.json")
 step "3b. POST /register with a foreign redirect (must be refused)"
-curl -sS -o /dev/stderr -w 'HTTP %{http_code}\n' -X POST "$H/register" -H 'Content-Type: application/json' -d '{"redirect_uris":["https://evil.example/cb"]}' 2>&1
+curl -sS -o "$T/r3b" -w 'HTTP %{http_code} ' -X POST "$H/register" -H 'Content-Type: application/json' -d '{"redirect_uris":["https://evil.example/cb"]}'
+cat "$T/r3b"; echo
 
 VERIFIER=$(openssl rand -base64 48 | tr '+/' '-_' | tr -d '=\n' | cut -c1-64)
 CHALLENGE=$(printf '%s' "$VERIFIER" | openssl dgst -sha256 -binary | openssl base64 | tr '+/' '-_' | tr -d '=\n')
@@ -71,7 +72,7 @@ curl -sS -X POST "$H/token" --data-urlencode grant_type=authorization_code --dat
 
 step "7. /api/mcp without a token (must be 401 + WWW-Authenticate)"
 curl -sS -o /dev/null -D - -X POST "$H/api/mcp" -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' \
-  -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}' | grep -i '^HTTP\|^www-authenticate'
+  -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}' | grep -i '^HTTP/2\|^www-authenticate'
 step "7b. /api/mcp with a forged token (must be 401)"
 curl -sS -o /dev/null -w 'HTTP %{http_code}\n' -X POST "$H/api/mcp" -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' \
   -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2UiOiJhY2Nlc3MifQ.forged' -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}'

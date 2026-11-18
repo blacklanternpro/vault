@@ -14,7 +14,7 @@ const CSS = `
 html,body{margin:0;height:100%}
 body{background:#f2f3f6;color:#151515;font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;display:flex;align-items:center;justify-content:center;padding:24px}
 main{background:#fff;border:1px solid #e5e6e8;border-radius:8px;width:100%;max-width:380px;padding:28px 28px 24px}
-.mark{font:600 15px/1 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;letter-spacing:.04em;margin:0 0 22px}
+.mark{font:600 15px/1 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;letter-spacing:.04em;margin:0 0 22px;color:#151515}
 .mark b{color:#0b6ef3;font-weight:600}
 h1{font-size:17px;font-weight:600;margin:0 0 6px}
 p{margin:0 0 18px;color:#666a70}
@@ -32,7 +32,7 @@ button{font:600 14px/1 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;heig
 @media (prefers-color-scheme:dark){
 body{background:#151515;color:#f2f3f6}
 main{background:#1d1e20;border-color:#2c2d30}
-h1{color:#f2f3f6}
+h1,.mark{color:#f2f3f6}
 .who{background:#2c2d30;color:#f2f3f6}
 input[type=password]{background:#151515;color:#f2f3f6;border-color:#3a3c40}
 .no{background:#1d1e20;border-color:#2c2d30}

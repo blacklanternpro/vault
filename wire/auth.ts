@@ -79,8 +79,17 @@ export function pkceMatches(verifier: string, challenge: string): boolean {
 
 /** The hosted Claude apps' callbacks (web, desktop, mobile, Cowork). */
 export const CLAUDE_CALLBACKS = ['https://claude.ai/api/mcp/auth_callback', 'https://claude.com/api/mcp/auth_callback']
-/** Hosts whose Client ID Metadata Documents we will fetch. */
-export const CIMD_HOSTS = ['claude.ai', 'claude.com']
+/**
+ * Hosts (and their subdomains) whose Client ID Metadata Documents we will
+ * fetch. Anthropic doesn't document the hosted apps' CIMD URL (Claude Code's
+ * is https://claude.ai/oauth/claude-code-client-metadata), so this is a
+ * little wider than claude.ai. The redirect allow-list holds either way.
+ */
+export const CIMD_HOSTS = ['claude.ai', 'claude.com', 'anthropic.com']
+
+export function cimdHostAllowed(hostname: string): boolean {
+  return CIMD_HOSTS.some((h) => hostname === h || hostname.endsWith('.' + h))
+}
 
 function isLoopback(u: URL): boolean {
   return u.protocol === 'http:' && (u.hostname === 'localhost' || u.hostname === '127.0.0.1' || u.hostname === '[::1]')

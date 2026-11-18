@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   ACCESS_TTL,
+  cimdHostAllowed,
   CODE_TTL,
   deriveKeys,
   issueClientId,
@@ -97,6 +98,15 @@ describe('redirect allow-list', () => {
     expect(redirectMatches('http://127.0.0.1:9/callback', 'http://localhost/callback')).toBe(false)
     expect(redirectMatches('https://claude.ai/api/mcp/auth_callback', 'https://claude.ai/api/mcp/auth_callback')).toBe(true)
     expect(redirectMatches('https://claude.ai/api/mcp/auth_callback/', 'https://claude.ai/api/mcp/auth_callback')).toBe(false)
+  })
+})
+
+describe('CIMD hosts', () => {
+  it('claude and anthropic hosts only', () => {
+    expect(cimdHostAllowed('claude.ai')).toBe(true)
+    expect(cimdHostAllowed('api.anthropic.com')).toBe(true)
+    expect(cimdHostAllowed('evilclaude.ai')).toBe(false)
+    expect(cimdHostAllowed('claude.ai.evil.com')).toBe(false)
   })
 })
 

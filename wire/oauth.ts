@@ -1,6 +1,6 @@
 import {
   AuthError,
-  CIMD_HOSTS,
+  cimdHostAllowed,
   isChallenge,
   isLoopbackUri,
   issueClientId,
@@ -111,7 +111,7 @@ async function fetchCimd(clientId: string, fetchImpl: typeof fetch): Promise<Cli
   } catch {
     throw new AuthError('invalid_client', 'client_id is not a URL')
   }
-  if (url.protocol !== 'https:' || !CIMD_HOSTS.includes(url.hostname) || url.port || url.username || url.hash) {
+  if (url.protocol !== 'https:' || !cimdHostAllowed(url.hostname) || url.port || url.username || url.hash) {
     throw new AuthError('invalid_client', `client metadata from ${url.hostname} is not accepted here`)
   }
   let res: Response
@@ -137,7 +137,12 @@ async function fetchCimd(clientId: string, fetchImpl: typeof fetch): Promise<Cli
 
 async function resolveClient(clientId: string, cfg: OAuthConfig): Promise<Client> {
   if (!clientId) throw new AuthError('invalid_client', 'missing client_id')
-  if (clientId.startsWith('https://')) return fetchCimd(clientId, cfg.fetchImpl ?? fetch)
+  if (clientId.startsWith('https://')) {
+    // Spike: log which CIMD URL the Claude apps actually send (public, not a secret).
+    console.log(`authorize: CIMD client_id ${clientId.slice(0, 200)}`)
+    return fetchCimd(clientId, cfg.fetchImpl ?? fetch)
+  }
+  console.log('authorize: DCR client')
   const reg = await readClientId(cfg.keys, clientId)
   return { id: clientId, label: reg.client_name ? reg.client_name.slice(0, 60) : 'Claude', redirectUris: reg.redirect_uris }
 }
