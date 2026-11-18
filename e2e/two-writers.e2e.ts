@@ -82,7 +82,6 @@ test('control: one writer at a time, the real agent and the page end up with bot
 })
 
 test('audit 2: an agent write inside the browser’s push window survives, and so does the browser’s edit', async ({ page }) => {
-  test.fail() // flips when G1 (merge, not overwrite) lands — then delete this line
 
   await openAppWithBridge(page, agent)
   await firstContact(page)
@@ -113,7 +112,6 @@ test('audit 2: an agent write inside the browser’s push window survives, and s
 })
 
 test('audit 1: a late reconnect keeps what both sides did while the bridge was down', async ({ page }) => {
-  test.fail() // flips when G1 (merge, not overwrite) lands — then delete this line
 
   await openAppWithBridge(page, agent)
   await firstContact(page)
