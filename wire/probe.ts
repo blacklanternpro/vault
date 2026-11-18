@@ -33,5 +33,23 @@ export async function probeBlob(token: string): Promise<Record<string, unknown>>
   out.ifNoneMatch = nm ? nm.statusCode : null
   await del(path, { token })
   out.deleted = true
+  // The board's own pattern: create, then read the ETag back with get() and write over it with ifMatch.
+  for (const cache of [undefined, 60]) {
+    const p2 = `wire-spike/probe-rw-${cache ?? 'default'}-${Date.now()}.json`
+    const extra = cache ? { cacheControlMaxAge: cache } : {}
+    const made = await put(p2, '{"n":1}', { ...opts, ...extra, allowOverwrite: false })
+    const read = await get(p2, { access: 'private', useCache: false, token })
+    const readEtag = read?.blob.etag ?? null
+    if (read?.stream) await new Response(read.stream).text()
+    let outcome: string
+    try {
+      const w = await put(p2, '{"n":2}', { ...opts, ...extra, ifMatch: readEtag ?? '' })
+      outcome = `written, etag ${w.etag}`
+    } catch (err) {
+      outcome = `refused: ${(err as Error).constructor.name}`
+    }
+    out[`readThenWrite(cacheControlMaxAge=${cache ?? 'default'})`] = { putEtag: made.etag, getEtag: readEtag, getHeaderEtag: read?.headers.get('etag') ?? null, outcome }
+    await del(p2, { token })
+  }
   return out
 }
