@@ -197,18 +197,21 @@ export function readBridgeBase(url: string): Agreed | null {
   try {
     const raw = localStorage.getItem(BRIDGE_BASE_KEY)
     if (!raw) return null
-    const parsed = JSON.parse(raw) as { url?: unknown; rev?: unknown; doc?: unknown }
+    const parsed = JSON.parse(raw) as { url?: unknown; rev?: unknown; doc?: unknown; at?: unknown }
     if (parsed.url !== url || typeof parsed.rev !== 'number' || !Number.isInteger(parsed.rev)) return null
-    return { rev: parsed.rev, doc: sanitizeDoc(parsed.doc) }
+    const out: Agreed = { rev: parsed.rev, doc: sanitizeDoc(parsed.doc) }
+    if (typeof parsed.at === 'number' && Number.isFinite(parsed.at)) out.at = parsed.at
+    return out
   } catch {
     return null
   }
 }
 
+/** Keeps the agreed base, with when it was agreed (`at`, now if not given), so other tabs can tell whose is newer. */
 export function writeBridgeBase(url: string, agreed: Agreed | null): void {
   try {
     if (!agreed) localStorage.removeItem(BRIDGE_BASE_KEY)
-    else localStorage.setItem(BRIDGE_BASE_KEY, JSON.stringify({ url, rev: agreed.rev, doc: agreed.doc }))
+    else localStorage.setItem(BRIDGE_BASE_KEY, JSON.stringify({ url, rev: agreed.rev, at: agreed.at ?? Date.now(), doc: agreed.doc }))
   } catch {
     /* full or private: the base still lives in memory for this tab */
   }

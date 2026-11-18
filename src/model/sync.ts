@@ -1,5 +1,5 @@
-import { byId } from './doc'
-import { countChanges, merge, mergeFresh, sameDoc, type Conflict, type MergeResult } from './merge'
+import { byId, sanitizeDoc } from './doc'
+import { canonical, countChanges, merge, mergeFresh, sameDoc, type Conflict, type MergeResult } from './merge'
 import type { Doc } from './types'
 
 /*
@@ -16,24 +16,31 @@ import type { Doc } from './types'
  *   both changed                      → three-way merge against `agreed`,
  *                                       push the merge with `base` = their rev.
  *
- * "Server changed" means a new rev AND different content: a rev that moved
- * with the same board (another tab pushed the same thing) is just remembered.
+ * "Server changed" is decided by content, every contact: a rev can be reused
+ * (vault.json restored from its .bak, the file deleted so the count starts
+ * again, `serve` pointed at another --file), so the rev is only the `base` a
+ * push names, never proof that nothing changed. A rev that moved with the
+ * same board (another tab pushed the same thing) is just remembered.
  * Never stamp-and-win: a push always names the rev it was built on, and a 409
  * comes back through here as "both changed".
  *
  * With no agreed doc (first contact, or the browser lost it):
  *   the same board on both sides → agree;
+ *   a browser that never saved   → take theirs (the sample board is not
+ *                                  work), and never push the sample to an
+ *                                  empty bridge: it stays empty until the
+ *                                  person makes a board of their own;
  *   an empty bridge              → push mine;
- *   a browser that never saved   → take theirs (the sample board is not work);
  *   otherwise                    → union merge (`mergeFresh`): nothing either
  *                                  side has is dropped; deletes may come back.
  */
 
-export type Agreed = { rev: number; doc: Doc }
+/** `at`: when this browser agreed on it (ms), so tabs sharing the stored base can tell whose is newer. */
+export type Agreed = { rev: number; doc: Doc; at?: number }
 export type Theirs = { rev: number; doc: Doc }
 
 export type SyncPlan =
-  | { act: 'none'; agreed: Agreed }
+  | { act: 'none'; agreed: Agreed | null }
   | { act: 'push'; doc: Doc; base: number }
   | { act: 'take'; doc: Doc; rev: number; changes?: number }
   | { act: 'merge'; doc: Doc; rev: number; result: MergeResult }
@@ -45,22 +52,48 @@ function blank(doc: Doc): boolean {
 export function planSync(agreed: Agreed | null, mine: Doc, theirs: Theirs, opts: { mineUnsaved?: boolean } = {}): SyncPlan {
   if (!agreed) {
     if (sameDoc(mine, theirs.doc)) return { act: 'none', agreed: { rev: theirs.rev, doc: theirs.doc } }
+    if (opts.mineUnsaved) return blank(theirs.doc) ? { act: 'none', agreed: null } : { act: 'take', doc: theirs.doc, rev: theirs.rev }
     if (blank(theirs.doc)) return { act: 'push', doc: mine, base: theirs.rev }
-    if (opts.mineUnsaved || blank(mine)) return { act: 'take', doc: theirs.doc, rev: theirs.rev }
+    if (blank(mine)) return { act: 'take', doc: theirs.doc, rev: theirs.rev }
     const result = mergeFresh(mine, theirs.doc)
     return { act: 'merge', doc: result.doc, rev: theirs.rev, result }
   }
   const mineChanged = !sameDoc(mine, agreed.doc)
-  const theirsChanged = theirs.rev !== agreed.rev && !sameDoc(theirs.doc, agreed.doc)
-  if (!mineChanged && !theirsChanged) return { act: 'none', agreed: theirs.rev === agreed.rev ? agreed : { rev: theirs.rev, doc: agreed.doc } }
+  const theirsChanged = !sameDoc(theirs.doc, agreed.doc)
+  if (!mineChanged && !theirsChanged) return { act: 'none', agreed: theirs.rev === agreed.rev ? agreed : { ...agreed, rev: theirs.rev } }
   if (!theirsChanged) return { act: 'push', doc: mine, base: theirs.rev }
   if (!mineChanged) return { act: 'take', doc: theirs.doc, rev: theirs.rev, changes: countChanges(agreed.doc, theirs.doc) }
   const result = merge(agreed.doc, mine, theirs.doc)
   return { act: 'merge', doc: result.doc, rev: theirs.rev, result }
 }
 
+/**
+ * A push went out but its answer never came back. Did it land? Yes when every
+ * task and note it changed (from `agreed`) is in `theirs` exactly as pushed
+ * (and every one it removed is gone), whatever else an agent wrote on top. If
+ * any of them has changed again since, there is no telling: no, which costs
+ * at most a duplicate; a wrong yes could drop work.
+ */
+export function pushLanded(agreed: Doc, pushed: Doc, theirs: Doc): boolean {
+  let changed = 0
+  const check = <K, T>(a: Map<K, T>, p: Map<K, T>, t: Map<K, T>): boolean => {
+    for (const id of new Set([...a.keys(), ...p.keys()])) {
+      const pv = p.get(id)
+      if (canonical(a.get(id)) === canonical(pv)) continue
+      changed++
+      if (canonical(t.get(id)) !== canonical(pv)) return false
+    }
+    return true
+  }
+  const nodes = (d: Doc) => new Map(d.nodes.map((n) => [n.id, n]))
+  const notes = (d: Doc) => new Map(d.notes.map((n) => [n.id, n]))
+  // Compared as the file would hold them.
+  const [a, p, t] = [sanitizeDoc(agreed), sanitizeDoc(pushed), sanitizeDoc(theirs)]
+  return check(nodes(a), nodes(p), nodes(t)) && check(notes(a), notes(p), notes(t)) && changed > 0
+}
+
 export type AdoptNote =
-  | { kind: 'take'; rev: number }
+  | { kind: 'take'; rev: number; snapshotted: boolean }
   | { kind: 'merge'; rev: number; doc: Doc; result: Pick<MergeResult, 'theirChanges' | 'conflicts'> }
 
 /**
@@ -69,7 +102,7 @@ export type AdoptNote =
  * (`restore mine`) is the notice's action, not part of the text.
  */
 export function adoptMessage(a: AdoptNote): string {
-  if (a.kind === 'take') return `took vault-agent's copy (rev ${a.rev}). yours is in snapshots`
+  if (a.kind === 'take') return `took vault-agent's copy (rev ${a.rev})${a.snapshotted ? '. yours is in snapshots' : ''}`
   const { theirChanges, conflicts } = a.result
   // Clashes where yours was kept, one per task or note, in the order met.
   const clashed = new Map<string, string>()

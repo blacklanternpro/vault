@@ -259,17 +259,32 @@ export function Studio() {
   const bridgeNotice = useRef(0)
   const bridge = useBridge({
     doc,
+    live: history.ref,
     // The bridge's copy (taken or merged) is one undo step: Ctrl+Z puts back what you had, and earlier undo stays.
-    adopt: (d) => {
+    // Over the never-saved sample it simply replaces it (no step back to the sample).
+    adopt: (d, how) => {
       lastSaved.current = ''
-      history.replace(d)
+      if (how.undoable) history.replace(d)
+      else history.adopt(d)
+      const moved = how.remapped
+      if (!moved?.size) return
+      // Both sides minted the same new id; yours moved. Follow it wherever the shell holds it.
+      const to = (id: number | null) => (id != null && moved.has(id) ? moved.get(id)! : id)
+      setOpenId(to)
+      setSelected(to)
+      setProjectFilter(to)
+      lastOpen.current = to(lastOpen.current)
+      setEditing((e) => (e && moved.has(e.id) ? { ...e, id: moved.get(e.id)! } : e))
+      setDraft((d) => (d && d.where !== 'board' && d.parent != null && moved.has(d.parent) ? { ...d, parent: moved.get(d.parent)! } : d))
+      if (clock.session && moved.has(clock.session.id)) clock.start(moved.get(clock.session.id)!, clock.session.startedAt)
     },
     // "restore mine": your board as it was before that, as one undoable change (pushed on the next contact).
     restore: (d) => {
       history.commit(d)
       setToasts((list) => list.filter((t) => t.id !== bridgeNotice.current))
     },
-    // Data notices (merged, took, token refused) sit in the sticky notice slot until answered; the bridge has one slot.
+    redo: () => history.redo(),
+    // Data notices (merged, took, token refused, undid) sit in the sticky notice slot until answered; the bridge has one slot.
     notify: (text, action, notice) => {
       if (!notice) return toast(text, action)
       const id = ++toastSeq.current
@@ -277,6 +292,8 @@ export function Studio() {
       bridgeNotice.current = id
       setToasts((list) => [...list.filter((t) => t.id !== prev), { id, text, action, sticky: true }])
     },
+    // The board moved on: the notice's words stand, its button goes.
+    retract: () => setToasts((list) => list.map((t) => (t.id === bridgeNotice.current ? { ...t, action: undefined } : t))),
   })
   // Reports an agent left on the bridge join the browser's own inbox, where the banner already reads them.
   const { inbox: bridgeInbox, dismissInbox: dismissBridgeInbox } = bridge
