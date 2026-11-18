@@ -34,6 +34,23 @@ export async function probeBlob(token: string): Promise<Record<string, unknown>>
   await del(path, { token })
   out.deleted = true
   // The board's own pattern: create, then read the ETag back with get() and write over it with ifMatch.
+  // A body big enough to be compressed in transit, read with and without Accept-Encoding: identity.
+  const big = JSON.stringify({ pad: 'x'.repeat(4000), arrow: '→' })
+  for (const identity of [false, true]) {
+    const p3 = `wire-spike/probe-big-${identity ? 'identity' : 'default'}-${Date.now()}.json`
+    const made = await put(p3, big, { ...opts, allowOverwrite: false })
+    const read = await get(p3, { access: 'private', useCache: false, token, ...(identity ? { headers: { 'Accept-Encoding': 'identity' } } : {}) })
+    if (read?.stream) await new Response(read.stream).text()
+    let outcome: string
+    try {
+      const w = await put(p3, big + ' ', { ...opts, ifMatch: read?.blob.etag ?? '' })
+      outcome = `written, etag ${w.etag}`
+    } catch (err) {
+      outcome = `refused: ${(err as Error).constructor.name}`
+    }
+    out[`bigReadThenWrite(identity=${identity})`] = { putEtag: made.etag, getEtag: read?.blob.etag ?? null, contentEncoding: read?.headers.get('content-encoding') ?? null, outcome }
+    await del(p3, { token })
+  }
   for (const cache of [undefined, 60]) {
     const p2 = `wire-spike/probe-rw-${cache ?? 'default'}-${Date.now()}.json`
     const extra = cache ? { cacheControlMaxAge: cache } : {}

@@ -124,7 +124,7 @@ export class BlobStore implements BoardStore {
       })
       return { etag: res.etag }
     } catch (err) {
-      if (err instanceof BlobPreconditionFailedError) throw new ConflictError('the board changed since it was read')
+      if (err instanceof BlobPreconditionFailedError) throw new ConflictError(`the board changed since it was read (ifMatch ${etag})`)
       if (!etag && err instanceof Error && /already exists/i.test(err.message)) throw new ConflictError('the board was created meanwhile')
       throw err
     }
