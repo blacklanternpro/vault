@@ -144,7 +144,29 @@ The status line keeps one message at a time; a newer one replaces it. A message 
 | report-applied | `report: 2 ticked, 1 added · undo` | a report applied | status line (keeps `report.ts` summary) |
 | report-empty | `report: nothing to apply` | a report that matched nothing | status line |
 
-### 3.5 The Wire and the local bridge (data: plain, no jokes)
+### 3.5 Sync: the local bridge (Phase 1) and the Wire (Phase 3) — data: plain, no jokes
+
+**Phase 1 — the local bridge (what ships now, G1 + G3).** The bridge can't tell who wrote a change, so every string names `vault-agent`, never `claude`, and an outside copy that isn't merged goes to **snapshots**, not `inbox/`. These are the strings in `src/model/sync.ts` (`adoptMessage`), `src/shell/useBridge.ts` and `agent/src/http.ts`; keep them in step.
+
+| id | Now | When | Where | Was |
+| --- | --- | --- | --- | --- |
+| bridge-on | `bridge on · localhost:7331` | the local helper answers | status line | `Agent bridge connected` |
+| bridge-offline | `bridge offline · working locally` | the local helper stopped answering | status line | `Agent bridge isn't answering; working locally` |
+| token-saved | `bridge token saved` · `bridge token saved. turn the bridge on in the menu to connect` | the app read `#bridge-token=` from the link | status line | — |
+| token-missing | `bridge refused: no token. run vault-agent token (or serve) for the link` | 401 with no stored token | notice | — |
+| token-wrong | `bridge refused: wrong token. run vault-agent token (or serve) for the link` | 401 with a stored token | notice | — |
+| token-server | `missing or wrong bridge token. Run vault-agent token on this PC and open the link it prints …` | the helper's own 401 body (for scripts and curl, not the app) | HTTP response | — |
+| merged | `merged 3 changes from vault-agent (rev 41) · restore mine` | both sides changed, and the merge needed no choice | notice | `An agent changed the board first; took their version` |
+| merged-back | `merged 3 changes from vault-agent (rev 41) · 1 you deleted came back · restore mine` | the merge kept a row you deleted because the agent changed it | notice | — |
+| conflict | `you and vault-agent both changed NETWORK MAP. kept yours; theirs is in snapshots · restore mine` (`… and 2 more` when several) | the same field changed on both sides; yours wins, theirs is snapshotted | notice | — |
+| took-theirs | `took vault-agent's copy (rev 41). yours is in snapshots · restore mine` | you changed nothing locally since the last agreed copy (or, on first contact, this tab had nothing saved), so theirs is taken whole after a snapshot | notice | — |
+| restored-mine | `restored yours (21:12). theirs is in snapshots` | `restore mine` | status line | — |
+| undid-adoption | `undid vault-agent's change · redo` | an undo that crosses an adopted outside copy (G1, landing) | notice | — |
+| stale-refused | `write refused: rev 41 is newer. merging` | a 409 from a versioned write | status line, transient | — |
+
+The app strings say `token (or serve)` because both `vault-agent token` and `vault-agent serve` print the link that hands the app its token. *(The app's current text names only `serve`; G1/G3 should align it to the strings above.)*
+
+**Phase 3 — the Wire (target).** The Wire signs every write, so it does know who wrote: these strings name `claude`, and a clash goes to `inbox/` as a proposal instead of snapshots.
 
 | id | Now | When | Where | Was |
 | --- | --- | --- | --- | --- |
@@ -152,15 +174,8 @@ The status line keeps one message at a time; a newer one replaces it. A message 
 | wire-on | `wire on · synced 21:14` | connected and in step | top bar (replaces `saved`) | — |
 | wire-offline | `wire offline · 3 unpushed · working locally` | can't reach it | top bar | — |
 | wire-login | `wire: logged out. log in to sync` | the login expired | notice | — |
-| bridge-on | `bridge on · localhost:7331` | the local helper answers | status line | `Agent bridge connected` |
-| bridge-offline | `bridge offline · working locally` | the local helper stopped answering | status line | `Agent bridge isn't answering; working locally` |
-| token-missing | `bridge refused: no token. run vault-agent serve and open the link it prints` | 401 from the helper | notice | — |
-| token-wrong | `bridge refused: wrong token. open the link vault-agent serve prints` | 401 with a stored token | notice | — |
-| merged | `merged 3 changes from vault-agent (rev 41) · restore mine` | an outside copy merged into yours | notice | `An agent changed the board first; took their version` |
-| took-theirs | `took vault-agent's copy (rev 41). yours is in snapshots · restore mine` | couldn't merge; theirs adopted after a snapshot | notice, sticky | — |
-| conflict | `you and claude both changed NETWORK MAP. kept yours; theirs is in inbox/` | same field changed on both sides | notice | — |
-| restored-mine | `restored yours (21:12). theirs is in snapshots` | `restore mine` | status line | — |
-| stale-refused | `write refused: rev 41 is newer. merging` | a 409 from a versioned write | status line, transient | — |
+| wire-merged | `merged 3 changes from claude (rev 41) · restore mine` | both sides changed, no clash | notice | — |
+| wire-conflict | `you and claude both changed NETWORK MAP. kept yours; theirs is in inbox/` | the same field changed on both sides | notice; theirs waits in `inbox/` as a proposal (`y` `n`) | — |
 
 ### 3.6 Files, snapshots, errors (data: plain, no jokes)
 
