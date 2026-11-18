@@ -28,7 +28,8 @@ export default defineConfig({
   },
   projects: [
     { name: 'e2e', testMatch: '**/*.e2e.ts' },
-    { name: 'perf', testMatch: 'perf/**/*.perf.ts', fullyParallel: false, retries: 0 },
+    // 30+ timed presses per test on a 1,000-item board: slow runners need more than the default 30s.
+    { name: 'perf', testMatch: 'perf/**/*.perf.ts', fullyParallel: false, retries: 0, timeout: 180_000 },
   ],
   webServer: {
     command: 'npm run build && npx vite preview --port 4174 --strictPort',
