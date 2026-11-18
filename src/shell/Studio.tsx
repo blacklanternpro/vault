@@ -257,11 +257,14 @@ export function Studio() {
   /* --- agent bridge: the board kept in step with `vault-agent serve`, when it is turned on --- */
   const bridge = useBridge({
     doc,
+    // The bridge's copy (taken or merged) is one undo step: Ctrl+Z puts back what you had, and earlier undo stays.
     adopt: (d) => {
       lastSaved.current = ''
-      adopt(d)
+      history.replace(d)
     },
-    notify: (text) => toast(text),
+    // "restore mine": your board as it was before that, as one undoable change (pushed on the next contact).
+    restore: (d) => history.commit(d),
+    notify: (text, action) => toast(text, action),
   })
   // Reports an agent left on the bridge join the browser's own inbox, where the banner already reads them.
   const { inbox: bridgeInbox, dismissInbox: dismissBridgeInbox } = bridge
