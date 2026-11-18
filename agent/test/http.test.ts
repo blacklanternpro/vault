@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { addNode, logEvent } from '../../src/model/doc'
+import type { Doc } from '../../src/model/types'
 import { startBridge, type RunningBridge } from '../src/http'
 import { makeStore, T0, type Fixture } from './fixture'
 
@@ -102,10 +103,38 @@ describe('inbox', () => {
     expect(gone.status).toBe(200)
     expect(gone.body).toMatchObject({ removed: { taskId: 2 }, inbox: [{ text: 'second' }] })
     expect((await call('DELETE', '/inbox/7')).status).toBe(404)
-    expect((await call('DELETE', '/inbox/x')).status).toBe(400)
+    expect((await call('DELETE', '/inbox/x')).status).toBe(404)
     expect((await call('POST', '/inbox', { text: '' })).status).toBe(400)
     expect((await call('POST', '/inbox', { text: 'x', taskId: 'two' })).status).toBe(400)
-    expect(fx.store.readInbox()).toEqual([{ at: T0, text: 'second' }])
+    expect(fx.store.readInbox()).toEqual([{ id: expect.any(String), at: T0, text: 'second' }])
+  })
+
+  it('deletes by id, so two removals at once take the right items (contract)', async () => {
+    const a = (await call('POST', '/inbox', { text: 'a' })).body as { item: { id: string } }
+    const b = (await call('POST', '/inbox', { text: 'b' })).body as { item: { id: string } }
+    await call('POST', '/inbox', { text: 'c' })
+    const [ra, rb] = await Promise.all([call('DELETE', `/inbox/${b.item.id}`), call('DELETE', `/inbox/${a.item.id}`)])
+    expect([ra.status, rb.status]).toEqual([200, 200])
+    expect(fx.store.readInbox().map((i) => i.text)).toEqual(['c'])
+    expect((await call('DELETE', `/inbox/${a.item.id}`)).status).toBe(404)
+  })
+})
+
+describe('versioned writes (Phase 1 contract)', () => {
+  it('GET /doc carries rev; a PUT based on the current rev lands and bumps it', async () => {
+    const got = (await call('GET', '/doc')).body as { rev: number; doc: Doc }
+    expect(got.rev).toBe(1)
+    const r = await call('PUT', '/doc', { app: 'vault', version: 1, savedAt: T0 + 5, base: got.rev, doc: addNode(got.doc, { parent: 1, title: 'MINE' }).doc })
+    expect(r).toMatchObject({ status: 200, body: { ok: true, rev: 2 } })
+    expect(fx.store.read().rev).toBe(2)
+  })
+
+  it('a PUT based on an old rev is refused with the current board, even if its savedAt is newer', async () => {
+    fx.store.update((doc) => ({ doc: addNode(doc, { parent: 1, title: 'AGENT' }).doc, result: null }))
+    const r = await call('PUT', '/doc', { app: 'vault', version: 1, savedAt: Date.now() + 60_000, base: 1, doc: fx.doc })
+    expect(r.status).toBe(409)
+    expect(r.body).toMatchObject({ app: 'vault', rev: 2 })
+    expect(fx.store.read().doc.nodes.some((n) => n.title === 'AGENT')).toBe(true)
   })
 })
 
@@ -115,7 +144,7 @@ describe('CORS and routing', () => {
     expect(pre.status).toBe(204)
     expect(pre.headers.get('access-control-allow-origin')).toBe(ORIGIN)
     expect(pre.headers.get('access-control-allow-methods')).toContain('PUT')
-    expect(pre.headers.get('access-control-allow-headers')).toBe('Content-Type')
+    expect(pre.headers.get('access-control-allow-headers')).toBe('Content-Type, Authorization')
     const ok = await call('GET', '/doc', undefined, { Origin: 'https://vault.example.app/' })
     expect(ok.status).toBe(200)
     expect(ok.headers.get('access-control-allow-origin')).toBe('https://vault.example.app/')

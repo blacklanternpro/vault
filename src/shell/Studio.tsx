@@ -277,8 +277,8 @@ export function Studio() {
     } catch {
       return
     }
-    // Taken: remove from the bridge, last first so the indexes stay right.
-    for (let i = bridgeInbox.length - 1; i >= 0; i--) void dismissBridgeInbox(i)
+    // Taken: remove each from the bridge by its id.
+    for (const e of bridgeInbox) void dismissBridgeInbox(e)
   }, [bridgeInbox, dismissBridgeInbox])
   /* --- end agent bridge --- */
 

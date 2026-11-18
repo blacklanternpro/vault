@@ -41,6 +41,28 @@ describe('bridge client', () => {
     expect(await pushDoc('http://x', seedDoc(), 7)).toEqual({ ok: true, savedAt: 7 })
   })
 
+  it('sends base and the token, and reads rev back (Phase 1 contract)', async () => {
+    let sent: { body: Record<string, unknown>; auth: string | null } | null = null
+    vi.spyOn(globalThis, 'fetch').mockImplementation((_url, init) => {
+      sent = { body: JSON.parse(String(init?.body)), auth: new Headers(init?.headers).get('authorization') }
+      return respond(200, { ok: true, savedAt: 7, rev: 4 })
+    })
+    expect(await pushDoc({ url: 'http://x', token: 'tok' }, seedDoc(), 7, 3)).toEqual({ ok: true, savedAt: 7, rev: 4 })
+    expect(sent).toMatchObject({ body: { base: 3, savedAt: 7 }, auth: 'Bearer tok' })
+    vi.spyOn(globalThis, 'fetch').mockImplementation(() => respond(409, { app: 'vault', version: 1, savedAt: 9, rev: 5, doc: seedDoc() }))
+    expect(await pushDoc('http://x', seedDoc(), 8, 3)).toMatchObject({ ok: false, conflict: true, rev: 5 })
+  })
+
+  it('removes an inbox entry by id', async () => {
+    const urls: string[] = []
+    vi.spyOn(globalThis, 'fetch').mockImplementation((url) => {
+      urls.push(String(url))
+      return respond(200)
+    })
+    expect(await removeInbox({ url: 'http://x' }, 'iabc')).toBe(true)
+    expect(urls).toEqual(['http://x/inbox/iabc'])
+  })
+
   it('reports an unreachable server without throwing', async () => {
     vi.spyOn(globalThis, 'fetch').mockImplementation(() => Promise.reject(new TypeError('Failed to fetch')))
     expect(await ping('http://x')).toBe(false)

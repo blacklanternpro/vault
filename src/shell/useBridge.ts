@@ -41,8 +41,10 @@ export function useBridge({ doc, adopt, notify }: Options) {
   const [settings, setSettingsState] = useState<BridgeSettings>(readBridgeSettings)
   const [status, setStatus] = useState<BridgeStatus>(settings.enabled ? 'connecting' : 'off')
   const [inbox, setInbox] = useState<InboxEntry[]>([])
+  const inboxRef = useRef(inbox)
+  inboxRef.current = inbox
   /** The JSON of the doc as the bridge last had it, so we neither push it back nor adopt it again. */
-  const known = useRef<{ json: string; savedAt: number }>({ json: '', savedAt: 0 })
+  const known = useRef<{ json: string; savedAt: number; rev: number }>({ json: '', savedAt: 0, rev: 0 })
   const docRef = useRef(doc)
   docRef.current = doc
   const adoptRef = useRef(adopt)
@@ -58,8 +60,9 @@ export function useBridge({ doc, adopt, notify }: Options) {
     if (!next.enabled) setInbox([])
   }, [])
 
-  const take = useCallback((theirs: Doc, savedAt: number) => {
-    known.current = { json: JSON.stringify(theirs), savedAt }
+  // Phase 1 contract: this still adopts theirs outright. G1 replaces it with merge + snapshot + "restore mine".
+  const take = useCallback((theirs: Doc, savedAt: number, rev: number) => {
+    known.current = { json: JSON.stringify(theirs), savedAt, rev }
     if (known.current.json !== JSON.stringify(docRef.current)) adoptRef.current(theirs)
   }, [])
 
@@ -67,7 +70,7 @@ export function useBridge({ doc, adopt, notify }: Options) {
   useEffect(() => {
     if (!settings.enabled) return
     let stopped = false
-    const url = settings.url
+    const url = { url: settings.url, token: settings.token }
 
     const online = () => {
       if (stopped) return
@@ -94,12 +97,12 @@ export function useBridge({ doc, adopt, notify }: Options) {
         if (first && known.current.savedAt === 0) {
           // First contact: the side saved more recently wins; an empty bridge always takes ours.
           if (theirs.doc.nodes.length === 0 || newer({ savedAt: localSavedAt() }, theirs) === 'mine') {
-            const r = await pushDoc(url, docRef.current)
-            if (r.ok) known.current = { json: mineJson, savedAt: r.savedAt }
-            else if (r.conflict) take(r.doc, r.savedAt)
-          } else take(theirs.doc, theirs.savedAt)
-        } else if (theirs.savedAt > known.current.savedAt) {
-          take(theirs.doc, theirs.savedAt)
+            const r = await pushDoc(url, docRef.current, Date.now(), theirs.rev)
+            if (r.ok) known.current = { json: mineJson, savedAt: r.savedAt, rev: r.rev ?? theirs.rev + 1 }
+            else if (r.conflict) take(r.doc, r.savedAt, r.rev)
+          } else take(theirs.doc, theirs.savedAt, theirs.rev)
+        } else if (theirs.rev !== known.current.rev && theirs.savedAt > known.current.savedAt) {
+          take(theirs.doc, theirs.savedAt, theirs.rev)
         }
         const entries = await pullInbox(url)
         if (!stopped) setInbox(entries)
@@ -115,7 +118,7 @@ export function useBridge({ doc, adopt, notify }: Options) {
       stopped = true
       window.clearInterval(t)
     }
-  }, [settings.enabled, settings.url, take])
+  }, [settings.enabled, settings.url, settings.token, take])
 
   // Push local changes, debounced.
   useEffect(() => {
@@ -124,22 +127,25 @@ export function useBridge({ doc, adopt, notify }: Options) {
     if (json === known.current.json) return
     const t = window.setTimeout(async () => {
       const savedAt = Date.now()
-      const r = await pushDoc(settings.url, doc, savedAt)
-      if (r.ok) known.current = { json, savedAt }
+      const r = await pushDoc({ url: settings.url, token: settings.token }, doc, savedAt, known.current.rev)
+      if (r.ok) known.current = { json, savedAt, rev: r.rev ?? known.current.rev + 1 }
       else if (r.conflict) {
-        take(r.doc, r.savedAt)
+        take(r.doc, r.savedAt, r.rev)
         notifyRef.current('An agent changed the board first; took their version')
       } else setStatus('offline')
     }, PUSH_DEBOUNCE_MS)
     return () => window.clearTimeout(t)
-  }, [doc, settings.enabled, settings.url, status, take])
+  }, [doc, settings.enabled, settings.url, settings.token, status, take])
 
+  /** Removes one entry by its id (old agents without ids fall back to its position). */
   const dismissInbox = useCallback(
-    async (index: number) => {
-      setInbox((list) => list.filter((_, i) => i !== index))
-      await removeInbox(settings.url, index)
+    async (entry: InboxEntry) => {
+      const index = inboxRef.current.indexOf(entry)
+      setInbox((list) => list.filter((e) => e !== entry))
+      if (entry.id == null && index < 0) return
+      await removeInbox({ url: settings.url, token: settings.token }, entry.id ?? index)
     },
-    [settings.url],
+    [settings.url, settings.token],
   )
 
   return { settings, setSettings, status, inbox, dismissInbox }

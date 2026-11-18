@@ -164,8 +164,8 @@ export async function main(argv: string[], streams: Partial<Streams> = {}): Prom
         return 0
       }
       case 'export': {
-        const { doc, savedAt } = store.read()
-        out(JSON.stringify(envelopeOf(doc, savedAt), null, 2) + '\n')
+        const { doc, savedAt, rev } = store.read()
+        out(JSON.stringify(envelopeOf(doc, savedAt, rev), null, 2) + '\n')
         return 0
       }
       default:

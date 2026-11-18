@@ -9,12 +9,14 @@ import { envelopeOf, StoreError, type FileStore } from './store.js'
  * localStorage) and the file the agents work on. Plain Node http, loopback
  * only, JSON in and out:
  *
- *   GET    /doc               the board, as the export envelope
- *   PUT    /doc               replace the board (envelope or bare doc); 409 when older than the file
+ *   GET    /doc               the board, as the export envelope (with `rev`, the write counter)
+ *   PUT    /doc               replace the board; send `base` = the rev your edit was based on.
+ *                             409 + the current envelope when `base` is not the current rev.
+ *                             (Without `base`: the legacy savedAt rule; see FileStore.put.)
  *   GET    /events?since=ms   trail events after `since`, newest first
  *   GET    /inbox             reports from agents, oldest first
  *   POST   /inbox             { text, taskId?, at? } → 201 with its index
- *   DELETE /inbox/:index      remove one
+ *   DELETE /inbox/:id         remove one by its id (a bare whole number is the legacy index)
  *   GET    /health            who is serving what
  *
  * CORS: only the origins given (by default the Vite dev and preview servers)
@@ -91,7 +93,7 @@ export function createBridge(opts: BridgeOptions): http.Server {
       res.setHeader('Access-Control-Allow-Origin', origin)
       res.setHeader('Vary', 'Origin')
       res.setHeader('Access-Control-Allow-Methods', METHODS)
-      res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
       res.setHeader('Access-Control-Max-Age', '600')
       // Chrome asks before a public https page may reach localhost (Private Network Access).
       if (req.headers['access-control-request-private-network'] === 'true') res.setHeader('Access-Control-Allow-Private-Network', 'true')
@@ -106,8 +108,8 @@ export function createBridge(opts: BridgeOptions): http.Server {
 
     if (parts.length === 1 && parts[0] === 'doc') {
       if (method === 'GET') {
-        const { doc, savedAt } = store.read()
-        return { status: 200, body: envelopeOf(doc, savedAt) }
+        const { doc, savedAt, rev } = store.read()
+        return { status: 200, body: envelopeOf(doc, savedAt, rev) }
       }
       if (method === 'PUT') {
         const incoming = await readJson(req)
@@ -118,9 +120,9 @@ export function createBridge(opts: BridgeOptions): http.Server {
           throw new HttpError(400, `not a VAULT document: ${(err as Error).message}`)
         }
         if (!outcome.ok) {
-          throw new HttpError(409, 'the file has a newer save; take this one and try again', envelopeOf(outcome.current.doc, outcome.current.savedAt))
+          throw new HttpError(409, 'the file has a newer save; take this one and try again', envelopeOf(outcome.current.doc, outcome.current.savedAt, outcome.current.rev))
         }
-        return { status: 200, body: { ok: true, savedAt: outcome.snapshot.savedAt } }
+        return { status: 200, body: { ok: true, savedAt: outcome.snapshot.savedAt, rev: outcome.snapshot.rev } }
       }
       throw new HttpError(405, 'method not allowed')
     }
@@ -149,9 +151,9 @@ export function createBridge(opts: BridgeOptions): http.Server {
         return { status: 201, body: added }
       }
       if (parts.length === 2 && method === 'DELETE') {
-        if (!/^\d+$/.test(parts[1])) throw new HttpError(400, 'index must be a whole number')
-        const removed = store.removeInbox(Number(parts[1]))
-        if (!removed) throw new HttpError(404, `no inbox item at ${parts[1]}`)
+        const key = decodeURIComponent(parts[1])
+        const removed = /^\d+$/.test(key) ? store.removeInbox(Number(key)) : store.removeInboxById(key)
+        if (!removed) throw new HttpError(404, `no inbox item ${key}`)
         return { status: 200, body: { removed, inbox: store.readInbox() } }
       }
       if (parts.length <= 2) throw new HttpError(405, 'method not allowed')

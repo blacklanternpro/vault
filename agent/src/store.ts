@@ -1,3 +1,4 @@
+import { randomBytes } from 'node:crypto'
 import fs from 'node:fs'
 import path from 'node:path'
 import { sanitizeDoc } from '../../src/model/doc.js'
@@ -22,9 +23,26 @@ import type { Doc } from '../../src/model/types.js'
 
 export const ENVELOPE_VERSION = 1
 
-export type Envelope = { app: 'vault'; version: number; savedAt: number; doc: Doc }
-export type Snapshot = { doc: Doc; savedAt: number }
-export type InboxItem = { at: number; taskId?: number; text: string }
+/**
+ * `rev` is the board's write counter: every write to the file adds one. A
+ * writer names the rev its edit was based on (`base`), and a write based on
+ * anything but the current rev is refused (Phase 1 contract, G1 + G3).
+ */
+export type Envelope = { app: 'vault'; version: number; savedAt: number; rev?: number; doc: Doc }
+export type Snapshot = { doc: Doc; savedAt: number; rev: number }
+/** `id` is stable for the life of the item, so removal is by id, never by position. */
+export type InboxItem = { id: string; at: number; taskId?: number; text: string }
+
+function newInboxId(): string {
+  return 'i' + randomBytes(6).toString('hex')
+}
+
+/** An id for an inbox item written before ids existed: stable as long as the item is unchanged. */
+function legacyInboxId(at: number, text: string): string {
+  let h = 5381
+  for (let i = 0; i < text.length; i++) h = ((h << 5) + h + text.charCodeAt(i)) >>> 0
+  return `L${at.toString(36)}${h.toString(36)}`
+}
 
 export class StoreError extends Error {}
 
@@ -32,26 +50,38 @@ export function emptyDoc(): Doc {
   return sanitizeDoc({ nodes: [], notes: [], events: [] })
 }
 
-export function envelopeOf(doc: Doc, savedAt: number): Envelope {
-  return { app: 'vault', version: ENVELOPE_VERSION, savedAt, doc }
+export function envelopeOf(doc: Doc, savedAt: number, rev = 0): Envelope {
+  return { app: 'vault', version: ENVELOPE_VERSION, savedAt, rev, doc }
+}
+
+function wholeOrUndefined(v: unknown): number | undefined {
+  return typeof v === 'number' && Number.isInteger(v) && v >= 0 ? v : undefined
 }
 
 /**
  * Reads an envelope or a bare doc out of parsed JSON. The doc comes back
  * sanitized; `savedAt` only when the envelope carried a usable one.
  */
-export function unwrap(parsed: unknown): { doc: Doc; savedAt?: number } {
+export type Unwrapped = { doc: Doc; savedAt?: number; rev?: number; base?: number }
+
+/** Also reads `rev` (the file's write counter) and `base` (the rev a PUT was based on) when present. */
+export function unwrap(parsed: unknown): Unwrapped {
   if (!parsed || typeof parsed !== 'object') throw new StoreError('not a VAULT document')
   const obj = parsed as Record<string, unknown>
   if ('doc' in obj) {
-    const doc = sanitizeDoc(obj.doc)
+    const out: Unwrapped = { doc: sanitizeDoc(obj.doc) }
     const at = obj.savedAt
-    return typeof at === 'number' && Number.isFinite(at) && at > 0 ? { doc, savedAt: Math.round(at) } : { doc }
+    if (typeof at === 'number' && Number.isFinite(at) && at > 0) out.savedAt = Math.round(at)
+    const rev = wholeOrUndefined(obj.rev)
+    if (rev !== undefined) out.rev = rev
+    const base = wholeOrUndefined(obj.base)
+    if (base !== undefined) out.base = base
+    return out
   }
   return { doc: sanitizeDoc(parsed) }
 }
 
-export function parseEnvelope(raw: string): { doc: Doc; savedAt?: number } {
+export function parseEnvelope(raw: string): Unwrapped {
   let parsed: unknown
   try {
     parsed = JSON.parse(raw)
@@ -94,12 +124,12 @@ export class FileStore {
     try {
       raw = fs.readFileSync(this.file, 'utf8')
     } catch (err) {
-      if ((err as NodeJS.ErrnoException).code === 'ENOENT') return { doc: emptyDoc(), savedAt: 0 }
+      if ((err as NodeJS.ErrnoException).code === 'ENOENT') return { doc: emptyDoc(), savedAt: 0, rev: 0 }
       throw new StoreError(`cannot read ${this.file}: ${(err as Error).message}`)
     }
     try {
-      const { doc, savedAt } = parseEnvelope(raw)
-      return { doc, savedAt: savedAt ?? safeMtime(this.file) }
+      const { doc, savedAt, rev } = parseEnvelope(raw)
+      return { doc, savedAt: savedAt ?? safeMtime(this.file), rev: rev ?? 0 }
     } catch (err) {
       throw new StoreError(`${this.file} is not a readable VAULT file (${(err as Error).message}). Fix it or move it aside; nothing has been written over it.`)
     }
@@ -107,7 +137,16 @@ export class FileStore {
 
   /** Writes the whole board. The doc is sanitized on the way through. */
   write(doc: Doc, savedAt = Date.now()): Snapshot {
-    return this.locked(() => this.writeUnlocked(doc, savedAt))
+    return this.locked(() => this.writeUnlocked(doc, savedAt, this.currentRev() + 1))
+  }
+
+  /** The file's rev, or 0 when there is no readable file (a write over an unreadable one parks it first). */
+  private currentRev(): number {
+    try {
+      return this.read().rev
+    } catch {
+      return 0
+    }
   }
 
   /** Read, change, write — under the lock, so two processes cannot lose each other's changes. */
@@ -116,23 +155,31 @@ export class FileStore {
       const current = this.read()
       const { doc, result } = fn(current.doc)
       if (doc === current.doc) return { result, savedAt: current.savedAt }
-      const written = this.writeUnlocked(doc, Date.now())
+      const written = this.writeUnlocked(doc, Date.now(), current.rev + 1)
       return { result, savedAt: written.savedAt }
     })
   }
 
   /**
-   * The bridge's PUT: replace the board with what the browser sent. An
-   * envelope whose `savedAt` is older than the file's is refused, and the
-   * caller answers 409 with the current board. A bare doc, or an envelope
-   * without a usable `savedAt`, is taken as "now".
+   * The bridge's PUT: replace the board with what the browser sent.
+   *
+   * With `base` (the rev the sender's edit was based on): refused unless
+   * `base` is the file's current rev, and the caller answers 409 with the
+   * current board. This is the rule from Phase 1 on.
+   *
+   * Without `base` (legacy senders): an envelope whose `savedAt` is older than
+   * the file's is refused; a bare doc, or an envelope without a usable
+   * `savedAt`, is taken as "now". G3 decides whether the HTTP route still
+   * accepts writes without `base`.
    */
   put(incoming: unknown): { ok: true; snapshot: Snapshot } | { ok: false; current: Snapshot } {
-    const { doc, savedAt } = unwrap(incoming)
+    const { doc, savedAt, base } = unwrap(incoming)
     return this.locked(() => {
       const current = this.read()
-      if (savedAt != null && savedAt < current.savedAt) return { ok: false, current }
-      return { ok: true, snapshot: this.writeUnlocked(doc, savedAt ?? Date.now()) }
+      if (base !== undefined) {
+        if (base !== current.rev) return { ok: false, current }
+      } else if (savedAt != null && savedAt < current.savedAt) return { ok: false, current }
+      return { ok: true, snapshot: this.writeUnlocked(doc, savedAt ?? Date.now(), current.rev + 1) }
     })
   }
 
@@ -155,7 +202,9 @@ export class FileStore {
         if (!item || typeof item !== 'object') continue
         const it = item as Record<string, unknown>
         if (typeof it.text !== 'string') continue
-        const entry: InboxItem = { at: typeof it.at === 'number' && Number.isFinite(it.at) ? Math.round(it.at) : 0, text: it.text }
+        const at = typeof it.at === 'number' && Number.isFinite(it.at) ? Math.round(it.at) : 0
+        const id = typeof it.id === 'string' && it.id ? it.id : legacyInboxId(at, it.text)
+        const entry: InboxItem = { id, at, text: it.text }
         if (typeof it.taskId === 'number' && Number.isInteger(it.taskId) && it.taskId > 0) entry.taskId = it.taskId
         out.push(entry)
       }
@@ -168,7 +217,7 @@ export class FileStore {
   appendInbox(item: { text: string; taskId?: number; at?: number }): { index: number; item: InboxItem } {
     const text = item.text.trim()
     if (!text) throw new StoreError('an inbox item needs some text')
-    const entry: InboxItem = { at: item.at && Number.isFinite(item.at) && item.at > 0 ? Math.round(item.at) : Date.now(), text }
+    const entry: InboxItem = { id: newInboxId(), at: item.at && Number.isFinite(item.at) && item.at > 0 ? Math.round(item.at) : Date.now(), text }
     if (item.taskId != null && Number.isInteger(item.taskId) && item.taskId > 0) entry.taskId = item.taskId
     return this.locked(() => {
       const list = this.readInbox()
@@ -178,6 +227,19 @@ export class FileStore {
     })
   }
 
+  /** Removes the item with this id. Safe however many removals race: an id names one item. */
+  removeInboxById(id: string): InboxItem | undefined {
+    return this.locked(() => {
+      const list = this.readInbox()
+      const at = list.findIndex((it) => it.id === id)
+      if (at < 0) return undefined
+      const [gone] = list.splice(at, 1)
+      this.writeJson(this.inboxFile, { inbox: list })
+      return gone
+    })
+  }
+
+  /** @deprecated Position-based; two removals at once can take the wrong item. Use removeInboxById. */
   removeInbox(index: number): InboxItem | undefined {
     return this.locked(() => {
       const list = this.readInbox()
@@ -190,12 +252,12 @@ export class FileStore {
 
   /* --------------------------------------------------------------- plumbing */
 
-  private writeUnlocked(doc: Doc, savedAt: number): Snapshot {
+  private writeUnlocked(doc: Doc, savedAt: number, rev: number): Snapshot {
     const clean = sanitizeDoc(doc)
-    const env = envelopeOf(clean, savedAt)
+    const env = envelopeOf(clean, savedAt, rev)
     this.backup()
     this.writeJson(this.file, env)
-    return { doc: clean, savedAt }
+    return { doc: clean, savedAt, rev }
   }
 
   /** The previous file becomes `.bak`; one that cannot be read is parked, never overwritten. */

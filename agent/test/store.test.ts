@@ -25,7 +25,16 @@ describe('round trip', () => {
   it('reads a missing file as an empty board at time 0', () => {
     fx = makeStore(null)
     expect(fx.store.exists()).toBe(false)
-    expect(fx.store.read()).toEqual({ doc: emptyDoc(), savedAt: 0 })
+    expect(fx.store.read()).toEqual({ doc: emptyDoc(), savedAt: 0, rev: 0 })
+  })
+
+  it('counts every write in rev, and put() with a base refuses anything but the current rev', () => {
+    fx = makeStore()
+    expect(fx.store.read().rev).toBe(1)
+    fx.store.update((doc) => ({ doc: { ...doc, notes: [] }, result: null }))
+    expect(fx.store.read().rev).toBe(2)
+    expect(fx.store.put({ app: 'vault', version: 1, savedAt: Date.now() + 1e6, base: 1, doc: fixtureDoc() })).toMatchObject({ ok: false, current: { rev: 2 } })
+    expect(fx.store.put({ app: 'vault', version: 1, savedAt: 1, base: 2, doc: fixtureDoc() })).toMatchObject({ ok: true, snapshot: { rev: 3 } })
   })
 
   it('accepts a bare doc and an envelope', () => {
@@ -133,14 +142,26 @@ describe('inbox', () => {
     expect(fx.store.readInbox()).toEqual([])
     const a = fx.store.appendInbox({ text: 'first', taskId: 2, at: T0 })
     const b = fx.store.appendInbox({ text: 'second' })
-    expect(a).toEqual({ index: 0, item: { at: T0, taskId: 2, text: 'first' } })
+    expect(a).toEqual({ index: 0, item: { id: expect.stringMatching(/^i[0-9a-f]{12}$/), at: T0, taskId: 2, text: 'first' } })
     expect(b.index).toBe(1)
     expect(b.item.at).toBeGreaterThan(T0)
     expect(fx.store.inboxFile).toBe(path.join(fx.dir, 'inbox.json'))
     expect(JSON.parse(fs.readFileSync(fx.store.inboxFile, 'utf8')).inbox).toHaveLength(2)
     expect(fx.store.removeInbox(5)).toBeUndefined()
-    expect(fx.store.removeInbox(0)).toEqual({ at: T0, taskId: 2, text: 'first' })
+    expect(fx.store.removeInbox(0)).toEqual(a.item)
     expect(fx.store.readInbox()).toEqual([b.item])
     expect(() => fx!.store.appendInbox({ text: '   ' })).toThrow(StoreError)
+    expect(fx.store.removeInboxById(b.item.id)).toEqual(b.item)
+    expect(fx.store.removeInboxById(b.item.id)).toBeUndefined()
+  })
+
+  it('gives items written before ids existed a stable id', () => {
+    fx = makeStore()
+    fs.writeFileSync(fx.store.inboxFile, JSON.stringify({ inbox: [{ at: 1, text: 'old' }, { at: 2, text: 'older' }] }))
+    const first = fx.store.readInbox()
+    expect(first.map((i) => i.id)).toEqual(fx.store.readInbox().map((i) => i.id))
+    expect(new Set(first.map((i) => i.id)).size).toBe(2)
+    expect(fx.store.removeInboxById(first[1].id)?.text).toBe('older')
+    expect(fx.store.readInbox()).toEqual([first[0]])
   })
 })

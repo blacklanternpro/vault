@@ -178,7 +178,7 @@ describe('vault_report', () => {
     expect(fresh.map((e) => e.kind)).toEqual(['ticked', 'ticked', 'created', 'created', 'leftoff', 'report'])
     expect(fresh.every((e) => e.text.startsWith('agent: ') && e.node === 2 && e.at === NOW)).toBe(true)
     expect(fresh.at(-1)?.text).toBe('agent: report: ticked 2, added 2, left off noted')
-    expect(fx.store.readInbox()).toEqual([{ at: NOW, taskId: 2, text: REPORT.trim() }])
+    expect(fx.store.readInbox()).toEqual([{ id: expect.any(String), at: NOW, taskId: 2, text: REPORT.trim() }])
     expect(fs.existsSync(fx.store.backupFile)).toBe(true)
   })
 
