@@ -152,3 +152,17 @@ describe('when storage is full', () => {
     expect(localStorage.getItem(DOC_KEY)).toBe(damaged)
   })
 })
+
+describe('snapshot() says whether the doc is now the newest snapshot', () => {
+  beforeEach(() => localStorage.clear())
+
+  it('true when taken (or forced and already newest), false when the ten-minute rule skipped it', () => {
+    const a = seedDoc()
+    const b = addNode(a, { parent: 1, title: 'b' }).doc
+    expect(snapshot(a)).toBe(true)
+    expect(snapshot(b)).toBe(false)
+    expect(snapshot(b, true)).toBe(true)
+    expect(snapshot(b, true)).toBe(true)
+    expect(listBackups()).toHaveLength(2)
+  })
+})

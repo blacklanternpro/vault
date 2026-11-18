@@ -137,16 +137,23 @@ function makeRoom(s: Storage, attempt: () => void): boolean {
   }
 }
 
-/** Snapshots the doc, unless one was taken in the last ten minutes (or `force`). */
-export function snapshot(doc: Doc, force = false): void {
+/**
+ * Snapshots the doc, unless one was taken in the last ten minutes (or `force`).
+ * True when the doc is the newest snapshot afterwards (taken now, or already
+ * there), so a caller can say "yours is in snapshots" only when it is.
+ */
+export function snapshot(doc: Doc, force = false): boolean {
   const s = storage()
-  if (!s || doc.nodes.length + doc.notes.length === 0) return
+  if (!s || doc.nodes.length + doc.notes.length === 0) return false
   const at = latestSnapshotAt(s)
-  if (!force && at != null && Date.now() - at < BACKUP_EVERY_MS) return
+  // The every-save path: decided from one tiny key, without parsing the snapshots.
+  if (!force && at != null && Date.now() - at < BACKUP_EVERY_MS) return false
   const list = listBackups()
   const latest = list[0]
-  if (latest && JSON.stringify(latest.doc) === JSON.stringify(doc)) return
-  writeBackups(s, [{ at: Date.now(), doc }, ...list])
+  if (latest && JSON.stringify(latest.doc) === JSON.stringify(doc)) return true
+  const now = Date.now()
+  writeBackups(s, [{ at: now, doc }, ...list])
+  return s.getItem(BACKUP_AT_KEY) === String(now)
 }
 
 /* -------------------------------------------------------------- load / save */

@@ -1,6 +1,6 @@
 import { BridgeAuthError, type PullResult, type PushResult } from '../model/bridge'
 import { sameDoc, type MergeResult } from '../model/merge'
-import { planSync, type Agreed, type Theirs } from '../model/sync'
+import { planSync, pushLanded, type Agreed, type Theirs } from '../model/sync'
 import type { Doc } from '../model/types'
 
 /*
@@ -21,8 +21,14 @@ export type Transport = {
   push: (doc: Doc, base: number) => Promise<PushResult>
 }
 
-/** How an outside copy came in. `before` is the board the person had, for "restore mine"; `rev` the bridge's rev it came from. */
-export type Adoption = { kind: 'take'; before: Doc; rev: number; changes?: number } | { kind: 'merge'; before: Doc; rev: number; theirs: Doc; result: MergeResult }
+/**
+ * How an outside copy came in. `before` is the board the person had, for
+ * "restore mine"; `rev` the bridge's rev it came from. `unsaved`: the board
+ * replaced was the never-saved sample, so there is nothing of theirs to restore.
+ */
+export type Adoption =
+  | { kind: 'take'; before: Doc; rev: number; changes?: number; unsaved?: boolean }
+  | { kind: 'merge'; before: Doc; rev: number; theirs: Doc; result: MergeResult }
 
 export type Outcome = 'online' | 'offline' | 'auth'
 
@@ -34,6 +40,12 @@ export type SyncDeps = {
   mineUnsaved: () => boolean
   /** The last doc both sides had, from storage; null when there is none. */
   agreed: Agreed | null
+  /**
+   * Re-reads the stored base at the start of each contact: another tab may
+   * have agreed on something newer since (each tab keeps its own in memory).
+   * The one agreed on later (`at`) wins.
+   */
+  loadAgreed?: () => Agreed | null
   saveAgreed: (agreed: Agreed) => void
   /** Show `next` instead of what is on screen. Called only when it differs. */
   adopt: (next: Doc, how: Adoption) => void
@@ -45,16 +57,25 @@ export function createBridgeSync(deps: SyncDeps) {
   let agreed = deps.agreed
   let running: Promise<Outcome> | null = null
   let queued: Promise<Outcome> | null = null
+  /**
+   * A push whose answer never came (timeout, sleep): it may have landed. If
+   * the next pull holds exactly it, it did, and it becomes the agreed base;
+   * otherwise later edits would merge against an old base and come back
+   * doubled (renumbered tasks, suffixed notes, time counted twice).
+   */
+  let unanswered: { doc: Doc; base: number } | null = null
 
   const agree = (next: Agreed) => {
     if (agreed && agreed.rev === next.rev && agreed.doc === next.doc) return
-    agreed = next
-    deps.saveAgreed(next)
+    agreed = { ...next, at: Date.now() }
+    deps.saveAgreed(agreed)
   }
 
   /** After a push: ok → agreed on what was pushed; refused → their copy for the next round; else the outcome. */
   async function push(doc: Doc, base: number): Promise<Theirs | Outcome> {
+    unanswered = { doc, base }
     const r = await deps.transport.push(doc, base)
+    if (r.ok || r.conflict) unanswered = null
     if (r.ok) {
       // A legacy bridge without `rev` in its answer: -1 makes the next contact compare by content.
       agree({ rev: r.rev ?? -1, doc })
@@ -76,16 +97,24 @@ export function createBridgeSync(deps: SyncDeps) {
     } catch (err) {
       return err instanceof BridgeAuthError ? 'auth' : 'offline'
     }
+    const stored = deps.loadAgreed?.()
+    if (stored && (!agreed || (stored.at ?? 0) > (agreed.at ?? 0))) agreed = stored
+    if (unanswered) {
+      if (sameDoc(theirs.doc, unanswered.doc)) agree({ rev: theirs.rev, doc: unanswered.doc })
+      else if (agreed && pushLanded(agreed.doc, unanswered.doc, theirs.doc)) agree({ rev: unanswered.base + 1, doc: unanswered.doc })
+      unanswered = null
+    }
     for (let round = 0; round < MAX_ROUNDS; round++) {
       const mine = deps.mine()
       const plan = planSync(agreed, mine, theirs, { mineUnsaved: deps.mineUnsaved() })
       let next: Theirs | Outcome
       if (plan.act === 'none') {
-        agree(plan.agreed)
+        if (plan.agreed) agree(plan.agreed)
         return 'online'
       } else if (plan.act === 'take') {
+        const unsaved = !agreed && deps.mineUnsaved()
         agree({ rev: plan.rev, doc: plan.doc })
-        if (!sameDoc(plan.doc, mine)) deps.adopt(plan.doc, { kind: 'take', before: mine, rev: plan.rev, changes: plan.changes })
+        if (!sameDoc(plan.doc, mine)) deps.adopt(plan.doc, { kind: 'take', before: mine, rev: plan.rev, changes: plan.changes, ...(unsaved ? { unsaved } : {}) })
         return 'online'
       } else if (plan.act === 'push') {
         next = await push(plan.doc, plan.base)

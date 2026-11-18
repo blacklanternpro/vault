@@ -27,6 +27,8 @@ function fakeServer(doc: Doc, rev = 1) {
     refused: 0,
     down: false,
     authFails: false,
+    /** The push lands, but its answer never comes back (a 4s abort, a sleeping laptop). */
+    loseAnswer: false,
     /** Runs just before a push is judged: an agent writing in the gap. */
     beforePut: null as null | (() => void),
     agent(fn: (d: Doc) => Doc) {
@@ -52,13 +54,14 @@ function fakeServer(doc: Doc, rev = 1) {
       s.doc = sanitizeDoc(next)
       s.rev += 1
       s.puts += 1
+      if (s.loseAnswer) return { ok: false, conflict: false, error: 'bridge: aborted' }
       return { ok: true, savedAt: 0, rev: s.rev }
     },
   }
   return s
 }
 
-function browser(doc: Doc, server: ReturnType<typeof fakeServer>, opts: { agreed?: Agreed | null; unsaved?: boolean } = {}) {
+function browser(doc: Doc, server: ReturnType<typeof fakeServer>, opts: { agreed?: Agreed | null; unsaved?: boolean; stored?: () => Agreed | null } = {}) {
   const b = {
     doc,
     saved: (opts.agreed ?? null) as Agreed | null,
@@ -72,6 +75,7 @@ function browser(doc: Doc, server: ReturnType<typeof fakeServer>, opts: { agreed
     mine: () => b.doc,
     mineUnsaved: () => opts.unsaved === true,
     agreed: opts.agreed ?? null,
+    loadAgreed: opts.stored,
     saveAgreed: (a) => {
       b.saved = a
     },
@@ -101,8 +105,17 @@ describe('bridge sync: first contact', () => {
     const { b, sync } = browser(before, server, { unsaved: true })
     await sync.run()
     expect(sameDoc(b.doc, board())).toBe(true)
-    expect(b.adoptions).toMatchObject([{ kind: 'take', before }])
+    expect(b.adoptions).toMatchObject([{ kind: 'take', before, unsaved: true }])
     expect(server.puts).toBe(0)
+  })
+
+  it('a browser that never saved leaves a blank bridge blank (the sample is not pushed)', async () => {
+    const server = fakeServer(sanitizeDoc({ nodes: [], notes: [] }), 0)
+    const { b, sync } = browser(board(), server, { unsaved: true })
+    expect(await sync.run()).toBe('online')
+    expect(server.puts).toBe(0)
+    expect(server.doc.nodes).toHaveLength(0)
+    expect(b.saved).toBeNull()
   })
 })
 
@@ -245,6 +258,38 @@ describe('bridge sync: every contact compares', () => {
     await sync.run()
     expect(byId(server.doc, 3)).toBeUndefined()
     expect(titles(server.doc)).toEqual(expect.arrayContaining(['synced', 'after reload']))
+  })
+
+  it('a push that landed but whose answer was lost is recognised next time (no duplicates, no double time)', async () => {
+    const base = updateNode(board(), 2, { spent: 100 })
+    const server = fakeServer(base, 4)
+    const { b, sync } = browser(base, server, { agreed: { rev: 4, doc: base } })
+    b.edit((d) => addNode(d, { parent: 1, title: 'first' }).doc)
+    server.loseAnswer = true
+    expect(await sync.run()).toBe('offline')
+    expect(titles(server.doc)).toContain('first')
+    server.loseAnswer = false
+    // Mine moves on from what landed; the agent writes too.
+    const first = b.doc.nodes.find((n) => n.title === 'first')!.id
+    b.edit((d) => updateNode(updateNode(d, first, { title: 'first, renamed' }), 2, { spent: 160 }))
+    server.agent((d) => updateNode(d, 3, { title: 'deck (agent)' }))
+    await sync.run()
+    expect(titles(server.doc).filter((t) => t.startsWith('first'))).toEqual(['first, renamed'])
+    expect(byId(server.doc, 2)?.spent).toBe(160)
+    expect(byId(server.doc, 3)?.title).toBe('deck (agent)')
+  })
+
+  it('another tab’s newer stored base is used (no false clash that reverts the agent)', async () => {
+    const d4 = board()
+    const x = updateNode(d4, 2, { title: 'tab A' }) // tab A pushed this as rev 5
+    const y = updateNode(x, 2, { title: 'agent' }) // then the agent wrote rev 6
+    const server = fakeServer(y, 6)
+    // Tab B: its memory says rev 4; its board followed tab A through storage; the stored base is tab A's.
+    const { b, sync } = browser(x, server, { agreed: { rev: 4, doc: d4, at: 1 }, stored: () => ({ rev: 5, doc: x, at: 2 }) })
+    await sync.run()
+    expect(byId(b.doc, 2)?.title).toBe('agent')
+    expect(byId(server.doc, 2)?.title).toBe('agent')
+    expect(b.adoptions).toMatchObject([{ kind: 'take' }])
   })
 
   it('runs one contact at a time (a poll and a push do not race each other)', async () => {

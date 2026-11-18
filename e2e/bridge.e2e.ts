@@ -112,8 +112,10 @@ test('turning the bridge on takes the agent’s board, pushes local changes with
   await page.getByTestId('menu').click()
   await page.getByTestId('menu-bridge').click()
 
-  // This browser never saved a board of its own (the sample), so it takes the agent's, and says so.
-  await expect(notice(page, "took vault-agent's copy (rev 3). yours is in snapshots").getByRole('button', { name: 'restore mine' })).toBeVisible()
+  // This browser never saved a board of its own (the sample), so it takes the agent's, and says so,
+  // with no "restore mine": that would push the sample over the real board.
+  await expect(notice(page, "took vault-agent's copy (rev 3)")).toBeVisible()
+  await expect(notice(page, 'took').getByRole('button', { name: 'restore mine' })).toHaveCount(0)
   await expect(page.getByTestId('directory')).toContainText('added by an agent')
   await expect(page.getByTestId('inbox-banner')).toContainText('SITE REDESIGN')
   await expect.poll(() => state.inbox.length).toBe(0)
@@ -229,8 +231,44 @@ test('a token in the link is taken, stripped from the address, and the bridge st
   await expect(page.getByTestId('menu-bridge')).toContainText('off')
   await page.getByTestId('menu-bridge').click()
   await expect(page.getByText('bridge on · localhost:7331')).toBeVisible()
-  // An empty bridge gets this browser's board.
-  await expect.poll(() => state.env.doc.nodes.length).toBeGreaterThan(0)
+  // The never-saved sample is not pushed into an empty bridge…
+  await page.waitForTimeout(1_500)
+  expect(state.puts).toHaveLength(0)
+  expect(state.env.doc.nodes).toHaveLength(0)
+  // …the first board of the person's own is.
+  await page.getByTestId('card-8').focus()
+  await page.keyboard.press('Delete')
+  await expect.poll(() => state.env.doc.nodes.length, { timeout: 10_000 }).toBeGreaterThan(0)
+  expect(state.env.doc.nodes.some((n) => n.id === 8)).toBe(false)
+})
+
+test('Ctrl+Z across an agent’s change says so, and redo puts it back', async ({ browser }) => {
+  const prep = await browser.newContext({ acceptDownloads: true })
+  const seed = await seedEnvelope(await prep.newPage())
+  await prep.close()
+
+  const ctx = await browser.newContext()
+  const page = await ctx.newPage()
+  await giveToken(page)
+  const state = await fakeBridge(page, { ...seed, rev: 1 })
+  await page.goto('/')
+  await turnBridgeOn(page)
+
+  state.agent((doc) => {
+    doc.nodes.find((x) => x.id === 13)!.title = 'RENAMED BY THE AGENT'
+  })
+  await expect(notice(page, /^took vault-agent's copy \(rev 2\)/).getByRole('button', { name: 'restore mine' })).toBeVisible({ timeout: 10_000 })
+  await expect(page.getByTestId('directory')).toContainText('RENAMED BY THE AGENT')
+
+  await page.keyboard.press('Escape')
+  await page.keyboard.press('Control+z')
+  const undid = notice(page, "undid vault-agent's change")
+  await expect(undid).toBeVisible()
+  await expect(page.getByTestId('directory')).not.toContainText('RENAMED BY THE AGENT')
+  await undid.getByRole('button', { name: 'redo' }).click()
+  await expect(page.getByTestId('directory')).toContainText('RENAMED BY THE AGENT')
+  await expect.poll(() => state.has('RENAMED BY THE AGENT'), { timeout: 10_000 }).toBe(true)
+  await ctx.close()
 })
 
 test('a missing or wrong token: no answer, and the toast says how to get one', async ({ page }) => {
@@ -238,7 +276,7 @@ test('a missing or wrong token: no answer, and the toast says how to get one', a
   await page.goto(`/#bridge-token=stale-token`)
   await page.getByTestId('menu').click()
   await page.getByTestId('menu-bridge').click()
-  await expect(notice(page, 'bridge refused: wrong token. open the link vault-agent serve prints')).toBeVisible()
+  await expect(notice(page, 'bridge refused: wrong token. run vault-agent token (or serve) for the link')).toBeVisible()
   await page.getByTestId('menu').click()
   await expect(page.getByTestId('menu-bridge')).toContainText('no answer')
 })
