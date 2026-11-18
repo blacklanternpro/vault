@@ -171,7 +171,7 @@ The status line keeps one message at a time; a newer one replaces it. A message 
 | exported | `wrote vault-2026-11-18.json · 184 KB` | export | status line | `Exported vault-….json` |
 | imported | `read board.json · 212 rows · undo puts yours back` | import | status line | `Imported N items from file` |
 | import-bad | `board.json isn't a VAULT export or a SPECK save. nothing changed.` | import of a bad file | status line | `That file isn't a VAULT export or an old SPECK save.` |
-| snapshot-restored | `restored the 21:04 14 nov snapshot · undo puts the newer one back` | snapshot restore | status line | `Restored the snapshot from …` |
+| snapshot-restored | `restored the 21:04 14 Nov snapshot · undo puts the newer one back` | snapshot restore | status line | `Restored the snapshot from …` |
 | snapshots-head | `snapshots · one per 10 min · last 30` | the snapshot list | sheet heading | `Restore a snapshot` |
 | tree-copied | `copied the tree · 42 lines` | `export --tree` / `E` | status line | — |
 | brief-copied | `brief copied · 24 lines` | `B` / copy as brief | status line | `Brief copied (24 lines)` |
@@ -187,11 +187,11 @@ The status line keeps one message at a time; a newer one replaces it. A message 
 | --- | --- | --- | --- | --- |
 | review-offer | `sunday. review the week? open` | first open on a Sunday | status line | `Sunday. Weekly review?` + Open |
 | review-sections | `DONE THIS WEEK` · `STUCK` · `DUE NEXT 7 DAYS` · `ROTTING` | review sheet | plaques | `Done this week` · `Stuck` · `Due next 7 days` |
-| since | `since 14 nov: 4 moved, 2 done · show` | first open after a gap | status line | `Since last time (3 days): …` |
+| since | `since 14 Nov: 4 moved, 2 done · show` | first open after a gap | status line | `Since last time (3 days): …` |
 | grey | `untouched 15d` | two weeks (tooltip only) | row hover | `Untouched for 15 days` |
 | bury | `left to rot since 2 Oct. bury it? y n` | eight weeks, in the review (Phase 4) | review sheet | — |
 | tonight-empty | `_` | an empty Tonight slot | `tonight/` | `_ t on a card, or drop one here` |
-| late-today | `today` · `tmrw` · `fri` · `21 nov` | due column words (day-month, never MM.DD) *(call: G4)* | due column, card | `Fri 7 Nov` / `11.20` |
+| late-today | `today` · `tmrw` · `fri` · `21 Nov` | due column words: weekday within a week, else day and month as in `left to rot since 2 Oct` (never MM.DD) *(call: G4)* | due column, card | `Fri 7 Nov` / `11.20` |
 
 ---
 

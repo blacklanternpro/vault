@@ -126,12 +126,13 @@ Four layers. Don't flatten them into one costume and don't add a fifth.
 2. A **reverse-video cursor**: the row under it is an ink plate with surface text and a `_` caret after the title.
 3. Folders end in `/` (`r1i/`) with a count at the right (`_` when empty). Subtasks carry `[ ]` / `[x]`.
 4. **`.dusted/`** sits at the foot of each folder that has dust, hidden until `ls -a` (`a`). DUSTED is not a lane.
-5. **`inbox/`** sits at the top: captured lines, pasted or pushed drafts (dashed, editable, not yet filed) and Claude's proposals (`y` takes, `n` drops).
-6. The **status rail** stands beside the tree: PENDING · R&D · ACTIVE `n/3` · DONE `↓ today n` · `.dusted/ n`. It is a drop target and a count, nothing more.
-7. The **drawer docks** beside the tree as a live preview of the row under the cursor. Enter goes into it.
-8. The **status line** is the foot: the `$` prompt, the last message, the exit code. `tail -f` (`F`) opens a live strip above it showing writes as they land.
+5. **`tonight/`** is pinned at the very top while it holds anything: up to three rows picked for tonight (`t`), shown as links — the rows stay where they live *(call: G4; it replaces the old shelf above the lanes)*.
+6. **`inbox/`** sits below it: captured lines, pasted or pushed drafts (dashed, editable, not yet filed) and Claude's proposals (`y` takes, `n` drops).
+7. The **status rail** stands beside the tree: PENDING · R&D · ACTIVE `n/3` · DONE `↓ today n` · `.dusted/ n`. It is a drop target and a count, nothing more.
+8. The **drawer docks** beside the tree as a live preview of the row under the cursor. Enter goes into it.
+9. The **status line** is the foot: the `$` prompt, the last message, the exit code. `tail -f` (`F`) opens a live strip above it showing writes as they land.
 
-**The tree may show:** stems, `name/`, `[ ]`/`[x]`, `ls -l` columns, the cursor and `_`, a hover strip (`+ → x`), `← claude`, `^` and `!` marks, `.dusted/`, dashed drafts.
+**The tree may show:** stems, `name/`, `tonight/` and `inbox/`, `[ ]`/`[x]`, `ls -l` columns, the cursor and `_`, a hover strip (`+ → x`), `← claude`, `^` and `!` marks, `.dusted/`, dashed drafts.
 **The tree may not show:** cards, boxes around filed rows, plaques on folders, status colour on a plate, progress bars, avatars.
 
 ### 5.3 The board (the pivot, `v`)
@@ -182,6 +183,7 @@ The old law said "no Unicode glyph characters as icons" because a `▸` beside d
 1. Every icon is a character from §6.1, set in mono. No drawn SVG icons in the new home, no icon font, no emoji.
 2. Nothing outside §6.1–6.2. No `▸ ⇄ ⇢ × ✓ ★ ⚑` or any other decorative Unicode. (The prototype's `⇄`, `⇢`, `×` and `::` grip are replaced: `/` between `tree` and `board`, ` →` after a loose row, `x` on a draft line, the whole head row as the draft's handle.)
 3. The retiring shell keeps its drawn SVG icons until it is deleted. Don't add new ones.
+4. Vendored design skills (e.g. `.agents/skills/impeccable`) say icons must be drawn and Unicode glyphs are a defect. For VAULT this section wins.
 
 ### 6.4 Plaque, card, cursor, tick
 
@@ -210,7 +212,7 @@ The old law said "no Unicode glyph characters as icons" because a `▸` beside d
 | **Drawer** | The same keys on the focused line of the drawer (a subtask is a row anywhere), or on the drawer's task when focus is on its head |
 | **Text field** (rename, new row, drawer fields, palette, prompt, draft line) | Only the field's own keys. Enter commits. Esc leaves (§7.3). Ctrl+Z is the field's own undo |
 | **Menu or sheet** (right-click menu, `m` picker, `?`, the one confirm) | ↑↓ / `j` `k` move, Enter picks, Esc closes |
-| **Anywhere but a text field** | `/` find, `:` prompt, `?` help, Ctrl+V paste a tree. None of these change data by themselves |
+| **Anywhere but a text field** | `/` find, `:` prompt, `?` help, and the keys that only open a sheet, strip or view (listed as `any` in `ACTIONS.md`). Ctrl+V pastes a tree into `inbox/` as a draft (undoable) |
 | **Anywhere** | Ctrl+K palette, Ctrl+Z / Ctrl+Shift+Z / Ctrl+Y (outside a text field), Ctrl+S export, Ctrl+O import, Esc |
 
 A single key that changes data acts **only** when the tree, the board or the drawer has focus — never while typing, never from a key pressed elsewhere on the page. (This replaces "no global single-key shortcut changes data".)

@@ -56,7 +56,7 @@ There is exactly **one** markdown table in this file, below. The parser can rely
 | palette | the palette | entry | click the find field | `Ctrl+K` | all | — | P2 | part | - | the same grammar as the prompt; `>` or a verb + space runs a command |
 | prompt | the shell prompt | entry | click the `$` on the status line | `:` | any | — | P2 | part | - | `:` (call: G4). Tab completes a path, ↑↓ recall |
 | context-menu | the right-click menu | entry | right-click a row, card or empty ground | `Shift+F10` · `ContextMenu` | field | — | P2 | no | - | lists every action for that row with its key |
-| undo | undo | action | click `undo` on the status line · ⋯ → undo | `Ctrl+Z` · `u` | any | `undo` | P2 | part | - | in a text field Ctrl+Z is the field's own undo. `u` (call: G4) |
+| undo | undo | action | click `undo` on the status line · ⋯ → undo | `Ctrl+Z` · `u` | any | `undo` | P2 | part | - | in a text field Ctrl+Z is the field's own undo. `u` works only with field focus, like every single key that changes data (call: G4) |
 | redo | redo | action | ⋯ → redo | `Ctrl+Shift+Z` · `Ctrl+Y` | any | `redo` | P2 | part | - | today: Ctrl+Shift+Z, Ctrl+Y, ⋯ menu |
 | set-due | set or clear a due date | action | click the due column · drawer due field | `!` then type a date | field | `due PATH fri` | P2 | part | y | `due PATH -` clears. Dates: see Grammar |
 | set-urgent | toggle urgent | action | right-click → urgent · drawer `^` | `^` | field | `urgent PATH` | P2 | part | y | today: `urgent`, drawer flag |
@@ -102,7 +102,7 @@ The same rules as `LANGUAGE.md` §7.2, restated for builders:
 4. **inbox:** with the cursor on a proposal, `y` takes and `n` drops; on a draft's head, `x` discards and `m` files. Everywhere else `y` yanks and `n` does nothing.
 5. **Text field:** only the field's keys. Enter commits; Esc leaves keeping what was typed (an empty new row is dropped); Ctrl+Z is the field's own undo. Ctrl+K, Ctrl+S and Ctrl+O still work.
 6. **Menu or sheet:** ↑↓ or `j`/`k` move, Enter picks, Esc closes. The one confirm starts on `n`.
-7. **any:** `/`, `:`, `?`, `Ctrl+V` (paste a tree), `u`, `T`, `W`, `E`, `S`, `F`, `I`, `w` work whenever no text field has focus. Of these only `u` and `Ctrl+V` change data, and both are undoable.
+7. **any:** `/`, `:`, `?`, `T`, `W`, `E`, `S`, `F`, `I`, `w` and `Ctrl+V` (paste a tree) work whenever no text field has focus. The single keys only open things (find, prompt, sheets, strips, the theme); `Ctrl+V` adds a draft to `inbox/` and is undoable. `u` (undo) is a field key.
 8. **Esc** backs out one level: confirm or menu → text field → drawer → marks → find/filter → cursor.
 9. A key that changes data never fires from a text field and never asks, except `rm -r` on a non-empty folder.
 
