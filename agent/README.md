@@ -9,6 +9,7 @@ a small local HTTP bridge so the web app can stay in sync with that file.
 agent/
   src/store.ts    the board file: atomic writes, .bak, lock, inbox.json
   src/http.ts     the bridge: GET/PUT /doc, /events, /inbox
+  src/token.ts    the bridge token: file, rotation, constant-time check, hand-off links
   src/mcp.ts      MCP server (stdio): vault_* tools, vault:// resources
   src/tools.ts    what the tools do; shared by MCP and the CLI
   src/brief.ts    the markdown brief for one task
@@ -58,57 +59,138 @@ Rules the store keeps:
 - every change an agent makes appends a trail event whose text starts with
   `agent: `, and stamps the task's `touched` time.
 
+The envelope also carries `rev`, a write counter: every write adds one. The
+bridge uses it to refuse stale writes (below).
+
 Next to it, `inbox.json` holds agents' reports for the person to read in the web
-app: `{ "inbox": [ { "at": 1793578710847, "taskId": 8, "text": "## Report ..." } ] }`.
+app: `{ "inbox": [ { "id": "i3f9a…", "at": 1793578710847, "taskId": 8, "text": "## Report ..." } ] }`.
+Each item has a stable `id`; items written before ids existed get one derived
+from their time and text.
+
+Also next to it, `bridge-token`: the bridge's secret (see below).
 
 ## The bridge (`vault-agent serve`)
 
 ```sh
-vault-agent serve                                  # http://127.0.0.1:7331
-vault-agent serve --port 7331 --origin https://vault.example.app   # the live site, https://vault-lilac-six.vercel.app, is allowed by default
+vault-agent serve                                               # http://127.0.0.1:7331
+vault-agent serve --origin https://vault-lilac-six.vercel.app   # also let the live site in
+vault-agent token                                               # print the token and the app links again
+vault-agent token --rotate                                      # make a new token; old links stop working
 ```
 
-Plain Node `http`, bound to loopback, JSON in and out.
+Plain Node `http`, bound to loopback, JSON in and out. On start it prints where
+it is, which file, which token file, which origins, the size cap, and one link
+per allowed origin:
 
-| Route | Does |
-| --- | --- |
-| `GET /doc` | the board, as the envelope above |
-| `PUT /doc` | replace the board; body is the envelope or a bare `{nodes, notes, events}`; validated |
-| `GET /events?since=<ms>` | `{ since, savedAt, events }`, trail events after `since`, newest first |
-| `GET /inbox` | `{ inbox: [...] }` |
-| `POST /inbox` | body `{ text, taskId?, at? }` → `201 { index, item }` |
-| `DELETE /inbox/:index` | `{ removed, inbox }`; 404 when there is none |
-| `GET /health` | `{ app, version, file, savedAt, nodes, inbox }` |
+```
+vault-agent bridge on http://127.0.0.1:7331
+  file:     C:\Users\you\.vault\vault.json
+  token:    C:\Users\you\.vault\bridge-token (new)
+  origins:  http://localhost:5173, http://localhost:4173, http://127.0.0.1:5173, http://127.0.0.1:4173
+  max body: 5 MiB
+  open the app with its token (one of):
+    http://localhost:5173/#bridge-token=<43 characters>
+    …
+```
 
-Conflict rule: the server keeps `savedAt`. A `PUT /doc` whose envelope carries a
-`savedAt` older than the file's is refused with `409` and the body is the current
-envelope, so the client can take it and try again. A bare doc, or an envelope
-without a usable `savedAt`, is accepted and stamped with the server's clock.
+Open the link for the address you use the app at. The app reads
+`#bridge-token=`, keeps the token with its bridge settings and removes it from
+the address bar. From then on it sends `Authorization: Bearer <token>` on every
+request.
 
-CORS: a request that carries an `Origin` header is answered only when that
-origin is on the list; anything else gets `403` before the file is touched.
-The default list is the Vite dev and preview servers
-(`http://localhost:5173`, `http://localhost:4173`, and the same on `127.0.0.1`);
-`--origin` adds more (repeatable), for example the Vercel deployment. Requests
-without an `Origin` (curl, scripts) are always allowed. The bridge does not
-listen beyond loopback unless you pass `--host`.
+| Route | Token | Does |
+| --- | --- | --- |
+| `GET /doc` | yes | the board, as the envelope above, with `rev` |
+| `PUT /doc` | yes | replace the board; body `{ app, version, savedAt, base, doc }`; `base` is required (below) → `{ ok, savedAt, rev }` |
+| `GET /events?since=<ms>` | yes | `{ since, savedAt, events }`, trail events after `since`, newest first |
+| `GET /inbox` | yes | `{ inbox: [...] }`, each item with its `id` |
+| `POST /inbox` | yes | body `{ text, taskId?, at? }` → `201 { id, item }` |
+| `DELETE /inbox/:id` | yes | `{ removed, inbox }`; 404 when there is none; 400 for a bare number |
+| `GET /health` | no | `{ app, version, authorized: false }`; with the token also `file, savedAt, rev, nodes, inbox` |
+| `OPTIONS *` | no | the CORS preflight, for allowed origins |
 
-### How the web app will sync (to be built in the web app)
+Every request is checked in this order and refused before the file is touched:
+Host (421), Origin (403), token (401), size (413). What each rule is and why:
 
-The web app's data lives in `localStorage`. With a "Local agent bridge" toggle on,
-the app:
+**The token.** Until Phase 1 any program on the PC, and possibly a hostile web
+page, could read or replace the board through the bridge (audit 4). Now every
+route needs `Authorization: Bearer <token>`. The token is 32 random bytes
+(base64url) in `bridge-token` beside the board file (`~/.vault/bridge-token` by
+default), created the first time `serve` or `token` runs, readable only by you
+(mode 0600; on Windows the file sits in your user folder, which only you can
+read). `--token-file <path>` or `VAULT_TOKEN_FILE` puts it elsewhere. A missing
+or wrong token gets `401` with a JSON error that says to run `vault-agent token`
+and open the link. The comparison takes the same time whatever was sent.
 
-1. polls `GET /doc` every few seconds and adopts the result when its `savedAt`
-   is newer than the last one it saw (and the doc differs);
-2. on every local change, `PUT /doc` with its own envelope (`savedAt: Date.now()`);
-3. on `409`, takes the envelope from the response as the new truth (or merges),
-   then puts its result again;
-4. shows `GET /inbox` items as a notice per report, and `DELETE /inbox/:index`
-   once the person has read one;
-5. optionally reads `GET /events?since=<lastSeen>` for "since last time".
+**Rotation.** `vault-agent token --rotate` writes a new token. A running bridge
+notices the file changed and uses the new one at once; the app needs the new
+link (run `vault-agent token` to print it). Rotate if a link was pasted
+somewhere it should not have been.
 
-Only the server side exists here. The toggle, polling and merge are the web
-app's job.
+**/health stays open.** Without the token it answers only
+`{ app, version, authorized: false }`, so the app can tell "the bridge is
+running but I don't have the token" apart from "nothing there". Nothing about
+the board is shown without the token.
+
+**The Host check.** A web page can point its own domain at 127.0.0.1 (DNS
+rebinding) and then talk to the bridge as if it were its own site. Such a
+request still carries the page's name in its `Host` header. The bridge only
+answers a `Host` of `localhost`, `127.0.0.1` or `[::1]` (or the address given
+with `--host`) at the port it is on; anything else gets `421`.
+
+**The live site is opt-in.** `https://vault-lilac-six.vercel.app` used to be
+allowed by default (audit 5). Now only the local dev and preview servers are.
+To use the bridge from the live site, start it with
+`--origin https://vault-lilac-six.vercel.app` (repeatable; `VAULT_ORIGINS`
+takes a comma-separated list too). A page from any other origin gets `403`
+whose error names the exact `--origin` flag to add, and no CORS headers.
+Chrome's Private Network Access preflight (a public https page asking to reach
+localhost) is answered only for allowed origins. Requests without an `Origin`
+(curl, scripts) skip this check but still need the token.
+
+**The size cap.** A request body may be at most 5 MiB (`--max-body 10mb` to
+change). A 1,000-item board with long text on every item and a full trail is
+about 0.8 MB, so that is five to six times headroom. A body over the cap gets
+`413`: at once when its `Content-Length` says so, otherwise as soon as it
+passes the cap; it is never buffered whole. (It was 32 MB.)
+
+**Versioned writes.** The file's `rev` goes up by one on every write, whoever
+writes. `PUT /doc` must say which rev its edit was based on, as `base`:
+
+- `base` is the current rev → written, answer `{ ok, savedAt, rev }` with the new rev;
+- `base` is any other rev → `409` and the body is the current envelope (with
+  its `rev`), so the client can merge and try again with that rev;
+- no `base` → `428 Precondition Required`: "send base: the rev your edit was
+  based on; GET /doc to read the current rev". The old "newer `savedAt` wins"
+  rule let the browser silently overwrite an agent's change made seconds
+  earlier (audit 2), so the bridge no longer accepts a write that cannot say
+  what it was based on. The bridge is off by default in the app and the live
+  site is opt-in, so no old client is writing through it.
+
+`GET /doc` and `GET /health` (with the token) show `rev`. A board file with no
+rev yet reads as rev 0.
+
+**Inbox by id.** Reports are removed with `DELETE /inbox/<id>`. Removal by
+position (`DELETE /inbox/0`) is gone: two removals at once could take the wrong
+item (audit 11). A bare number now gets `400` saying to use the id. `POST
+/inbox` answers the new item's `id`. Agents that file reports through MCP
+(`vault_report`) or the CLI (`vault-agent report`) write to `inbox.json`
+directly; their items get ids the same way.
+
+The bridge does not listen beyond loopback unless you pass `--host`.
+
+### How the web app syncs
+
+With "Local agent bridge" on, the app (`src/model/bridge.ts`, `src/shell/useBridge.ts`):
+
+1. sends `Authorization: Bearer <token>` on every request, the token taken
+   from the `#bridge-token=` link;
+2. polls `GET /doc` and remembers the `rev` it last saw;
+3. on a local change, `PUT /doc` with `base` = that rev;
+4. on `409`, merges with the envelope in the response and puts again with its `rev`;
+5. shows `GET /inbox` items as a notice per report and `DELETE /inbox/<id>`s
+   them once read;
+6. optionally reads `GET /events?since=<lastSeen>` for "since last time".
 
 ## The MCP server (`vault-agent mcp`)
 
@@ -182,7 +264,8 @@ PATH that Claude Desktop sees, the full path to `node.exe` as `command`.
 
 ```
 vault-agent mcp                         MCP server over stdio
-vault-agent serve [--port 7331] [--origin URL]...
+vault-agent serve [--port 7331] [--origin URL]... [--max-body 5mb] [--token-file PATH]
+vault-agent token [--rotate] [--origin URL]... [--json]
 vault-agent ls [project] [--status lane] [--tonight] [--json]
 vault-agent brief <id|title>            one task as a markdown brief
 vault-agent report <id> < report.md     apply a report
@@ -191,7 +274,9 @@ vault-agent import <vault-export.json>  copy an export (or an old SPECK save) in
 vault-agent export > out.json           print the board file as an export envelope
 ```
 
-`--file <path>` works on every command; `VAULT_FILE` does the same. Exit codes:
+`--file <path>` works on every command; `VAULT_FILE` does the same.
+`--token-file` / `VAULT_TOKEN_FILE` and `--origin` / `VAULT_ORIGINS` work on
+`serve` and `token`. Paths may start with `~`; Windows paths work as they are. Exit codes:
 0 ok, 1 a clear refusal (printed to stderr), 2 usage.
 
 ## The brief
@@ -331,7 +416,9 @@ result lists what was ticked, added and skipped (with reasons).
 ## Notes
 
 - The bridge and the MCP server are separate processes sharing one file; the
-  lock file keeps their writes from interleaving. Run `vault-agent serve` once
+  lock file keeps their writes from interleaving. The MCP server and the CLI
+  read the file directly and need no token; the token guards only the HTTP
+  bridge. Run `vault-agent serve` once
   (for example in a terminal you leave open) and let each MCP client start its
   own `vault-agent mcp`.
 - The MCP server writes only the protocol to stdout; its one log line goes to
