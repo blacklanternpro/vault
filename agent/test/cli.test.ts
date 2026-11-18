@@ -2,7 +2,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { exportText } from '../../src/model/store'
-import { resolveFile } from '../src/config'
+import { LIVE_SITE_ORIGIN, parseSize, resolveFile, resolveOrigins } from '../src/config'
 import { main } from '../src/main'
 import { FileStore } from '../src/store'
 import { fixtureDoc, makeStore, type Fixture } from './fixture'
@@ -10,7 +10,7 @@ import { fixtureDoc, makeStore, type Fixture } from './fixture'
 let fx: Fixture
 let out: string[]
 let err: string[]
-const run = (args: string[], stdin?: string) => main(['--file', fx.store.file, ...args], { out: (s) => out.push(s), err: (s) => err.push(s), stdin: stdin === undefined ? undefined : () => stdin })
+const run = (args: string[], stdin?: string) => main(['--file', fx.store.file, ...args], { out: (s) => out.push(s), err: (s) => err.push(s), stdin: stdin === undefined ? undefined : () => stdin, env: {} })
 
 beforeEach(() => {
   fx = makeStore()
@@ -77,21 +77,90 @@ describe('vault-agent', () => {
     expect(err.join('')).toContain("isn't a VAULT export")
   })
 
-  it('serve starts the bridge on the given port and stops when told', async () => {
+  it('serve makes the token, prints a hand-off link per origin, locks every route, and stops when told', async () => {
     let stop!: () => void
     const until = new Promise<void>((resolve) => {
       stop = resolve
     })
-    const running = main(['serve', '--port', '0', '--file', fx.store.file, '--origin', 'https://vault.example.app'], { out: (s) => out.push(s), err: (s) => err.push(s), until })
-    while (!err.join('').includes('vault-agent bridge on')) await new Promise((r) => setTimeout(r, 10))
+    const running = main(['serve', '--port', '0', '--file', fx.store.file, '--origin', 'https://vault.example.app'], { out: (s) => out.push(s), err: (s) => err.push(s), until, env: {} })
+    while (!err.join('').includes('open the app with its token')) await new Promise((r) => setTimeout(r, 10))
+    await new Promise((r) => setTimeout(r, 20))
     const banner = err.join('')
-    expect(banner).toContain('origins: http://localhost:5173, http://localhost:4173, http://127.0.0.1:5173, http://127.0.0.1:4173, https://vault-lilac-six.vercel.app, https://vault.example.app')
+    const tokenFile = path.join(fx.dir, 'bridge-token')
+    const token = fs.readFileSync(tokenFile, 'utf8').trim()
+    expect(token).toMatch(/^[A-Za-z0-9_-]{43}$/)
+    if (process.platform !== 'win32') expect(fs.statSync(tokenFile).mode & 0o777).toBe(0o600)
+    expect(banner).toContain(`token:    ${tokenFile} (new)`)
+    expect(banner).toContain('origins:  http://localhost:5173, http://localhost:4173, http://127.0.0.1:5173, http://127.0.0.1:4173, https://vault.example.app\n')
+    expect(banner).not.toContain(LIVE_SITE_ORIGIN)
+    expect(banner).toContain('max body: 5 MiB')
+    expect(banner).toContain(`    http://localhost:5173/#bridge-token=${token}\n`)
+    expect(banner).toContain(`    https://vault.example.app/#bridge-token=${token}\n`)
     const url = /bridge on (http:\/\/[^\s]+)/.exec(banner)![1]
-    const health = await fetch(`${url}/health`).then((r) => r.json())
-    expect(health).toMatchObject({ app: 'vault-agent', file: fx.store.file })
+    expect(await fetch(`${url}/health`).then((r) => r.json())).toMatchObject({ app: 'vault-agent', authorized: false })
+    expect((await fetch(`${url}/doc`)).status).toBe(401)
+    const health = await fetch(`${url}/health`, { headers: { Authorization: `Bearer ${token}` } }).then((r) => r.json())
+    expect(health).toMatchObject({ app: 'vault-agent', authorized: true, file: fx.store.file, rev: 1 })
+
+    // A rotation while it runs takes effect at once.
+    out = []
+    expect(await run(['token', '--rotate', '--json'])).toBe(0)
+    const rotated = JSON.parse(out.join('')).token as string
+    expect((await fetch(`${url}/doc`, { headers: { Authorization: `Bearer ${token}` } })).status).toBe(401)
+    expect((await fetch(`${url}/doc`, { headers: { Authorization: `Bearer ${rotated}` } })).status).toBe(200)
+
     stop()
     expect(await running).toBe(0)
     await expect(fetch(`${url}/health`)).rejects.toThrow()
+  })
+
+  it('serve takes --origin from VAULT_ORIGINS, --token-file / VAULT_TOKEN_FILE, and --max-body; refuses a bad size', async () => {
+    let stop!: () => void
+    const until = new Promise<void>((resolve) => {
+      stop = resolve
+    })
+    const tokenFile = path.join(fx.dir, 'elsewhere', 'tok')
+    const env = { VAULT_ORIGINS: `${LIVE_SITE_ORIGIN}, https://b.example`, VAULT_TOKEN_FILE: tokenFile }
+    const running = main(['serve', '--port', '0', '--file', fx.store.file, '--max-body', '256kb'], { out: (s) => out.push(s), err: (s) => err.push(s), until, env })
+    while (!err.join('').includes('open the app with its token')) await new Promise((r) => setTimeout(r, 10))
+    await new Promise((r) => setTimeout(r, 20))
+    const banner = err.join('')
+    expect(banner).toContain(`https://vault-lilac-six.vercel.app, https://b.example\n`)
+    expect(banner).toContain(`token:    ${tokenFile} (new)`)
+    expect(banner).toContain('max body: 256 KiB')
+    expect(banner).toContain(`${LIVE_SITE_ORIGIN}/#bridge-token=`)
+    stop()
+    expect(await running).toBe(0)
+    err = []
+    expect(await run(['serve', '--port', '0', '--max-body', 'lots'])).toBe(1)
+    expect(err.join('')).toContain("--max-body must be a size")
+  })
+
+  it('token prints the token and the links, makes the file when missing, and --rotate replaces it', async () => {
+    const tokenFile = path.join(fx.dir, 'bridge-token')
+    expect(await run(['token'])).toBe(0)
+    const first = fs.readFileSync(tokenFile, 'utf8').trim()
+    const text = out.join('')
+    expect(text).toContain(`token file: ${tokenFile} (new)`)
+    expect(text).toContain(`token:      ${first}\n`)
+    expect(text).toContain(`  http://localhost:5173/#bridge-token=${first}\n`)
+    expect(text).toContain(`--origin ${LIVE_SITE_ORIGIN}`)
+    out = []
+    expect(await run(['token', '--json', '--origin', LIVE_SITE_ORIGIN])).toBe(0)
+    const json = JSON.parse(out.join(''))
+    expect(json).toMatchObject({ file: tokenFile, token: first, rotated: false, created: false })
+    expect(json.links).toContain(`${LIVE_SITE_ORIGIN}/#bridge-token=${first}`)
+    out = []
+    expect(await run(['token', '--rotate'])).toBe(0)
+    const second = fs.readFileSync(tokenFile, 'utf8').trim()
+    expect(second).not.toBe(first)
+    expect(second).toMatch(/^[A-Za-z0-9_-]{43}$/)
+    expect(out.join('')).toContain('(rotated; links handed out before no longer work)')
+    if (process.platform !== 'win32') expect(fs.statSync(tokenFile).mode & 0o777).toBe(0o600)
+    fs.writeFileSync(tokenFile, 'not a token at all !!')
+    err = []
+    expect(await run(['token'])).toBe(1)
+    expect(err.join('')).toContain('vault-agent token --rotate')
   })
 })
 
@@ -101,5 +170,23 @@ describe('resolveFile', () => {
     expect(resolveFile(undefined, { VAULT_FILE: 'rel/board.json' })).toBe(path.resolve('rel/board.json'))
     expect(resolveFile('', { VAULT_FILE: '' })).toMatch(/[\\/]\.vault[\\/]vault\.json$/)
     expect(resolveFile('~/boards/v.json', {})).not.toContain('~')
+  })
+})
+
+describe('resolveOrigins and parseSize', () => {
+  it('the local servers first, then VAULT_ORIGINS, then --origin; deduplicated; never the live site by default', () => {
+    expect(resolveOrigins([], {})).toEqual(['http://localhost:5173', 'http://localhost:4173', 'http://127.0.0.1:5173', 'http://127.0.0.1:4173'])
+    expect(resolveOrigins([], {})).not.toContain(LIVE_SITE_ORIGIN)
+    expect(resolveOrigins(['https://a.example/', 'http://localhost:5173'], { VAULT_ORIGINS: ' https://B.example ,,https://a.example' }).slice(4)).toEqual(['https://B.example', 'https://a.example'])
+  })
+
+  it('reads bytes and k/m suffixes', () => {
+    expect(parseSize('524288')).toBe(524288)
+    expect(parseSize('512k')).toBe(512 * 1024)
+    expect(parseSize('5mb')).toBe(5 * 1024 * 1024)
+    expect(parseSize('5 MiB')).toBe(5 * 1024 * 1024)
+    expect(parseSize('0')).toBeUndefined()
+    expect(parseSize('lots')).toBeUndefined()
+    expect(parseSize('-1')).toBeUndefined()
   })
 })
