@@ -23,7 +23,23 @@ Written 18 Nov 2026 at the end of the planning session. Read this, then the plan
 - **Still open (Jake's):** folder names for his Claude Projects.
 - **Review:** Jake does a feel check on a preview link at the end of each phase. Nothing merges to `main` without his yes.
 
-## Start here: Phase 1
+## Phase 1 status (18 Nov, evening)
+
+Built, reviewed, CI green; waiting on Jake's feel check. Nothing is on `main` yet.
+
+| Branch | What |
+| --- | --- |
+| `phase1/base` | `main` + the contract: `rev` write counter, PUT `/doc` with `base`, inbox ids, bearer token in the browser client |
+| `g1-merge` | three-way merge (`src/model/merge.ts`), compare on every contact (`sync.ts`, `bridgeSync.ts`), snapshot + `restore mine`, token from `#bridge-token=`; review fixes in `ad0cb37` |
+| `g3-lock` | token file + bearer on every route, Host check, 5 MiB cap, live site opt-in (`--origin`), 428 without `base`, inbox by id only |
+| `g6-ci` | GitHub Actions on every push (checks · e2e + a11y + two writers · perf), real-agent two-writer tests, axe baseline, 1,000-item speed harness |
+| `g4-law` | LANGUAGE, PRODUCT, DESIGN, AGENTS, .cursorrules, README rewritten tree-first; new `docs/VOICE.md`, `docs/ACTIONS.md` (70 actions, parseable) |
+| `phase1/all` | all four merged; the branch to feel-check and, on Jake's yes, to merge to `main` |
+| `w0/wire-spike` | not for merge. Deployed on its own Vercel project `vault-wire-spike` (no Vercel login) at https://vault-wire-spike.vercel.app, MCP at `/api/mcp`; write-up `docs/WIRE_SPIKE.md` on that branch |
+
+Open after Phase 1: keypress-to-paint is 2–3× over budget on FIND, tick and lane move (perf harness, soft for now); audit 6 (snapshots trimmed silently) is an `it.fails` test; `hostile import` e2e can time out on a 2-vCPU box under parallel load (green in CI); the spike's passphrase brake and stateless code/refresh replay must not be copied into Phase 3 (see WIRE_SPIKE §6, §8); dev on Vite's default :5173 shares an origin (and the bridge token) with any other Vite project.
+
+## Phase 1 (as planned)
 
 Run in parallel, one git worktree and branch per track, one owner per file:
 
