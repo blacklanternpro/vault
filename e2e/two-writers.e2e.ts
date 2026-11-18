@@ -1,5 +1,9 @@
 import { expect, test, type Page, type Request, type Route } from '@playwright/test'
+import { seedDoc } from '../src/model/seed'
 import { openAppWithBridge, startAgent, type Agent } from './helpers/agent'
+
+/** The sample board saved as this browser's own, so first contact pushes it (a never-saved sample is not pushed to an empty bridge). */
+const savedSeed = () => JSON.stringify({ app: 'vault', version: 1, savedAt: Date.now(), doc: seedDoc() })
 
 /*
  * Two writers, one board: the browser (bridge on) and a REAL vault-agent,
@@ -73,7 +77,7 @@ async function bothEditsEverywhere(page: Page) {
 test('control: one writer at a time, the real agent and the page end up with both edits', async ({ page }) => {
   // One writer at a time: proves the harness (agent, CLI, page, bridge) works, so when a
   // two-writer case below fails it is the merge that is wrong, not a broken setup.
-  await openAppWithBridge(page, agent)
+  await openAppWithBridge(page, agent, { seedLocal: savedSeed() })
   await firstContact(page)
   await agentAddsSubtask(AGENT_EDIT)
   await expect.poll(async () => (await pageTitles(page)).includes(AGENT_EDIT), { timeout: 15_000 }).toBe(true)
@@ -83,7 +87,7 @@ test('control: one writer at a time, the real agent and the page end up with bot
 
 test('audit 2: an agent write inside the browser’s push window survives, and so does the browser’s edit', async ({ page }) => {
 
-  await openAppWithBridge(page, agent)
+  await openAppWithBridge(page, agent, { seedLocal: savedSeed() })
   await firstContact(page)
 
   // Hold the browser's next push in flight until the agent has written: the
@@ -113,7 +117,7 @@ test('audit 2: an agent write inside the browser’s push window survives, and s
 
 test('audit 1: a late reconnect keeps what both sides did while the bridge was down', async ({ page }) => {
 
-  await openAppWithBridge(page, agent)
+  await openAppWithBridge(page, agent, { seedLocal: savedSeed() })
   await firstContact(page)
 
   await agent.stop()
