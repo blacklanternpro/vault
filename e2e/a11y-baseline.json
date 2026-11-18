@@ -1,0 +1,31 @@
+{
+  "_comment": "Known accessibility debts, so CI is green today and any NEW serious/critical violation fails. Each entry names its audit finding. Selectors are exact axe targets, or a regex written /like this/. Delete an entry when it is fixed. See e2e/a11y.e2e.ts.",
+  "axe": [
+    {
+      "rule": "aria-required-children",
+      "selector": ".forest",
+      "audit": "audit 10",
+      "note": "role=tree holds children that are not treeitem/group (the ghost add rows and drafts), critical. Tree-first rebuild (Phase 2) should fix the structure."
+    },
+    {
+      "rule": "label-content-name-mismatch",
+      "selector": "/^#tree-\\d+ > \\.stem-check\\[data-action=\"done\"\\]$/",
+      "audit": "audit 10",
+      "note": "The [x]/[ ] tick in the directory: its aria-label does not contain its visible text, so voice control can't target it by what it shows."
+    },
+    {
+      "rule": "target-size",
+      "selector": "/^button\\[data-testid=\"advance-\\d+\"\\]$/",
+      "audit": "audit 10",
+      "note": "The hover chevron that shoves a card to the next lane is under 24x24 with neighbours too close (WCAG 2.2 2.5.8)."
+    }
+  ],
+  "motion": [
+    {
+      "selector": "div[data-testid=pane-handle].pane-handle::after",
+      "property": "transition",
+      "audit": "audit 10",
+      "note": "The reduced-motion rule is `* { transition-duration: 0 }`, which does not reach ::before/::after; the pane handle's line still fades."
+    }
+  ]
+}
