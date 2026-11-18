@@ -4,8 +4,9 @@
     {
       "rule": "aria-required-children",
       "selector": ".forest",
+      "related": "/^(\\.forest-col\\[role=\"group\"\\]:nth-child\\(\\d+\\) > \\.stem-ghost\\.stem|button\\[data-testid=\"tree-new-project\"\\])$/",
       "audit": "audit 10",
-      "note": "role=tree holds children that are not treeitem/group (the ghost add rows and drafts), critical. Tree-first rebuild (Phase 2) should fix the structure."
+      "note": "Only these offenders: the ghost add buttons (one per folder group, and + new project) sit directly in role=tree / role=group, where only treeitem/group are allowed (critical). Any other unallowed child of the tree fails. Tree-first rebuild (Phase 2) should fix the structure."
     },
     {
       "rule": "label-content-name-mismatch",

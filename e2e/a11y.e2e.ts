@@ -22,7 +22,12 @@ const HERE = path.dirname(fileURLToPath(import.meta.url))
 const BASELINE_FILE = path.join(HERE, 'a11y-baseline.json')
 const RECORD = !!process.env.A11Y_RECORD
 
-type AxeEntry = { rule: string; selector: string; audit: string; note?: string; screens?: string[] }
+/**
+ * `related` narrows a rule reported on a container (axe names the parent, e.g. the
+ * tree, for aria-required-children): every related node axe lists (the offending
+ * children) must match it, so a new offender inside the same container still fails.
+ */
+type AxeEntry = { rule: string; selector: string; related?: string; audit: string; note?: string; screens?: string[] }
 type MotionEntry = { selector: string; property: 'animation' | 'transition'; audit: string; note?: string }
 type Baseline = { axe: AxeEntry[]; motion: MotionEntry[] }
 
@@ -109,10 +114,17 @@ test.describe('axe: no new serious or critical violations', () => {
         if (v.impact !== 'serious' && v.impact !== 'critical') continue
         for (const node of v.nodes) {
           const selector = node.target.map(String).join(' >> ')
-          found.axe.push({ rule: v.id, selector, impact: v.impact, help: v.help, screen: screen.name })
-          const hit = baseline.axe.some((b) => b.rule === v.id && matches(b.selector, selector) && (!b.screens || b.screens.includes(screen.name)))
+          const related = [...node.any, ...node.all, ...node.none].flatMap((c) => c.relatedNodes ?? []).map((r) => r.target.map(String).join(' >> '))
+          found.axe.push({ rule: v.id, selector, related: related.join(' | ') || undefined, impact: v.impact, help: v.help, screen: screen.name })
+          const hit = baseline.axe.some(
+            (b) =>
+              b.rule === v.id &&
+              matches(b.selector, selector) &&
+              (!b.screens || b.screens.includes(screen.name)) &&
+              (b.related === undefined || (related.length > 0 && related.every((r) => matches(b.related!, r)))),
+          )
           if (hit) known++
-          else fresh.push(`${v.id} (${v.impact}) ${selector}\n    ${v.help}\n    ${node.failureSummary?.split('\n').join('\n    ') ?? ''}`)
+          else fresh.push(`${v.id} (${v.impact}) ${selector}${related.length ? ` [related: ${related.join(' | ')}]` : ''}\n    ${v.help}\n    ${node.failureSummary?.split('\n').join('\n    ') ?? ''}`)
         }
       }
       info.annotations.push({ type: 'a11y', description: `${screen.name}: ${known} baselined serious/critical node(s), ${fresh.length} new` })

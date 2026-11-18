@@ -71,8 +71,8 @@ async function bothEditsEverywhere(page: Page) {
 }
 
 test('control: one writer at a time, the real agent and the page end up with both edits', async ({ page }) => {
-  // Not a known failure: proves the harness (agent, CLI, page, bridge) works, so the
-  // two test.fail() cases below fail for the reason they name and not for a broken setup.
+  // One writer at a time: proves the harness (agent, CLI, page, bridge) works, so when a
+  // two-writer case below fails it is the merge that is wrong, not a broken setup.
   await openAppWithBridge(page, agent)
   await firstContact(page)
   await agentAddsSubtask(AGENT_EDIT)
